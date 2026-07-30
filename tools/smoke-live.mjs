@@ -100,12 +100,19 @@ function requireHeader(response, name, expected, label) {
   requireContains(value.toLowerCase(), expected.toLowerCase(), `${label} ${name}`);
 }
 
+function requireReferrerPolicy(response, label) {
+  const value = (response.headers.get("Referrer-Policy") ?? "").toLowerCase();
+  if (value !== "no-referrer" && value !== "strict-origin-when-cross-origin") {
+    throw new Error(`${label} Referrer-Policy is not an approved production policy: ${value}`);
+  }
+}
+
 function requireSecurityHeaders(response, label) {
   requireHeader(response, "Content-Security-Policy", "default-src", label);
   requireHeader(response, "Cross-Origin-Opener-Policy", "same-origin", label);
   requireHeader(response, "Cross-Origin-Resource-Policy", "same-origin", label);
   requireHeader(response, "Permissions-Policy", "camera=()", label);
-  requireHeader(response, "Referrer-Policy", "origin", label);
+  requireReferrerPolicy(response, label);
   requireHeader(response, "Strict-Transport-Security", "max-age=31536000", label);
   requireHeader(response, "X-Content-Type-Options", "nosniff", label);
   requireHeader(response, "X-Frame-Options", "deny", label);
