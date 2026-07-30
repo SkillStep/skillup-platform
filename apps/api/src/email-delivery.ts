@@ -54,9 +54,14 @@ function signInMessage(
     ].join(""),
     headers: {
       "X-Auto-Response-Suppress": "All",
-      "X-Entity-Ref-ID": `skillup-sign-in-${input.code.length}`,
+      "X-Entity-Ref-ID": "skillup-passwordless-sign-in",
     },
   };
+}
+
+function requireSmtpCredential(value: string | undefined, name: string): string {
+  if (!value) throw new Error(`${name} is required for SMTP delivery.`);
+  return value;
 }
 
 export function createSmtpTransport(config: ApiConfig): Transporter {
@@ -64,8 +69,12 @@ export function createSmtpTransport(config: ApiConfig): Transporter {
     throw new Error("SMTP transport cannot be created while email delivery is disabled.");
   }
 
+  const host = requireSmtpCredential(config.SMTP_HOST, "SMTP_HOST");
+  const username = requireSmtpCredential(config.SMTP_USERNAME, "SMTP_USERNAME");
+  const password = requireSmtpCredential(config.SMTP_PASSWORD, "SMTP_PASSWORD");
+
   return createTransport({
-    host: config.SMTP_HOST,
+    host,
     port: config.SMTP_PORT,
     secure: config.SMTP_SECURE,
     requireTLS: config.SMTP_REQUIRE_TLS,
@@ -76,8 +85,8 @@ export function createSmtpTransport(config: ApiConfig): Transporter {
     greetingTimeout: 10_000,
     socketTimeout: 20_000,
     auth: {
-      user: config.SMTP_USERNAME,
-      pass: config.SMTP_PASSWORD,
+      user: username,
+      pass: password,
     },
   });
 }
@@ -97,8 +106,7 @@ export function createConfiguredAuthCodeDelivery(
   }
 
   const smtp = transport ?? createSmtpTransport(config);
-  const from = config.EMAIL_FROM;
-  if (!from) throw new Error("EMAIL_FROM is required for SMTP delivery.");
+  const from = requireSmtpCredential(config.EMAIL_FROM, "EMAIL_FROM");
 
   return {
     sendSignInCode: async (input) => {
