@@ -173,7 +173,9 @@ export function SignInForm() {
 
       <div aria-live="polite" aria-atomic="true">
         {message ? (
-          <p className={`${styles.message} ${isError ? styles.error : styles.success}`}>{message}</p>
+          <p className={`${styles.message} ${isError ? styles.error : styles.success}`}>
+            {message}
+          </p>
         ) : null}
       </div>
       <p className={styles.privacy}>

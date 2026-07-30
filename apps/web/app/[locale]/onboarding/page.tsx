@@ -38,8 +38,8 @@ export default async function OnboardingPage({ params }: PageProps) {
             Tell us what progress means to you.
           </h1>
           <p className={styles.summary}>
-            SkillUp uses your goal to recommend a practical starting path. You can change these details
-            later from your private profile.
+            SkillUp uses your goal to recommend a practical starting path. You can change these
+            details later from your private profile.
           </p>
           <ul className={styles.commitments} aria-label="Onboarding commitments">
             <li>Only a few useful questions</li>

@@ -67,7 +67,9 @@ export function OnboardingForm() {
         setLocale(profile?.locale ?? "en");
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setMessage("We could not load your private profile. Check your connection and try again.");
+          setMessage(
+            "We could not load your private profile. Check your connection and try again.",
+          );
         }
       } finally {
         setLoading(false);
@@ -167,7 +169,9 @@ export function OnboardingForm() {
             <option value="25_34">25–34</option>
             <option value="35_plus">35+</option>
           </select>
-          <p className={styles.help}>SkillUp’s first beta is designed for learners aged 16 and above.</p>
+          <p className={styles.help}>
+            SkillUp’s first beta is designed for learners aged 16 and above.
+          </p>
         </div>
 
         <div className={styles.field}>
@@ -214,7 +218,8 @@ export function OnboardingForm() {
         {message ? <p className={`${styles.message} ${styles.error}`}>{message}</p> : null}
       </div>
       <p className={styles.privacy}>
-        Your age group and learning goal are private profile data. They are not published or indexed.
+        Your age group and learning goal are private profile data. They are not published or
+        indexed.
       </p>
     </div>
   );

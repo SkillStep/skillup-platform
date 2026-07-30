@@ -150,8 +150,8 @@ export default async function EnglishHomePage({ params }: PageProps) {
           <p className="eyebrow">Closed beta preparation</p>
           <h2 id="early-access-title">Help shape SkillUp for Pakistani learners.</h2>
           <p>
-            Secure account and onboarding flows are now being connected. Email delivery will open only
-            after sender-domain, abuse-control and privacy gates pass.
+            Secure account and onboarding flows are now being connected. Email delivery will open
+            only after sender-domain, abuse-control and privacy gates pass.
           </p>
         </div>
         <Link className="button button-light" href="/en/sign-in">
