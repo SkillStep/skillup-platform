@@ -1,16 +1,11 @@
 import { count, eq } from "drizzle-orm";
 
 import {
-  authChallenges,
-  authSessions,
   createDatabaseClient,
-  learnerProfiles,
   learningPaths,
   requireDatabaseUrl,
   skills,
   skillVersions,
-  userEmailIdentities,
-  users,
 } from "../index.js";
 import { launchCatalogSeed } from "../seed-data.js";
 
@@ -64,19 +59,28 @@ try {
     throw new Error("The immutable pilot skill version is missing or invalid.");
   }
 
-  const identityTables = [
-    ["users", users],
-    ["user_email_identities", userEmailIdentities],
-    ["auth_challenges", authChallenges],
-    ["auth_sessions", authSessions],
-    ["learner_profiles", learnerProfiles],
-  ] as const;
-
-  for (const [name, table] of identityTables) {
-    const [result] = await client.db.select({ value: count() }).from(table);
-    if (result?.value !== 0) {
-      throw new Error(`Identity table ${name} must be empty after the synthetic catalog seed.`);
-    }
+  const identityCounts = await client.pool.query<{
+    users: number;
+    identities: number;
+    challenges: number;
+    sessions: number;
+    profiles: number;
+  }>(`select
+      (select count(*)::int from users) as users,
+      (select count(*)::int from user_email_identities) as identities,
+      (select count(*)::int from auth_challenges) as challenges,
+      (select count(*)::int from auth_sessions) as sessions,
+      (select count(*)::int from learner_profiles) as profiles`);
+  const identity = identityCounts.rows[0];
+  if (
+    !identity ||
+    identity.users !== 0 ||
+    identity.identities !== 0 ||
+    identity.challenges !== 0 ||
+    identity.sessions !== 0 ||
+    identity.profiles !== 0
+  ) {
+    throw new Error("Identity tables must exist and remain empty after the synthetic catalog seed.");
   }
 
   console.log(
