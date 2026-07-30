@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./components.css";
 
-const publicAppUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicAppUrl),
