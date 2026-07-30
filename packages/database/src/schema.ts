@@ -235,8 +235,14 @@ export const authSessions = pgTable(
     uniqueIndex("auth_sessions_token_digest_unique").on(table.tokenDigest),
     index("auth_sessions_user_idx").on(table.userId),
     check("auth_sessions_token_digest_length", sql`char_length(${table.tokenDigest}) = 64`),
-    check("auth_sessions_absolute_expiry_after_creation", sql`${table.expiresAt} > ${table.createdAt}`),
-    check("auth_sessions_idle_expiry_after_creation", sql`${table.idleExpiresAt} > ${table.createdAt}`),
+    check(
+      "auth_sessions_absolute_expiry_after_creation",
+      sql`${table.expiresAt} > ${table.createdAt}`,
+    ),
+    check(
+      "auth_sessions_idle_expiry_after_creation",
+      sql`${table.idleExpiresAt} > ${table.createdAt}`,
+    ),
   ],
 );
 

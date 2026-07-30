@@ -80,7 +80,9 @@ try {
     identity.sessions !== 0 ||
     identity.profiles !== 0
   ) {
-    throw new Error("Identity tables must exist and remain empty after the synthetic catalog seed.");
+    throw new Error(
+      "Identity tables must exist and remain empty after the synthetic catalog seed.",
+    );
   }
 
   console.log(

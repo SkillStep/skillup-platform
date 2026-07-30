@@ -1,10 +1,4 @@
-import {
-  createHmac,
-  randomBytes,
-  randomInt,
-  randomUUID,
-  timingSafeEqual,
-} from "node:crypto";
+import { createHmac, randomBytes, randomInt, randomUUID, timingSafeEqual } from "node:crypto";
 
 import type { DatabaseClient } from "@skillup/database";
 import type { FastifyInstance, FastifyRequest } from "fastify";
@@ -54,18 +48,24 @@ export type AuthenticatedLearner = Readonly<{
 }>;
 
 export type AuthCodeDelivery = Readonly<{
-  sendSignInCode: (input: Readonly<{ email: string; code: string; expiresAt: Date }>) => Promise<void>;
+  sendSignInCode: (
+    input: Readonly<{ email: string; code: string; expiresAt: Date }>,
+  ) => Promise<void>;
 }>;
 
 export type AuthService = Readonly<{
-  startEmailSignIn: (input: Readonly<{
-    email: string;
-    requestFingerprint: string;
-  }>) => Promise<Readonly<{ challengeId: string; expiresAt: Date }>>;
-  verifyEmailSignIn: (input: Readonly<{
-    challengeId: string;
-    code: string;
-  }>) => Promise<
+  startEmailSignIn: (
+    input: Readonly<{
+      email: string;
+      requestFingerprint: string;
+    }>,
+  ) => Promise<Readonly<{ challengeId: string; expiresAt: Date }>>;
+  verifyEmailSignIn: (
+    input: Readonly<{
+      challengeId: string;
+      code: string;
+    }>,
+  ) => Promise<
     Readonly<{
       sessionToken: string;
       sessionExpiresAt: Date;
@@ -159,17 +159,19 @@ export function createUnavailableAuthCodeDelivery(): AuthCodeDelivery {
   };
 }
 
-export function createAuthService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  secret: string;
-  challengeMinutes: number;
-  sessionIdleMinutes: number;
-  sessionAbsoluteHours: number;
-  delivery: AuthCodeDelivery;
-  now?: () => Date;
-  createCode?: () => string;
-  createSessionToken?: () => string;
-}>): AuthService {
+export function createAuthService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    secret: string;
+    challengeMinutes: number;
+    sessionIdleMinutes: number;
+    sessionAbsoluteHours: number;
+    delivery: AuthCodeDelivery;
+    now?: () => Date;
+    createCode?: () => string;
+    createSessionToken?: () => string;
+  }>,
+): AuthService {
   const now = options.now ?? (() => new Date());
   const createCode = options.createCode ?? generateCode;
   const createToken = options.createSessionToken ?? generateSessionToken;
@@ -381,12 +383,18 @@ export function createAuthService(options: Readonly<{
       if (!existing) throw new AuthRequestError(404, "The learner profile was not found.");
 
       const merged = {
-        displayName: patch.displayName === undefined ? profileFromRow(existing).displayName : patch.displayName,
+        displayName:
+          patch.displayName === undefined
+            ? profileFromRow(existing).displayName
+            : patch.displayName,
         locale: patch.locale ?? profileFromRow(existing).locale,
         ageBand: patch.ageBand ?? profileFromRow(existing).ageBand,
-        avatarKey: patch.avatarKey === undefined ? profileFromRow(existing).avatarKey : patch.avatarKey,
+        avatarKey:
+          patch.avatarKey === undefined ? profileFromRow(existing).avatarKey : patch.avatarKey,
         learningGoal:
-          patch.learningGoal === undefined ? profileFromRow(existing).learningGoal : patch.learningGoal,
+          patch.learningGoal === undefined
+            ? profileFromRow(existing).learningGoal
+            : patch.learningGoal,
         onboardingStatus: patch.onboardingStatus ?? profileFromRow(existing).onboardingStatus,
       };
 
@@ -499,7 +507,10 @@ export function registerAuthRoutes(
     requireTrustedOrigin(request, options.config);
     const body = VerifyEmailSignInSchema.parse(request.body);
     const verified = await options.authService.verifyEmailSignIn(body);
-    reply.header("set-cookie", sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt));
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
     return reply.status(200).send({ learner: verified.learner });
   });
 
