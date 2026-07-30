@@ -33,6 +33,11 @@ for (const [label, dockerfile] of [
   rejectText(dockerfile, "COPY .env", label);
   rejectText(dockerfile, "--no-frozen-lockfile", label);
 }
+requireText(
+  webDockerfile,
+  "/workspace/apps/web/public ./apps/web/public",
+  "web production Dockerfile",
+);
 
 if (apiRailway.build?.dockerfilePath !== "/infra/docker/api.Dockerfile") {
   throw new Error("Railway API config must select the reviewed API Dockerfile.");
@@ -54,6 +59,11 @@ for (const required of [
   "EMAIL_PROVIDER=disabled",
   "SMTP_HOST=",
   "SMTP_PASSWORD=",
+  "FEATURE_AI_GENERATION_ENABLED=false",
+  "FEATURE_PREMIUM_ENABLED=false",
+  "FEATURE_JAZZCASH_ENABLED=false",
+  "AI_PROVIDER=disabled",
+  "JAZZCASH_MODE=disabled",
   "RELEASE_SHA=local",
 ]) {
   requireText(environmentExample, required, ".env.example");
