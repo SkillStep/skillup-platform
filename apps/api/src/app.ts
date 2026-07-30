@@ -6,6 +6,7 @@ import Fastify, { type FastifyInstance } from "fastify";
 import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
+import { type ProgressService, registerProgressRoutes } from "./progress.js";
 
 export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
@@ -13,6 +14,7 @@ export type BuildApiOptions = Readonly<{
   readiness?: () => Promise<boolean>;
   authService?: AuthService | undefined;
   gameplayService?: GameplayService | undefined;
+  progressService?: ProgressService | undefined;
 }>;
 
 type NormalizedError = Readonly<{
@@ -129,6 +131,13 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       gameplayService: options.gameplayService,
+    });
+  }
+  if (options.authService && options.progressService) {
+    registerProgressRoutes(app, {
+      config,
+      authService: options.authService,
+      progressService: options.progressService,
     });
   }
 
