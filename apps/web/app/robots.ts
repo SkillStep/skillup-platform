@@ -11,8 +11,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/en", "/en/"],
-        disallow: ["/app", "/admin", "/api"],
+        allow: ["/", "/en", "/en/skills", "/en/categories", "/en/paths"],
+        disallow: [
+          "/app",
+          "/admin",
+          "/api",
+          "/offline",
+          "/en/sign-in",
+          "/en/onboarding",
+          "/en/progress",
+          "/en/learn",
+        ],
       },
     ],
     host: baseUrl.origin,

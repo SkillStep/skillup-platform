@@ -7,6 +7,11 @@ const privateRouteHeaders = [
   { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
 ];
 
+const publicRouteHeaders = [
+  { key: "Cache-Control", value: "public, max-age=0, must-revalidate" },
+  { key: "X-SkillUp-Cacheable", value: "public" },
+];
+
 const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
@@ -25,6 +30,18 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
         ],
+      },
+      {
+        source: "/en",
+        headers: publicRouteHeaders,
+      },
+      {
+        source: "/en/(skills|categories|paths)/:path*",
+        headers: publicRouteHeaders,
+      },
+      {
+        source: "/offline",
+        headers: publicRouteHeaders,
       },
       {
         source: "/:locale(en|ur)/(sign-in|onboarding|progress)",

@@ -3,12 +3,18 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 import "./components.css";
+import { PwaStatus } from "./pwa-status";
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicAppUrl),
   applicationName: "SkillUp",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    icon: [{ url: "/icons/skillup-icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/skillup-icon.svg", type: "image/svg+xml" }],
+  },
   title: {
     default: "SkillUp — Learn. Play. Level Up.",
     template: "%s | SkillUp",
@@ -44,7 +50,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <PwaStatus />
+      </body>
     </html>
   );
 }
