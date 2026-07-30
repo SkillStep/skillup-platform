@@ -39,7 +39,7 @@ describe("API runtime configuration", () => {
     const config = readApiConfig({
       ...requiredEnvironment,
       EMAIL_PROVIDER: "smtp",
-      EMAIL_FROM: "SkillUp <no-reply@skillup.example>",
+      EMAIL_FROM: "no-reply@skillup.example",
       SMTP_HOST: "smtp.skillup.example",
       SMTP_PORT: "587",
       SMTP_SECURE: "false",
