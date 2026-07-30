@@ -51,8 +51,18 @@ docs/                   Product, architecture, security, roadmap and operating d
 - Public learning content is server-rendered or statically generated, indexable, useful, original and linked through a coherent information architecture.
 - AI-generated material is schema-validated, quality-scored, versioned, traceable and reviewable. It must not create thin programmatic pages for search manipulation.
 - Payment, entitlement, identity, progress and scoring decisions are authoritative on the server.
-- Private user data, dashboards, payments and personal progress are never indexed.
+- Private user data, dashboards, payments and personal progress are never indexed or placed in the public offline cache.
 - Production releases use reviewed pull requests, required checks, immutable artifacts, staged verification and documented rollback.
+
+## Public discovery and PWA
+
+- `/en/skills` presents the five reviewed launch skills in useful server-rendered HTML.
+- `/en/skills/:slug` provides public outcomes, editorial boundaries and visible-content-matched metadata.
+- `/en/paths/:slug` distinguishes the reviewed playable pilot from planned paths.
+- `/en/categories/launch-skills` provides the initial category and internal-link hub.
+- The installable PWA caches only responses explicitly marked public.
+- Sign-in, onboarding, gameplay, progress, admin and API routes are excluded from the public service-worker cache.
+- Offline and update states preserve privacy and require connectivity for all account or learning-state changes.
 
 ## Product and brand foundation
 
@@ -98,8 +108,8 @@ SKILLUP_EXPECTED_RELEASE_SHA=<deployed-git-commit-sha> \
 pnpm smoke:live
 ```
 
-The same check is available through the manually dispatched `Live Staging Smoke` GitHub Actions workflow.
+The live smoke verifies server-rendered public content, structured data, PWA resources, explicit cache boundaries, private-route protection, web/API health, database readiness and release identity. The same check is available through the manually dispatched `Live Staging Smoke` GitHub Actions workflow.
 
 ## Current phase
 
-The executable platform now includes the public mobile-first shell, secure passwordless session foundation, onboarding, versioned reviewed learning content, server-authoritative gameplay, exact-session recovery, progress, points, streaks, achievements, privacy-aware leaderboards and deployment-ready web/API containers. Real SMTP sign-in can be activated only with an approved sender account. JazzCash, live AI generation, production credentials, final legal/privacy approval, backups and production promotion remain separately gated work.
+The executable platform now includes the public mobile-first discovery catalog, installable privacy-safe PWA, secure passwordless session foundation, onboarding, versioned reviewed learning content, server-authoritative gameplay, exact-session recovery, progress, points, streaks, achievements, privacy-aware leaderboards and deployment-ready web/API containers. Real SMTP sign-in can be activated only with an approved sender account. JazzCash, live AI generation, production credentials, final legal/privacy approval, backups and production promotion remain separately gated work.
