@@ -34,7 +34,9 @@ try {
     );
   }
   if (repeated.state !== "active" || repeated.currentChallengeOrdinal !== 0) {
-    throw new Error(`The authoritative active session was not resumed safely: ${JSON.stringify(repeated)}`);
+    throw new Error(
+      `The authoritative active session was not resumed safely: ${JSON.stringify(repeated)}`,
+    );
   }
 
   const state = await database.pool.query(
