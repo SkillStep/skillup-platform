@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=75,<76"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "skillup-ai-worker"
+version = "0.0.0"
+description = "SkillUp durable AI generation and evaluation worker"
+requires-python = ">=3.13.14,<3.14"
+dependencies = []
+
+[project.scripts]
+skillup-ai-worker-health = "skillup_ai_worker.health:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.pytest.ini_options]
+addopts = "-q"

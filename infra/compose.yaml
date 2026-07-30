@@ -1,0 +1,25 @@
+name: skillup-local
+
+services:
+  postgres:
+    image: postgres:18.4-bookworm
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-skillup}
+      POSTGRES_USER: ${POSTGRES_USER:-skillup_local}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skillup_local_only}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - skillup_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  skillup_postgres_data:
