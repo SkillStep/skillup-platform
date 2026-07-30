@@ -156,9 +156,9 @@ export default async function EnglishHomePage({ params }: PageProps) {
             readiness gates pass.
           </p>
         </div>
-        <a className="button button-light" href="mailto:beta@skillup.example?subject=SkillUp%20early%20access">
-          Register interest
-        </a>
+        <span className="button button-light button-disabled" aria-disabled="true">
+          Registration opening soon
+        </span>
       </section>
 
       <footer className="site-footer">
