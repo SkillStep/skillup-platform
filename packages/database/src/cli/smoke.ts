@@ -1,11 +1,16 @@
 import { count, eq } from "drizzle-orm";
 
 import {
+  authChallenges,
+  authSessions,
   createDatabaseClient,
+  learnerProfiles,
   learningPaths,
   requireDatabaseUrl,
   skills,
   skillVersions,
+  userEmailIdentities,
+  users,
 } from "../index.js";
 import { launchCatalogSeed } from "../seed-data.js";
 
@@ -59,8 +64,23 @@ try {
     throw new Error("The immutable pilot skill version is missing or invalid.");
   }
 
+  const identityTables = [
+    ["users", users],
+    ["user_email_identities", userEmailIdentities],
+    ["auth_challenges", authChallenges],
+    ["auth_sessions", authSessions],
+    ["learner_profiles", learnerProfiles],
+  ] as const;
+
+  for (const [name, table] of identityTables) {
+    const [result] = await client.db.select({ value: count() }).from(table);
+    if (result?.value !== 0) {
+      throw new Error(`Identity table ${name} must be empty after the synthetic catalog seed.`);
+    }
+  }
+
   console.log(
-    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, one published pilot).`,
+    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, one published pilot, secure identity schema ready).`,
   );
 } finally {
   await client.close();
