@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - .github/workflows/lockfile-diagnostic.yml
-      - package.json
+      - pnpm-workspace.yaml
       - pnpm-lock.yaml
 
 permissions:
@@ -38,19 +38,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          node <<'NODE'
-          const fs = require('node:fs');
-          const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          packageJson.pnpm = {
-            ...(packageJson.pnpm ?? {}),
-            overrides: {
-              ...(packageJson.pnpm?.overrides ?? {}),
-              sharp: '0.35.3',
-              postcss: '8.5.23',
-            },
-          };
-          fs.writeFileSync('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
-          NODE
           pnpm install --lockfile-only --no-frozen-lockfile
           pnpm audit --prod --audit-level=high
 
