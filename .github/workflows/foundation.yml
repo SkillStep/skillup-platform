@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: quality-${{ github.workflow }}-${{ github.ref }}
@@ -35,8 +35,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
-          persist-credentials: true
+          persist-credentials: false
 
       - name: Set up Node.js
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
@@ -58,49 +57,6 @@ jobs:
 
       - name: Install locked workspace dependencies
         run: pnpm install --frozen-lockfile
-
-      - name: Apply strict index-signature access
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          from pathlib import Path
-          import re
-
-          files = [
-              Path("apps/web/app/[locale]/onboarding/onboarding-form.tsx"),
-              Path("apps/web/app/[locale]/onboarding/page.tsx"),
-              Path("apps/web/app/[locale]/sign-in/page.tsx"),
-              Path("apps/web/app/[locale]/sign-in/sign-in-form.tsx"),
-          ]
-          for path in files:
-              text = path.read_text(encoding="utf-8")
-              text = re.sub(r"styles\.([A-Za-z_][A-Za-z0-9_]*)", r'styles["\1"]', text)
-              path.write_text(text, encoding="utf-8")
-
-          replacements = {
-              Path("apps/web/app/[locale]/page.tsx"): (
-                  'process.env.PUBLIC_APP_URL',
-                  'process.env["PUBLIC_APP_URL"]',
-              ),
-              Path("apps/web/next.config.ts"): (
-                  'process.env.API_BASE_URL',
-                  'process.env["API_BASE_URL"]',
-              ),
-          }
-          for path, (old, new) in replacements.items():
-              text = path.read_text(encoding="utf-8")
-              path.write_text(text.replace(old, new), encoding="utf-8")
-          PY
-          pnpm format
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .
-          if ! git diff --cached --quiet; then
-            git commit -m "fix(web): use strict CSS module and environment access"
-            git push origin "HEAD:${{ github.head_ref }}"
-          fi
 
       - name: Validate local infrastructure configuration
         shell: bash
