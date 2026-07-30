@@ -223,10 +223,6 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
   }, [levelId, locale, storageKey]);
 
   const challenge = session?.currentChallenge ?? null;
-  const challengeKey = challenge
-    ? `${challenge.id}:${challenge.versionId}:${session?.attemptsUsed ?? 0}`
-    : "none";
-
   useEffect(() => {
     setSelectedKeys([]);
     setMatches({});
@@ -236,11 +232,17 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
     } else {
       setOrderedKeys([]);
     }
-  }, [challengeKey, challenge]);
+  }, [challenge]);
 
   useEffect(() => {
     if (feedback) feedbackRef.current?.focus();
   }, [feedback]);
+
+  useEffect(() => {
+    if (session?.state === "completed" && feedback === null) {
+      window.sessionStorage.removeItem(storageKey);
+    }
+  }, [feedback, session?.state, storageKey]);
 
   const selectedRightKeys = useMemo(() => new Set(Object.values(matches)), [matches]);
 
@@ -395,7 +397,6 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
       : 0;
 
   if (session.state === "completed" && feedback === null) {
-    window.sessionStorage.removeItem(storageKey);
     return (
       <section className={styles["player"]}>
         <div className={styles["completion"]}>
