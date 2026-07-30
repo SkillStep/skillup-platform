@@ -231,12 +231,8 @@
           "name": "auth_sessions_user_id_users_id_fk",
           "tableFrom": "auth_sessions",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -330,12 +326,8 @@
           "name": "learner_profiles_user_id_users_id_fk",
           "tableFrom": "learner_profiles",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -479,12 +471,8 @@
           "name": "learning_path_versions_learning_path_id_learning_paths_id_fk",
           "tableFrom": "learning_path_versions",
           "tableTo": "learning_paths",
-          "columnsFrom": [
-            "learning_path_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["learning_path_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -594,12 +582,8 @@
           "name": "learning_paths_skill_id_skills_id_fk",
           "tableFrom": "learning_paths",
           "tableTo": "skills",
-          "columnsFrom": [
-            "skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -725,12 +709,8 @@
           "name": "skill_versions_skill_id_skills_id_fk",
           "tableFrom": "skill_versions",
           "tableTo": "skills",
-          "columnsFrom": [
-            "skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -932,12 +912,8 @@
           "name": "user_email_identities_user_id_users_id_fk",
           "tableFrom": "user_email_identities",
           "tableTo": "users",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1114,12 +1090,8 @@
           "name": "challenge_answer_options_challenge_version_id_challenge_versions_id_fk",
           "tableFrom": "challenge_answer_options",
           "tableTo": "challenge_versions",
-          "columnsFrom": [
-            "challenge_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["challenge_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1191,12 +1163,8 @@
           "name": "challenge_evaluations_challenge_version_id_challenge_versions_id_fk",
           "tableFrom": "challenge_evaluations",
           "tableTo": "challenge_versions",
-          "columnsFrom": [
-            "challenge_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["challenge_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1356,12 +1324,8 @@
           "name": "challenge_versions_challenge_id_challenges_id_fk",
           "tableFrom": "challenge_versions",
           "tableTo": "challenges",
-          "columnsFrom": [
-            "challenge_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["challenge_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1369,12 +1333,8 @@
           "name": "challenge_versions_level_version_id_level_versions_id_fk",
           "tableFrom": "challenge_versions",
           "tableTo": "level_versions",
-          "columnsFrom": [
-            "level_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1520,12 +1480,8 @@
           "name": "challenges_level_id_levels_id_fk",
           "tableFrom": "challenges",
           "tableTo": "levels",
-          "columnsFrom": [
-            "level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1789,12 +1745,8 @@
           "name": "content_source_references_level_version_id_level_versions_id_fk",
           "tableFrom": "content_source_references",
           "tableTo": "level_versions",
-          "columnsFrom": [
-            "level_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1802,12 +1754,8 @@
           "name": "content_source_references_challenge_version_id_challenge_versions_id_fk",
           "tableFrom": "content_source_references",
           "tableTo": "challenge_versions",
-          "columnsFrom": [
-            "challenge_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["challenge_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1960,12 +1908,8 @@
           "name": "learning_module_versions_module_id_learning_modules_id_fk",
           "tableFrom": "learning_module_versions",
           "tableTo": "learning_modules",
-          "columnsFrom": [
-            "module_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["module_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1973,12 +1917,8 @@
           "name": "learning_module_versions_learning_path_version_id_learning_path_versions_id_fk",
           "tableFrom": "learning_module_versions",
           "tableTo": "learning_path_versions",
-          "columnsFrom": [
-            "learning_path_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["learning_path_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2112,12 +2052,8 @@
           "name": "learning_modules_learning_path_id_learning_paths_id_fk",
           "tableFrom": "learning_modules",
           "tableTo": "learning_paths",
-          "columnsFrom": [
-            "learning_path_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["learning_path_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2237,12 +2173,8 @@
           "name": "learning_objectives_level_version_id_level_versions_id_fk",
           "tableFrom": "learning_objectives",
           "tableTo": "level_versions",
-          "columnsFrom": [
-            "level_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2393,12 +2325,8 @@
           "name": "lesson_versions_lesson_id_lessons_id_fk",
           "tableFrom": "lesson_versions",
           "tableTo": "lessons",
-          "columnsFrom": [
-            "lesson_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lesson_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2406,12 +2334,8 @@
           "name": "lesson_versions_module_version_id_learning_module_versions_id_fk",
           "tableFrom": "lesson_versions",
           "tableTo": "learning_module_versions",
-          "columnsFrom": [
-            "module_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["module_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2549,12 +2473,8 @@
           "name": "lessons_module_id_learning_modules_id_fk",
           "tableFrom": "lessons",
           "tableTo": "learning_modules",
-          "columnsFrom": [
-            "module_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["module_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2626,12 +2546,8 @@
           "name": "level_prerequisites_level_id_levels_id_fk",
           "tableFrom": "level_prerequisites",
           "tableTo": "levels",
-          "columnsFrom": [
-            "level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2639,12 +2555,8 @@
           "name": "level_prerequisites_prerequisite_level_id_levels_id_fk",
           "tableFrom": "level_prerequisites",
           "tableTo": "levels",
-          "columnsFrom": [
-            "prerequisite_level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["prerequisite_level_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2793,12 +2705,8 @@
           "name": "level_versions_level_id_levels_id_fk",
           "tableFrom": "level_versions",
           "tableTo": "levels",
-          "columnsFrom": [
-            "level_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["level_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2806,12 +2714,8 @@
           "name": "level_versions_lesson_version_id_lesson_versions_id_fk",
           "tableFrom": "level_versions",
           "tableTo": "lesson_versions",
-          "columnsFrom": [
-            "lesson_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lesson_version_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2953,12 +2857,8 @@
           "name": "levels_lesson_id_lessons_id_fk",
           "tableFrom": "levels",
           "tableTo": "lessons",
-          "columnsFrom": [
-            "lesson_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["lesson_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3135,12 +3035,8 @@
           "name": "skill_category_memberships_category_id_skill_categories_id_fk",
           "tableFrom": "skill_category_memberships",
           "tableTo": "skill_categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3148,12 +3044,8 @@
           "name": "skill_category_memberships_skill_id_skills_id_fk",
           "tableFrom": "skill_category_memberships",
           "tableTo": "skills",
-          "columnsFrom": [
-            "skill_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["skill_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3284,12 +3176,8 @@
           "name": "skill_category_versions_category_id_skill_categories_id_fk",
           "tableFrom": "skill_category_versions",
           "tableTo": "skill_categories",
-          "columnsFrom": [
-            "category_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["category_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

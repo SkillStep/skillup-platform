@@ -47,7 +47,8 @@ export const pilotLearningSeed = {
   objective: {
     id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa9",
     code: "INTERVIEW_EVIDENCE_01",
-    statement: "Distinguish a specific evidence-based interview answer from a broad unsupported claim.",
+    statement:
+      "Distinguish a specific evidence-based interview answer from a broad unsupported claim.",
   },
   challenges: [
     {
@@ -55,7 +56,8 @@ export const pilotLearningSeed = {
       versionId: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb2",
       slug: "choose-strongest-evidence",
       type: "multiple_choice" as const,
-      prompt: "Which response gives the strongest evidence that the candidate improves a work process?",
+      prompt:
+        "Which response gives the strongest evidence that the candidate improves a work process?",
       instruction: "Choose one answer.",
       explanation:
         "The strongest response names a concrete action and a result. General claims such as working hard do not show what changed.",
@@ -72,7 +74,8 @@ export const pilotLearningSeed = {
         {
           id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbb4",
           key: "evidence",
-          label: "I created a reusable reporting template that reduced our weekly preparation time.",
+          label:
+            "I created a reusable reporting template that reduced our weekly preparation time.",
           sortOrder: 2,
         },
         {

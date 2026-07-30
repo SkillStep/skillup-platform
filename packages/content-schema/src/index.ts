@@ -127,10 +127,9 @@ export type PublicChallenge = z.infer<typeof PublicChallengeSchema>;
 export const PrivateChallengeEvaluationSchema = z.object({
   challengeVersionId: z.string().uuid(),
   evaluator: z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/),
-  evaluation: z.record(z.string(), z.unknown()).refine(
-    (value) => Object.keys(value).length > 0,
-    "Private evaluation cannot be empty.",
-  ),
+  evaluation: z
+    .record(z.string(), z.unknown())
+    .refine((value) => Object.keys(value).length > 0, "Private evaluation cannot be empty."),
 });
 
 export const PublishedLevelPackageSchema = z.object({

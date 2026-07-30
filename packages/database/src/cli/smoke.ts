@@ -150,7 +150,9 @@ try {
     domain.publications !== 6 + pilotLearningSeed.challenges.length ||
     domain.forbidden_public_payloads !== 0
   ) {
-    throw new Error(`The reviewed pilot learning hierarchy is incomplete: ${JSON.stringify(domain)}`);
+    throw new Error(
+      `The reviewed pilot learning hierarchy is incomplete: ${JSON.stringify(domain)}`,
+    );
   }
 
   const negativeTestClient = await client.pool.connect();
@@ -234,17 +236,11 @@ try {
         );
         await negativeTestClient.query(
           "insert into level_prerequisites (level_id, prerequisite_level_id) values ($1, $2)",
-          [
-            "dddddddd-dddd-4ddd-8ddd-ddddddddddd3",
-            "dddddddd-dddd-4ddd-8ddd-ddddddddddd4",
-          ],
+          ["dddddddd-dddd-4ddd-8ddd-ddddddddddd3", "dddddddd-dddd-4ddd-8ddd-ddddddddddd4"],
         );
         await negativeTestClient.query(
           "insert into level_prerequisites (level_id, prerequisite_level_id) values ($1, $2)",
-          [
-            "dddddddd-dddd-4ddd-8ddd-ddddddddddd4",
-            "dddddddd-dddd-4ddd-8ddd-ddddddddddd3",
-          ],
+          ["dddddddd-dddd-4ddd-8ddd-ddddddddddd4", "dddddddd-dddd-4ddd-8ddd-ddddddddddd3"],
         );
       },
     );
@@ -274,7 +270,9 @@ try {
           "update challenge_versions set state = 'published', published_at = now() where id = $1",
           [versionId],
         );
-        await negativeTestClient.query("set constraints validate_published_challenge_trigger immediate");
+        await negativeTestClient.query(
+          "set constraints validate_published_challenge_trigger immediate",
+        );
       },
     );
   } finally {

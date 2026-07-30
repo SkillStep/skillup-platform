@@ -12,12 +12,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import {
-  learningPaths,
-  learningPathVersions,
-  skills,
-  skillVersions,
-} from "./schema.js";
+import { learningPaths, learningPathVersions, skills, skillVersions } from "./schema.js";
 
 const editorialStates = [
   "draft",
@@ -96,8 +91,14 @@ export const skillCategoryVersions = pgTable(
       "skill_category_versions_state_allowed",
       sql`${table.state} in ('draft', 'in_review', 'approved', 'scheduled', 'published', 'superseded', 'archived', 'rejected')`,
     ),
-    check("skill_category_versions_index_policy", sql`${table.indexPolicy} in ('index', 'noindex')`),
-    check("skill_category_versions_title_length", sql`char_length(${table.title}) between 3 and 100`),
+    check(
+      "skill_category_versions_index_policy",
+      sql`${table.indexPolicy} in ('index', 'noindex')`,
+    ),
+    check(
+      "skill_category_versions_title_length",
+      sql`char_length(${table.title}) between 3 and 100`,
+    ),
     check(
       "skill_category_versions_summary_length",
       sql`char_length(${table.summary}) between 40 and 300`,
@@ -181,8 +182,14 @@ export const learningModuleVersions = pgTable(
       "learning_module_versions_state_allowed",
       sql`${table.state} in ('draft', 'in_review', 'approved', 'scheduled', 'published', 'superseded', 'archived', 'rejected')`,
     ),
-    check("learning_module_versions_index_policy", sql`${table.indexPolicy} in ('index', 'noindex')`),
-    check("learning_module_versions_title_length", sql`char_length(${table.title}) between 3 and 120`),
+    check(
+      "learning_module_versions_index_policy",
+      sql`${table.indexPolicy} in ('index', 'noindex')`,
+    ),
+    check(
+      "learning_module_versions_title_length",
+      sql`char_length(${table.title}) between 3 and 120`,
+    ),
     check(
       "learning_module_versions_summary_length",
       sql`char_length(${table.summary}) between 40 and 300`,
@@ -312,7 +319,10 @@ export const levelVersions = pgTable(
       "level_versions_public_summary_length",
       sql`char_length(${table.publicSummary}) between 40 and 300`,
     ),
-    check("level_versions_instructions_length", sql`char_length(${table.instructions}) between 20 and 1000`),
+    check(
+      "level_versions_instructions_length",
+      sql`char_length(${table.instructions}) between 20 and 1000`,
+    ),
     check("level_versions_estimated_minutes", sql`${table.estimatedMinutes} between 1 and 20`),
     check(
       "level_versions_publication_metadata",
@@ -423,7 +433,10 @@ export const challengeVersions = pgTable(
       "challenge_versions_state_allowed",
       sql`${table.state} in ('draft', 'in_review', 'approved', 'scheduled', 'published', 'superseded', 'archived', 'rejected')`,
     ),
-    check("challenge_versions_prompt_length", sql`char_length(${table.prompt}) between 10 and 1000`),
+    check(
+      "challenge_versions_prompt_length",
+      sql`char_length(${table.prompt}) between 10 and 1000`,
+    ),
     check(
       "challenge_versions_instruction_length",
       sql`${table.instruction} is null or char_length(${table.instruction}) between 3 and 300`,
@@ -433,7 +446,10 @@ export const challengeVersions = pgTable(
       sql`char_length(${table.explanation}) between 20 and 1000`,
     ),
     check("challenge_versions_points_range", sql`${table.points} between 0 and 1000`),
-    check("challenge_versions_public_payload_object", sql`jsonb_typeof(${table.publicPayload}) = 'object'`),
+    check(
+      "challenge_versions_public_payload_object",
+      sql`jsonb_typeof(${table.publicPayload}) = 'object'`,
+    ),
     check(
       "challenge_versions_publication_metadata",
       sql`(${table.state} <> 'published') or (${table.reviewedAt} is not null and ${table.publishedAt} is not null)`,
@@ -464,7 +480,10 @@ export const challengeAnswerOptions = pgTable(
       table.sortOrder,
     ),
     check("challenge_answer_options_key_format", sql`${table.optionKey} ~ '^[a-z0-9_]{1,40}$'`),
-    check("challenge_answer_options_label_length", sql`char_length(${table.label}) between 1 and 500`),
+    check(
+      "challenge_answer_options_label_length",
+      sql`char_length(${table.label}) between 1 and 500`,
+    ),
     check(
       "challenge_answer_options_accessible_label_length",
       sql`${table.accessibleLabel} is null or char_length(${table.accessibleLabel}) between 1 and 500`,
@@ -480,9 +499,7 @@ export const challengeEvaluations = pgTable(
       .primaryKey()
       .references(() => challengeVersions.id, { onDelete: "cascade" }),
     evaluator: text("evaluator").notNull().default("deterministic_v1"),
-    privateEvaluation: jsonb("private_evaluation")
-      .$type<Record<string, unknown>>()
-      .notNull(),
+    privateEvaluation: jsonb("private_evaluation").$type<Record<string, unknown>>().notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -528,7 +545,10 @@ export const contentSourceReferences = pgTable(
       "content_source_references_kind_allowed",
       sql`${table.kind} in ('internal_editorial', 'primary', 'official', 'research')`,
     ),
-    check("content_source_references_title_length", sql`char_length(${table.title}) between 3 and 300`),
+    check(
+      "content_source_references_title_length",
+      sql`char_length(${table.title}) between 3 and 300`,
+    ),
     check(
       "content_source_references_external_url",
       sql`${table.url} is null or ${table.url} ~ '^https://[^[:space:]]+$'`,
