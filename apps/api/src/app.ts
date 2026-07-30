@@ -3,12 +3,14 @@ import { randomUUID } from "node:crypto";
 import { ApiErrorSchema, ServiceHealthSchema } from "@skillup/contracts";
 import Fastify, { type FastifyInstance } from "fastify";
 
+import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 
 export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
   now?: () => Date;
   readiness?: () => Promise<boolean>;
+  authService?: AuthService;
 }>;
 
 type NormalizedError = Readonly<{
@@ -60,7 +62,11 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
                 "res.headers.set-cookie",
                 "password",
                 "token",
+                "sessionToken",
+                "code",
                 "otp",
+                "secret",
+                "secretDigest",
               ],
               censor: "[redacted]",
             },
@@ -112,6 +118,10 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
     version: "0.0.0",
     releaseSha: config.RELEASE_SHA,
   }));
+
+  if (options.authService) {
+    registerAuthRoutes(app, { config, authService: options.authService });
+  }
 
   app.setNotFoundHandler(async (request, reply) => {
     return reply.status(404).send(
