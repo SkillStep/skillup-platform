@@ -1,0 +1,19 @@
+# Default ownership
+* @waseem99
+
+# Release, supply-chain and infrastructure controls
+/.github/ @waseem99
+/infra/ @waseem99
+/tools/ @waseem99
+/.env.example @waseem99
+/SECURITY.md @waseem99
+
+# Authentication, gameplay, progress and data integrity
+/apps/api/ @waseem99
+/packages/database/ @waseem99
+/packages/gameplay-engine/ @waseem99
+/packages/content-schema/ @waseem99
+
+# Public indexing, private-route boundaries and learner experience
+/apps/web/ @waseem99
+/packages/discoverability/ @waseem99

@@ -19,9 +19,12 @@ function rejectText(source, forbidden, label) {
 
 const packageJson = JSON.parse(read("package.json"));
 const workflow = read(".github/workflows/foundation.yml");
+const codeowners = read(".github/CODEOWNERS");
+const pullRequestTemplate = read(".github/pull_request_template.md");
 const webDockerfile = read("infra/docker/web.Dockerfile");
 const environmentExample = read(".env.example");
 const liveSmoke = read("tools/smoke-live.mjs");
+const secretScan = read("tools/scan-secrets.mjs");
 
 const requiredOperationsDocuments = [
   "docs/operations/PRODUCTION_READINESS.md",
@@ -49,6 +52,8 @@ requireText(
   "/workspace/apps/web/public ./apps/web/public",
   "web production Dockerfile",
 );
+requireText(workflow, "Reject high-severity production dependency findings", "Quality CI");
+requireText(workflow, "pnpm audit --prod --audit-level=high", "Quality CI");
 requireText(workflow, "Run production containers and end-to-end smoke", "Quality CI");
 requireText(workflow, "pnpm smoke:live", "Quality CI");
 requireText(workflow, "pnpm release:evidence", "Quality CI");
@@ -56,14 +61,22 @@ requireText(workflow, "actions/upload-artifact@", "Quality CI");
 rejectText(workflow, "skillup-api:latest", "Quality CI");
 rejectText(workflow, "skillup-web:latest", "Quality CI");
 
+requireText(codeowners, "/.github/", "CODEOWNERS");
+requireText(codeowners, "/apps/api/", "CODEOWNERS");
+requireText(codeowners, "/packages/database/", "CODEOWNERS");
+requireText(pullRequestTemplate, "## Risk review", "pull request template");
+requireText(pullRequestTemplate, "## Deployment and recovery", "pull request template");
+requireText(secretScan, "PRIVATE KEY", "committed-secret scan");
+requireText(secretScan, "GitHub token", "committed-secret scan");
+
 requireText(liveSmoke, "Content-Security-Policy", "live production smoke");
 requireText(liveSmoke, "Strict-Transport-Security", "live production smoke");
 requireText(liveSmoke, "robots.txt", "live production smoke");
 requireText(liveSmoke, "sitemap.xml", "live production smoke");
 requireText(liveSmoke, "Skip to main content", "live production smoke");
 
-if (!packageJson.scripts?.["production:check"] || !packageJson.scripts?.["release:evidence"]) {
-  throw new Error("Root scripts must expose production:check and release:evidence.");
+for (const script of ["production:check", "security:secrets", "release:evidence"]) {
+  if (!packageJson.scripts?.[script]) throw new Error(`Root scripts must expose ${script}.`);
 }
 
 console.log("SkillUp pre-deployment production-readiness contract passed.");
