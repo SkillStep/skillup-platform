@@ -1,3 +1,5 @@
+import path from "node:path";
+
 import type { NextConfig } from "next";
 
 const privateRouteHeaders = [
@@ -8,6 +10,7 @@ const privateRouteHeaders = [
 const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd(), "../.."),
   poweredByHeader: false,
   reactStrictMode: true,
   transpilePackages: ["@skillup/discoverability", "@skillup/ui"],
