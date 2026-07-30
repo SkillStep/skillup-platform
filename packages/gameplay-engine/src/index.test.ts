@@ -200,7 +200,7 @@ describe("deterministic challenge evaluation", () => {
       challenge: multipleChoiceChallenge,
       privateEvaluation: { correctOptionKeys: ["evidence"] },
       response: { type: "multiple_choice", selectedOptionKeys: ["evidence"] },
-      explanation: "Specific actions and results provide stronger evidence than broad claims.",
+      explanation: "Specific actions and results are stronger than broad claims.",
       attemptNumber: 1,
       maxAttempts: 2,
       evaluatedAt,
