@@ -72,6 +72,14 @@ function requireContains(actual, expected, label) {
   if (!actual.includes(expected)) throw new Error(`${label} must contain ${expected}.`);
 }
 
+function requirePublicCacheBoundary(response, label) {
+  requireEqual(response.headers.get("x-skillup-cacheable"), "public", `${label} cache boundary`);
+  const cacheControl = (response.headers.get("cache-control") ?? "").toLowerCase();
+  if (cacheControl.includes("private") || cacheControl.includes("no-store")) {
+    throw new Error(`${label} unexpectedly uses a private cache policy: ${cacheControl}`);
+  }
+}
+
 const webHealth = await json("/api/health");
 requireEqual(webHealth.body.status, "ok", "Web health status");
 requireEqual(webHealth.body.service, "skillup-web", "Web health service");
@@ -85,6 +93,51 @@ const homepage = await request("/en", { accept: "text/html" });
 const homepageHtml = await homepage.text();
 requireContains(homepageHtml, "Learn useful skills in short, focused games.", "Homepage HTML");
 requireContains(homepageHtml, "Practical learning for Pakistan", "Homepage positioning");
+requirePublicCacheBoundary(homepage, "Homepage");
+
+const skills = await request("/en/skills", { accept: "text/html" });
+const skillsHtml = await skills.text();
+for (const title of [
+  "Interview and Workplace Communication",
+  "Practical English for Study and Work",
+  "AI Tools for Study and Work",
+  "Freelancing Foundations",
+  "Digital Marketing Foundations",
+]) {
+  requireContains(skillsHtml, title, "Server-rendered skill catalog");
+}
+requireContains(skillsHtml, 'application/ld+json', "Skill catalog structured data");
+requirePublicCacheBoundary(skills, "Skill catalog");
+
+const pilotSkill = await request("/en/skills/interview-workplace-communication", {
+  accept: "text/html",
+});
+const pilotSkillHtml = await pilotSkill.text();
+requireContains(pilotSkillHtml, "Answer common interview questions with evidence.", "Pilot skill outcomes");
+requireContains(pilotSkillHtml, "LearningResource", "Pilot skill structured data");
+requirePublicCacheBoundary(pilotSkill, "Pilot skill");
+
+const pilotPath = await request("/en/paths/interview-workplace-communication", {
+  accept: "text/html",
+});
+const pilotPathHtml = await pilotPath.text();
+requireContains(pilotPathHtml, "Interview answers with evidence", "Pilot path modules");
+requireContains(pilotPathHtml, '"@type":"Course"', "Pilot path course data");
+requirePublicCacheBoundary(pilotPath, "Pilot path");
+
+const manifest = await json("/manifest.webmanifest");
+requireEqual(manifest.body.display, "standalone", "PWA display mode");
+requireEqual(manifest.body.start_url, "/en", "PWA start URL");
+if (!Array.isArray(manifest.body.icons) || manifest.body.icons.length < 2) {
+  throw new Error("PWA manifest must expose standard and maskable icons.");
+}
+
+const serviceWorker = await request("/sw.js", { accept: "application/javascript" });
+const serviceWorkerSource = await serviceWorker.text();
+for (const privatePrefix of ["/api", "/en/sign-in", "/en/progress", "/en/learn"]) {
+  requireContains(serviceWorkerSource, `"${privatePrefix}"`, "Service-worker private boundary");
+}
+requireContains(serviceWorkerSource, 'cacheBoundary === "public"', "Service-worker public boundary");
 
 const progress = await request("/en/progress", { accept: "text/html" });
 requireContains(
@@ -97,6 +150,9 @@ requireContains(
   "no-store",
   "Private progress cache policy",
 );
+if (progress.headers.get("x-skillup-cacheable")) {
+  throw new Error("Private progress must never declare the public service-worker cache boundary.");
+}
 
 const proxyHealth = await json("/api/v1/health");
 requireEqual(proxyHealth.body.status, "ok", "Proxied API health status");
@@ -143,6 +199,10 @@ console.log(
       checks: [
         "web health",
         "server-rendered homepage",
+        "public skill catalog and detail HTML",
+        "visible-content-matched structured data",
+        "installable PWA manifest and service worker",
+        "explicit public cache boundary",
         "private progress noindex/no-store",
         "API liveness through same-origin proxy",
         "database-backed readiness",
