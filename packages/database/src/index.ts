@@ -19,7 +19,7 @@ export type DatabaseClientOptions = Readonly<{
 }>;
 
 export function requireDatabaseUrl(environment: NodeJS.ProcessEnv = process.env): string {
-  const value = environment.DATABASE_URL;
+  const value = environment["DATABASE_URL"];
   if (!value) throw new Error("DATABASE_URL is required.");
 
   const parsed = new URL(value);
