@@ -1,10 +1,9 @@
 import { spawn } from "node:child_process";
-import { setTimeout as delay } from "node:timers/promises";
 import process from "node:process";
+import { setTimeout as delay } from "node:timers/promises";
 
 const port = 3101;
-const command = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
-const child = spawn(command, ["--filter", "@skillup/api", "start"], {
+const child = spawn(process.execPath, ["apps/api/dist/index.js"], {
   env: {
     ...process.env,
     API_HOST: "127.0.0.1",
@@ -31,6 +30,9 @@ async function stop() {
       if (child.exitCode === null) child.kill("SIGKILL");
     }),
   ]);
+
+  child.stdout.destroy();
+  child.stderr.destroy();
 }
 
 try {
@@ -58,7 +60,9 @@ try {
   }
 
   const ready = await readyResponse.json();
-  const healthResponse = await fetch(`http://127.0.0.1:${port}/v1/health`);
+  const healthResponse = await fetch(`http://127.0.0.1:${port}/v1/health`, {
+    signal: AbortSignal.timeout(1_000),
+  });
   const health = await healthResponse.json();
 
   if (ready.status !== "ok" || health.status !== "ok") {
