@@ -12,6 +12,8 @@ type PageProps = Readonly<{
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
+export const dynamic = "force-dynamic";
+
 export function generateStaticParams() {
   return [{ locale: "en" }];
 }
@@ -158,12 +160,12 @@ export default async function EnglishHomePage({ params }: PageProps) {
           <p className="eyebrow">Closed beta preparation</p>
           <h2 id="early-access-title">Help shape SkillUp for Pakistani learners.</h2>
           <p>
-            Secure account and onboarding flows are now being connected. Email delivery will open
-            only after sender-domain, abuse-control and privacy gates pass.
+            Secure account, onboarding, gameplay and progress flows are ready for staged testing.
+            Production sign-in email activates only with an approved sender domain and SMTP account.
           </p>
         </div>
         <Link className="button button-light" href="/en/sign-in">
-          Preview account setup
+          Start account setup
         </Link>
       </section>
 
