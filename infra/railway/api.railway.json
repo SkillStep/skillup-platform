@@ -14,9 +14,7 @@
     ]
   },
   "deploy": {
-    "preDeployCommand": [
-      "node node_modules/@skillup/database/dist/cli/migrate.js"
-    ],
+    "preDeployCommand": ["node node_modules/@skillup/database/dist/cli/migrate.js"],
     "healthcheckPath": "/v1/ready",
     "healthcheckTimeout": 180,
     "restartPolicyType": "ON_FAILURE",

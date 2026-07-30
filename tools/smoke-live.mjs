@@ -6,7 +6,11 @@ const timeoutMilliseconds = Number(process.env["SKILLUP_SMOKE_TIMEOUT_MS"] ?? 15
 if (!webUrlInput) {
   throw new Error("SKILLUP_WEB_URL is required, for example https://staging.skillup.example.");
 }
-if (!Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1_000 || timeoutMilliseconds > 60_000) {
+if (
+  !Number.isInteger(timeoutMilliseconds) ||
+  timeoutMilliseconds < 1_000 ||
+  timeoutMilliseconds > 60_000
+) {
   throw new Error("SKILLUP_SMOKE_TIMEOUT_MS must be an integer between 1000 and 60000.");
 }
 
@@ -43,7 +47,9 @@ async function request(path, options = {}) {
 
   if (response.status !== (options.status ?? 200)) {
     const body = (await response.text()).slice(0, 300);
-    throw new Error(`${url} returned ${response.status}; expected ${options.status ?? 200}. Body: ${body}`);
+    throw new Error(
+      `${url} returned ${response.status}; expected ${options.status ?? 200}. Body: ${body}`,
+    );
   }
   return response;
 }
@@ -58,7 +64,8 @@ async function json(path, options = {}) {
 }
 
 function requireEqual(actual, expected, label) {
-  if (actual !== expected) throw new Error(`${label}: expected ${expected}, received ${String(actual)}.`);
+  if (actual !== expected)
+    throw new Error(`${label}: expected ${expected}, received ${String(actual)}.`);
 }
 
 function requireContains(actual, expected, label) {
@@ -68,7 +75,11 @@ function requireContains(actual, expected, label) {
 const webHealth = await json("/api/health");
 requireEqual(webHealth.body.status, "ok", "Web health status");
 requireEqual(webHealth.body.service, "skillup-web", "Web health service");
-requireContains(webHealth.response.headers.get("cache-control") ?? "", "no-store", "Web health cache policy");
+requireContains(
+  webHealth.response.headers.get("cache-control") ?? "",
+  "no-store",
+  "Web health cache policy",
+);
 
 const homepage = await request("/en", { accept: "text/html" });
 const homepageHtml = await homepage.text();
@@ -90,7 +101,11 @@ requireContains(
 const proxyHealth = await json("/api/v1/health");
 requireEqual(proxyHealth.body.status, "ok", "Proxied API health status");
 requireEqual(proxyHealth.body.service, "skillup-api", "Proxied API health service");
-requireContains(proxyHealth.response.headers.get("cache-control") ?? "", "no-store", "API cache policy");
+requireContains(
+  proxyHealth.response.headers.get("cache-control") ?? "",
+  "no-store",
+  "API cache policy",
+);
 
 const proxyReady = await json("/api/v1/ready");
 requireEqual(proxyReady.body.status, "ok", "Proxied API readiness");
@@ -101,7 +116,11 @@ requireEqual(proxyVersion.body.service, "skillup-api", "Proxied API version serv
 if (directApiBase) {
   const directHealth = await json("/v1/health", { base: directApiBase });
   requireEqual(directHealth.body.status, "ok", "Direct API health status");
-  requireEqual(directHealth.body.releaseSha, proxyHealth.body.releaseSha, "Direct/proxied API release SHA");
+  requireEqual(
+    directHealth.body.releaseSha,
+    proxyHealth.body.releaseSha,
+    "Direct/proxied API release SHA",
+  );
 }
 
 const webRelease = webHealth.body.releaseSha;
