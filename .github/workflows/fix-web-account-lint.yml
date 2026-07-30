@@ -38,3 +38,5 @@ jobs:
             git commit -m "style: apply account-flow lint fixes"
             git push origin HEAD:feat/20-web-sign-in-onboarding
           fi
+
+      # Temporary single-run fixer; delete after it writes the branch.
