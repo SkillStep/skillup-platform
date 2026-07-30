@@ -8,13 +8,7 @@ export type BrandMarkProps = Readonly<{
 export function BrandMark({ compact = false, className }: BrandMarkProps): ReactNode {
   return (
     <span className={className} role="img" aria-label="SkillUp">
-      <svg
-        aria-hidden="true"
-        focusable="false"
-        viewBox="0 0 44 44"
-        width="44"
-        height="44"
-      >
+      <svg aria-hidden="true" focusable="false" viewBox="0 0 44 44" width="44" height="44">
         <rect x="4" y="24" width="12" height="12" rx="4" fill="currentColor" opacity="0.45" />
         <rect x="16" y="16" width="12" height="12" rx="4" fill="currentColor" opacity="0.72" />
         <path
