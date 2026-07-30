@@ -10,6 +10,35 @@ export type BuildApiOptions = Readonly<{
   now?: () => Date;
 }>;
 
+type NormalizedError = Readonly<{
+  statusCode: number;
+  message: string;
+}>;
+
+function normalizeError(error: unknown): NormalizedError {
+  let candidateStatusCode: number | undefined;
+  let candidateMessage = "The request could not be completed.";
+
+  if (error instanceof Error) {
+    candidateMessage = error.message;
+
+    if ("statusCode" in error) {
+      const statusCode = (error as Error & { statusCode?: unknown }).statusCode;
+      if (typeof statusCode === "number") candidateStatusCode = statusCode;
+    }
+  }
+
+  const statusCode =
+    candidateStatusCode !== undefined && candidateStatusCode >= 400 && candidateStatusCode < 500
+      ? candidateStatusCode
+      : 500;
+
+  return {
+    statusCode,
+    message: statusCode < 500 ? candidateMessage : "An unexpected server error occurred.",
+  };
+}
+
 export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   const config = options.config ?? readApiConfig();
   const now = options.now ?? (() => new Date());
@@ -84,14 +113,12 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
 
   app.setErrorHandler(async (error, request, reply) => {
     request.log.error({ error, requestId: request.id }, "API request failed");
+    const normalized = normalizeError(error);
 
-    const statusCode = error.statusCode && error.statusCode < 500 ? error.statusCode : 500;
-    const message = statusCode < 500 ? error.message : "An unexpected server error occurred.";
-
-    return reply.status(statusCode).send(
+    return reply.status(normalized.statusCode).send(
       ApiErrorSchema.parse({
-        code: statusCode < 500 ? "request_error" : "internal_error",
-        message,
+        code: normalized.statusCode < 500 ? "request_error" : "internal_error",
+        message: normalized.message,
         requestId: request.id,
       }),
     );
