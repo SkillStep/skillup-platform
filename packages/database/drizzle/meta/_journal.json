@@ -36,6 +36,13 @@
       "when": 1785420540000,
       "tag": "0004_steady_compass",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1785421080000,
+      "tag": "0005_reward_guardian",
+      "breakpoints": true
     }
   ]
 }
