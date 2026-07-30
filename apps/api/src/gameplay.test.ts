@@ -102,7 +102,7 @@ function createGameplayService(): GameplayService {
       result: {
         challengeId,
         challengeVersionId,
-        status: "correct",
+        status: "correct" as const,
         awardedPoints: 10,
         maxPoints: 10,
         explanation: "Specific actions and results provide stronger evidence than broad claims.",
