@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/:locale(en|ur)/(sign-in|onboarding)",
+        source: "/:locale(en|ur)/(sign-in|onboarding|progress)",
         headers: privateRouteHeaders,
       },
       {

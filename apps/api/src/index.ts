@@ -4,6 +4,7 @@ import { buildApi } from "./app.js";
 import { createAuthService, createUnavailableAuthCodeDelivery } from "./auth.js";
 import { readApiConfig } from "./config.js";
 import { createGameplayService } from "./gameplay.js";
+import { createProgressService } from "./progress.js";
 
 const config = readApiConfig();
 const database = createDatabaseClient({
@@ -20,11 +21,13 @@ const authService = createAuthService({
   delivery: createUnavailableAuthCodeDelivery(),
 });
 const gameplayService = createGameplayService({ pool: database.pool });
+const progressService = createProgressService({ pool: database.pool });
 const app = buildApi({
   config,
   readiness: database.ping,
   authService,
   gameplayService,
+  progressService,
 });
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {

@@ -45,6 +45,7 @@ export default async function EnglishHomePage({ params }: PageProps) {
         <nav aria-label="Primary navigation" className="primary-nav">
           <a href="#paths">Explore skills</a>
           <a href="#how-it-works">How it works</a>
+          <Link href="/en/progress">Your progress</Link>
           <Link className="nav-action" href="/en/sign-in">
             Sign in
           </Link>
