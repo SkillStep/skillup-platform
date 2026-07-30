@@ -1,3 +1,5 @@
+import { eq } from "drizzle-orm";
+
 import {
   challengeAnswerOptions,
   challengeEvaluations,
@@ -205,10 +207,10 @@ try {
         publicSummary: pilot.level.publicSummary,
         instructions: pilot.level.instructions,
         estimatedMinutes: pilot.level.estimatedMinutes,
-        state: "published",
+        state: "approved",
         indexPolicy: "noindex",
         reviewedAt: pilot.reviewedAt,
-        publishedAt: pilot.reviewedAt,
+        publishedAt: null,
       })
       .onConflictDoNothing();
 
@@ -249,9 +251,9 @@ try {
           explanation: challenge.explanation,
           publicPayload: challenge.publicPayload,
           points: challenge.points,
-          state: "published",
+          state: "approved",
           reviewedAt: pilot.reviewedAt,
-          publishedAt: pilot.reviewedAt,
+          publishedAt: null,
         })
         .onConflictDoNothing();
 
@@ -276,6 +278,11 @@ try {
           privateEvaluation: challenge.privateEvaluation,
         })
         .onConflictDoNothing();
+
+      await transaction
+        .update(challengeVersions)
+        .set({ state: "published", publishedAt: pilot.reviewedAt })
+        .where(eq(challengeVersions.id, challenge.versionId));
     }
 
     await transaction
@@ -289,6 +296,11 @@ try {
         sortOrder: 1,
       })
       .onConflictDoNothing();
+
+    await transaction
+      .update(levelVersions)
+      .set({ state: "published", publishedAt: pilot.reviewedAt })
+      .where(eq(levelVersions.id, pilot.level.versionId));
 
     const publicationRecords = [
       {
