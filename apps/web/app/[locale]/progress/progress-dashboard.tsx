@@ -202,7 +202,11 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
       <section className={styles["loading"]} role="alert">
         <h1>Your progress is unavailable</h1>
         <p>{message ?? "The private progress record could not be loaded safely."}</p>
-        <button className={styles["primaryButton"]} type="button" onClick={() => void loadDashboard(period, true)}>
+        <button
+          className={styles["primaryButton"]}
+          type="button"
+          onClick={() => void loadDashboard(period, true)}
+        >
           Try again
         </button>
       </section>
@@ -216,8 +220,8 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
           <p className={styles["eyebrow"]}>Private learning record</p>
           <h1 id="progress-title">Your progress, clearly explained.</h1>
           <p className={styles["summary"]}>
-            Points, streaks and achievements are calculated from verified server events. Device clock
-            changes and replayed requests cannot add rewards.
+            Points, streaks and achievements are calculated from verified server events. Device
+            clock changes and replayed requests cannot add rewards.
           </p>
         </div>
         <span className={styles["tierBadge"]}>{summary.capabilities.tier} progress view</span>
@@ -247,8 +251,8 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
             <p className={styles["eyebrow"]}>Continue learning</p>
             <h2 id="resume-title">{summary.resume.title}</h2>
             <p>
-              Challenge {summary.resume.currentChallengeOrdinal + 1} · {summary.resume.awardedPoints}/
-              {summary.resume.maxPoints} points saved
+              Challenge {summary.resume.currentChallengeOrdinal + 1} ·{" "}
+              {summary.resume.awardedPoints}/{summary.resume.maxPoints} points saved
             </p>
           </div>
           <button className={styles["primaryButton"]} type="button" onClick={resumeLevel}>
@@ -281,7 +285,9 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
               ))}
             </ul>
           ) : (
-            <p className={styles["empty"]}>Complete a reviewed level to create your first progress record.</p>
+            <p className={styles["empty"]}>
+              Complete a reviewed level to create your first progress record.
+            </p>
           )}
         </section>
 
@@ -306,7 +312,9 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
               ))}
             </ul>
           ) : (
-            <p className={styles["empty"]}>Your first verified completion can unlock an achievement.</p>
+            <p className={styles["empty"]}>
+              Your first verified completion can unlock an achievement.
+            </p>
           )}
         </section>
       </div>
@@ -324,7 +332,9 @@ export function ProgressDashboard({ locale }: ProgressDashboardProps) {
             <ul className={styles["ledgerList"]}>
               {ledger.entries.map((entry) => (
                 <li key={entry.id}>
-                  <span className={entry.pointsDelta >= 0 ? styles["positive"] : styles["negative"]}>
+                  <span
+                    className={entry.pointsDelta >= 0 ? styles["positive"] : styles["negative"]}
+                  >
                     {entry.pointsDelta > 0 ? "+" : ""}
                     {entry.pointsDelta}
                   </span>

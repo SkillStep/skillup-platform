@@ -136,12 +136,12 @@ describe("private progress routes", () => {
     const app = createTestApi(createAuthService(), progressService);
     const headers = { cookie: "skillup_session=browser-session-token" };
 
-    expect((await app.inject({ method: "GET", url: "/v1/progress/summary", headers })).statusCode).toBe(
-      200,
-    );
-    expect((await app.inject({ method: "GET", url: "/v1/progress/ledger", headers })).statusCode).toBe(
-      200,
-    );
+    expect(
+      (await app.inject({ method: "GET", url: "/v1/progress/summary", headers })).statusCode,
+    ).toBe(200);
+    expect(
+      (await app.inject({ method: "GET", url: "/v1/progress/ledger", headers })).statusCode,
+    ).toBe(200);
     expect(progressService.summary).toHaveBeenCalledWith(learner.id);
     expect(progressService.ledger).toHaveBeenCalledWith(learner.id);
   });

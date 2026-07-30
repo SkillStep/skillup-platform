@@ -142,7 +142,8 @@ export function applyQualifiedActivity(
     graceCredits: snapshot.graceCredits,
     eventType: "qualified",
     changed: true,
-    explanation: "The previous streak ended after missed local days, and verified activity started a new one.",
+    explanation:
+      "The previous streak ended after missed local days, and verified activity started a new one.",
   };
 }
 

@@ -127,10 +127,10 @@ try {
       );
     }
 
-    await database.query(
-      "update level_play_sessions set last_activity_at = $2 where id = $1",
-      [sessionId, new Date("2026-07-30T12:05:00.000Z")],
-    );
+    await database.query("update level_play_sessions set last_activity_at = $2 where id = $1", [
+      sessionId,
+      new Date("2026-07-30T12:05:00.000Z"),
+    ]);
     const duplicateCounts = await database.query<{
       ledger: number;
       streaks: number;

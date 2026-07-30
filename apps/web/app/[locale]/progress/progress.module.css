@@ -119,9 +119,7 @@
 
 .resumeCard {
   align-items: center;
-  background:
-    linear-gradient(120deg, rgba(224, 231, 255, 0.96), rgba(236, 252, 203, 0.88)),
-    white;
+  background: linear-gradient(120deg, rgba(224, 231, 255, 0.96), rgba(236, 252, 203, 0.88)), white;
   display: flex;
   gap: 1.5rem;
   justify-content: space-between;

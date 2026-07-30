@@ -172,7 +172,10 @@ type BadgeDefinitionRow = Readonly<{
 }>;
 
 function stableAlias(userId: string): string {
-  const suffix = createHash("sha256").update(`skillup-leaderboard:${userId}`).digest("hex").slice(0, 10);
+  const suffix = createHash("sha256")
+    .update(`skillup-leaderboard:${userId}`)
+    .digest("hex")
+    .slice(0, 10);
   return `Learner-${suffix}`;
 }
 
@@ -710,7 +713,8 @@ export function createProgressService(
           [userId, timezone, leaderboardOptIn, leaderboardAlias, now()],
         );
         const settings = updated.rows[0];
-        if (!settings) throw new ProgressServiceError(500, "Progress settings could not be updated.");
+        if (!settings)
+          throw new ProgressServiceError(500, "Progress settings could not be updated.");
 
         await database.query(
           `insert into learner_streaks
@@ -775,7 +779,9 @@ export function registerProgressRoutes(
 
   app.get("/v1/progress/leaderboard", async (request) => {
     await requireLearner(request, options.config, options.authService);
-    const query = z.object({ period: LeaderboardPeriodSchema.default("week") }).parse(request.query);
+    const query = z
+      .object({ period: LeaderboardPeriodSchema.default("week") })
+      .parse(request.query);
     return options.progressService.leaderboard(query.period);
   });
 

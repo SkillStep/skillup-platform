@@ -21,12 +21,7 @@ import { users } from "./schema.js";
 const enrollmentStates = ["enrolled", "in_progress", "completed", "paused"] as const;
 const progressTiers = ["free", "premium"] as const;
 const leaderboardStatuses = ["eligible", "suspended"] as const;
-const pointsSourceTypes = [
-  "level_completion",
-  "badge",
-  "manual_adjustment",
-  "correction",
-] as const;
+const pointsSourceTypes = ["level_completion", "badge", "manual_adjustment", "correction"] as const;
 const streakEventTypes = ["qualified", "grace", "correction"] as const;
 const badgeStates = ["active", "retired"] as const;
 const badgeRuleKinds = ["first_level", "perfect_level", "streak_days", "points_total"] as const;
@@ -92,7 +87,10 @@ export const learnerProgressSettings = pgTable(
   },
   (table) => [
     uniqueIndex("learner_progress_settings_alias_unique").on(table.leaderboardAlias),
-    check("learner_progress_settings_timezone_length", sql`char_length(${table.timezone}) between 3 and 64`),
+    check(
+      "learner_progress_settings_timezone_length",
+      sql`char_length(${table.timezone}) between 3 and 64`,
+    ),
     check(
       "learner_progress_settings_timezone_format",
       sql`${table.timezone} ~ '^[A-Za-z0-9_+./-]+$'`,
