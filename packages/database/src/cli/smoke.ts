@@ -59,8 +59,34 @@ try {
     throw new Error("The immutable pilot skill version is missing or invalid.");
   }
 
+  const identityCounts = await client.pool.query<{
+    users: number;
+    identities: number;
+    challenges: number;
+    sessions: number;
+    profiles: number;
+  }>(`select
+      (select count(*)::int from users) as users,
+      (select count(*)::int from user_email_identities) as identities,
+      (select count(*)::int from auth_challenges) as challenges,
+      (select count(*)::int from auth_sessions) as sessions,
+      (select count(*)::int from learner_profiles) as profiles`);
+  const identity = identityCounts.rows[0];
+  if (
+    !identity ||
+    identity.users !== 0 ||
+    identity.identities !== 0 ||
+    identity.challenges !== 0 ||
+    identity.sessions !== 0 ||
+    identity.profiles !== 0
+  ) {
+    throw new Error(
+      "Identity tables must exist and remain empty after the synthetic catalog seed.",
+    );
+  }
+
   console.log(
-    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, one published pilot).`,
+    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, one published pilot, secure identity schema ready).`,
   );
 } finally {
   await client.close();

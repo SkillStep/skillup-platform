@@ -22,11 +22,13 @@ jobs:
     env:
       APP_ENV: test
       AI_PROVIDER: disabled
+      EMAIL_PROVIDER: disabled
       DATABASE_URL: postgresql://skillup_local:skillup_local_only@127.0.0.1:5432/skillup
       POSTGRES_DB: skillup
       POSTGRES_USER: skillup_local
       POSTGRES_PASSWORD: skillup_local_only
       PUBLIC_APP_URL: https://skillup.example
+      SESSION_SECRET: ci-only-session-secret-at-least-32-random-bytes
       RELEASE_SHA: ${{ github.sha }}
 
     steps:
