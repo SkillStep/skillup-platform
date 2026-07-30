@@ -2,7 +2,7 @@
 
 import { type FormEvent, useId, useState } from "react";
 
-import { withReturnTo } from "../../../../lib/return-to";
+import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
 type ApiError = Readonly<{
