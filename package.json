@@ -27,6 +27,7 @@
     "db:migrate": "pnpm --filter @skillup/database db:migrate",
     "db:seed": "pnpm --filter @skillup/database db:seed",
     "db:smoke": "pnpm --filter @skillup/database db:smoke",
+    "smoke:api": "node tools/smoke-api.mjs",
     "local:setup": "pnpm infra:up && pnpm db:wait && pnpm db:migrate && pnpm db:seed && pnpm db:smoke",
     "infra:up": "docker compose -f infra/compose.yaml up -d",
     "infra:down": "docker compose -f infra/compose.yaml down",
