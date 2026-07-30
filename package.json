@@ -9,7 +9,7 @@
     "pnpm": "11.17.x"
   },
   "scripts": {
-    "shared:build": "pnpm --filter @skillup/contracts --filter @skillup/content-schema --filter @skillup/discoverability --filter @skillup/analytics --filter @skillup/ui --filter @skillup/database build",
+    "shared:build": "pnpm --filter @skillup/contracts --filter @skillup/content-schema --filter @skillup/gameplay-engine --filter @skillup/discoverability --filter @skillup/analytics --filter @skillup/ui --filter @skillup/database build",
     "dev": "pnpm shared:build && pnpm --parallel --filter @skillup/api --filter @skillup/web dev",
     "dev:web": "pnpm shared:build && pnpm --filter @skillup/web dev",
     "dev:api": "pnpm shared:build && pnpm --filter @skillup/api dev",
