@@ -9,6 +9,9 @@ import {
 } from "../index.js";
 import { launchCatalogSeed } from "../seed-data.js";
 
+const pilotSeed = launchCatalogSeed.find((item) => item.skill.status === "published");
+if (!pilotSeed) throw new Error("A published pilot seed is required.");
+
 const client = createDatabaseClient({
   connectionString: requireDatabaseUrl(),
   applicationName: "skillup-db-smoke",
@@ -27,7 +30,7 @@ try {
   const pilotVersions = await client.db
     .select({ title: skillVersions.title, version: skillVersions.version })
     .from(skillVersions)
-    .where(eq(skillVersions.skillId, launchCatalogSeed[0].skill.id));
+    .where(eq(skillVersions.skillId, pilotSeed.skill.id));
 
   if (skillCount?.value !== launchCatalogSeed.length) {
     throw new Error(
