@@ -1,6 +1,7 @@
 import { createDatabaseClient } from "@skillup/database";
 
 import { buildApi } from "./app.js";
+import { createAuthService, createUnavailableAuthCodeDelivery } from "./auth.js";
 import { readApiConfig } from "./config.js";
 
 const config = readApiConfig();
@@ -9,7 +10,15 @@ const database = createDatabaseClient({
   maxConnections: config.DATABASE_MAX_CONNECTIONS,
   applicationName: "skillup-api",
 });
-const app = buildApi({ config, readiness: database.ping });
+const authService = createAuthService({
+  pool: database.pool,
+  secret: config.SESSION_SECRET,
+  challengeMinutes: config.AUTH_CHALLENGE_MINUTES,
+  sessionIdleMinutes: config.SESSION_IDLE_MINUTES,
+  sessionAbsoluteHours: config.SESSION_ABSOLUTE_HOURS,
+  delivery: createUnavailableAuthCodeDelivery(),
+});
+const app = buildApi({ config, readiness: database.ping, authService });
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   app.log.info({ signal }, "Shutting down SkillUp API");
