@@ -11,8 +11,10 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@skillup/content-schema": "workspace:*",
     "@skillup/contracts": "workspace:*",
     "@skillup/database": "workspace:*",
+    "@skillup/gameplay-engine": "workspace:*",
     "fastify": "5.10.0",
     "zod": "4.4.3"
   },
