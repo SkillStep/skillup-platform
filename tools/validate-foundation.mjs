@@ -21,7 +21,7 @@ const requiredFiles = [
   "docs/product/PRODUCT_SPEC.md",
   "docs/architecture/ARCHITECTURE.md",
   "docs/discoverability/SEO_AEO_GEO_STANDARD.md",
-  "docs/design/DESIGN_ACCESSIBILITY_PERFORMANCE_STANDARD.md"
+  "docs/design/DESIGN_ACCESSIBILITY_PERFORMANCE_STANDARD.md",
 ];
 
 const requiredDirectories = [
@@ -35,7 +35,7 @@ const requiredDirectories = [
   "packages/analytics",
   "content",
   "infra",
-  "docs"
+  "docs",
 ];
 
 async function exists(path) {
@@ -74,7 +74,7 @@ const forbiddenSecretPatterns = [
   /\bglpat-[A-Za-z0-9_-]{20,}\b/,
   /\bsk-[A-Za-z0-9_-]{20,}\b/,
   /\bAKIA[0-9A-Z]{16}\b/,
-  /mongodb\+srv:\/\/[^:\s]+:[^@\s]+@/i
+  /mongodb\+srv:\/\/[^:\s]+:[^@\s]+@/i,
 ];
 
 const ignoredDirectories = new Set([
@@ -85,7 +85,7 @@ const ignoredDirectories = new Set([
   "build",
   "coverage",
   ".venv",
-  "__pycache__"
+  "__pycache__",
 ]);
 
 async function walk(directory) {
@@ -108,7 +108,9 @@ for (const file of files) {
   const fileName = basename(file);
 
   if ((fileName === ".env" || fileName.startsWith(".env.")) && fileName !== ".env.example") {
-    failures.push(`Tracked/local runtime environment file found in validation scope: ${relativePath}`);
+    failures.push(
+      `Tracked/local runtime environment file found in validation scope: ${relativePath}`,
+    );
   }
 
   if (/\.(?:png|jpe?g|gif|webp|ico|pdf|zip|woff2?)$/i.test(fileName)) continue;
@@ -132,7 +134,7 @@ for (const file of files) {
 const bootstrapModes = new Set(["--format", "--lint", "--types", "--test", "--build"]);
 if (bootstrapModes.has(mode)) {
   notices.push(
-    `${mode.slice(2)} currently validates the repository foundation only; application-specific checks become mandatory when each package is scaffolded.`
+    `${mode.slice(2)} currently validates the repository foundation only; application-specific checks become mandatory when each package is scaffolded.`,
   );
 }
 
@@ -144,5 +146,7 @@ if (failures.length > 0) {
   for (const failure of failures) console.error(`[failure] ${failure}`);
   process.exitCode = 1;
 } else {
-  console.log(`SkillUp foundation validation passed (${files.length} files checked, mode ${mode}).`);
+  console.log(
+    `SkillUp foundation validation passed (${files.length} files checked, mode ${mode}).`,
+  );
 }

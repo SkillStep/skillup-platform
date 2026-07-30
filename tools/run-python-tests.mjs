@@ -10,7 +10,8 @@ const environment = {
   RELEASE_SHA: process.env.RELEASE_SHA ?? "local",
 };
 
-const candidates = process.platform === "win32" ? [["py", "-3.13"], ["python"]] : [["python3"], ["python"]];
+const candidates =
+  process.platform === "win32" ? [["py", "-3.13"], ["python"]] : [["python3"], ["python"]];
 
 function findPython() {
   for (const [command, ...prefix] of candidates) {
@@ -35,6 +36,13 @@ function run(command, args) {
 }
 
 const { command, prefix } = findPython();
-run(command, [...prefix, "-m", "compileall", "-q", "services/ai-worker/src", "services/ai-worker/tests"]);
+run(command, [
+  ...prefix,
+  "-m",
+  "compileall",
+  "-q",
+  "services/ai-worker/src",
+  "services/ai-worker/tests",
+]);
 run(command, [...prefix, "-m", "unittest", "discover", "-s", "services/ai-worker/tests", "-v"]);
 run(command, [...prefix, "-m", "skillup_ai_worker.health"]);

@@ -56,8 +56,8 @@ export default async function EnglishHomePage({ params }: PageProps) {
           <p className="eyebrow">Practical learning for Pakistan</p>
           <h1 id="hero-title">Learn useful skills in short, focused games.</h1>
           <p className="hero-summary">
-            Choose a skill, complete realistic challenges, understand your mistakes and see
-            progress after every session.
+            Choose a skill, complete realistic challenges, understand your mistakes and see progress
+            after every session.
           </p>
           <div className="hero-actions">
             <a className="button button-primary" href="#early-access">
@@ -141,7 +141,9 @@ export default async function EnglishHomePage({ params }: PageProps) {
               </span>
               <h3>{path.title}</h3>
               <p>{path.summary}</p>
-              <span className="path-meta">Short levels · Practical feedback · Visible progress</span>
+              <span className="path-meta">
+                Short levels · Practical feedback · Visible progress
+              </span>
             </Surface>
           ))}
         </div>

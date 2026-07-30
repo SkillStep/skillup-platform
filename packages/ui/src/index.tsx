@@ -18,7 +18,10 @@ export function BrandMark({ compact = false, className }: BrandMarkProps): React
       >
         <rect x="4" y="24" width="12" height="12" rx="4" fill="currentColor" opacity="0.45" />
         <rect x="16" y="16" width="12" height="12" rx="4" fill="currentColor" opacity="0.72" />
-        <path d="M28 8h12v12h-6v-3.75L24.25 26 18 19.75 8.75 29 4.5 24.75 18 11.25l6.25 6.25L29.75 12H28V8Z" fill="currentColor" />
+        <path
+          d="M28 8h12v12h-6v-3.75L24.25 26 18 19.75 8.75 29 4.5 24.75 18 11.25l6.25 6.25L29.75 12H28V8Z"
+          fill="currentColor"
+        />
       </svg>
       {compact ? null : <span>SkillUp</span>}
     </span>
