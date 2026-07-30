@@ -1,0 +1,65 @@
+name: Normalize staging test fixtures
+
+on:
+  push:
+    branches:
+      - feat/17-staging-deployment-and-live-auth
+
+permissions:
+  contents: write
+
+concurrency:
+  group: normalize-staging-test-fixtures
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/17-staging-deployment-and-live-auth
+          persist-credentials: true
+          fetch-depth: 0
+
+      - name: Add normalized disabled-email defaults to direct API config fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          paths = [
+              Path("apps/api/src/app.test.ts"),
+              Path("apps/api/src/gameplay.test.ts"),
+              Path("apps/api/src/progress.test.ts"),
+          ]
+          marker = '  EMAIL_PROVIDER: "disabled",\n'
+          replacement = marker + (
+              '  SMTP_PORT: 587,\n'
+              '  SMTP_SECURE: false,\n'
+              '  SMTP_REQUIRE_TLS: true,\n'
+          )
+          for path in paths:
+              source = path.read_text(encoding="utf-8")
+              if "SMTP_REQUIRE_TLS" in source:
+                  continue
+              if marker not in source:
+                  raise SystemExit(f"Expected email-provider fixture marker in {path}")
+              path.write_text(source.replace(marker, replacement, 1), encoding="utf-8")
+          PY
+
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm format
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "test: normalize disabled email configuration fixtures"
+            git push origin HEAD:feat/17-staging-deployment-and-live-auth
+          fi
