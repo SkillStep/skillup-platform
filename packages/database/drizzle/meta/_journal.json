@@ -22,6 +22,13 @@
       "when": 1785410241398,
       "tag": "0002_familiar_wolfpack",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1785413746373,
+      "tag": "0003_right_doorman",
+      "breakpoints": true
     }
   ]
 }

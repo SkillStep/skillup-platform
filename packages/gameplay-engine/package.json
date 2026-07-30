@@ -1,28 +1,28 @@
 {
-  "name": "@skillup/api",
+  "name": "@skillup/gameplay-engine",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run src"
   },
   "dependencies": {
     "@skillup/content-schema": "workspace:*",
-    "@skillup/contracts": "workspace:*",
-    "@skillup/database": "workspace:*",
-    "@skillup/gameplay-engine": "workspace:*",
-    "fastify": "5.10.0",
-    "pg": "8.22.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "24.12.1",
-    "@types/pg": "8.20.0",
-    "tsx": "4.23.1",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }

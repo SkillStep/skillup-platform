@@ -5,12 +5,14 @@ import Fastify, { type FastifyInstance } from "fastify";
 
 import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
+import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
 
 export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
   now?: () => Date;
   readiness?: () => Promise<boolean>;
   authService?: AuthService | undefined;
+  gameplayService?: GameplayService | undefined;
 }>;
 
 type NormalizedError = Readonly<{
@@ -121,6 +123,13 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
 
   if (options.authService) {
     registerAuthRoutes(app, { config, authService: options.authService });
+  }
+  if (options.authService && options.gameplayService) {
+    registerGameplayRoutes(app, {
+      config,
+      authService: options.authService,
+      gameplayService: options.gameplayService,
+    });
   }
 
   app.setNotFoundHandler(async (request, reply) => {
