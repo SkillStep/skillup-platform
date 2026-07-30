@@ -152,6 +152,13 @@ try {
       );
     }
 
+    await expectPostgresFailure(database, "Append-only points guard", "append-only", async () => {
+      await database.query(
+        "update points_ledger set explanation = 'Mutated history' where user_id = $1",
+        [userId],
+      );
+    });
+
     await expectPostgresFailure(
       database,
       "Correction metadata guard",
