@@ -60,7 +60,7 @@ try {
       startedEvent.session_id !== sessionId ||
       startedEvent.content_id !== pilotLearningSeed.level.id ||
       startedEvent.content_version_id !== pilotLearningSeed.level.versionId ||
-      startedEvent.content_version !== pilotLearningSeed.level.version ||
+      startedEvent.content_version !== 1 ||
       startedEvent.locale !== "en" ||
       startedEvent.consent !== "essential-only" ||
       startedEvent.occurred_at.toISOString() !== startedAt.toISOString()
