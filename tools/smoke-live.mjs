@@ -287,7 +287,9 @@ console.log(
       webRelease,
       apiRelease,
       responseBudgetMilliseconds,
-      maximumObservedResponseMilliseconds: Math.max(...timings.map((timing) => timing.durationMilliseconds)),
+      maximumObservedResponseMilliseconds: Math.max(
+        ...timings.map((timing) => timing.durationMilliseconds),
+      ),
       timings,
       checks: [
         "web health and security headers",
