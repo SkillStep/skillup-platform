@@ -402,11 +402,8 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
         <div className={styles["completion"]}>
           <p>Level complete</p>
           <h1>You finished this practice level.</h1>
-          <div
-            className={styles["score"]}
-            aria-label={`${session.awardedPoints} out of ${session.maxPoints} points`}
-          >
-            {session.awardedPoints}/{session.maxPoints}
+          <div className={styles["score"]}>
+            {session.awardedPoints} out of {session.maxPoints} points
           </div>
           <p>Your result is saved against this exact published level version.</p>
           <Link className={styles["homeButton"]} href={`/${locale}`}>
@@ -461,7 +458,7 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
           <span className={styles["progressValue"]} style={{ width: `${scoreProgress}%` }} />
         </span>
         <span className={styles["points"]}>
-          {session.awardedPoints}/{session.maxPoints} points
+          {session.awardedPoints} out of {session.maxPoints} points points
         </span>
       </div>
 
