@@ -29,24 +29,23 @@ jobs:
         with:
           node-version-file: .node-version
 
-      - name: Install and format
+      - name: Generate deterministic lockfile
         shell: bash
         run: |
           set -euo pipefail
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
-          pnpm install --no-frozen-lockfile
-          pnpm format
+          pnpm install --lockfile-only --no-frozen-lockfile
 
-      - name: Commit deterministic lockfile and formatting
+      - name: Commit deterministic lockfile
         shell: bash
         run: |
           set -euo pipefail
           git config user.name "SkillUp Foundation Bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
+          git add pnpm-lock.yaml
           if git diff --cached --quiet; then
-            echo "No generated changes to commit."
+            echo "No lockfile changes to commit."
             exit 0
           fi
           git commit -m "chore: generate executable workspace lockfile"
