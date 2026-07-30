@@ -26,13 +26,7 @@ try {
          awarded_points, max_points, started_at, last_activity_at, expires_at)
        values ($1, $2, $3, $4, 'active', 0, 0, 20,
                $5::timestamptz, $5::timestamptz, $5::timestamptz + interval '1 day')`,
-      [
-        sessionId,
-        userId,
-        pilotLearningSeed.level.id,
-        pilotLearningSeed.level.versionId,
-        startedAt,
-      ],
+      [sessionId, userId, pilotLearningSeed.level.id, pilotLearningSeed.level.versionId, startedAt],
     );
 
     const started = await database.query<{
@@ -65,7 +59,9 @@ try {
       startedEvent.consent !== "essential-only" ||
       startedEvent.occurred_at.toISOString() !== startedAt.toISOString()
     ) {
-      throw new Error(`The level-started analytics event is inconsistent: ${JSON.stringify(startedEvent)}`);
+      throw new Error(
+        `The level-started analytics event is inconsistent: ${JSON.stringify(startedEvent)}`,
+      );
     }
 
     await database.query(
@@ -100,10 +96,10 @@ try {
       throw new Error(`The pilot analytics funnel is inconsistent: ${JSON.stringify(events.rows)}`);
     }
 
-    await database.query(
-      "update level_play_sessions set last_activity_at = $2 where id = $1",
-      [sessionId, new Date("2026-07-30T14:06:00.000Z")],
-    );
+    await database.query("update level_play_sessions set last_activity_at = $2 where id = $1", [
+      sessionId,
+      new Date("2026-07-30T14:06:00.000Z"),
+    ]);
     const replayCount = await database.query<{ count: number }>(
       "select count(*)::int as count from learning_analytics_events where session_id = $1",
       [sessionId],
