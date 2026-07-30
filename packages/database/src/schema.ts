@@ -1,13 +1,5 @@
 import { sql } from "drizzle-orm";
-import {
-  check,
-  integer,
-  pgTable,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from "drizzle-orm/pg-core";
+import { check, integer, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 const contentStatuses = ["draft", "in_review", "published", "archived"] as const;
 const locales = ["en", "ur"] as const;
@@ -28,7 +20,10 @@ export const skills = pgTable(
   (table) => [
     uniqueIndex("skills_slug_unique").on(table.slug),
     check("skills_slug_format", sql`${table.slug} ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'`),
-    check("skills_status_allowed", sql`${table.status} in ('draft', 'in_review', 'published', 'archived')`),
+    check(
+      "skills_status_allowed",
+      sql`${table.status} in ('draft', 'in_review', 'published', 'archived')`,
+    ),
     check("skills_locale_allowed", sql`${table.defaultLocale} in ('en', 'ur')`),
   ],
 );
@@ -119,7 +114,10 @@ export const learningPathVersions = pgTable(
       "learning_path_versions_estimated_minutes",
       sql`${table.estimatedMinutes} between 5 and 3000`,
     ),
-    check("learning_path_versions_title_length", sql`char_length(${table.title}) between 3 and 120`),
+    check(
+      "learning_path_versions_title_length",
+      sql`char_length(${table.title}) between 3 and 120`,
+    ),
     check(
       "learning_path_versions_summary_length",
       sql`char_length(${table.summary}) between 40 and 300`,

@@ -3,7 +3,10 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "files": ["dist", "drizzle"],
+  "files": [
+    "dist",
+    "drizzle"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

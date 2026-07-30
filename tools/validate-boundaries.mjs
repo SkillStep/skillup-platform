@@ -6,8 +6,24 @@ const root = process.cwd();
 const failures = [];
 
 const allowedWorkspaceDependencies = new Map([
-  ["@skillup/web", new Set(["@skillup/contracts", "@skillup/discoverability", "@skillup/ui", "@skillup/analytics"])],
-  ["@skillup/api", new Set(["@skillup/contracts", "@skillup/database", "@skillup/analytics", "@skillup/content-schema"])],
+  [
+    "@skillup/web",
+    new Set([
+      "@skillup/contracts",
+      "@skillup/discoverability",
+      "@skillup/ui",
+      "@skillup/analytics",
+    ]),
+  ],
+  [
+    "@skillup/api",
+    new Set([
+      "@skillup/contracts",
+      "@skillup/database",
+      "@skillup/analytics",
+      "@skillup/content-schema",
+    ]),
+  ],
   ["@skillup/database", new Set()],
   ["@skillup/contracts", new Set()],
   ["@skillup/content-schema", new Set(["@skillup/contracts"])],
@@ -20,7 +36,16 @@ async function readJson(path) {
   return JSON.parse(await readFile(path, "utf8"));
 }
 
-for (const packageDirectory of ["apps/web", "apps/api", "packages/database", "packages/contracts", "packages/content-schema", "packages/discoverability", "packages/analytics", "packages/ui"]) {
+for (const packageDirectory of [
+  "apps/web",
+  "apps/api",
+  "packages/database",
+  "packages/contracts",
+  "packages/content-schema",
+  "packages/discoverability",
+  "packages/analytics",
+  "packages/ui",
+]) {
   const manifestPath = join(root, packageDirectory, "package.json");
   const manifest = await readJson(manifestPath);
   const allowed = allowedWorkspaceDependencies.get(manifest.name);

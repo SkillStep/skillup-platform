@@ -12,9 +12,7 @@ const ApiConfigSchema = z.object({
     }),
   DATABASE_MAX_CONNECTIONS: z.coerce.number().int().min(1).max(50).default(10),
   RELEASE_SHA: z.string().min(1).default("local"),
-  LOG_LEVEL: z
-    .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
-    .default("info"),
+  LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
 });
 
 export type ApiConfig = z.infer<typeof ApiConfigSchema>;
