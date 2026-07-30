@@ -19,6 +19,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
+    "db:wait": "tsx src/cli/wait.ts",
     "db:migrate": "tsx src/cli/migrate.ts",
     "db:seed": "tsx src/cli/seed.ts",
     "db:smoke": "tsx src/cli/smoke.ts"
