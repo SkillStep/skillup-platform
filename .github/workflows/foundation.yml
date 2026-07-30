@@ -58,6 +58,33 @@ jobs:
       - name: Install locked workspace dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Generate secure dependency lockfile candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('node:fs');
+          const packageJson = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          packageJson.pnpm = {
+            ...(packageJson.pnpm ?? {}),
+            overrides: {
+              ...(packageJson.pnpm?.overrides ?? {}),
+              sharp: '0.35.3',
+              postcss: '8.5.23',
+            },
+          };
+          fs.writeFileSync('package.json', `${JSON.stringify(packageJson, null, 2)}\n`);
+          NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
+
+      - name: Upload secure dependency lockfile candidate
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: secure-pnpm-lock
+          path: pnpm-lock.yaml
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Reject high-severity production dependency findings
         run: pnpm audit --prod --audit-level=high
 
