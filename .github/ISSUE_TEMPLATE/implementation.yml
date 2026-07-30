@@ -1,0 +1,67 @@
+name: Implementation work
+description: Define a product, engineering, content, security, or operations outcome.
+title: "[M#] "
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Outcome
+      description: What learner, product, security, or operating result must exist?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context and evidence
+      description: Current behavior, research, code, contract, or problem evidence.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: List exact included work.
+    validations:
+      required: true
+  - type: textarea
+    id: exclusions
+    attributes:
+      label: Out of scope
+      description: State what this issue must not absorb.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Use testable checkboxes.
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: quality
+    attributes:
+      label: Quality requirements
+      description: Security, privacy, accessibility, performance, SEO/AEO/GEO, analytics, AI, and data requirements as applicable.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Tests and validation
+      description: Positive, negative, contract, migration, staging, and production checks.
+    validations:
+      required: true
+  - type: textarea
+    id: delivery
+    attributes:
+      label: Dependencies, rollout, monitoring, and rollback
+    validations:
+      required: true
+  - type: textarea
+    id: ai_boundary
+    attributes:
+      label: AI execution boundary
+      description: What an autonomous coding/content agent may change and what requires human approval.
+    validations:
+      required: true
