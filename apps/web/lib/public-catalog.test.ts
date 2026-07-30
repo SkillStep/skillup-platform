@@ -13,9 +13,9 @@ describe("reviewed public launch catalog", () => {
     const pilots = publicSkills.filter((skill) => skill.status === "pilot");
     expect(pilots).toHaveLength(1);
     expect(pilotSkill().levelId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(publicSkills.filter((skill) => skill.status === "planned").every((skill) => !skill.levelId)).toBe(
-      true,
-    );
+    expect(
+      publicSkills.filter((skill) => skill.status === "planned").every((skill) => !skill.levelId),
+    ).toBe(true);
   });
 
   it("provides useful outcomes and explicit editorial boundaries", () => {
@@ -27,7 +27,9 @@ describe("reviewed public launch catalog", () => {
       expect(publicSkill(skill.slug)).toEqual(skill);
     }
 
-    expect(publicSkill("practical-english-study-work")?.editorialNote).toContain("not promise fluency");
+    expect(publicSkill("practical-english-study-work")?.editorialNote).toContain(
+      "not promise fluency",
+    );
     expect(publicSkill("freelancing-foundations")?.editorialNote).toContain(
       "not make guaranteed-income claims",
     );

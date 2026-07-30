@@ -113,7 +113,11 @@ const pilotSkill = await request("/en/skills/interview-workplace-communication",
   accept: "text/html",
 });
 const pilotSkillHtml = await pilotSkill.text();
-requireContains(pilotSkillHtml, "Answer common interview questions with evidence.", "Pilot skill outcomes");
+requireContains(
+  pilotSkillHtml,
+  "Answer common interview questions with evidence.",
+  "Pilot skill outcomes",
+);
 requireContains(pilotSkillHtml, "LearningResource", "Pilot skill structured data");
 requirePublicCacheBoundary(pilotSkill, "Pilot skill");
 
@@ -137,7 +141,11 @@ const serviceWorkerSource = await serviceWorker.text();
 for (const privatePrefix of ["/api", "/en/sign-in", "/en/progress", "/en/learn"]) {
   requireContains(serviceWorkerSource, `"${privatePrefix}"`, "Service-worker private boundary");
 }
-requireContains(serviceWorkerSource, 'cacheBoundary === "public"', "Service-worker public boundary");
+requireContains(
+  serviceWorkerSource,
+  'cacheBoundary === "public"',
+  "Service-worker public boundary",
+);
 
 const progress = await request("/en/progress", { accept: "text/html" });
 requireContains(

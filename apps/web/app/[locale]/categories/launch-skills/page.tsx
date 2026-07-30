@@ -46,9 +46,7 @@ export default async function LaunchCategoryPage({ params }: PageProps) {
     <>
       <PublicHeader />
       <main className={styles["page"]}>
-        <Breadcrumbs
-          items={[{ label: "Home", href: "/en" }, { label: launchCategory.title }]}
-        />
+        <Breadcrumbs items={[{ label: "Home", href: "/en" }, { label: launchCategory.title }]} />
 
         <section className={styles["hero"]} aria-labelledby="category-title">
           <p className={styles["eyebrow"]}>Skill category</p>

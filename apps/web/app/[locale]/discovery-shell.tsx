@@ -44,7 +44,11 @@ export function Breadcrumbs({ items }: Readonly<{ items: readonly BreadcrumbItem
       <ol>
         {items.map((item, index) => (
           <li key={`${item.label}-${index}`}>
-            {item.href ? <Link href={item.href}>{item.label}</Link> : <span aria-current="page">{item.label}</span>}
+            {item.href ? (
+              <Link href={item.href}>{item.label}</Link>
+            ) : (
+              <span aria-current="page">{item.label}</span>
+            )}
           </li>
         ))}
       </ol>
@@ -69,7 +73,9 @@ export function PublicFooter(): ReactNode {
   );
 }
 
-export function JsonLd({ value }: Readonly<{ value: Readonly<Record<string, unknown>> }>): ReactNode {
+export function JsonLd({
+  value,
+}: Readonly<{ value: Readonly<Record<string, unknown>> }>): ReactNode {
   const json = JSON.stringify(value).replaceAll("<", "\\u003c");
   return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }

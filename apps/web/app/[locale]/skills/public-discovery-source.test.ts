@@ -37,15 +37,10 @@ describe("public discovery source boundaries", () => {
   });
 
   it("includes public catalog routes in discovery files and excludes private routes", () => {
-    expect(sitemap).toContain('`/skills/${skill.slug}`');
-    expect(sitemap).toContain('`/paths/${skill.slug}`');
-    expect(sitemap).toContain('`/categories/${launchCategory.slug}`');
-    for (const privatePath of [
-      "/en/sign-in",
-      "/en/onboarding",
-      "/en/progress",
-      "/en/learn",
-    ]) {
+    expect(sitemap).toContain("`/skills/${skill.slug}`");
+    expect(sitemap).toContain("`/paths/${skill.slug}`");
+    expect(sitemap).toContain("`/categories/${launchCategory.slug}`");
+    for (const privatePath of ["/en/sign-in", "/en/onboarding", "/en/progress", "/en/learn"]) {
       expect(robots).toContain(`"${privatePath}"`);
     }
   });

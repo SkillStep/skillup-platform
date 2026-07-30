@@ -81,7 +81,8 @@ export default async function EnglishHomePage({ params }: PageProps) {
               <li className="answer-option">I am confident that I can do everything required.</li>
             </ul>
             <p className="preview-feedback">
-              Strong answers show a specific action and result instead of relying on a general claim.
+              Strong answers show a specific action and result instead of relying on a general
+              claim.
             </p>
           </Surface>
         </section>
@@ -157,7 +158,8 @@ export default async function EnglishHomePage({ params }: PageProps) {
             <h2 id="early-access-title">Help shape SkillUp for Pakistani learners.</h2>
             <p>
               Secure account, onboarding, gameplay and progress flows are ready for staged testing.
-              Production sign-in email activates only with an approved sender domain and SMTP account.
+              Production sign-in email activates only with an approved sender domain and SMTP
+              account.
             </p>
           </div>
           <Link className="button button-light" href="/en/sign-in">
