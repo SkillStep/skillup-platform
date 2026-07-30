@@ -9,14 +9,26 @@
     "pnpm": "11.17.x"
   },
   "scripts": {
-    "check": "node tools/validate-foundation.mjs",
-    "format:check": "node tools/validate-foundation.mjs --format",
-    "lint": "node tools/validate-foundation.mjs --lint",
-    "typecheck": "node tools/validate-foundation.mjs --types",
-    "test": "node tools/validate-foundation.mjs --test",
-    "build": "node tools/validate-foundation.mjs --build",
+    "dev": "pnpm --parallel --filter @skillup/api --filter @skillup/web dev",
+    "dev:web": "pnpm --filter @skillup/web dev",
+    "dev:api": "pnpm --filter @skillup/api dev",
+    "foundation:check": "node tools/validate-foundation.mjs",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "lint": "biome lint .",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test && node tools/run-python-tests.mjs",
+    "build": "pnpm -r --if-present build",
+    "check": "pnpm foundation:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "clean": "node tools/clean.mjs",
     "infra:up": "docker compose -f infra/compose.yaml up -d",
     "infra:down": "docker compose -f infra/compose.yaml down",
     "infra:reset": "docker compose -f infra/compose.yaml down -v"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.6",
+    "tsx": "4.23.1",
+    "typescript": "6.0.3",
+    "vitest": "4.1.10"
   }
 }
