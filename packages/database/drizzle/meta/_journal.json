@@ -43,6 +43,13 @@
       "when": 1785421080000,
       "tag": "0005_reward_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785421800000,
+      "tag": "0006_immutable_progress_events",
+      "breakpoints": true
     }
   ]
 }
