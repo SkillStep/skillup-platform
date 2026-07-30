@@ -10,7 +10,7 @@ export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
   now?: () => Date;
   readiness?: () => Promise<boolean>;
-  authService?: AuthService;
+  authService?: AuthService | undefined;
 }>;
 
 type NormalizedError = Readonly<{
