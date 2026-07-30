@@ -33,7 +33,10 @@ async function expectPostgresFailure(
   if (!receivedExpectedFailure) throw new Error(`${label} unexpectedly succeeded.`);
 }
 
-async function insertSessionFixture(database: PoolClient, suffix: string): Promise<{
+async function insertSessionFixture(
+  database: PoolClient,
+  suffix: string,
+): Promise<{
   userId: string;
   sessionId: string;
 }> {
@@ -114,7 +117,12 @@ try {
         (user_id, level_id, level_version_id, best_awarded_points, max_points,
          completion_count, last_session_id, first_completed_at, last_completed_at)
        values ($1, $2, $3, 10, 20, 1, $4, now(), now())`,
-      [fixture.userId, pilotLearningSeed.level.id, pilotLearningSeed.level.versionId, fixture.sessionId],
+      [
+        fixture.userId,
+        pilotLearningSeed.level.id,
+        pilotLearningSeed.level.versionId,
+        fixture.sessionId,
+      ],
     );
     await database.query("rollback");
 

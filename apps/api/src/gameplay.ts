@@ -186,7 +186,10 @@ function publicOptions(rows: readonly OptionRow[]): z.infer<typeof OptionSchema>
   );
 }
 
-function buildPublicChallenge(row: ChallengeRow, optionRows: readonly OptionRow[]): PublicChallenge {
+function buildPublicChallenge(
+  row: ChallengeRow,
+  optionRows: readonly OptionRow[],
+): PublicChallenge {
   const base = {
     id: row.challenge_id,
     versionId: row.challenge_version_id,
@@ -386,7 +389,12 @@ export function createGameplayService(
   }>,
 ): GameplayService {
   const now = options.now ?? (() => new Date());
-  const sessionHours = z.number().int().min(1).max(168).parse(options.sessionHours ?? 24);
+  const sessionHours = z
+    .number()
+    .int()
+    .min(1)
+    .max(168)
+    .parse(options.sessionHours ?? 24);
 
   return {
     startLevel: async (userId, levelId, input) =>
@@ -406,7 +414,8 @@ export function createGameplayService(
           [levelId, input.locale, input.levelVersionId ?? null],
         );
         const selected = version.rows[0];
-        if (!selected) throw new GameplayServiceError(404, "The published level version was not found.");
+        if (!selected)
+          throw new GameplayServiceError(404, "The published level version was not found.");
 
         const challenges = await database.query<{
           challenge_id: string;
@@ -440,14 +449,21 @@ export function createGameplayService(
           [userId, selected.level_id, selected.level_version_id, maxPoints, startedAt, expiresAt],
         );
         const session = inserted.rows[0];
-        if (!session) throw new GameplayServiceError(500, "The gameplay session could not be created.");
+        if (!session)
+          throw new GameplayServiceError(500, "The gameplay session could not be created.");
 
         for (const [ordinal, challenge] of challenges.rows.entries()) {
           await database.query(
             `insert into level_session_challenges
               (session_id, ordinal, challenge_id, challenge_version_id, max_attempts, max_points)
              values ($1, $2, $3, $4, 2, $5)`,
-            [session.id, ordinal, challenge.challenge_id, challenge.challenge_version_id, challenge.points],
+            [
+              session.id,
+              ordinal,
+              challenge.challenge_id,
+              challenge.challenge_version_id,
+              challenge.points,
+            ],
           );
         }
 
@@ -508,9 +524,18 @@ export function createGameplayService(
         }
 
         session = await expireSessionIfRequired(database, session, evaluatedAt);
-        const sequence = await loadSequence(database, session.id, session.current_challenge_ordinal);
-        if (!sequence) throw new GameplayServiceError(409, "The gameplay session has no active challenge.");
-        const attemptsUsed = await countAttempts(database, session.id, sequence.challenge_version_id);
+        const sequence = await loadSequence(
+          database,
+          session.id,
+          session.current_challenge_ordinal,
+        );
+        if (!sequence)
+          throw new GameplayServiceError(409, "The gameplay session has no active challenge.");
+        const attemptsUsed = await countAttempts(
+          database,
+          session.id,
+          sequence.challenge_version_id,
+        );
         const guard = guardSubmission({
           authenticatedUserId: userId,
           session: {
@@ -586,10 +611,17 @@ export function createGameplayService(
             where id = $1
             returning id, user_id, level_id, level_version_id, state,
                       current_challenge_ordinal, awarded_points, max_points, started_at, expires_at`,
-          [session.id, nextOrdinal, result.awardedPoints, evaluatedAt, completed ? "completed" : "active"],
+          [
+            session.id,
+            nextOrdinal,
+            result.awardedPoints,
+            evaluatedAt,
+            completed ? "completed" : "active",
+          ],
         );
         const updatedSession = updated.rows[0];
-        if (!updatedSession) throw new GameplayServiceError(500, "The gameplay session could not be updated.");
+        if (!updatedSession)
+          throw new GameplayServiceError(500, "The gameplay session could not be updated.");
 
         if (completed) {
           await database.query(
@@ -656,14 +688,20 @@ async function requireLearner(
 
 export function registerGameplayRoutes(
   app: FastifyInstance,
-  options: Readonly<{ config: ApiConfig; authService: AuthService; gameplayService: GameplayService }>,
+  options: Readonly<{
+    config: ApiConfig;
+    authService: AuthService;
+    gameplayService: GameplayService;
+  }>,
 ): void {
   app.post("/v1/gameplay/levels/:levelId/sessions", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const learner = await requireLearner(request, options.config, options.authService);
     const params = z.object({ levelId: z.string().uuid() }).parse(request.params);
     const input = StartLevelInputSchema.parse(request.body ?? {});
-    return reply.status(201).send(await options.gameplayService.startLevel(learner.id, params.levelId, input));
+    return reply
+      .status(201)
+      .send(await options.gameplayService.startLevel(learner.id, params.levelId, input));
   });
 
   app.get("/v1/gameplay/sessions/:sessionId", async (request) => {
