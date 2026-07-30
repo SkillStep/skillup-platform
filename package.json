@@ -16,7 +16,7 @@
     "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "lint": "biome lint .",
+    "lint": "biome lint --max-diagnostics=300 .",
     "typecheck": "pnpm shared:build && pnpm -r --if-present typecheck",
     "test": "pnpm shared:build && pnpm -r --if-present test && node tools/run-python-tests.mjs",
     "build": "pnpm -r --if-present build",
