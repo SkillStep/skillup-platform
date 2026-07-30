@@ -81,17 +81,13 @@ export default async function EnglishHomePage({ params }: PageProps) {
           </div>
           <p className="level-label">Interview communication</p>
           <h2 id="preview-title">Which answer gives the strongest evidence?</h2>
-          <div className="answer-list" role="list" aria-label="Example answers">
-            <div className="answer-option" role="listitem">
-              I work hard and learn quickly.
-            </div>
-            <div className="answer-option answer-option-selected" role="listitem">
+          <ul className="answer-list" aria-label="Example answers">
+            <li className="answer-option">I work hard and learn quickly.</li>
+            <li className="answer-option answer-option-selected">
               I reduced weekly reporting time by creating a reusable template.
-            </div>
-            <div className="answer-option" role="listitem">
-              I am confident that I can do everything required.
-            </div>
-          </div>
+            </li>
+            <li className="answer-option">I am confident that I can do everything required.</li>
+          </ul>
           <p className="preview-feedback">
             Strong answers show a specific action and result instead of relying on a general claim.
           </p>
