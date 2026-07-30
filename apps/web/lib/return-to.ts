@@ -10,18 +10,26 @@ function isReservedAccountPath(pathname: string): boolean {
   );
 }
 
+function hasControlCharacters(value: string): boolean {
+  for (const character of value) {
+    const codePoint = character.codePointAt(0);
+    if (codePoint !== undefined && (codePoint <= 31 || codePoint === 127)) return true;
+  }
+  return false;
+}
+
 export function safeReturnTo(
   value: string | readonly string[] | undefined,
   fallback = "/en",
 ): string {
-  const candidate = Array.isArray(value) ? value[0] : value;
+  const candidate = typeof value === "string" ? value : value?.[0];
   if (
     !candidate ||
     candidate.length > maximumReturnToLength ||
     !candidate.startsWith("/") ||
     candidate.startsWith("//") ||
     candidate.includes("\\") ||
-    /[\u0000-\u001f\u007f]/.test(candidate)
+    hasControlCharacters(candidate)
   ) {
     return fallback;
   }
