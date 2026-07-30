@@ -1,7 +1,10 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
-import * as schema from "./schema.js";
+import * as learningSchema from "./learning-schema.js";
+import * as baseSchema from "./schema.js";
+
+const schema = { ...baseSchema, ...learningSchema };
 
 export type SkillUpDatabase = NodePgDatabase<typeof schema>;
 
@@ -53,4 +56,5 @@ export function createDatabaseClient(options: DatabaseClientOptions): DatabaseCl
   };
 }
 
+export * from "./learning-schema.js";
 export * from "./schema.js";
