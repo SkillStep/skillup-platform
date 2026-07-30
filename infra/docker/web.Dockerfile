@@ -4,7 +4,6 @@ FROM node:24.18.0-bookworm-slim AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-ENV NODE_ENV=development
 ENV NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /workspace
