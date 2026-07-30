@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const apiBaseUrl = (process.env["API_BASE_URL"] ?? "http://127.0.0.1:3001").replace(/\/$/, "");
 
+const privateRouteHeaders = [
+  { key: "Cache-Control", value: "private, no-store" },
+  { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
+];
+
 const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
@@ -30,10 +35,11 @@ const nextConfig: NextConfig = {
       },
       {
         source: "/:locale(en|ur)/(sign-in|onboarding)",
-        headers: [
-          { key: "Cache-Control", value: "private, no-store" },
-          { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
-        ],
+        headers: privateRouteHeaders,
+      },
+      {
+        source: "/:locale(en|ur)/learn/:path*",
+        headers: privateRouteHeaders,
       },
     ];
   },

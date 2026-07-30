@@ -140,6 +140,13 @@ export default async function EnglishHomePage({ params }: PageProps) {
               <span className="path-meta">
                 Short levels · Practical feedback · Visible progress
               </span>
+              {path.status === "pilot" && path.levelId ? (
+                <div className="hero-actions">
+                  <Link className="button button-primary" href={`/en/learn/${path.levelId}`}>
+                    Practice reviewed pilot
+                  </Link>
+                </div>
+              ) : null}
             </Surface>
           ))}
         </div>
