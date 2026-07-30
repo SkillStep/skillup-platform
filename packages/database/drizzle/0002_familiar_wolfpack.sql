@@ -547,3 +547,145 @@ CREATE CONSTRAINT TRIGGER validate_publication_entity_trigger
 CREATE TRIGGER enforce_publication_record_transition
   BEFORE UPDATE ON content_publication_records
   FOR EACH ROW EXECUTE FUNCTION enforce_editorial_state_transition();
+--> statement-breakpoint
+-- skillup_domain_guard_fix_marker
+CREATE OR REPLACE FUNCTION protect_published_version_content() RETURNS trigger AS $$
+DECLARE
+  old_content jsonb;
+  new_content jsonb;
+  transition_allowed boolean := false;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.state = 'published' THEN
+      RAISE EXCEPTION 'Published content version % cannot be deleted', OLD.id;
+    END IF;
+    RETURN OLD;
+  END IF;
+
+  IF OLD.state = 'published' THEN
+    old_content := to_jsonb(OLD) - ARRAY['state', 'scheduled_at'];
+    new_content := to_jsonb(NEW) - ARRAY['state', 'scheduled_at'];
+    IF old_content IS DISTINCT FROM new_content THEN
+      RAISE EXCEPTION 'Published content version % cannot be mutated; create a new version', OLD.id;
+    END IF;
+  END IF;
+
+  IF NEW.state = OLD.state THEN
+    RETURN NEW;
+  END IF;
+
+  transition_allowed :=
+    (OLD.state = 'draft' AND NEW.state IN ('in_review', 'rejected', 'archived')) OR
+    (OLD.state = 'in_review' AND NEW.state IN ('draft', 'approved', 'rejected')) OR
+    (OLD.state = 'approved' AND NEW.state IN ('draft', 'scheduled', 'published', 'rejected')) OR
+    (OLD.state = 'scheduled' AND NEW.state IN ('approved', 'published', 'archived')) OR
+    (OLD.state = 'published' AND NEW.state IN ('superseded', 'archived')) OR
+    (OLD.state = 'superseded' AND NEW.state = 'archived') OR
+    (OLD.state = 'rejected' AND NEW.state IN ('draft', 'archived'));
+
+  IF NOT transition_allowed THEN
+    RAISE EXCEPTION 'Unsupported editorial transition from % to % on %', OLD.state, NEW.state, TG_TABLE_NAME;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION prevent_level_prerequisite_cycle() RETURNS trigger AS $$
+DECLARE
+  cycle_found boolean;
+  previous_level_id uuid;
+  previous_prerequisite_id uuid;
+BEGIN
+  IF TG_OP = 'UPDATE' THEN
+    previous_level_id := OLD.level_id;
+    previous_prerequisite_id := OLD.prerequisite_level_id;
+  END IF;
+
+  WITH RECURSIVE prerequisites(level_id) AS (
+    SELECT NEW.prerequisite_level_id
+    UNION
+    SELECT edge.prerequisite_level_id
+    FROM level_prerequisites edge
+    JOIN prerequisites current ON edge.level_id = current.level_id
+    WHERE TG_OP = 'INSERT'
+       OR edge.level_id <> previous_level_id
+       OR edge.prerequisite_level_id <> previous_prerequisite_id
+  )
+  SELECT EXISTS (SELECT 1 FROM prerequisites WHERE level_id = NEW.level_id)
+    INTO cycle_found;
+
+  IF cycle_found THEN
+    RAISE EXCEPTION 'Level prerequisite cycle detected for level %', NEW.level_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION protect_published_challenge_child() RETURNS trigger AS $$
+DECLARE
+  owner_id uuid;
+  owner_state text;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    owner_id := OLD.challenge_version_id;
+  ELSE
+    owner_id := NEW.challenge_version_id;
+  END IF;
+  SELECT state INTO owner_state FROM challenge_versions WHERE id = owner_id;
+  IF owner_state = 'published' THEN
+    RAISE EXCEPTION 'Published challenge % child records cannot be mutated', owner_id;
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION protect_published_level_child() RETURNS trigger AS $$
+DECLARE
+  owner_id uuid;
+  owner_state text;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    owner_id := OLD.level_version_id;
+  ELSE
+    owner_id := NEW.level_version_id;
+  END IF;
+  SELECT state INTO owner_state FROM level_versions WHERE id = owner_id;
+  IF owner_state = 'published' THEN
+    RAISE EXCEPTION 'Published level % child records cannot be mutated', owner_id;
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION protect_published_source_reference() RETURNS trigger AS $$
+DECLARE
+  level_owner uuid;
+  challenge_owner uuid;
+  owner_state text;
+BEGIN
+  IF TG_OP = 'DELETE' THEN
+    level_owner := OLD.level_version_id;
+    challenge_owner := OLD.challenge_version_id;
+  ELSE
+    level_owner := NEW.level_version_id;
+    challenge_owner := NEW.challenge_version_id;
+  END IF;
+
+  IF level_owner IS NOT NULL THEN
+    SELECT state INTO owner_state FROM level_versions WHERE id = level_owner;
+  ELSE
+    SELECT state INTO owner_state FROM challenge_versions WHERE id = challenge_owner;
+  END IF;
+  IF owner_state = 'published' THEN
+    RAISE EXCEPTION 'Published content source references cannot be mutated';
+  END IF;
+  IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+--> statement-breakpoint
+CREATE TRIGGER protect_published_source_references
+  BEFORE INSERT OR UPDATE OR DELETE ON content_source_references
+  FOR EACH ROW EXECUTE FUNCTION protect_published_source_reference();
