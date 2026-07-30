@@ -45,9 +45,9 @@ export default async function EnglishHomePage({ params }: PageProps) {
         <nav aria-label="Primary navigation" className="primary-nav">
           <a href="#paths">Explore skills</a>
           <a href="#how-it-works">How it works</a>
-          <a className="nav-action" href="#early-access">
-            Start learning
-          </a>
+          <Link className="nav-action" href="/en/sign-in">
+            Sign in
+          </Link>
         </nav>
       </header>
 
@@ -60,9 +60,9 @@ export default async function EnglishHomePage({ params }: PageProps) {
             after every session.
           </p>
           <div className="hero-actions">
-            <a className="button button-primary" href="#early-access">
-              Join early access
-            </a>
+            <Link className="button button-primary" href="/en/sign-in">
+              Create your learning profile
+            </Link>
             <a className="button button-secondary" href="#paths">
               Explore launch paths
             </a>
@@ -150,13 +150,13 @@ export default async function EnglishHomePage({ params }: PageProps) {
           <p className="eyebrow">Closed beta preparation</p>
           <h2 id="early-access-title">Help shape SkillUp for Pakistani learners.</h2>
           <p>
-            Early access registration will open after account privacy, content review and payment
-            readiness gates pass.
+            Secure account and onboarding flows are now being connected. Email delivery will open
+            only after sender-domain, abuse-control and privacy gates pass.
           </p>
         </div>
-        <span className="button button-light button-disabled" aria-disabled="true">
-          Registration opening soon
-        </span>
+        <Link className="button button-light" href="/en/sign-in">
+          Preview account setup
+        </Link>
       </section>
 
       <footer className="site-footer">
