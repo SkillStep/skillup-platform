@@ -3,6 +3,15 @@ import { describe, expect, it, vi } from "vitest";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 
+type TestMessage = Readonly<{
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  html: string;
+  headers: Readonly<Record<string, string>>;
+}>;
+
 const smtpConfig = readApiConfig({
   APP_ENV: "test",
   PUBLIC_APP_URL: "https://skillup.example",
@@ -20,7 +29,7 @@ const smtpConfig = readApiConfig({
 
 describe("configured authentication email delivery", () => {
   it("sends a bounded one-time-code message without session or profile data", async () => {
-    const sendMail = vi.fn(async () => ({ messageId: "test-message" }));
+    const sendMail = vi.fn(async (_message: TestMessage) => ({ messageId: "test-message" }));
     const delivery = createConfiguredAuthCodeDelivery(smtpConfig, { sendMail });
 
     await delivery.sendSignInCode({
