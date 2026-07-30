@@ -1,0 +1,63 @@
+name: Patch learning seed publication order
+
+on:
+  push:
+    branches:
+      - feat/22-versioned-learning-domain
+
+permissions:
+  contents: write
+
+concurrency:
+  group: patch-learning-seed
+  cancel-in-progress: false
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/22-versioned-learning-domain
+          persist-credentials: true
+
+      - name: Patch seed publication order once
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("packages/database/src/cli/seed.ts")
+          text = path.read_text(encoding="utf-8")
+          if 'import { eq } from "drizzle-orm";' not in text:
+              text = 'import { eq } from "drizzle-orm";\n\n' + text
+
+          text = text.replace(
+              '''        estimatedMinutes: pilot.level.estimatedMinutes,\n        state: "published",\n        indexPolicy: "noindex",\n        reviewedAt: pilot.reviewedAt,\n        publishedAt: pilot.reviewedAt,''',
+              '''        estimatedMinutes: pilot.level.estimatedMinutes,\n        state: "approved",\n        indexPolicy: "noindex",\n        reviewedAt: pilot.reviewedAt,\n        publishedAt: null,''',
+          )
+          text = text.replace(
+              '''          points: challenge.points,\n          state: "published",\n          reviewedAt: pilot.reviewedAt,\n          publishedAt: pilot.reviewedAt,''',
+              '''          points: challenge.points,\n          state: "approved",\n          reviewedAt: pilot.reviewedAt,\n          publishedAt: null,''',
+          )
+          challenge_anchor = '''      await transaction\n        .insert(challengeEvaluations)\n        .values({\n          challengeVersionId: challenge.versionId,\n          evaluator: "deterministic_v1",\n          privateEvaluation: challenge.privateEvaluation,\n        })\n        .onConflictDoNothing();\n'''
+          challenge_publish = challenge_anchor + '''\n      await transaction\n        .update(challengeVersions)\n        .set({ state: "published", publishedAt: pilot.reviewedAt })\n        .where(eq(challengeVersions.id, challenge.versionId));\n'''
+          if challenge_publish not in text:
+              text = text.replace(challenge_anchor, challenge_publish)
+
+          source_anchor = '''    await transaction\n      .insert(contentSourceReferences)\n      .values({\n        id: pilot.source.id,\n        levelVersionId: pilot.level.versionId,\n        kind: "internal_editorial",\n        title: pilot.source.title,\n        locator: pilot.source.locator,\n        sortOrder: 1,\n      })\n      .onConflictDoNothing();\n'''
+          level_publish = source_anchor + '''\n    await transaction\n      .update(levelVersions)\n      .set({ state: "published", publishedAt: pilot.reviewedAt })\n      .where(eq(levelVersions.id, pilot.level.versionId));\n'''
+          if level_publish not in text:
+              text = text.replace(source_anchor, level_publish)
+
+          path.write_text(text, encoding="utf-8")
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/database/src/cli/seed.ts
+          if ! git diff --cached --quiet; then
+            git commit -m "fix(database): publish pilot after protected children exist"
+            git push origin HEAD:feat/22-versioned-learning-domain
+          fi
