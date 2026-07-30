@@ -1,4 +1,5 @@
 import { BrandMark } from "@skillup/ui";
+import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -6,7 +7,7 @@ import styles from "./discovery.module.css";
 
 export type BreadcrumbItem = Readonly<{
   label: string;
-  href?: string;
+  href?: Route;
 }>;
 
 export function PublicHeader(): ReactNode {
