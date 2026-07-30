@@ -21,27 +21,27 @@ export default async function OnboardingPage({ params }: PageProps) {
   if (locale !== "en") notFound();
 
   return (
-    <main className={styles.shell}>
-      <header className={styles.header}>
-        <Link className={styles.homeLink} href="/en" aria-label="SkillUp home">
+    <main className={styles["shell"]}>
+      <header className={styles["header"]}>
+        <Link className={styles["homeLink"]} href="/en" aria-label="SkillUp home">
           <BrandMark className="brand-mark" />
         </Link>
-        <Link className={styles.backLink} href="/en">
+        <Link className={styles["backLink"]} href="/en">
           Save and return later
         </Link>
       </header>
 
-      <div className={styles.layout}>
-        <section className={styles.intro} aria-labelledby="onboarding-title">
-          <p className={styles.eyebrow}>A focused start</p>
-          <h1 className={styles.title} id="onboarding-title">
+      <div className={styles["layout"]}>
+        <section className={styles["intro"]} aria-labelledby="onboarding-title">
+          <p className={styles["eyebrow"]}>A focused start</p>
+          <h1 className={styles["title"]} id="onboarding-title">
             Tell us what progress means to you.
           </h1>
-          <p className={styles.summary}>
+          <p className={styles["summary"]}>
             SkillUp uses your goal to recommend a practical starting path. You can change these
             details later from your private profile.
           </p>
-          <ul className={styles.commitments} aria-label="Onboarding commitments">
+          <ul className={styles["commitments"]} aria-label="Onboarding commitments">
             <li>Only a few useful questions</li>
             <li>No public learner profile by default</li>
             <li>Preferences can be changed later</li>

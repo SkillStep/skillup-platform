@@ -114,17 +114,17 @@ export function OnboardingForm() {
 
   if (loading) {
     return (
-      <div className={styles.card} aria-live="polite">
+      <div className={styles["card"]} aria-live="polite">
         <h2>Loading your private profile…</h2>
-        <p className={styles.cardLead}>This page is never indexed or cached publicly.</p>
+        <p className={styles["cardLead"]}>This page is never indexed or cached publicly.</p>
       </div>
     );
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles["card"]}>
       <div
-        className={styles.progress}
+        className={styles["progress"]}
         role="progressbar"
         aria-label="Onboarding progress"
         aria-valuemin={1}
@@ -133,22 +133,22 @@ export function OnboardingForm() {
         aria-valuetext="Step 2 of 3"
       >
         <span>Step 2 of 3</span>
-        <span className={styles.progressBar} aria-hidden="true">
-          <span className={styles.progressValue} />
+        <span className={styles["progressBar"]} aria-hidden="true">
+          <span className={styles["progressValue"]} />
         </span>
       </div>
       <h2>Shape your first learning path</h2>
-      <p className={styles.cardLead}>
+      <p className={styles["cardLead"]}>
         A few details help SkillUp recommend practical challenges without creating a heavy profile.
       </p>
 
-      <form className={styles.form} onSubmit={save}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={displayNameId}>
+      <form className={styles["form"]} onSubmit={save}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={displayNameId}>
             What should we call you?
           </label>
           <input
-            className={styles.input}
+            className={styles["input"]}
             id={displayNameId}
             name="displayName"
             autoComplete="name"
@@ -160,12 +160,12 @@ export function OnboardingForm() {
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={ageBandId}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={ageBandId}>
             Age group
           </label>
           <select
-            className={styles.select}
+            className={styles["select"]}
             id={ageBandId}
             name="ageBand"
             value={ageBand}
@@ -177,17 +177,17 @@ export function OnboardingForm() {
             <option value="25_34">25–34</option>
             <option value="35_plus">35+</option>
           </select>
-          <p className={styles.help}>
+          <p className={styles["help"]}>
             SkillUp’s first beta is designed for learners aged 16 and above.
           </p>
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={goalId}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={goalId}>
             What do you want to achieve first?
           </label>
           <textarea
-            className={styles.textarea}
+            className={styles["textarea"]}
             id={goalId}
             name="learningGoal"
             minLength={3}
@@ -199,12 +199,12 @@ export function OnboardingForm() {
           />
         </div>
 
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor={localeId}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={localeId}>
             Learning language
           </label>
           <select
-            className={styles.select}
+            className={styles["select"]}
             id={localeId}
             name="locale"
             value={locale}
@@ -217,15 +217,15 @@ export function OnboardingForm() {
           </select>
         </div>
 
-        <button className={styles.action} type="submit" disabled={busy}>
+        <button className={styles["action"]} type="submit" disabled={busy}>
           {busy ? "Saving…" : "Save and continue"}
         </button>
       </form>
 
       <div aria-live="polite" aria-atomic="true">
-        {message ? <p className={`${styles.message} ${styles.error}`}>{message}</p> : null}
+        {message ? <p className={`${styles["message"]} ${styles["error"]}`}>{message}</p> : null}
       </div>
-      <p className={styles.privacy}>
+      <p className={styles["privacy"]}>
         Your age group and learning goal are private profile data. They are not published or
         indexed.
       </p>

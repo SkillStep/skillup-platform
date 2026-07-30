@@ -96,23 +96,23 @@ export function SignInForm() {
   }
 
   return (
-    <div className={styles.card}>
+    <div className={styles["card"]}>
       <h2>{challenge ? "Check your email" : "Start with your email"}</h2>
-      <p className={styles.cardLead}>
+      <p className={styles["cardLead"]}>
         {challenge
           ? `We sent a short-lived sign-in code to ${email}.`
           : "No password to remember. We will send a short-lived verification code."}
       </p>
 
       {challenge ? (
-        <form className={styles.form} onSubmit={verify}>
-          <div className={styles.codeGrid}>
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor={codeId}>
+        <form className={styles["form"]} onSubmit={verify}>
+          <div className={styles["codeGrid"]}>
+            <div className={styles["field"]}>
+              <label className={styles["label"]} htmlFor={codeId}>
                 Six-digit code
               </label>
               <input
-                className={styles.input}
+                className={styles["input"]}
                 id={codeId}
                 name="code"
                 inputMode="numeric"
@@ -123,15 +123,15 @@ export function SignInForm() {
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
                 required
               />
-              <p className={styles.help}>
+              <p className={styles["help"]}>
                 The code expires shortly and stops working after five unsuccessful attempts.
               </p>
             </div>
-            <button className={styles.action} type="submit" disabled={busy || code.length !== 6}>
+            <button className={styles["action"]} type="submit" disabled={busy || code.length !== 6}>
               {busy ? "Verifying…" : "Verify and continue"}
             </button>
             <button
-              className={styles.secondaryAction}
+              className={styles["secondaryAction"]}
               type="button"
               disabled={busy}
               onClick={() => {
@@ -145,13 +145,13 @@ export function SignInForm() {
           </div>
         </form>
       ) : (
-        <form className={styles.form} onSubmit={start}>
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor={emailId}>
+        <form className={styles["form"]} onSubmit={start}>
+          <div className={styles["field"]}>
+            <label className={styles["label"]} htmlFor={emailId}>
               Email address
             </label>
             <input
-              className={styles.input}
+              className={styles["input"]}
               id={emailId}
               name="email"
               type="email"
@@ -163,9 +163,9 @@ export function SignInForm() {
               onChange={(event) => setEmail(event.target.value)}
               required
             />
-            <p className={styles.help}>Use an address you can access on this device.</p>
+            <p className={styles["help"]}>Use an address you can access on this device.</p>
           </div>
-          <button className={styles.action} type="submit" disabled={busy}>
+          <button className={styles["action"]} type="submit" disabled={busy}>
             {busy ? "Requesting code…" : "Send sign-in code"}
           </button>
         </form>
@@ -173,12 +173,12 @@ export function SignInForm() {
 
       <div aria-live="polite" aria-atomic="true">
         {message ? (
-          <p className={`${styles.message} ${isError ? styles.error : styles.success}`}>
+          <p className={`${styles["message"]} ${isError ? styles["error"] : styles["success"]}`}>
             {message}
           </p>
         ) : null}
       </div>
-      <p className={styles.privacy}>
+      <p className={styles["privacy"]}>
         SkillUp does not return or log verification codes. Account existence is not disclosed by the
         request step.
       </p>

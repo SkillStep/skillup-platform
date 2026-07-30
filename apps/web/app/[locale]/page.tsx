@@ -10,7 +10,7 @@ type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
 }>;
 
-const publicAppUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
+const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
 export function generateStaticParams() {
   return [{ locale: "en" }];
