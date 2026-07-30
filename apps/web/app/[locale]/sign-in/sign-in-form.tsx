@@ -99,9 +99,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
       const body = (await response.json()) as VerifyResponse;
       const onboardingComplete = body.learner?.profile?.onboardingStatus === "completed";
-      const destination = onboardingComplete
-        ? returnTo
-        : withReturnTo("/en/onboarding", returnTo);
+      const destination = onboardingComplete ? returnTo : withReturnTo("/en/onboarding", returnTo);
 
       setIsError(false);
       setMessage(
