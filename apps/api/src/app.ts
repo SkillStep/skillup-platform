@@ -7,6 +7,12 @@ import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
 import { type ProgressService, registerProgressRoutes } from "./progress.js";
+import { createRateLimitHook, type RateLimitOptions } from "./rate-limit.js";
+
+const API_BODY_LIMIT_BYTES = 128 * 1_024;
+const API_REQUEST_TIMEOUT_MS = 15_000;
+const API_CONNECTION_TIMEOUT_MS = 10_000;
+const API_KEEP_ALIVE_TIMEOUT_MS = 72_000;
 
 export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
@@ -15,6 +21,7 @@ export type BuildApiOptions = Readonly<{
   authService?: AuthService | undefined;
   gameplayService?: GameplayService | undefined;
   progressService?: ProgressService | undefined;
+  rateLimit?: RateLimitOptions;
 }>;
 
 type NormalizedError = Readonly<{
@@ -46,14 +53,21 @@ function normalizeError(error: unknown): NormalizedError {
   };
 }
 
+function isPublicRuntime(config: ApiConfig): boolean {
+  return config.APP_ENV === "staging" || config.APP_ENV === "production";
+}
+
 export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   const config = options.config ?? readApiConfig();
   const now = options.now ?? (() => new Date());
   const readiness = options.readiness ?? (async () => true);
 
   const app = Fastify({
+    bodyLimit: API_BODY_LIMIT_BYTES,
+    connectionTimeout: API_CONNECTION_TIMEOUT_MS,
     disableRequestLogging: config.APP_ENV === "test",
     genReqId: () => randomUUID(),
+    keepAliveTimeout: API_KEEP_ALIVE_TIMEOUT_MS,
     logger:
       config.LOG_LEVEL === "silent"
         ? false
@@ -75,16 +89,37 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
               censor: "[redacted]",
             },
           },
-    trustProxy: false,
+    maxParamLength: 200,
+    requestTimeout: API_REQUEST_TIMEOUT_MS,
+    trustProxy: isPublicRuntime(config),
   });
+
+  app.addHook(
+    "onRequest",
+    createRateLimitHook(
+      options.rateLimit ?? {
+        windowMs: 60_000,
+        maxRequests: 120,
+        maxEntries: 10_000,
+      },
+    ),
+  );
 
   app.addHook("onSend", async (_request, reply) => {
     reply.headers({
       "cache-control": "no-store",
-      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'",
+      "cross-origin-opener-policy": "same-origin",
+      "cross-origin-resource-policy": "same-origin",
+      "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=(), usb=()",
       "referrer-policy": "no-referrer",
       "x-content-type-options": "nosniff",
+      "x-dns-prefetch-control": "off",
+      "x-frame-options": "DENY",
     });
+    if (isPublicRuntime(config)) {
+      reply.header("strict-transport-security", "max-age=31536000; includeSubDomains");
+    }
   });
 
   app.get("/v1/health", async () =>
