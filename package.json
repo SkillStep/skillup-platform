@@ -1,0 +1,22 @@
+{
+  "name": "skillup-platform",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Pakistan-first mobile-first gamified learning platform",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": "24.18.x",
+    "pnpm": "11.17.x"
+  },
+  "scripts": {
+    "check": "node tools/validate-foundation.mjs",
+    "format:check": "node tools/validate-foundation.mjs --format",
+    "lint": "node tools/validate-foundation.mjs --lint",
+    "typecheck": "node tools/validate-foundation.mjs --types",
+    "test": "node tools/validate-foundation.mjs --test",
+    "build": "node tools/validate-foundation.mjs --build",
+    "infra:up": "docker compose -f infra/compose.yaml up -d",
+    "infra:down": "docker compose -f infra/compose.yaml down",
+    "infra:reset": "docker compose -f infra/compose.yaml down -v"
+  }
+}
