@@ -22,11 +22,11 @@ child.stderr.on("data", (chunk) => {
   output += chunk.toString();
 });
 
-async function stop(): Promise<void> {
+async function stop() {
   if (child.exitCode === null) child.kill("SIGTERM");
 
   await Promise.race([
-    new Promise<void>((resolve) => child.once("exit", () => resolve())),
+    new Promise((resolve) => child.once("exit", () => resolve())),
     delay(5_000).then(() => {
       if (child.exitCode === null) child.kill("SIGKILL");
     }),
