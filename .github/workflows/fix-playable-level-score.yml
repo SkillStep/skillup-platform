@@ -1,0 +1,73 @@
+name: Fix playable level score
+
+on:
+  push:
+    branches:
+      - feat/23-playable-level-web
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-playable-level-score
+  cancel-in-progress: false
+
+jobs:
+  fix:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/23-playable-level-web
+          persist-credentials: true
+
+      - name: Apply semantic score fix
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          player_path = Path("apps/web/app/[locale]/learn/[levelId]/level-player.tsx")
+          player = player_path.read_text(encoding="utf-8")
+          old = '''          <div
+            className={styles["score"]}
+            aria-label={`${session.awardedPoints} out of ${session.maxPoints} points`}
+          >
+            {session.awardedPoints}/{session.maxPoints}
+          </div>
+          '''
+          new = '''          <div className={styles["score"]}>
+            <span aria-hidden="true">
+              {session.awardedPoints}/{session.maxPoints}
+            </span>
+            <span className={styles["visuallyHidden"]}>
+              {session.awardedPoints} out of {session.maxPoints} points
+            </span>
+          </div>
+          '''
+          if old not in player:
+              raise SystemExit("Expected score block was not found.")
+          player_path.write_text(player.replace(old, new), encoding="utf-8")
+
+          package_path = Path("package.json")
+          package = package_path.read_text(encoding="utf-8")
+          package_path.write_text(
+              package.replace(
+                  '"lint": "biome lint --max-diagnostics=300 ."',
+                  '"lint": "biome lint ."',
+              ),
+              encoding="utf-8",
+          )
+          PY
+
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm format
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "fix(web): expose level score with valid semantics"
+          git push origin HEAD:feat/23-playable-level-web
