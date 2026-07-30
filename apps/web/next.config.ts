@@ -1,7 +1,5 @@
 import type { NextConfig } from "next";
 
-const apiBaseUrl = (process.env["API_BASE_URL"] ?? "http://127.0.0.1:3001").replace(/\/$/, "");
-
 const privateRouteHeaders = [
   { key: "Cache-Control", value: "private, no-store" },
   { key: "X-Robots-Tag", value: "noindex, nofollow, noarchive" },
@@ -14,14 +12,6 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   transpilePackages: ["@skillup/discoverability", "@skillup/ui"],
   typedRoutes: true,
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: `${apiBaseUrl}/v1/:path*`,
-      },
-    ];
-  },
   async headers() {
     return [
       {
