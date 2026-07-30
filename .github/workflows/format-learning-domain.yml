@@ -1,0 +1,39 @@
+name: Format learning domain
+
+on:
+  push:
+    branches:
+      - feat/22-versioned-learning-domain
+
+permissions:
+  contents: write
+
+concurrency:
+  group: format-learning-domain
+  cancel-in-progress: false
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/22-versioned-learning-domain
+          persist-credentials: true
+
+      - name: Format repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm format
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          if ! git diff --cached --quiet; then
+            git commit -m "style: format versioned learning domain"
+            git push origin HEAD:feat/22-versioned-learning-domain
+          fi
