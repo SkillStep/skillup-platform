@@ -56,7 +56,8 @@ try {
       `insert into level_play_sessions
         (id, user_id, level_id, level_version_id, state, current_challenge_ordinal,
          awarded_points, max_points, started_at, last_activity_at, expires_at)
-       values ($1, $2, $3, $4, 'active', 0, 0, 20, $5, $5, $5 + interval '1 day')`,
+       values ($1, $2, $3, $4, 'active', 0, 0, 20,
+               $5::timestamptz, $5::timestamptz, $5::timestamptz + interval '1 day')`,
       [
         sessionId,
         userId,
@@ -82,7 +83,9 @@ try {
       enrolled.rows[0].leaderboard_opt_in !== false ||
       enrolled.rows[0].timezone !== "UTC"
     ) {
-      throw new Error(`Session enrollment/privacy defaults were not derived: ${JSON.stringify(enrolled.rows[0])}`);
+      throw new Error(
+        `Session enrollment/privacy defaults were not derived: ${JSON.stringify(enrolled.rows[0])}`,
+      );
     }
 
     await database.query(
@@ -119,14 +122,20 @@ try {
       rewardRow.badges !== 2 ||
       rewardRow.enrollment_state !== "completed"
     ) {
-      throw new Error(`Verified completion rewards were not derived correctly: ${JSON.stringify(rewardRow)}`);
+      throw new Error(
+        `Verified completion rewards were not derived correctly: ${JSON.stringify(rewardRow)}`,
+      );
     }
 
     await database.query(
       "update level_play_sessions set last_activity_at = $2 where id = $1",
       [sessionId, new Date("2026-07-30T12:05:00.000Z")],
     );
-    const duplicateCounts = await database.query<{ ledger: number; streaks: number; badges: number }>(
+    const duplicateCounts = await database.query<{
+      ledger: number;
+      streaks: number;
+      badges: number;
+    }>(
       `select
          (select count(*)::int from points_ledger where user_id = $1) as ledger,
          (select count(*)::int from streak_events where user_id = $1) as streaks,
@@ -138,7 +147,9 @@ try {
       duplicateCounts.rows[0].streaks !== 1 ||
       duplicateCounts.rows[0].badges !== 2
     ) {
-      throw new Error(`Completed-session replay inflated rewards: ${JSON.stringify(duplicateCounts.rows[0])}`);
+      throw new Error(
+        `Completed-session replay inflated rewards: ${JSON.stringify(duplicateCounts.rows[0])}`,
+      );
     }
 
     await expectPostgresFailure(
