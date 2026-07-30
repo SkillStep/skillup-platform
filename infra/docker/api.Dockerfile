@@ -1,0 +1,38 @@
+# syntax=docker/dockerfile:1.7
+
+FROM node:24.18.0-bookworm-slim AS build
+
+ENV PNPM_HOME=/pnpm
+ENV PATH=$PNPM_HOME:$PATH
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+WORKDIR /workspace
+
+RUN corepack enable && corepack prepare pnpm@11.17.0 --activate
+
+COPY . .
+
+RUN --mount=type=cache,id=skillup-pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile
+RUN pnpm shared:build && pnpm --filter @skillup/api build
+RUN pnpm --filter @skillup/api --prod deploy --legacy /out/api
+
+FROM node:24.18.0-bookworm-slim AS runtime
+
+ENV NODE_ENV=production
+ENV API_HOST=0.0.0.0
+ENV API_PORT=3001
+
+WORKDIR /app
+
+COPY --from=build --chown=node:node /out/api ./
+
+USER node
+
+EXPOSE 3001
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "const port=process.env.PORT||process.env.API_PORT||3001;fetch('http://127.0.0.1:'+port+'/v1/ready').then((response)=>{if(!response.ok)process.exit(1)}).catch(()=>process.exit(1))"
+
+CMD ["node", "dist/index.js"]
