@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 
 import "./globals.css";
+import "./components.css";
 
 const publicAppUrl = process.env.PUBLIC_APP_URL ?? "http://localhost:3000";
 
