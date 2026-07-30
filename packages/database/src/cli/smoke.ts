@@ -73,8 +73,7 @@ try {
       (select count(*)::int from learner_profiles) as profiles`);
   const identity = identityCounts.rows[0];
   if (
-    !identity ||
-    identity.users !== 0 ||
+    identity?.users !== 0 ||
     identity.identities !== 0 ||
     identity.challenges !== 0 ||
     identity.sessions !== 0 ||

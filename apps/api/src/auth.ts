@@ -121,32 +121,32 @@ function addHours(date: Date, hours: number): Date {
 
 function profileFromRow(row: Record<string, unknown>): LearnerProfile {
   return {
-    displayName: typeof row["display_name"] === "string" ? row["display_name"] : null,
-    locale: row["locale"] === "ur" ? "ur" : "en",
+    displayName: typeof row.display_name === "string" ? row.display_name : null,
+    locale: row.locale === "ur" ? "ur" : "en",
     ageBand:
-      row["age_band"] === "16_17" ||
-      row["age_band"] === "18_24" ||
-      row["age_band"] === "25_34" ||
-      row["age_band"] === "35_plus"
-        ? row["age_band"]
+      row.age_band === "16_17" ||
+      row.age_band === "18_24" ||
+      row.age_band === "25_34" ||
+      row.age_band === "35_plus"
+        ? row.age_band
         : "unspecified",
-    avatarKey: typeof row["avatar_key"] === "string" ? row["avatar_key"] : null,
-    learningGoal: typeof row["learning_goal"] === "string" ? row["learning_goal"] : null,
+    avatarKey: typeof row.avatar_key === "string" ? row.avatar_key : null,
+    learningGoal: typeof row.learning_goal === "string" ? row.learning_goal : null,
     onboardingStatus:
-      row["onboarding_status"] === "in_progress" || row["onboarding_status"] === "completed"
-        ? row["onboarding_status"]
+      row.onboarding_status === "in_progress" || row.onboarding_status === "completed"
+        ? row.onboarding_status
         : "not_started",
   };
 }
 
 function learnerFromRow(row: Record<string, unknown>): AuthenticatedLearner {
-  if (typeof row["user_id"] !== "string" || typeof row["email_display"] !== "string") {
+  if (typeof row.user_id !== "string" || typeof row.email_display !== "string") {
     throw new Error("The authentication query returned an invalid learner record.");
   }
 
   return {
-    id: row["user_id"],
-    email: row["email_display"],
+    id: row.user_id,
+    email: row.email_display,
     profile: profileFromRow(row),
   };
 }
@@ -345,7 +345,7 @@ export function createAuthService(
         [tokenDigest, seenAt],
       );
       const row = result.rows[0];
-      if (!row || typeof row["session_id"] !== "string" || !(row["expires_at"] instanceof Date)) {
+      if (!row || typeof row.session_id !== "string" || !(row.expires_at instanceof Date)) {
         return null;
       }
 
@@ -354,7 +354,7 @@ export function createAuthService(
         `update auth_sessions
             set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
           where id = $1 and last_seen_at < $2 - interval '5 minutes'`,
-        [row["session_id"], seenAt, extendedIdle],
+        [row.session_id, seenAt, extendedIdle],
       );
 
       return learnerFromRow(row);
@@ -414,7 +414,7 @@ export function createAuthService(
           merged.learningGoal,
           merged.onboardingStatus,
           updatedAt,
-          existing["email_display"],
+          existing.email_display,
         ],
       );
       const row = updated.rows[0];
