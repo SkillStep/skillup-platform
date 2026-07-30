@@ -8,7 +8,16 @@ describe("launch path content", () => {
     expect(new Set(launchPaths.map((path) => path.slug)).size).toBe(launchPaths.length);
   });
 
-  it("selects the interview and workplace communication pilot", () => {
-    expect(featuredPath().slug).toBe("interview-workplace-communication");
+  it("selects the playable interview and workplace communication pilot", () => {
+    expect(featuredPath()).toMatchObject({
+      slug: "interview-workplace-communication",
+      levelId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7",
+    });
+  });
+
+  it("does not expose unreviewed paths as playable", () => {
+    expect(launchPaths.filter((path) => path.status === "planned").every((path) => !path.levelId)).toBe(
+      true,
+    );
   });
 });
