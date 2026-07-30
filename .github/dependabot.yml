@@ -11,7 +11,12 @@ updates:
     open-pull-requests-limit: 5
     versioning-strategy: increase-if-necessary
     groups:
-      development-tooling:
+      production-minor-patch:
+        dependency-type: production
+        update-types:
+          - minor
+          - patch
+      development-minor-patch:
         dependency-type: development
         update-types:
           - minor
@@ -30,3 +35,14 @@ updates:
     labels:
       - dependencies
       - github-actions
+
+  - package-ecosystem: docker
+    directory: /infra/docker
+    schedule:
+      interval: monthly
+      time: "06:00"
+      timezone: Asia/Karachi
+    open-pull-requests-limit: 3
+    labels:
+      - dependencies
+      - docker
