@@ -30,7 +30,8 @@ try {
       `insert into level_play_sessions
         (id, user_id, level_id, level_version_id, state, current_challenge_ordinal,
          awarded_points, max_points, started_at, last_activity_at, expires_at)
-       values ($1, $2, $3, $4, 'active', 0, 0, 20, $5, $5, $5 + interval '1 day')`,
+       values ($1, $2, $3, $4, 'active', 0, 0, 20,
+               $5::timestamptz, $5::timestamptz, $5::timestamptz + interval '1 day')`,
       [
         sessionId,
         userId,
