@@ -8,6 +8,7 @@ import { type ApiConfig, readApiConfig } from "./config.js";
 export type BuildApiOptions = Readonly<{
   config?: ApiConfig;
   now?: () => Date;
+  readiness?: () => Promise<boolean>;
 }>;
 
 type NormalizedError = Readonly<{
@@ -42,6 +43,7 @@ function normalizeError(error: unknown): NormalizedError {
 export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   const config = options.config ?? readApiConfig();
   const now = options.now ?? (() => new Date());
+  const readiness = options.readiness ?? (async () => true);
 
   const app = Fastify({
     disableRequestLogging: config.APP_ENV === "test",
@@ -85,15 +87,25 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
     }),
   );
 
-  app.get("/v1/ready", async () =>
-    ServiceHealthSchema.parse({
-      status: "ok",
+  app.get("/v1/ready", async (_request, reply) => {
+    let databaseReady = false;
+
+    try {
+      databaseReady = await readiness();
+    } catch {
+      databaseReady = false;
+    }
+
+    if (!databaseReady) reply.status(503);
+
+    return ServiceHealthSchema.parse({
+      status: databaseReady ? "ok" : "degraded",
       service: "skillup-api",
       version: "0.0.0",
       releaseSha: config.RELEASE_SHA,
       timestamp: now().toISOString(),
-    }),
-  );
+    });
+  });
 
   app.get("/v1/version", async () => ({
     service: "skillup-api",

@@ -9,11 +9,11 @@
     "pnpm": "11.17.x"
   },
   "scripts": {
-    "shared:build": "pnpm --filter @skillup/contracts --filter @skillup/content-schema --filter @skillup/discoverability --filter @skillup/analytics --filter @skillup/ui build",
+    "shared:build": "pnpm --filter @skillup/contracts --filter @skillup/content-schema --filter @skillup/discoverability --filter @skillup/analytics --filter @skillup/ui --filter @skillup/database build",
     "dev": "pnpm shared:build && pnpm --parallel --filter @skillup/api --filter @skillup/web dev",
     "dev:web": "pnpm shared:build && pnpm --filter @skillup/web dev",
     "dev:api": "pnpm shared:build && pnpm --filter @skillup/api dev",
-    "foundation:check": "node tools/validate-foundation.mjs",
+    "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
     "lint": "biome lint .",
@@ -22,6 +22,13 @@
     "build": "pnpm -r --if-present build",
     "check": "pnpm foundation:check && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "clean": "node tools/clean.mjs",
+    "db:generate": "pnpm --filter @skillup/database db:generate",
+    "db:wait": "pnpm --filter @skillup/database db:wait",
+    "db:migrate": "pnpm --filter @skillup/database db:migrate",
+    "db:seed": "pnpm --filter @skillup/database db:seed",
+    "db:smoke": "pnpm --filter @skillup/database db:smoke",
+    "smoke:api": "node tools/smoke-api.mjs",
+    "local:setup": "pnpm infra:up && pnpm db:wait && pnpm db:migrate && pnpm db:seed && pnpm db:smoke",
     "infra:up": "docker compose -f infra/compose.yaml up -d",
     "infra:down": "docker compose -f infra/compose.yaml down",
     "infra:reset": "docker compose -f infra/compose.yaml down -v"

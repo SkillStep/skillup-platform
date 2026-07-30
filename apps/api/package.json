@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@skillup/contracts": "workspace:*",
+    "@skillup/database": "workspace:*",
     "fastify": "5.10.0",
     "zod": "4.4.3"
   },
