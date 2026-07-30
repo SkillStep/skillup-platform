@@ -1,0 +1,263 @@
+.shell {
+  min-height: 100svh;
+  padding: 1rem;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1080px;
+  padding: 0.5rem 0;
+}
+
+.homeLink {
+  border-radius: 0.75rem;
+  text-decoration: none;
+}
+
+.backLink {
+  border-radius: 0.65rem;
+  color: var(--ink-700);
+  font-size: 0.92rem;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 0.6rem;
+  text-decoration: none;
+}
+
+.layout {
+  align-items: start;
+  display: grid;
+  gap: clamp(1.5rem, 5vw, 4rem);
+  grid-template-columns: minmax(0, 0.9fr) minmax(320px, 0.72fr);
+  margin: 0 auto;
+  max-width: 1080px;
+  padding: clamp(2.5rem, 8vw, 6rem) 0;
+}
+
+.intro {
+  max-width: 620px;
+  padding-top: clamp(0rem, 3vw, 2rem);
+}
+
+.eyebrow {
+  color: var(--brand-700);
+  font-size: 0.78rem;
+  font-weight: 850;
+  letter-spacing: 0.13em;
+  margin: 0 0 0.8rem;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(2.35rem, 7vw, 4.8rem);
+  letter-spacing: -0.06em;
+  line-height: 0.99;
+  margin: 0;
+  text-wrap: balance;
+}
+
+.summary {
+  color: var(--ink-700);
+  font-size: 1.05rem;
+  margin: 1.25rem 0 0;
+  max-width: 560px;
+}
+
+.commitments {
+  color: var(--ink-700);
+  display: grid;
+  gap: 0.65rem;
+  list-style: none;
+  margin: 1.75rem 0 0;
+  padding: 0;
+}
+
+.commitments li::before {
+  color: #4d7c0f;
+  content: "✓";
+  font-weight: 900;
+  margin-right: 0.55rem;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--line);
+  border-radius: 1.4rem;
+  box-shadow: var(--shadow);
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.card h2 {
+  font-size: clamp(1.45rem, 4vw, 2rem);
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+  margin: 0;
+}
+
+.cardLead {
+  color: var(--ink-700);
+  margin: 0.65rem 0 0;
+}
+
+.form {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.label {
+  color: var(--ink-950);
+  font-size: 0.9rem;
+  font-weight: 780;
+}
+
+.input,
+.select,
+.textarea {
+  background: var(--surface-0);
+  border: 1px solid #bac7d8;
+  border-radius: 0.8rem;
+  color: var(--ink-950);
+  font: inherit;
+  min-height: 48px;
+  padding: 0.75rem 0.85rem;
+  width: 100%;
+}
+
+.textarea {
+  min-height: 112px;
+  resize: vertical;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: var(--focus);
+  box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.14);
+  outline: none;
+}
+
+.help {
+  color: var(--ink-500);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.action {
+  background: var(--brand-700);
+  border: 0;
+  border-radius: 0.85rem;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 800;
+  min-height: 50px;
+  padding: 0.75rem 1rem;
+}
+
+.action:disabled {
+  cursor: wait;
+  opacity: 0.66;
+}
+
+.secondaryAction {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  color: var(--ink-950);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+  min-height: 48px;
+  padding: 0.7rem 1rem;
+}
+
+.message {
+  border-radius: 0.8rem;
+  font-size: 0.9rem;
+  margin: 0;
+  padding: 0.8rem;
+}
+
+.error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+}
+
+.success {
+  background: var(--progress-100);
+  border: 1px solid #bef264;
+  color: #365314;
+}
+
+.codeGrid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.progress {
+  align-items: center;
+  color: var(--ink-700);
+  display: flex;
+  font-size: 0.84rem;
+  font-weight: 700;
+  gap: 0.65rem;
+  margin-bottom: 1rem;
+}
+
+.progressBar {
+  background: var(--brand-100);
+  border-radius: 999px;
+  display: block;
+  flex: 1;
+  height: 0.55rem;
+  overflow: hidden;
+}
+
+.progressValue {
+  background: var(--progress-500);
+  display: block;
+  height: 100%;
+  width: 66%;
+}
+
+.privacy {
+  color: var(--ink-500);
+  font-size: 0.78rem;
+  margin: 1rem 0 0;
+}
+
+@media (max-width: 760px) {
+  .shell {
+    padding: 0.75rem 1rem 2rem;
+  }
+
+  .layout {
+    grid-template-columns: 1fr;
+    padding: 2.25rem 0 1rem;
+  }
+
+  .intro {
+    padding-top: 0;
+  }
+
+  .title {
+    font-size: clamp(2.25rem, 13vw, 3.7rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action,
+  .secondaryAction {
+    scroll-behavior: auto;
+  }
+}
