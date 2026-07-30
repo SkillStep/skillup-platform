@@ -32,13 +32,7 @@ try {
          awarded_points, max_points, started_at, last_activity_at, expires_at)
        values ($1, $2, $3, $4, 'active', 0, 0, 20,
                $5::timestamptz, $5::timestamptz, $5::timestamptz + interval '1 day')`,
-      [
-        sessionId,
-        userId,
-        pilotLearningSeed.level.id,
-        pilotLearningSeed.level.versionId,
-        startedAt,
-      ],
+      [sessionId, userId, pilotLearningSeed.level.id, pilotLearningSeed.level.versionId, startedAt],
     );
     await database.query(
       `insert into level_session_challenges
@@ -108,7 +102,9 @@ try {
       resumedRow.enrollment_state !== "in_progress" ||
       resumedRow.awarded_points !== 10
     ) {
-      throw new Error(`The exact pilot session did not resume safely: ${JSON.stringify(resumedRow)}`);
+      throw new Error(
+        `The exact pilot session did not resume safely: ${JSON.stringify(resumedRow)}`,
+      );
     }
 
     await database.query(
@@ -212,7 +208,9 @@ try {
       completionRow.badge_unlocks !== 2 ||
       completionRow.attempts !== 2
     ) {
-      throw new Error(`The pilot completion evidence is inconsistent: ${JSON.stringify(completionRow)}`);
+      throw new Error(
+        `The pilot completion evidence is inconsistent: ${JSON.stringify(completionRow)}`,
+      );
     }
 
     await database.query("update level_play_sessions set last_activity_at = $2 where id = $1", [
