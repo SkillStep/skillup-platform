@@ -19,10 +19,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
-    "db:wait": "tsx src/cli/wait.ts",
-    "db:migrate": "tsx src/cli/migrate.ts",
-    "db:seed": "tsx src/cli/seed.ts",
-    "db:smoke": "tsx src/cli/smoke.ts"
+    "db:wait": "node --env-file-if-exists=../../.env --import tsx src/cli/wait.ts",
+    "db:migrate": "node --env-file-if-exists=../../.env --import tsx src/cli/migrate.ts",
+    "db:seed": "node --env-file-if-exists=../../.env --import tsx src/cli/seed.ts",
+    "db:smoke": "node --env-file-if-exists=../../.env --import tsx src/cli/smoke.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",
