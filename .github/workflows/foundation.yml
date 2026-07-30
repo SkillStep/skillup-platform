@@ -17,7 +17,7 @@ jobs:
   quality:
     name: Install, validate, test and build
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 55
 
     env:
       APP_ENV: test
@@ -89,6 +89,81 @@ jobs:
       - name: Smoke API against migrated PostgreSQL
         run: pnpm smoke:api
 
+      - name: Run production containers and end-to-end smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker rm -f skillup-api-ci skillup-web-ci >/dev/null 2>&1 || true
+          docker run --detach --name skillup-api-ci --network host \
+            --env APP_ENV=staging \
+            --env API_HOST=0.0.0.0 \
+            --env API_PORT=3001 \
+            --env PUBLIC_APP_URL=http://127.0.0.1:3000 \
+            --env DATABASE_URL="$DATABASE_URL" \
+            --env SESSION_SECRET="$SESSION_SECRET" \
+            --env EMAIL_PROVIDER=disabled \
+            --env RELEASE_SHA="$RELEASE_SHA" \
+            skillup-api:${{ github.sha }}
+
+          api_ready=false
+          for attempt in $(seq 1 40); do
+            if node -e "fetch('http://127.0.0.1:3001/v1/ready').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"; then
+              api_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$api_ready" != true ]; then
+            docker logs skillup-api-ci
+            exit 1
+          fi
+
+          docker run --detach --name skillup-web-ci --network host \
+            --env PORT=3000 \
+            --env HOSTNAME=0.0.0.0 \
+            --env PUBLIC_APP_URL=http://127.0.0.1:3000 \
+            --env API_BASE_URL=http://127.0.0.1:3001 \
+            --env RELEASE_SHA="$RELEASE_SHA" \
+            skillup-web:${{ github.sha }}
+
+          web_ready=false
+          for attempt in $(seq 1 40); do
+            if node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"; then
+              web_ready=true
+              break
+            fi
+            sleep 1
+          done
+          if [ "$web_ready" != true ]; then
+            docker logs skillup-web-ci
+            exit 1
+          fi
+
+          SKILLUP_WEB_URL=http://127.0.0.1:3000 \
+          SKILLUP_API_URL=http://127.0.0.1:3001 \
+          SKILLUP_EXPECTED_RELEASE_SHA="$RELEASE_SHA" \
+          pnpm smoke:live
+
+      - name: Write release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          export SKILLUP_API_IMAGE_ID="$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Id}}')"
+          export SKILLUP_WEB_IMAGE_ID="$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Id}}')"
+          pnpm release:evidence
+          cat artifacts/release-evidence.json
+
+      - name: Upload release evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-evidence-${{ github.sha }}
+          path: artifacts/release-evidence.json
+          if-no-files-found: error
+          retention-days: 30
+
       - name: Stop local infrastructure
         if: always()
-        run: docker compose -f infra/compose.yaml down -v
+        shell: bash
+        run: |
+          docker rm -f skillup-api-ci skillup-web-ci >/dev/null 2>&1 || true
+          docker compose -f infra/compose.yaml down -v

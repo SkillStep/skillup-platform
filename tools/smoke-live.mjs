@@ -1,17 +1,19 @@
-const webUrlInput = process.env["SKILLUP_WEB_URL"];
-const apiUrlInput = process.env["SKILLUP_API_URL"];
-const expectedRelease = process.env["SKILLUP_EXPECTED_RELEASE_SHA"];
-const timeoutMilliseconds = Number(process.env["SKILLUP_SMOKE_TIMEOUT_MS"] ?? 15_000);
+const webUrlInput = process.env.SKILLUP_WEB_URL;
+const apiUrlInput = process.env.SKILLUP_API_URL;
+const expectedRelease = process.env.SKILLUP_EXPECTED_RELEASE_SHA;
+const timeoutMilliseconds = Number(process.env.SKILLUP_SMOKE_TIMEOUT_MS ?? 15_000);
+const responseBudgetMilliseconds = Number(process.env.SKILLUP_SMOKE_RESPONSE_BUDGET_MS ?? 5_000);
 
 if (!webUrlInput) {
   throw new Error("SKILLUP_WEB_URL is required, for example https://staging.skillup.example.");
 }
-if (
-  !Number.isInteger(timeoutMilliseconds) ||
-  timeoutMilliseconds < 1_000 ||
-  timeoutMilliseconds > 60_000
-) {
-  throw new Error("SKILLUP_SMOKE_TIMEOUT_MS must be an integer between 1000 and 60000.");
+for (const [label, value, minimum, maximum] of [
+  ["SKILLUP_SMOKE_TIMEOUT_MS", timeoutMilliseconds, 1_000, 60_000],
+  ["SKILLUP_SMOKE_RESPONSE_BUDGET_MS", responseBudgetMilliseconds, 250, 30_000],
+]) {
+  if (!Number.isInteger(value) || value < minimum || value > maximum) {
+    throw new Error(`${label} must be an integer between ${minimum} and ${maximum}.`);
+  }
 }
 
 function baseUrl(value, label) {
@@ -27,6 +29,7 @@ function baseUrl(value, label) {
 
 const webBase = baseUrl(webUrlInput, "SKILLUP_WEB_URL");
 const directApiBase = apiUrlInput ? baseUrl(apiUrlInput, "SKILLUP_API_URL") : null;
+const timings = [];
 
 function endpoint(base, path) {
   return new URL(path, `${base.toString().replace(/\/$/, "")}/`);
@@ -34,21 +37,40 @@ function endpoint(base, path) {
 
 async function request(path, options = {}) {
   const url = endpoint(options.base ?? webBase, path);
+  const startedAt = performance.now();
+  const headers = new Headers({
+    accept: options.accept ?? "application/json, text/html;q=0.9",
+    "user-agent": "SkillUp-Deployment-Smoke/2.0",
+  });
+  for (const [name, value] of Object.entries(options.headers ?? {})) headers.set(name, value);
+
+  let body;
+  if (options.payload !== undefined) {
+    headers.set("content-type", "application/json");
+    body = JSON.stringify(options.payload);
+  }
+
   const response = await fetch(url, {
-    method: "GET",
+    method: options.method ?? "GET",
+    body,
     cache: "no-store",
     redirect: options.redirect ?? "follow",
-    headers: {
-      accept: options.accept ?? "application/json, text/html;q=0.9",
-      "user-agent": "SkillUp-Deployment-Smoke/1.0",
-    },
+    headers,
     signal: AbortSignal.timeout(timeoutMilliseconds),
   });
+  const durationMilliseconds = Math.round(performance.now() - startedAt);
+  timings.push({ path, durationMilliseconds, status: response.status });
+
+  if (durationMilliseconds > responseBudgetMilliseconds) {
+    throw new Error(
+      `${url} exceeded the ${responseBudgetMilliseconds}ms response budget: ${durationMilliseconds}ms.`,
+    );
+  }
 
   if (response.status !== (options.status ?? 200)) {
-    const body = (await response.text()).slice(0, 300);
+    const responseBody = (await response.text()).slice(0, 300);
     throw new Error(
-      `${url} returned ${response.status}; expected ${options.status ?? 200}. Body: ${body}`,
+      `${url} returned ${response.status}; expected ${options.status ?? 200}. Body: ${responseBody}`,
     );
   }
   return response;
@@ -64,12 +86,36 @@ async function json(path, options = {}) {
 }
 
 function requireEqual(actual, expected, label) {
-  if (actual !== expected)
+  if (actual !== expected) {
     throw new Error(`${label}: expected ${expected}, received ${String(actual)}.`);
+  }
 }
 
 function requireContains(actual, expected, label) {
   if (!actual.includes(expected)) throw new Error(`${label} must contain ${expected}.`);
+}
+
+function requireHeader(response, name, expected, label) {
+  const value = response.headers.get(name) ?? "";
+  requireContains(value.toLowerCase(), expected.toLowerCase(), `${label} ${name}`);
+}
+
+function requireReferrerPolicy(response, label) {
+  const value = (response.headers.get("Referrer-Policy") ?? "").toLowerCase();
+  if (value !== "no-referrer" && value !== "strict-origin-when-cross-origin") {
+    throw new Error(`${label} Referrer-Policy is not an approved production policy: ${value}`);
+  }
+}
+
+function requireSecurityHeaders(response, label) {
+  requireHeader(response, "Content-Security-Policy", "default-src", label);
+  requireHeader(response, "Cross-Origin-Opener-Policy", "same-origin", label);
+  requireHeader(response, "Cross-Origin-Resource-Policy", "same-origin", label);
+  requireHeader(response, "Permissions-Policy", "camera=()", label);
+  requireReferrerPolicy(response, label);
+  requireHeader(response, "Strict-Transport-Security", "max-age=31536000", label);
+  requireHeader(response, "X-Content-Type-Options", "nosniff", label);
+  requireHeader(response, "X-Frame-Options", "deny", label);
 }
 
 function requirePublicCacheBoundary(response, label) {
@@ -88,12 +134,20 @@ requireContains(
   "no-store",
   "Web health cache policy",
 );
+requireSecurityHeaders(webHealth.response, "Web health");
 
 const homepage = await request("/en", { accept: "text/html" });
 const homepageHtml = await homepage.text();
 requireContains(homepageHtml, "Learn useful skills in short, focused games.", "Homepage HTML");
 requireContains(homepageHtml, "Practical learning for Pakistan", "Homepage positioning");
+requireContains(homepageHtml, "Skip to main content", "Homepage keyboard navigation");
+requireContains(homepageHtml, 'id="main-content"', "Homepage main landmark target");
+requireContains(homepageHtml, '<html lang="en"', "Homepage document language");
+if (Buffer.byteLength(homepageHtml, "utf8") > 500_000) {
+  throw new Error("Homepage HTML exceeds the reviewed 500KB transfer boundary.");
+}
 requirePublicCacheBoundary(homepage, "Homepage");
+requireSecurityHeaders(homepage, "Homepage");
 
 const skills = await request("/en/skills", { accept: "text/html" });
 const skillsHtml = await skills.text();
@@ -129,12 +183,26 @@ requireContains(pilotPathHtml, "Interview answers with evidence", "Pilot path mo
 requireContains(pilotPathHtml, '"@type":"Course"', "Pilot path course data");
 requirePublicCacheBoundary(pilotPath, "Pilot path");
 
+const robots = await request("/robots.txt", { accept: "text/plain" });
+const robotsText = await robots.text();
+requireContains(robotsText, "Sitemap:", "robots.txt");
+requireContains(robotsText, "/en/learn", "robots.txt private learning boundary");
+
+const sitemap = await request("/sitemap.xml", { accept: "application/xml" });
+const sitemapText = await sitemap.text();
+requireContains(sitemapText, "/en/skills/interview-workplace-communication", "sitemap.xml");
+if (sitemapText.includes("/en/learn/") || sitemapText.includes("/en/progress")) {
+  throw new Error("sitemap.xml must not expose private learner routes.");
+}
+
 const manifest = await json("/manifest.webmanifest");
 requireEqual(manifest.body.display, "standalone", "PWA display mode");
 requireEqual(manifest.body.start_url, "/en", "PWA start URL");
 if (!Array.isArray(manifest.body.icons) || manifest.body.icons.length < 2) {
   throw new Error("PWA manifest must expose standard and maskable icons.");
 }
+await request("/icons/skillup-icon.svg", { accept: "image/svg+xml" });
+await request("/icons/skillup-maskable.svg", { accept: "image/svg+xml" });
 
 const serviceWorker = await request("/sw.js", { accept: "application/javascript" });
 const serviceWorkerSource = await serviceWorker.text();
@@ -170,12 +238,32 @@ requireContains(
   "no-store",
   "API cache policy",
 );
+requireSecurityHeaders(proxyHealth.response, "Proxied API health");
 
 const proxyReady = await json("/api/v1/ready");
 requireEqual(proxyReady.body.status, "ok", "Proxied API readiness");
 
 const proxyVersion = await json("/api/v1/version");
 requireEqual(proxyVersion.body.service, "skillup-api", "Proxied API version service");
+
+const privateSession = await json("/api/v1/auth/session", { status: 401 });
+requireEqual(privateSession.body.code, "request_error", "Unauthenticated private-session code");
+requireContains(
+  privateSession.response.headers.get("cache-control") ?? "",
+  "no-store",
+  "Unauthenticated private-session cache policy",
+);
+
+const untrustedMutation = await json("/api/v1/auth/email/start", {
+  method: "POST",
+  status: 403,
+  headers: { origin: "https://attacker.invalid" },
+  payload: { email: "smoke-user@example.invalid" },
+});
+requireEqual(untrustedMutation.body.code, "request_error", "Untrusted-origin mutation code");
+if (JSON.stringify(untrustedMutation.body).includes("smoke-user@example.invalid")) {
+  throw new Error("Rejected mutation must not echo submitted personal data.");
+}
 
 if (directApiBase) {
   const directHealth = await json("/v1/health", { base: directApiBase });
@@ -185,6 +273,7 @@ if (directApiBase) {
     proxyHealth.body.releaseSha,
     "Direct/proxied API release SHA",
   );
+  requireSecurityHeaders(directHealth.response, "Direct API health");
 }
 
 const webRelease = webHealth.body.releaseSha;
@@ -204,16 +293,24 @@ console.log(
       apiCheckedDirectly: directApiBase !== null,
       webRelease,
       apiRelease,
+      responseBudgetMilliseconds,
+      maximumObservedResponseMilliseconds: Math.max(
+        ...timings.map((timing) => timing.durationMilliseconds),
+      ),
+      timings,
       checks: [
-        "web health",
-        "server-rendered homepage",
+        "web health and security headers",
+        "server-rendered homepage and keyboard boundary",
         "public skill catalog and detail HTML",
         "visible-content-matched structured data",
-        "installable PWA manifest and service worker",
+        "robots and sitemap privacy boundaries",
+        "installable PWA manifest, icons and service worker",
         "explicit public cache boundary",
         "private progress noindex/no-store",
         "API liveness through same-origin proxy",
         "database-backed readiness",
+        "unauthenticated and untrusted-origin rejection",
+        "bounded response latency and homepage HTML",
         "release identity",
       ],
     },
