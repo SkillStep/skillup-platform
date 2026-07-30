@@ -10,7 +10,8 @@ function optionalEnvironment(name) {
   return typeof value === "string" && value.length > 0 ? value : null;
 }
 
-const releaseSha = optionalEnvironment("RELEASE_SHA") ?? optionalEnvironment("GITHUB_SHA") ?? "local";
+const releaseSha =
+  optionalEnvironment("RELEASE_SHA") ?? optionalEnvironment("GITHUB_SHA") ?? "local";
 const evidence = {
   schemaVersion: 1,
   generatedAt: new Date().toISOString(),
