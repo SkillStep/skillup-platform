@@ -182,7 +182,10 @@ function optionKeys(challenge: PublicChallenge): readonly string[] {
     case "scenario":
       return challenge.options.map((option) => option.key);
     case "matching":
-      return [...challenge.left.map((option) => option.key), ...challenge.right.map((option) => option.key)];
+      return [
+        ...challenge.left.map((option) => option.key),
+        ...challenge.right.map((option) => option.key),
+      ];
     case "fill_blank":
     case "short_response":
       return [];
@@ -200,10 +203,7 @@ function assertKnownKeys(candidate: readonly string[], allowed: readonly string[
   }
 }
 
-function normalizeText(
-  value: string,
-  policy: z.infer<typeof FillBlankEvaluationSchema>,
-): string {
+function normalizeText(value: string, policy: z.infer<typeof FillBlankEvaluationSchema>): string {
   let normalized = value;
   if (policy.trim) normalized = normalized.trim();
   if (policy.collapseWhitespace) normalized = normalized.replace(/\s+/g, " ");
@@ -226,35 +226,51 @@ function stableValue(value: unknown): unknown {
 
 export function submissionRequestHash(submission: ChallengeSubmission): string {
   const parsed = ChallengeSubmissionSchema.parse(submission);
-  return createHash("sha256").update(JSON.stringify(stableValue(parsed))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(stableValue(parsed)))
+    .digest("hex");
 }
 
 export type SubmissionGuardResult =
   | Readonly<{ kind: "new"; requestHash: string }>
   | Readonly<{ kind: "duplicate"; result: ChallengeEvaluationResult }>;
 
-export function guardSubmission(input: Readonly<{
-  authenticatedUserId: string;
-  session: GameplaySessionSnapshot;
-  submission: ChallengeSubmission;
-  evaluatedAt: Date;
-  existingAttempt: StoredSubmissionAttempt | null;
-}>): SubmissionGuardResult {
+export function guardSubmission(
+  input: Readonly<{
+    authenticatedUserId: string;
+    session: GameplaySessionSnapshot;
+    submission: ChallengeSubmission;
+    evaluatedAt: Date;
+    existingAttempt: StoredSubmissionAttempt | null;
+  }>,
+): SubmissionGuardResult {
   const session = GameplaySessionSnapshotSchema.parse(input.session);
   const submission = ChallengeSubmissionSchema.parse(input.submission);
   const requestHash = submissionRequestHash(submission);
 
   if (session.userId !== input.authenticatedUserId) {
-    throw new GameplayRuleError(403, "session_owner_mismatch", "This gameplay session belongs to another learner.");
+    throw new GameplayRuleError(
+      403,
+      "session_owner_mismatch",
+      "This gameplay session belongs to another learner.",
+    );
   }
   if (session.id !== submission.sessionId) {
-    throw new GameplayRuleError(409, "session_mismatch", "The submission does not match the active gameplay session.");
+    throw new GameplayRuleError(
+      409,
+      "session_mismatch",
+      "The submission does not match the active gameplay session.",
+    );
   }
 
   if (input.existingAttempt) {
     const existing = StoredSubmissionAttemptSchema.parse(input.existingAttempt);
     if (existing.idempotencyKey !== submission.idempotencyKey) {
-      throw new GameplayRuleError(409, "idempotency_mismatch", "The stored attempt does not match this request.");
+      throw new GameplayRuleError(
+        409,
+        "idempotency_mismatch",
+        "The stored attempt does not match this request.",
+      );
     }
     if (existing.requestHash !== requestHash) {
       throw new GameplayRuleError(
@@ -267,7 +283,11 @@ export function guardSubmission(input: Readonly<{
   }
 
   if (session.state !== "active") {
-    throw new GameplayRuleError(409, "session_not_active", "The gameplay session is no longer active.");
+    throw new GameplayRuleError(
+      409,
+      "session_not_active",
+      "The gameplay session is no longer active.",
+    );
   }
   if (new Date(session.expiresAt).getTime() <= input.evaluatedAt.getTime()) {
     throw new GameplayRuleError(410, "session_expired", "The gameplay session has expired.");
@@ -283,21 +303,27 @@ export function guardSubmission(input: Readonly<{
     );
   }
   if (session.attemptsUsed >= session.maxAttempts) {
-    throw new GameplayRuleError(409, "attempt_limit_reached", "No attempts remain for this challenge.");
+    throw new GameplayRuleError(
+      409,
+      "attempt_limit_reached",
+      "No attempts remain for this challenge.",
+    );
   }
 
   return { kind: "new", requestHash };
 }
 
-export function evaluateChallenge(input: Readonly<{
-  challenge: PublicChallenge;
-  privateEvaluation: Record<string, unknown>;
-  response: ChallengeResponse;
-  explanation: string;
-  attemptNumber: number;
-  maxAttempts: number;
-  evaluatedAt: Date;
-}>): ChallengeEvaluationResult {
+export function evaluateChallenge(
+  input: Readonly<{
+    challenge: PublicChallenge;
+    privateEvaluation: Record<string, unknown>;
+    response: ChallengeResponse;
+    explanation: string;
+    attemptNumber: number;
+    maxAttempts: number;
+    evaluatedAt: Date;
+  }>,
+): ChallengeEvaluationResult {
   const challenge = PublicChallengeSchema.parse(input.challenge);
   const response = ChallengeResponseSchema.parse(input.response);
   const attemptNumber = z.number().int().min(1).parse(input.attemptNumber);
@@ -305,7 +331,11 @@ export function evaluateChallenge(input: Readonly<{
   const evaluatedAt = input.evaluatedAt.toISOString();
 
   if (response.type !== challenge.type) {
-    throw new GameplayRuleError(400, "response_type_mismatch", "The response type does not match the challenge.");
+    throw new GameplayRuleError(
+      400,
+      "response_type_mismatch",
+      "The response type does not match the challenge.",
+    );
   }
 
   let status: "correct" | "incorrect" | "needs_review";
@@ -316,7 +346,11 @@ export function evaluateChallenge(input: Readonly<{
       const typedResponse = MultipleChoiceResponseSchema.parse(response);
       assertKnownKeys(typedResponse.selectedOptionKeys, optionKeys(challenge));
       if (typedResponse.selectedOptionKeys.length > challenge.selectionLimit) {
-        throw new GameplayRuleError(400, "selection_limit_exceeded", "Too many answer options were selected.");
+        throw new GameplayRuleError(
+          400,
+          "selection_limit_exceeded",
+          "Too many answer options were selected.",
+        );
       }
       status = equalSets(typedResponse.selectedOptionKeys, evaluation.correctOptionKeys)
         ? "correct"
@@ -327,7 +361,8 @@ export function evaluateChallenge(input: Readonly<{
       const evaluation = TrueFalseEvaluationSchema.parse(input.privateEvaluation);
       const typedResponse = TrueFalseResponseSchema.parse(response);
       assertKnownKeys([typedResponse.selectedOptionKey], optionKeys(challenge));
-      status = typedResponse.selectedOptionKey === evaluation.correctOptionKey ? "correct" : "incorrect";
+      status =
+        typedResponse.selectedOptionKey === evaluation.correctOptionKey ? "correct" : "incorrect";
       break;
     }
     case "ordering": {
@@ -335,7 +370,11 @@ export function evaluateChallenge(input: Readonly<{
       const typedResponse = OrderingResponseSchema.parse(response);
       assertKnownKeys(typedResponse.orderedOptionKeys, optionKeys(challenge));
       if (typedResponse.orderedOptionKeys.length !== challenge.options.length) {
-        throw new GameplayRuleError(400, "incomplete_order", "Every answer option must appear once in the order.");
+        throw new GameplayRuleError(
+          400,
+          "incomplete_order",
+          "Every answer option must appear once in the order.",
+        );
       }
       status = equalSequences(typedResponse.orderedOptionKeys, evaluation.correctOrder)
         ? "correct"
@@ -356,10 +395,18 @@ export function evaluateChallenge(input: Readonly<{
         rightKeys,
       );
       if (typedResponse.matches.length !== challenge.left.length) {
-        throw new GameplayRuleError(400, "incomplete_matching", "Every item must be matched exactly once.");
+        throw new GameplayRuleError(
+          400,
+          "incomplete_matching",
+          "Every item must be matched exactly once.",
+        );
       }
-      const actualPairs = typedResponse.matches.map((match) => `${match.leftKey}:${match.rightKey}`);
-      const expectedPairs = evaluation.correctPairs.map((match) => `${match.leftKey}:${match.rightKey}`);
+      const actualPairs = typedResponse.matches.map(
+        (match) => `${match.leftKey}:${match.rightKey}`,
+      );
+      const expectedPairs = evaluation.correctPairs.map(
+        (match) => `${match.leftKey}:${match.rightKey}`,
+      );
       status = equalSets(actualPairs, expectedPairs) ? "correct" : "incorrect";
       break;
     }
@@ -376,7 +423,9 @@ export function evaluateChallenge(input: Readonly<{
       const evaluation = FillBlankEvaluationSchema.parse(input.privateEvaluation);
       const typedResponse = FillBlankResponseSchema.parse(response);
       const submitted = normalizeText(typedResponse.value, evaluation);
-      const accepted = evaluation.acceptedAnswers.map((answer) => normalizeText(answer, evaluation));
+      const accepted = evaluation.acceptedAnswers.map((answer) =>
+        normalizeText(answer, evaluation),
+      );
       status = accepted.includes(submitted) ? "correct" : "incorrect";
       break;
     }

@@ -162,6 +162,25 @@ importers:
         specifier: 4.1.10
         version: 4.1.10(@types/node@24.12.1)(vite@8.1.5(@types/node@24.12.1)(esbuild@0.28.1)(tsx@4.23.1))
 
+  packages/gameplay-engine:
+    dependencies:
+      '@skillup/content-schema':
+        specifier: workspace:*
+        version: link:../content-schema
+      zod:
+        specifier: 4.4.3
+        version: 4.4.3
+    devDependencies:
+      '@types/node':
+        specifier: 24.12.1
+        version: 24.12.1
+      typescript:
+        specifier: 6.0.3
+        version: 6.0.3
+      vitest:
+        specifier: 4.1.10
+        version: 4.1.10(@types/node@24.12.1)(vite@8.1.5(@types/node@24.12.1)(esbuild@0.28.1)(tsx@4.23.1))
+
   packages/ui:
     devDependencies:
       '@types/react':
