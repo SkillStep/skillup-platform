@@ -417,6 +417,26 @@ export function createGameplayService(
         if (!selected)
           throw new GameplayServiceError(404, "The published level version was not found.");
 
+        const requestedAt = now();
+        await database.query("select id from users where id = $1 for update", [userId]);
+        const activeSession = await database.query<SessionRow>(
+          `select id, user_id, level_id, level_version_id, state,
+                  current_challenge_ordinal, awarded_points, max_points, started_at, expires_at
+             from level_play_sessions
+            where user_id = $1 and level_version_id = $2 and state = 'active'
+            order by started_at desc
+            limit 1
+            for update`,
+          [userId, selected.level_version_id],
+        );
+        const existingSession = activeSession.rows[0];
+        if (existingSession) {
+          const resumedSession = await expireSessionIfRequired(database, existingSession, requestedAt);
+          if (resumedSession.state === "active") {
+            return sessionView(database, resumedSession, requestedAt);
+          }
+        }
+
         const challenges = await database.query<{
           challenge_id: string;
           challenge_version_id: string;
@@ -437,7 +457,7 @@ export function createGameplayService(
         }
 
         const maxPoints = challenges.rows.reduce((sum, challenge) => sum + challenge.points, 0);
-        const startedAt = now();
+        const startedAt = requestedAt;
         const expiresAt = new Date(startedAt.getTime() + sessionHours * 3_600_000);
         const inserted = await database.query<SessionRow>(
           `insert into level_play_sessions
