@@ -3,9 +3,10 @@ import { Pool } from "pg";
 
 import * as gameplaySchema from "./gameplay-schema.js";
 import * as learningSchema from "./learning-schema.js";
+import * as progressSchema from "./progress-schema.js";
 import * as baseSchema from "./schema.js";
 
-const schema = { ...baseSchema, ...learningSchema, ...gameplaySchema };
+const schema = { ...baseSchema, ...learningSchema, ...gameplaySchema, ...progressSchema };
 
 export type SkillUpDatabase = NodePgDatabase<typeof schema>;
 
@@ -59,4 +60,5 @@ export function createDatabaseClient(options: DatabaseClientOptions): DatabaseCl
 
 export * from "./gameplay-schema.js";
 export * from "./learning-schema.js";
+export * from "./progress-schema.js";
 export * from "./schema.js";
