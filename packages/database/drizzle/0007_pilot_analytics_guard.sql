@@ -33,3 +33,59 @@ CREATE TRIGGER "learning_analytics_events_append_only_trigger"
 BEFORE UPDATE OR DELETE ON "learning_analytics_events"
 FOR EACH ROW
 EXECUTE FUNCTION "skillup_reject_progress_event_mutation"();
+--> statement-breakpoint
+CREATE OR REPLACE FUNCTION "skillup_record_learning_analytics_event"()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+DECLARE
+	analytics_name text;
+	analytics_occurred_at timestamp with time zone;
+	version_number integer;
+	version_locale text;
+BEGIN
+	IF TG_OP = 'INSERT' THEN
+		analytics_name := 'level_started';
+		analytics_occurred_at := NEW."started_at";
+	ELSIF TG_OP = 'UPDATE' AND NEW."state" = 'completed' AND OLD."state" <> 'completed' THEN
+		analytics_name := 'level_completed';
+		analytics_occurred_at := NEW."completed_at";
+	ELSE
+		RETURN NEW;
+	END IF;
+
+	SELECT "version", "locale"
+		INTO version_number, version_locale
+		FROM "level_versions"
+		WHERE "id" = NEW."level_version_id";
+
+	IF version_number IS NULL OR version_locale IS NULL OR analytics_occurred_at IS NULL THEN
+		RAISE EXCEPTION 'Published level analytics metadata is incomplete'
+			USING ERRCODE = '23514';
+	END IF;
+
+	INSERT INTO "learning_analytics_events"
+		("event_key", "event_name", "session_id", "content_id", "content_version_id",
+		 "content_version", "locale", "consent", "occurred_at")
+	VALUES
+		(
+			analytics_name || ':' || NEW."id"::text,
+			analytics_name,
+			NEW."id",
+			NEW."level_id",
+			NEW."level_version_id",
+			version_number,
+			version_locale,
+			'essential-only',
+			analytics_occurred_at
+		)
+	ON CONFLICT ("event_key") DO NOTHING;
+
+	RETURN NEW;
+END;
+$$;
+--> statement-breakpoint
+CREATE TRIGGER "level_play_sessions_learning_analytics_trigger"
+AFTER INSERT OR UPDATE ON "level_play_sessions"
+FOR EACH ROW
+EXECUTE FUNCTION "skillup_record_learning_analytics_event"();
