@@ -1,0 +1,53 @@
+name: Live Staging Smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      web_url:
+        description: HTTPS base URL of the SkillUp staging web service
+        required: true
+        type: string
+      api_url:
+        description: Optional protected public API base URL
+        required: false
+        type: string
+      expected_release_sha:
+        description: Expected deployed Git commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: live-staging-smoke
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    name: Verify deployed staging release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    env:
+      SKILLUP_WEB_URL: ${{ inputs.web_url }}
+      SKILLUP_API_URL: ${{ inputs.api_url }}
+      SKILLUP_EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha }}
+
+    steps:
+      - name: Checkout expected release
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ inputs.expected_release_sha }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Run bounded live smoke
+        shell: bash
+        run: |
+          set -euo pipefail
+          node tools/smoke-live.mjs
