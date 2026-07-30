@@ -1,8 +1,9 @@
 import { createDatabaseClient } from "@skillup/database";
 
 import { buildApi } from "./app.js";
-import { createAuthService, createUnavailableAuthCodeDelivery } from "./auth.js";
+import { createAuthService } from "./auth.js";
 import { readApiConfig } from "./config.js";
+import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
 import { createProgressService } from "./progress.js";
 
@@ -18,7 +19,7 @@ const authService = createAuthService({
   challengeMinutes: config.AUTH_CHALLENGE_MINUTES,
   sessionIdleMinutes: config.SESSION_IDLE_MINUTES,
   sessionAbsoluteHours: config.SESSION_ABSOLUTE_HOURS,
-  delivery: createUnavailableAuthCodeDelivery(),
+  delivery: createConfiguredAuthCodeDelivery(config),
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });

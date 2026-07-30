@@ -63,7 +63,7 @@ docs/                   Product, architecture, security, roadmap and operating d
 - [Information architecture](docs/product/INFORMATION_ARCHITECTURE.md)
 - [Brand system V1](docs/brand/BRAND_SYSTEM_V1.md)
 
-## Engineering foundation
+## Engineering and operations
 
 - [Target architecture](docs/architecture/ARCHITECTURE.md)
 - [Architecture decisions](docs/architecture/adr/)
@@ -71,23 +71,35 @@ docs/                   Product, architecture, security, roadmap and operating d
 - [Accessibility and performance standard](docs/design/DESIGN_ACCESSIBILITY_PERFORMANCE_STANDARD.md)
 - [Delivery roadmap](docs/roadmap/ROADMAP.md)
 - [Local development bootstrap](docs/engineering/LOCAL_DEVELOPMENT.md)
+- [Railway staging deployment](docs/operations/RAILWAY_STAGING_DEPLOYMENT.md)
 - [Security baseline](SECURITY.md)
 - [Agent instructions](AGENTS.md)
 
-## Foundation validation
-
-The current branch contains the deterministic repository and local-infrastructure bootstrap. Executable Next.js and Fastify applications are added next under the scoped M1 issues.
+## Local validation
 
 ```bash
 corepack enable
 corepack prepare pnpm@11.17.0 --activate
 pnpm install --frozen-lockfile
+pnpm local:setup
 pnpm check
-pnpm infra:up
+pnpm container:build
 ```
 
-The root format, lint, type, test and build commands currently validate the foundation and explicitly report that application-specific checks are pending. They must become real package checks before feature implementation is considered complete.
+The quality pipeline validates locked dependencies, repository boundaries, migrations, deterministic seed data, database constraints, formatting, linting, strict TypeScript, unit and integration tests, Python tests, production application builds, production container builds and API/PostgreSQL startup smoke.
+
+## Staging verification
+
+After an authorized operator configures the isolated Railway staging project and secrets:
+
+```bash
+SKILLUP_WEB_URL=https://<staging-web-hostname> \
+SKILLUP_EXPECTED_RELEASE_SHA=<deployed-git-commit-sha> \
+pnpm smoke:live
+```
+
+The same check is available through the manually dispatched `Live Staging Smoke` GitHub Actions workflow.
 
 ## Current phase
 
-Foundation Sprint 1 is establishing the M0 product contract and the first M1 architecture, runtime, CI, local PostgreSQL, package boundaries, accessibility and performance gates. Domain clearance, primary user research, legal/payment-provider approval and executable application scaffolding remain tracked work—not assumed completion.
+The executable platform now includes the public mobile-first shell, secure passwordless session foundation, onboarding, versioned reviewed learning content, server-authoritative gameplay, exact-session recovery, progress, points, streaks, achievements, privacy-aware leaderboards and deployment-ready web/API containers. Real SMTP sign-in can be activated only with an approved sender account. JazzCash, live AI generation, production credentials, final legal/privacy approval, backups and production promotion remain separately gated work.

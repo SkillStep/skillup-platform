@@ -20,6 +20,9 @@ const testConfig: ApiConfig = {
   SESSION_ABSOLUTE_HOURS: 168,
   AUTH_CHALLENGE_MINUTES: 10,
   EMAIL_PROVIDER: "disabled",
+  SMTP_PORT: 587,
+  SMTP_SECURE: false,
+  SMTP_REQUIRE_TLS: true,
   RELEASE_SHA: "test-sha",
   LOG_LEVEL: "silent",
 };

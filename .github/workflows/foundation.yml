@@ -17,7 +17,7 @@ jobs:
   quality:
     name: Install, validate, test and build
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
 
     env:
       APP_ENV: test
@@ -76,6 +76,15 @@ jobs:
 
       - name: Validate repository and application quality
         run: pnpm check
+
+      - name: Build reviewed production containers
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker build --file infra/docker/api.Dockerfile --tag skillup-api:${{ github.sha }} .
+          docker build --file infra/docker/web.Dockerfile --tag skillup-web:${{ github.sha }} .
+          test "$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Config.User}}')" = "node"
+          test "$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Config.User}}')" = "node"
 
       - name: Smoke API against migrated PostgreSQL
         run: pnpm smoke:api

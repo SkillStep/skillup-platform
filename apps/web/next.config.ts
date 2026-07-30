@@ -1,6 +1,6 @@
-import type { NextConfig } from "next";
+import path from "node:path";
 
-const apiBaseUrl = (process.env["API_BASE_URL"] ?? "http://127.0.0.1:3001").replace(/\/$/, "");
+import type { NextConfig } from "next";
 
 const privateRouteHeaders = [
   { key: "Cache-Control", value: "private, no-store" },
@@ -10,18 +10,11 @@ const privateRouteHeaders = [
 const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
+  outputFileTracingRoot: path.join(process.cwd(), "../.."),
   poweredByHeader: false,
   reactStrictMode: true,
   transpilePackages: ["@skillup/discoverability", "@skillup/ui"],
   typedRoutes: true,
-  async rewrites() {
-    return [
-      {
-        source: "/api/v1/:path*",
-        destination: `${apiBaseUrl}/v1/:path*`,
-      },
-    ];
-  },
   async headers() {
     return [
       {
