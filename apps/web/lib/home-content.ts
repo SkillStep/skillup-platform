@@ -3,6 +3,7 @@ export type LaunchPath = Readonly<{
   title: string;
   summary: string;
   status: "pilot" | "planned";
+  levelId?: string;
 }>;
 
 export const launchPaths: readonly LaunchPath[] = [
@@ -12,6 +13,7 @@ export const launchPaths: readonly LaunchPath[] = [
     summary:
       "Practice evidence-based interview answers, professional messages and difficult workplace conversations.",
     status: "pilot",
+    levelId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7",
   },
   {
     slug: "practical-english-study-work",
