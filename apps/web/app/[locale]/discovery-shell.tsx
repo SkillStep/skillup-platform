@@ -42,8 +42,8 @@ export function Breadcrumbs({ items }: Readonly<{ items: readonly BreadcrumbItem
   return (
     <nav className={styles["breadcrumbs"]} aria-label="Breadcrumb">
       <ol>
-        {items.map((item, index) => (
-          <li key={`${item.label}-${index}`}>
+        {items.map((item) => (
+          <li key={item.href ?? item.label}>
             {item.href ? (
               <Link href={item.href}>{item.label}</Link>
             ) : (
@@ -77,5 +77,5 @@ export function JsonLd({
   value,
 }: Readonly<{ value: Readonly<Record<string, unknown>> }>): ReactNode {
   const json = JSON.stringify(value).replaceAll("<", "\\u003c");
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
+  return <script type="application/ld+json">{json}</script>;
 }
