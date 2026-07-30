@@ -5,6 +5,6 @@ packages:
 catalogMode: strict
 linkWorkspacePackages: true
 
-onlyBuiltDependencies:
-  - esbuild
-  - sharp
+allowBuilds:
+  esbuild: true
+  sharp: true
