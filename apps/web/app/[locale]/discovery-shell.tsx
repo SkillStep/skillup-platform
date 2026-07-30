@@ -7,7 +7,7 @@ import styles from "./discovery.module.css";
 
 export type BreadcrumbItem = Readonly<{
   label: string;
-  href?: Route;
+  href?: string;
 }>;
 
 export function PublicHeader(): ReactNode {
@@ -46,7 +46,7 @@ export function Breadcrumbs({ items }: Readonly<{ items: readonly BreadcrumbItem
         {items.map((item) => (
           <li key={item.href ?? item.label}>
             {item.href ? (
-              <Link href={item.href}>{item.label}</Link>
+              <Link href={item.href as Route}>{item.label}</Link>
             ) : (
               <span aria-current="page">{item.label}</span>
             )}
