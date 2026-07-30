@@ -142,6 +142,33 @@ try {
         where id = $1`,
       [sessionId, completedAt],
     );
+    await database.query(
+      `insert into learner_level_progress
+        (user_id, level_id, level_version_id, best_awarded_points, max_points,
+         completion_count, last_session_id, first_completed_at, last_completed_at, updated_at)
+       values ($1, $2, $3, 20, 20, 1, $4, $5, $5, $5)
+       on conflict (user_id, level_version_id) do update
+         set best_awarded_points = greatest(
+               learner_level_progress.best_awarded_points,
+               excluded.best_awarded_points
+             ),
+             max_points = excluded.max_points,
+             completion_count = learner_level_progress.completion_count + 1,
+             last_session_id = excluded.last_session_id,
+             first_completed_at = coalesce(
+               learner_level_progress.first_completed_at,
+               excluded.first_completed_at
+             ),
+             last_completed_at = excluded.last_completed_at,
+             updated_at = excluded.updated_at`,
+      [
+        userId,
+        pilotLearningSeed.level.id,
+        pilotLearningSeed.level.versionId,
+        sessionId,
+        completedAt,
+      ],
+    );
 
     const completion = await database.query<{
       session_state: string;
