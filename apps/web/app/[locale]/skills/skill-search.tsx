@@ -22,7 +22,7 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
 
   return (
     <>
-      <div className={styles["searchPanel"]} role="search">
+      <search className={styles["searchPanel"]}>
         <label htmlFor={inputId}>Search the launch catalog</label>
         <input
           className={styles["searchInput"]}
@@ -33,7 +33,7 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
           placeholder="Try interview, AI, English or freelancing"
           autoComplete="off"
         />
-      </div>
+      </search>
 
       <p aria-live="polite" className="visually-hidden">
         {visibleSkills.length} {visibleSkills.length === 1 ? "skill" : "skills"} shown.
