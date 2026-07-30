@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { LevelPlayer } from "./level-player";
+import { AuthenticatedLevelPlayer } from "./authenticated-level-player";
 import styles from "./level-player.module.css";
 
 type PageProps = Readonly<{
@@ -34,7 +34,7 @@ export default async function PlayLevelPage({ params }: PageProps) {
         </Link>
       </header>
 
-      <LevelPlayer levelId={levelId} locale="en" />
+      <AuthenticatedLevelPlayer levelId={levelId} locale="en" />
     </main>
   );
 }

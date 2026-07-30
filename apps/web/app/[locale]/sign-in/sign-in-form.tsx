@@ -2,6 +2,7 @@
 
 import { type FormEvent, useId, useState } from "react";
 
+import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
 type ApiError = Readonly<{
@@ -11,6 +12,18 @@ type ApiError = Readonly<{
 type ChallengeResponse = Readonly<{
   challengeId: string;
   expiresAt: string;
+}>;
+
+type VerifyResponse = Readonly<{
+  learner?: Readonly<{
+    profile?: Readonly<{
+      onboardingStatus?: "not_started" | "in_progress" | "completed";
+    }>;
+  }>;
+}>;
+
+type SignInFormProps = Readonly<{
+  returnTo: string;
 }>;
 
 async function readError(response: Response): Promise<string> {
@@ -23,7 +36,7 @@ async function readError(response: Response): Promise<string> {
   return "This step is not available right now. Please try again later.";
 }
 
-export function SignInForm() {
+export function SignInForm({ returnTo }: SignInFormProps) {
   const emailId = useId();
   const codeId = useId();
   const [email, setEmail] = useState("");
@@ -84,9 +97,17 @@ export function SignInForm() {
         return;
       }
 
+      const body = (await response.json()) as VerifyResponse;
+      const onboardingComplete = body.learner?.profile?.onboardingStatus === "completed";
+      const destination = onboardingComplete ? returnTo : withReturnTo("/en/onboarding", returnTo);
+
       setIsError(false);
-      setMessage("Signed in. Preparing your SkillUp profile…");
-      window.location.assign("/en/onboarding");
+      setMessage(
+        onboardingComplete
+          ? "Signed in. Returning to your learning activity…"
+          : "Signed in. Preparing your SkillUp profile…",
+      );
+      window.location.assign(destination);
     } catch {
       setIsError(true);
       setMessage("We could not verify the code. Check your connection and try again.");

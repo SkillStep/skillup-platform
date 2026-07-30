@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { safeReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 import { SignInForm } from "./sign-in-form";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ returnTo?: string | string[] }>;
 }>;
 
 export const metadata: Metadata = {
@@ -16,9 +18,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false, noarchive: true },
 };
 
-export default async function SignInPage({ params }: PageProps) {
-  const { locale } = await params;
+export default async function SignInPage({ params, searchParams }: PageProps) {
+  const [{ locale }, { returnTo }] = await Promise.all([params, searchParams]);
   if (locale !== "en") notFound();
+  const destination = safeReturnTo(returnTo);
 
   return (
     <main className={styles["shell"]}>
@@ -48,7 +51,7 @@ export default async function SignInPage({ params }: PageProps) {
           </ul>
         </section>
 
-        <SignInForm />
+        <SignInForm returnTo={destination} />
       </div>
     </main>
   );

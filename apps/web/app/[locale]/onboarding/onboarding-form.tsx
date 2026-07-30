@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useId, useState } from "react";
 
+import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
 type LearnerResponse = Readonly<{
@@ -17,6 +18,10 @@ type LearnerResponse = Readonly<{
   message?: string;
 }>;
 
+type OnboardingFormProps = Readonly<{
+  returnTo: string;
+}>;
+
 async function readMessage(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as LearnerResponse;
@@ -27,7 +32,7 @@ async function readMessage(response: Response): Promise<string> {
   return "We could not save your profile right now.";
 }
 
-export function OnboardingForm() {
+export function OnboardingForm({ returnTo }: OnboardingFormProps) {
   const displayNameId = useId();
   const ageBandId = useId();
   const goalId = useId();
@@ -51,7 +56,7 @@ export function OnboardingForm() {
           signal: controller.signal,
         });
         if (response.status === 401) {
-          window.location.replace("/en/sign-in");
+          window.location.replace(withReturnTo("/en/sign-in", returnTo));
           return;
         }
         if (!response.ok) {
@@ -61,6 +66,10 @@ export function OnboardingForm() {
 
         const body = (await response.json()) as LearnerResponse;
         const profile = body.learner?.profile;
+        if (profile?.onboardingStatus === "completed") {
+          window.location.replace(returnTo);
+          return;
+        }
         setDisplayName(profile?.displayName ?? "");
         setAgeBand(profile?.ageBand ?? "unspecified");
         setLearningGoal(profile?.learningGoal ?? "");
@@ -78,7 +87,7 @@ export function OnboardingForm() {
 
     void loadSession();
     return () => controller.abort();
-  }, []);
+  }, [returnTo]);
 
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -104,7 +113,7 @@ export function OnboardingForm() {
         return;
       }
 
-      window.location.assign("/en");
+      window.location.assign(returnTo);
     } catch {
       setMessage("We could not save your profile. Check your connection and try again.");
     } finally {
