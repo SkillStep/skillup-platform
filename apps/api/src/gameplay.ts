@@ -431,7 +431,11 @@ export function createGameplayService(
         );
         const existingSession = activeSession.rows[0];
         if (existingSession) {
-          const resumedSession = await expireSessionIfRequired(database, existingSession, requestedAt);
+          const resumedSession = await expireSessionIfRequired(
+            database,
+            existingSession,
+            requestedAt,
+          );
           if (resumedSession.state === "active") {
             return sessionView(database, resumedSession, requestedAt);
           }
