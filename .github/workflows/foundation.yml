@@ -1,4 +1,4 @@
-name: Foundation CI
+name: Quality CI
 
 on:
   pull_request:
@@ -10,14 +10,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: foundation-${{ github.workflow }}-${{ github.ref }}
+  group: quality-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  validate:
-    name: Validate repository foundation
+  quality:
+    name: Install, validate, test and build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 25
+
+    env:
+      APP_ENV: test
+      AI_PROVIDER: disabled
+      PUBLIC_APP_URL: https://skillup.example
+      RELEASE_SHA: ${{ github.sha }}
 
     steps:
       - name: Checkout repository
@@ -38,28 +44,16 @@ jobs:
           corepack prepare pnpm@11.17.0 --activate
           pnpm --version
 
-      - name: Install locked workspace dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Validate repository structure and configuration hygiene
-        run: pnpm check
-
       - name: Set up Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: .python-version
 
-      - name: Validate AI worker bootstrap
-        shell: bash
-        env:
-          PYTHONPATH: services/ai-worker/src
-          AI_PROVIDER: disabled
-          RELEASE_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          python -m compileall -q services/ai-worker/src services/ai-worker/tests
-          python -m unittest discover -s services/ai-worker/tests -v
-          python -m skillup_ai_worker.health
+      - name: Install locked workspace dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate repository and application quality
+        run: pnpm check
 
       - name: Validate local infrastructure configuration
         shell: bash

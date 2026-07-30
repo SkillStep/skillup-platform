@@ -4,3 +4,7 @@ packages:
 
 catalogMode: strict
 linkWorkspacePackages: true
+
+allowBuilds:
+  esbuild: true
+  sharp: true
