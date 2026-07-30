@@ -56,8 +56,8 @@ async function request(path, options = {}) {
 
 async function json(path, options = {}) {
   const response = await request(path, { ...options, accept: "application/json" });
-  const contentType = response.headers.get("content-type") ?? "";
-  if (!contentType.includes("application/json")) {
+  const contentType = (response.headers.get("content-type") ?? "").toLowerCase();
+  if (!contentType.includes("application/json") && !contentType.includes("+json")) {
     throw new Error(`${endpoint(options.base ?? webBase, path)} did not return JSON.`);
   }
   return { response, body: await response.json() };
@@ -106,7 +106,7 @@ for (const title of [
 ]) {
   requireContains(skillsHtml, title, "Server-rendered skill catalog");
 }
-requireContains(skillsHtml, 'application/ld+json', "Skill catalog structured data");
+requireContains(skillsHtml, "application/ld+json", "Skill catalog structured data");
 requirePublicCacheBoundary(skills, "Skill catalog");
 
 const pilotSkill = await request("/en/skills/interview-workplace-communication", {
