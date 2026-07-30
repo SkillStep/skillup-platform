@@ -123,7 +123,15 @@ export function OnboardingForm() {
 
   return (
     <div className={styles.card}>
-      <div className={styles.progress} aria-label="Onboarding progress: step 2 of 3">
+      <div
+        className={styles.progress}
+        role="progressbar"
+        aria-label="Onboarding progress"
+        aria-valuemin={1}
+        aria-valuemax={3}
+        aria-valuenow={2}
+        aria-valuetext="Step 2 of 3"
+      >
         <span>Step 2 of 3</span>
         <span className={styles.progressBar} aria-hidden="true">
           <span className={styles.progressValue} />
