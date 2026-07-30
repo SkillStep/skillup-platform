@@ -81,15 +81,17 @@ async function proxy(request: NextRequest, context: RouteContext): Promise<Respo
     target.search = request.nextUrl.search;
 
     const method = request.method.toUpperCase();
-    const body = method === "GET" || method === "HEAD" ? undefined : await request.arrayBuffer();
-    const upstream = await fetch(target, {
+    const requestInit: RequestInit = {
       method,
       headers: requestHeaders(request),
-      body,
       cache: "no-store",
       redirect: "manual",
       signal: request.signal,
-    });
+    };
+    if (method !== "GET" && method !== "HEAD") {
+      requestInit.body = await request.arrayBuffer();
+    }
+    const upstream = await fetch(target, requestInit);
 
     return new Response(upstream.body, {
       status: upstream.status,
