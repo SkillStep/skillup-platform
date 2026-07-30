@@ -16,8 +16,8 @@ describe("launch path content", () => {
   });
 
   it("does not expose unreviewed paths as playable", () => {
-    expect(launchPaths.filter((path) => path.status === "planned").every((path) => !path.levelId)).toBe(
-      true,
-    );
+    expect(
+      launchPaths.filter((path) => path.status === "planned").every((path) => !path.levelId),
+    ).toBe(true);
   });
 });

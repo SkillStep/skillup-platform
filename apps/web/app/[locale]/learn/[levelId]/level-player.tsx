@@ -209,7 +209,9 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
         setSession(loadedSession);
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
-          setSystemMessage(error instanceof Error ? error.message : "The level could not be loaded.");
+          setSystemMessage(
+            error instanceof Error ? error.message : "The level could not be loaded.",
+          );
         }
       } finally {
         setLoading(false);
@@ -388,7 +390,9 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
   }
 
   const scoreProgress =
-    session.maxPoints > 0 ? Math.min(100, Math.round((session.awardedPoints / session.maxPoints) * 100)) : 0;
+    session.maxPoints > 0
+      ? Math.min(100, Math.round((session.awardedPoints / session.maxPoints) * 100))
+      : 0;
 
   if (session.state === "completed" && feedback === null) {
     window.sessionStorage.removeItem(storageKey);
@@ -397,7 +401,10 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
         <div className={styles["completion"]}>
           <p>Level complete</p>
           <h1>You finished this practice level.</h1>
-          <div className={styles["score"]} aria-label={`${session.awardedPoints} out of ${session.maxPoints} points`}>
+          <div
+            className={styles["score"]}
+            aria-label={`${session.awardedPoints} out of ${session.maxPoints} points`}
+          >
             {session.awardedPoints}/{session.maxPoints}
           </div>
           <p>Your result is saved against this exact published level version.</p>
@@ -414,7 +421,9 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
       <section className={styles["player"]}>
         <div className={styles["loading"]}>
           <h1>This session has ended</h1>
-          <p>Your completed attempts remain saved. Start the level again from the SkillUp home page.</p>
+          <p>
+            Your completed attempts remain saved. Start the level again from the SkillUp home page.
+          </p>
           <Link className={styles["homeButton"]} href={`/${locale}`}>
             Return home
           </Link>
@@ -437,7 +446,9 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
   return (
     <section className={styles["player"]} aria-labelledby="challenge-title">
       <div className={styles["statusBar"]}>
-        <span className={styles["statusLabel"]}>Challenge {session.currentChallengeOrdinal + 1}</span>
+        <span className={styles["statusLabel"]}>
+          Challenge {session.currentChallengeOrdinal + 1}
+        </span>
         <span
           className={styles["progressTrack"]}
           role="progressbar"
@@ -459,7 +470,8 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
             <div className={styles["challengeMeta"]}>
               <span className={styles["typeBadge"]}>{challengeTypeLabel(challenge.type)}</span>
               <span className={styles["attemptBadge"]}>
-                Attempt {Math.min(session.attemptsUsed + 1, session.maxAttempts)} of {session.maxAttempts}
+                Attempt {Math.min(session.attemptsUsed + 1, session.maxAttempts)} of{" "}
+                {session.maxAttempts}
               </span>
             </div>
             <h1 className={styles["prompt"]} id="challenge-title">
@@ -493,7 +505,11 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
                 : `${feedback.awardedPoints} of ${feedback.maxPoints} points awarded.`}
             </p>
             <button className={styles["retryButton"]} type="button" onClick={continueAfterFeedback}>
-              {feedback.retryAllowed ? "Try again" : session.state === "completed" ? "See result" : "Continue"}
+              {feedback.retryAllowed
+                ? "Try again"
+                : session.state === "completed"
+                  ? "See result"
+                  : "Continue"}
             </button>
           </div>
         ) : challenge ? (
@@ -504,8 +520,7 @@ export function LevelPlayer({ levelId, locale }: LevelPlayerProps) {
               <fieldset className={styles["fieldset"]}>
                 <legend className={styles["visuallyHidden"]}>Choose your answer</legend>
                 {challenge.options.map((option) => {
-                  const limit =
-                    challenge.type === "multiple_choice" ? challenge.selectionLimit : 1;
+                  const limit = challenge.type === "multiple_choice" ? challenge.selectionLimit : 1;
                   const inputType = limit === 1 ? "radio" : "checkbox";
                   return (
                     <label className={styles["option"]} key={option.key}>
