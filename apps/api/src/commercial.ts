@@ -89,7 +89,7 @@ export type CommercialService = Readonly<{
   handleJazzCashCallback: (fields: Readonly<Record<string, string>>) => Promise<PaymentOrder>;
   recordOfferView: (input: {
     userId: string | null;
-    planCode?: string;
+    planCode?: string | undefined;
     surface: string;
   }) => Promise<void>;
 }>;
