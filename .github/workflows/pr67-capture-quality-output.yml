@@ -60,10 +60,10 @@ jobs:
       - name: Commit diagnostic and remove this workflow
         shell: bash
         run: |
+          test -s .github/pr67-quality-diagnostic.txt
           rm .github/workflows/pr67-capture-quality-output.yml
           git config user.name "skillup-ci-diagnostic"
           git config user.email "skillup-ci-diagnostic@users.noreply.github.com"
           git add .github/pr67-quality-diagnostic.txt .github/workflows/pr67-capture-quality-output.yml
-          git diff --cached --check
           git commit -m "chore(ci): capture PR 67 quality failure"
           git push origin HEAD:feat/launch-commercial-content-ops
