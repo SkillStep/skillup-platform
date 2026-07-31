@@ -46,6 +46,16 @@ run(command, [
   "services/ai-worker/src",
   "services/ai-worker/tests",
 ]);
-run(command, [...prefix, "-W", "error::ResourceWarning", "-m", "unittest", "discover", "-s", "services/ai-worker/tests", "-v"]);
+run(command, [
+  ...prefix,
+  "-W",
+  "error::ResourceWarning",
+  "-m",
+  "unittest",
+  "discover",
+  "-s",
+  "services/ai-worker/tests",
+  "-v",
+]);
 run(command, [...prefix, "-m", "skillup_ai_worker.evaluate"]);
 run(command, [...prefix, "-m", "skillup_ai_worker.health"]);
