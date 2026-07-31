@@ -33,11 +33,12 @@ const aiQueue = read("services/ai-worker/src/skillup_ai_worker/queue.py");
 const aiPolicies = read("services/ai-worker/src/skillup_ai_worker/policies.py");
 const aiEvaluation = read("services/ai-worker/evaluation/fixtures.jsonl");
 const commercialService = read("apps/api/src/commercial.ts");
-const adminService = read("apps/api/src/admin.ts");
+const adminService = read("apps/api/src/admin-service.ts");
 const commercialMigration = read("packages/database/drizzle/0008_launch_commercial_operations.sql");
 const pricingPage = read("apps/web/app/[locale]/pricing/page.tsx");
 const accountPage = read("apps/web/app/[locale]/account/page.tsx");
 const adminPage = read("apps/web/app/[locale]/admin/page.tsx");
+const workflowAiImage = ["skillup-ai-worker:", "$", "{{ github.sha }}"].join("");
 
 const requiredOperationsDocuments = [
   "docs/operations/PRODUCTION_READINESS.md",
@@ -48,6 +49,7 @@ const requiredOperationsDocuments = [
   "docs/operations/OBSERVABILITY.md",
   "docs/operations/RELEASE_EVIDENCE_TEMPLATE.md",
   "docs/operations/MANUAL_LAUNCH_TEST_PLAN.md",
+  "docs/operations/LAUNCH_EVIDENCE_INDEX.md",
   "docs/ai/AI_PROVIDER_GATEWAY.md",
   "docs/ai/AI_PRIVACY_AND_COST_POLICY.md",
   "docs/ai/AI_MODEL_APPROVAL_RUNBOOK.md",
@@ -82,7 +84,7 @@ requireText(aiWorkerDockerfile, "skillup_ai_worker.health", "AI worker productio
 requireText(workflow, "Reject high-severity production dependency findings", "Quality CI");
 requireText(workflow, "pnpm audit --prod --audit-level=high", "Quality CI");
 requireText(workflow, "Build reviewed production containers", "Quality CI");
-requireText(workflow, "skillup-ai-worker:${{ github.sha }}", "Quality CI");
+requireText(workflow, workflowAiImage, "Quality CI");
 requireText(workflow, "Smoke disabled AI worker image", "Quality CI");
 requireText(workflow, "pnpm smoke:live", "Quality CI");
 requireText(workflow, "pnpm release:evidence", "Quality CI");
