@@ -44,6 +44,7 @@ async function expectRejected(
 
 const databaseUrl = requireDatabaseUrl();
 const database = new URL(databaseUrl);
+// CI or an explicit local opt-in must confirm that this database is disposable.
 const disposableDatabaseConfirmed =
   process.env.CI === "true" || process.env.SKILLUP_DISPOSABLE_DATABASE === "true";
 const loopbackDatabase =
