@@ -1,0 +1,62 @@
+name: Temporary commercial SQL repair
+
+on:
+  push:
+    branches:
+      - feat/launch-commercial-content-ops
+    paths:
+      - .github/workflows/temporary-commercial-sql-fix.yml
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    name: Apply exact PostgreSQL parameter casts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/launch-commercial-content-ops
+
+      - name: Patch exact entitlement timestamp expression
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path("apps/api/src/commercial.ts")
+          source = path.read_text(encoding="utf-8")
+          old = """               $4,
+               case when $5 = 'month' then $4 + interval '1 month' else $4 + interval '1 year' end,
+               $4,
+               $4"""
+          new = """               $4::timestamptz,
+               case
+                 when $5::text = 'month'
+                   then $4::timestamptz + interval '1 month'
+                 else $4::timestamptz + interval '1 year'
+               end,
+               $4::timestamptz,
+               $4::timestamptz"""
+          count = source.count(old)
+          if count != 1:
+              raise SystemExit(f"Expected exactly one SQL expression to patch; found {count}.")
+          path.write_text(source.replace(old, new), encoding="utf-8")
+          PY
+
+          git diff --check
+          git diff -- apps/api/src/commercial.ts
+
+      - name: Commit source correction
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "skillup-ci-maintenance"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/api/src/commercial.ts
+          git commit -m "fix(api): cast entitlement timestamp parameters"
+          git push origin HEAD:feat/launch-commercial-content-ops
