@@ -1,0 +1,136 @@
+name: Fix launch lint once
+
+on:
+  push:
+    branches:
+      - feat/launch-commercial-content-ops
+
+permissions:
+  contents: write
+
+concurrency:
+  group: fix-launch-lint-once
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Checkout launch branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/launch-commercial-content-ops
+          persist-credentials: true
+
+      - name: Apply reviewed fixes, format, and remove this workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+
+          cat > /tmp/fix_launch.py <<'PY'
+          from pathlib import Path
+
+          admin = Path("apps/api/src/admin.ts")
+          text = admin.read_text()
+          text = text.replace('import { randomUUID } from "node:crypto";\n\n', '', 1)
+          support_start = text.index('    supportLearner: async (userId) => {')
+          query_start = text.index('      const learner = await options.pool.query<Record<string, unknown>>(', support_start)
+          query_end = text.index('      const row = learner.rows[0];', query_start)
+          replacement = '''      const learner = await options.pool.query<Record<string, unknown>>(
+            `select
+               u.id,
+               u.status,
+               p.locale,
+               p.age_band as "ageBand",
+               p.onboarding_status as "onboardingStatus",
+               p.created_at as "createdAt",
+               coalesce((
+                 select sum(pl.points)
+                   from points_ledger pl
+                  where pl.user_id = u.id
+               ), 0)::integer as "pointsEarned",
+               (
+                 select count(*)::integer
+                   from level_play_sessions ls
+                  where ls.user_id = u.id
+               ) as "gameplaySessions"
+             from users u
+             join learner_profiles p on p.user_id = u.id
+             where u.id = $1`,
+            [userId],
+          );
+'''
+          admin.write_text(text[:query_start] + replacement + text[query_end:])
+
+          bootstrap = Path("packages/database/src/cli/admin-bootstrap.ts")
+          text = bootstrap.read_text()
+          text = text.replace(
+              'import { randomUUID } from "node:crypto";',
+              'import { createHash, randomUUID } from "node:crypto";',
+              1,
+          )
+          text = text.replace(
+              'const email = required("ADMIN_BOOTSTRAP_EMAIL").toLowerCase();\n',
+              'const email = required("ADMIN_BOOTSTRAP_EMAIL").toLowerCase();\nconst emailDigest = createHash("sha256").update(email).digest("hex");\n',
+              1,
+          )
+          text = text.replace(
+              "jsonb_build_object('emailDigest', encode(digest($5, 'sha256'), 'hex'), 'roles', $6::jsonb)",
+              "jsonb_build_object('emailDigest', $5::text, 'roles', $6::jsonb)",
+              1,
+          )
+          text = text.replace(
+              '[userId, reason, randomUUID(), releaseSha, email, JSON.stringify(roles)]',
+              '[userId, reason, randomUUID(), releaseSha, emailDigest, JSON.stringify(roles)]',
+              1,
+          )
+          bootstrap.write_text(text)
+
+          console = Path("apps/web/app/[locale]/admin/operations-console.tsx")
+          text = console.read_text()
+          text = text.replace(
+              'async function publishArtifact(artifactId: string) {',
+              'async function publishArtifact(artifactId: string, targetType: string) {',
+              1,
+          )
+          text = text.replace(
+              'body: JSON.stringify({ targetType: artifactId, targetVersionId, reason }),',
+              'body: JSON.stringify({ targetType, targetVersionId, reason }),',
+              1,
+          )
+          text = text.replace(
+              'onClick={() => void publishArtifact(artifact.id)}',
+              'onClick={() => void publishArtifact(artifact.id, artifact.artifactType)}',
+              1,
+          )
+          console.write_text(text)
+
+          validator = Path("tools/validate-production-readiness.mjs")
+          text = validator.read_text()
+          marker = 'const adminPage = read("apps/web/app/[locale]/admin/page.tsx");\n'
+          text = text.replace(
+              marker,
+              marker + 'const workflowAiImage = ["skillup-ai-worker:", "$", "{{ github.sha }}"].join("");\n',
+              1,
+          )
+          text = text.replace(
+              'requireText(workflow, "skillup-ai-worker:${{ github.sha }}", "Quality CI");',
+              'requireText(workflow, workflowAiImage, "Quality CI");',
+              1,
+          )
+          validator.write_text(text)
+          PY
+
+          python3 /tmp/fix_launch.py
+          pnpm format
+          rm .github/workflows/fix-launch-lint.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "fix: correct launch lint and operational queries"
+          git push origin HEAD:feat/launch-commercial-content-ops
