@@ -27,7 +27,7 @@ export type GenerationRequestInput = Readonly<{
     | "evaluate_content"
     | "translate_content";
   targetType: string;
-  targetId?: string | null;
+  targetId?: string | null | undefined;
   locale: "en" | "ur";
   promptVersion: string;
   requestedItems: number;
@@ -36,7 +36,7 @@ export type GenerationRequestInput = Readonly<{
 export type ReviewArtifactInput = Readonly<{
   decision: "approve" | "reject" | "request_changes" | "escalate";
   reason: string;
-  editedContent?: Readonly<Record<string, unknown>> | null;
+  editedContent?: Readonly<Record<string, unknown>> | null | undefined;
 }>;
 
 export type PublishArtifactInput = Readonly<{
@@ -52,10 +52,10 @@ export type ResolveReconciliationInput = Readonly<{
 
 export type CorrectEntitlementInput = Readonly<{
   nextStatus: "active" | "grace" | "expired" | "cancelled" | "refunded" | "revoked";
-  endsAt?: string;
-  graceEndsAt?: string | null;
+  endsAt?: string | undefined;
+  graceEndsAt?: string | null | undefined;
   reason: string;
-  evidenceReference?: string | null;
+  evidenceReference?: string | null | undefined;
 }>;
 
 export type AdminService = Readonly<{
@@ -240,7 +240,7 @@ export function createAdminService(
       if (!row) throw new Error("The AI generation request could not be created.");
       await audit({
         actorUserId: actor.userId,
-        actorRole: actor.roles[0],
+        actorRole: actor.roles[0] ?? null,
         action: "ai.generation.request",
         targetType: "ai_generation_request",
         targetId: row.id,
@@ -554,7 +554,7 @@ export function createAdminService(
       }
       await audit({
         actorUserId: actor.userId,
-        actorRole: actor.roles[0],
+        actorRole: actor.roles[0] ?? null,
         action: "payment.reconciliation.resolve",
         targetType: "reconciliation_case",
         targetId: caseId,
