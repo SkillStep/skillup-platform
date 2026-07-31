@@ -17,11 +17,13 @@ jobs:
   quality:
     name: Install, validate, test and build
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 60
 
     env:
       APP_ENV: test
+      FEATURE_AI_GENERATION_ENABLED: "false"
       AI_PROVIDER: disabled
+      AI_FALLBACK_PROVIDER: disabled
       EMAIL_PROVIDER: disabled
       DATABASE_URL: postgresql://skillup_local:skillup_local_only@127.0.0.1:5432/skillup
       POSTGRES_DB: skillup
@@ -86,8 +88,25 @@ jobs:
           set -euo pipefail
           docker build --file infra/docker/api.Dockerfile --tag skillup-api:${{ github.sha }} .
           docker build --file infra/docker/web.Dockerfile --tag skillup-web:${{ github.sha }} .
+          docker build --file infra/docker/ai-worker.Dockerfile --tag skillup-ai-worker:${{ github.sha }} .
           test "$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Config.User}}')" = "node"
           test "$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Config.User}}')" = "node"
+          test "$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{.Config.User}}')" = "skillup-ai"
+
+      - name: Smoke disabled AI worker image
+        shell: bash
+        run: |
+          set -euo pipefail
+          output="$(docker run --rm \
+            --env APP_ENV=staging \
+            --env FEATURE_AI_GENERATION_ENABLED=false \
+            --env AI_PROVIDER=disabled \
+            --env AI_FALLBACK_PROVIDER=disabled \
+            --env RELEASE_SHA="$RELEASE_SHA" \
+            --entrypoint python \
+            skillup-ai-worker:${{ github.sha }} -m skillup_ai_worker.health)"
+          printf '%s\n' "$output"
+          HEALTH_OUTPUT="$output" node -e "const health=JSON.parse(process.env.HEALTH_OUTPUT); if(health.status!=='disabled'||health.provider!=='disabled'||health.release_sha!==process.env.RELEASE_SHA) process.exit(1)"
 
       - name: Smoke API against migrated PostgreSQL
         run: pnpm smoke:api
@@ -153,6 +172,7 @@ jobs:
           set -euo pipefail
           export SKILLUP_API_IMAGE_ID="$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Id}}')"
           export SKILLUP_WEB_IMAGE_ID="$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Id}}')"
+          export SKILLUP_AI_WORKER_IMAGE_ID="$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{.Id}}')"
           pnpm release:evidence
           cat artifacts/release-evidence.json
 
