@@ -1,0 +1,56 @@
+name: PR 67 auth lint repair
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr67-auth-lint-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'feat/launch-commercial-content-ops'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/launch-commercial-content-ops
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Apply and verify the scoped Biome repair
+        run: |
+          pnpm exec biome check --write --unsafe apps/api/src/auth.ts
+          pnpm exec biome check apps/api/src/auth.ts
+
+      - name: Commit the repair and remove this workflow
+        run: |
+          rm .github/workflows/pr67-repair-auth-lint.yml
+          git config user.name "skillup-ci-repair"
+          git config user.email "skillup-ci-repair@users.noreply.github.com"
+          git add apps/api/src/auth.ts .github/workflows/pr67-repair-auth-lint.yml
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo "No auth lint changes were required."
+            exit 0
+          fi
+          git commit -m "style(api): satisfy auth literal-key lint rules"
+          git push origin HEAD:feat/launch-commercial-content-ops
