@@ -19,7 +19,7 @@
     "security:secrets": "node tools/scan-secrets.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
-    "lint": "biome lint .",
+    "lint": "biome lint . --max-diagnostics=1000",
     "typecheck": "pnpm shared:build && pnpm -r --if-present typecheck",
     "test": "pnpm shared:build && pnpm -r --if-present test && node tools/run-python-tests.mjs",
     "build": "pnpm -r --if-present build",
