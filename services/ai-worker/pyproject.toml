@@ -4,13 +4,15 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "skillup-ai-worker"
-version = "0.0.0"
-description = "SkillUp durable AI generation and evaluation worker"
+version = "1.0.0"
+description = "SkillUp provider-agnostic AI generation, evaluation and durable job worker"
 requires-python = ">=3.13.14,<3.14"
 dependencies = []
 
 [project.scripts]
 skillup-ai-worker-health = "skillup_ai_worker.health:main"
+skillup-ai-worker-evaluate = "skillup_ai_worker.evaluate:main"
+skillup-ai-worker = "skillup_ai_worker.worker:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}

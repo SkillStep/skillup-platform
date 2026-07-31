@@ -12,19 +12,8 @@ This repository is the new production source of truth. Earlier QRK repositories 
 - Initial premium pricing: PKR 599 monthly and PKR 4,999 yearly.
 - Payment launch: JazzCash.
 - Initial language: English, with Urdu-ready content, URL, data and design architecture from the start.
-- AI strategy: provider-agnostic model gateway with DeepSeek or the cheapest acceptable model selected by task, quality, latency, privacy and cost policy.
+- AI strategy: provider-agnostic gateway with DeepSeek as the economical primary candidate, Groq as an approved fallback candidate, OpenRouter free only for local/synthetic evaluation, and a deterministic offline adapter for CI.
 - Discoverability: SEO, AEO and GEO are product architecture requirements, not a later marketing add-on.
-
-## Required experience
-
-1. Discover a skill or learning resource through search, AI answers, social sharing or direct navigation.
-2. Register or continue as an eligible guest where allowed.
-3. Select a skill and learning goal.
-4. Play short, structured learning levels and varied challenge types.
-5. Receive immediate feedback, explanations, points, streaks and progress.
-6. Continue through a personalized learning path.
-7. Upgrade through JazzCash when premium value is clear.
-8. Share achievements without exposing private learning data.
 
 ## Repository structure
 
@@ -33,7 +22,7 @@ apps/
   web/                  Next.js mobile-first web/PWA and public discovery pages
   api/                  Versioned application API and domain services
 services/
-  ai-worker/            Python generation, validation and evaluation workers
+  ai-worker/            Provider-neutral generation, validation, evaluation and durable queue
 packages/
   ui/                   Shared accessible design system
   contracts/            Versioned API, event and job contracts
@@ -47,41 +36,36 @@ docs/                   Product, architecture, security, roadmap and operating d
 
 ## Non-negotiable engineering principles
 
-- Mobile performance, accessibility, security and discoverability are acceptance criteria for every relevant feature.
-- Public learning content is server-rendered or statically generated, indexable, useful, original and linked through a coherent information architecture.
-- AI-generated material is schema-validated, quality-scored, versioned, traceable and reviewable. It must not create thin programmatic pages for search manipulation.
-- Payment, entitlement, identity, progress and scoring decisions are authoritative on the server.
+- Mobile performance, accessibility, security and discoverability are acceptance criteria.
+- AI-generated material is schema-validated, quality-scored, versioned, traceable and reviewable; it never publishes directly.
+- Domain code never instantiates a provider SDK. Every task uses an approved prompt/schema/model/cost policy.
+- Payment, entitlement, identity, progress and scoring decisions remain authoritative on the server.
 - Private user data, dashboards, payments and personal progress are never indexed or placed in the public offline cache.
 - Production releases use reviewed pull requests, required checks, immutable artifacts, staged verification and documented rollback.
 
-## Public discovery and PWA
+## AI gateway
 
-- `/en/skills` presents the five reviewed launch skills in useful server-rendered HTML.
-- `/en/skills/:slug` provides public outcomes, editorial boundaries and visible-content-matched metadata.
-- `/en/paths/:slug` distinguishes the reviewed playable pilot from planned paths.
-- `/en/categories/launch-skills` provides the initial category and internal-link hub.
-- The installable PWA caches only responses explicitly marked public.
-- Sign-in, onboarding, gameplay, progress, admin and API routes are excluded from the public service-worker cache.
-- Offline and update states preserve privacy and require connectivity for all account or learning-state changes.
+The AI worker is production-built but live generation remains fail-closed. It includes:
 
-## Product and brand foundation
+- DeepSeek, Groq and OpenRouter-compatible adapters through one dependency-free HTTP boundary;
+- deterministic offline evaluation for every supported task;
+- strict task input allowlists and output schemas;
+- private-field rejection and PII redaction;
+- idempotency, caching, bounded retries, timeouts, concurrency and circuit breakers;
+- per-job, daily and monthly budget reservations;
+- a durable priority queue with leases, cancellation and bounded attempts;
+- privacy-safe usage metadata and traceability;
+- a non-root production image and disabled-mode health smoke.
 
-- [Product specification](docs/product/PRODUCT_SPEC.md)
-- [Pakistan launch brief and personas](docs/product/LAUNCH_BRIEF.md)
-- [Initial skill catalog and content governance](docs/product/INITIAL_SKILL_CATALOG.md)
-- [Freemium, premium and pilot KPIs](docs/product/FREEMIUM_PREMIUM_AND_KPIS.md)
-- [Information architecture](docs/product/INFORMATION_ARCHITECTURE.md)
-- [Brand system V1](docs/brand/BRAND_SYSTEM_V1.md)
+See [AI provider gateway](docs/ai/AI_PROVIDER_GATEWAY.md), [privacy and cost policy](docs/ai/AI_PRIVACY_AND_COST_POLICY.md), [model approval runbook](docs/ai/AI_MODEL_APPROVAL_RUNBOOK.md), and [worker operations](docs/ai/AI_WORKER_OPERATIONS.md).
 
 ## Engineering and operations
 
 - [Target architecture](docs/architecture/ARCHITECTURE.md)
-- [Architecture decisions](docs/architecture/adr/)
-- [SEO, AEO and GEO standard](docs/discoverability/SEO_AEO_GEO_STANDARD.md)
-- [Accessibility and performance standard](docs/design/DESIGN_ACCESSIBILITY_PERFORMANCE_STANDARD.md)
 - [Delivery roadmap](docs/roadmap/ROADMAP.md)
 - [Local development bootstrap](docs/engineering/LOCAL_DEVELOPMENT.md)
 - [Railway staging deployment](docs/operations/RAILWAY_STAGING_DEPLOYMENT.md)
+- [Production readiness](docs/operations/PRODUCTION_READINESS.md)
 - [Security baseline](SECURITY.md)
 - [Agent instructions](AGENTS.md)
 
@@ -96,20 +80,8 @@ pnpm check
 pnpm container:build
 ```
 
-The quality pipeline validates locked dependencies, repository boundaries, migrations, deterministic seed data, database constraints, formatting, linting, strict TypeScript, unit and integration tests, Python tests, production application builds, production container builds and API/PostgreSQL startup smoke.
-
-## Staging verification
-
-After an authorized operator configures the isolated Railway staging project and secrets:
-
-```bash
-SKILLUP_WEB_URL=https://<staging-web-hostname> \
-SKILLUP_EXPECTED_RELEASE_SHA=<deployed-git-commit-sha> \
-pnpm smoke:live
-```
-
-The live smoke verifies server-rendered public content, structured data, PWA resources, explicit cache boundaries, private-route protection, web/API health, database readiness and release identity. The same check is available through the manually dispatched `Live Staging Smoke` GitHub Actions workflow.
+The quality pipeline validates locked dependencies, migrations, deterministic seed data, database constraints, formatting, linting, strict TypeScript, unit/integration/Python tests, deterministic AI evaluation, production builds, non-root API/web/AI-worker images, API/PostgreSQL smoke and production-like web/API smoke.
 
 ## Current phase
 
-The executable platform now includes the public mobile-first discovery catalog, installable privacy-safe PWA, secure passwordless session foundation, onboarding, versioned reviewed learning content, server-authoritative gameplay, exact-session recovery, progress, points, streaks, achievements, privacy-aware leaderboards and deployment-ready web/API containers. Real SMTP sign-in can be activated only with an approved sender account. JazzCash, live AI generation, production credentials, final legal/privacy approval, backups and production promotion remain separately gated work.
+The executable beta includes public discovery, privacy-safe PWA, passwordless sessions, onboarding, reviewed learning content, server-authoritative gameplay/resume, progress/rewards, production operations, and a production-built provider-neutral AI worker. Live SMTP, live AI generation, provider credentials, final provider/model/task approval, premium, JazzCash, infrastructure and production traffic promotion remain separately gated.

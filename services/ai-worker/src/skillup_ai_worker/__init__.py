@@ -1,8 +1,7 @@
-"""SkillUp AI worker package.
+"""SkillUp provider-neutral AI worker."""
 
-Provider SDKs and job execution are intentionally not introduced until the approved
-gateway, queue contract, schema validation and cost controls are implemented.
-"""
+from .contracts import AiJob, AiResult, ProviderName, TaskName
+from .gateway import AiGateway
 
-__all__ = ["__version__"]
-__version__ = "0.0.0"
+__all__ = ["AiGateway", "AiJob", "AiResult", "ProviderName", "TaskName", "__version__"]
+__version__ = "1.0.0"
