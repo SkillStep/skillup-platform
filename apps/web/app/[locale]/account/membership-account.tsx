@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "./account.module.css";
@@ -78,7 +78,7 @@ export function MembershipAccount() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadAccount(signal?: AbortSignal) {
+  const loadAccount = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
       const response = await fetch("/api/v1/commercial/account", {
@@ -102,14 +102,14 @@ export function MembershipAccount() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     setMessage(queryMessage());
     void loadAccount(controller.signal);
     return () => controller.abort();
-  }, []);
+  }, [loadAccount]);
 
   if (loading) {
     return <section className={styles["panel"]}>Loading your private membership…</section>;
