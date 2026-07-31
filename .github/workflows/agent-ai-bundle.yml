@@ -30,10 +30,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          if [[ ! -d .agent/ai-bundle ]]; then
+            echo "AI bundle already applied."
+            exit 0
+          fi
+
           cat .agent/ai-bundle/part-* | base64 --decode > /tmp/ai-bundle.tgz
           tar -xzf /tmp/ai-bundle.tgz -C "$GITHUB_WORKSPACE"
+
+          # GitHub Actions tokens cannot modify workflow files. The authorized
+          # GitHub connector applies foundation.yml and removes this workflow.
+          git restore --source=HEAD -- .github/workflows/foundation.yml
           rm -rf .agent
-          rm -f .github/workflows/agent-ai-bundle.yml
 
           git config user.name "SkillUp CI"
           git config user.email "actions@users.noreply.github.com"
