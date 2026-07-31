@@ -78,7 +78,7 @@ export function MembershipAccount() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const loadAccount = useCallback(async (signal?: AbortSignal) => {
+  const loadAccount = useCallback(async (signal: AbortSignal | null = null) => {
     setError(null);
     try {
       const response = await fetch("/api/v1/commercial/account", {
