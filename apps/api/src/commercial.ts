@@ -624,7 +624,7 @@ export function createCommercialService(
                $4::timestamptz,
                $4::timestamptz
              )
-             on conflict (source_order_id) do nothing
+             on conflict (source_order_id) where source_order_id is not null do nothing
              returning id`,
             [row["user_id"], row["plan_version_id"], row["id"], now(), row["billing_period"]],
           );

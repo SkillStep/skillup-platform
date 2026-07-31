@@ -45,13 +45,13 @@ async function expectRejected(
 const databaseUrl = requireDatabaseUrl();
 const database = new URL(databaseUrl);
 const disposableDatabaseConfirmed =
-  process.env["CI"] === "true" || process.env["SKILLUP_DISPOSABLE_DATABASE"] === "true";
+  process.env.CI === "true" || process.env.SKILLUP_DISPOSABLE_DATABASE === "true";
 const loopbackDatabase =
   database.hostname === "127.0.0.1" ||
   database.hostname === "localhost" ||
   database.hostname === "::1";
 assert(
-  process.env["APP_ENV"] === "test" && disposableDatabaseConfirmed && loopbackDatabase,
+  process.env.APP_ENV === "test" && disposableDatabaseConfirmed && loopbackDatabase,
   "The commercial lifecycle smoke may run only against an explicitly disposable local test database.",
 );
 
