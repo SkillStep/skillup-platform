@@ -615,10 +615,14 @@ export function createCommercialService(
                $2,
                $3,
                'active',
-               $4,
-               case when $5 = 'month' then $4 + interval '1 month' else $4 + interval '1 year' end,
-               $4,
-               $4
+               $4::timestamptz,
+               case
+                 when $5::text = 'month'
+                   then $4::timestamptz + interval '1 month'
+                 else $4::timestamptz + interval '1 year'
+               end,
+               $4::timestamptz,
+               $4::timestamptz
              )
              on conflict (source_order_id) do nothing
              returning id`,
