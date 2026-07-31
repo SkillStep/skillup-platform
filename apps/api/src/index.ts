@@ -1,7 +1,9 @@
 import { createDatabaseClient } from "@skillup/database";
 
+import { createAdminService } from "./admin.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
+import { createCommercialService } from "./commercial.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
@@ -23,12 +25,19 @@ const authService = createAuthService({
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
+const commercialService = createCommercialService({ pool: database.pool, config });
+const adminService = createAdminService({
+  pool: database.pool,
+  releaseSha: config.RELEASE_SHA,
+});
 const app = buildApi({
   config,
   readiness: database.ping,
   authService,
   gameplayService,
   progressService,
+  commercialService,
+  adminService,
 });
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
