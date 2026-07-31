@@ -34,7 +34,8 @@ jobs:
             echo "Retry-ledger patch already applied."
             exit 0
           fi
-          patch -p1 < .agent/retry-ledger.patch
+          base64 --decode .agent/retry-ledger.patch > /tmp/retry-ledger.patch
+          patch -p1 < /tmp/retry-ledger.patch
           rm -rf .agent
           git config user.name "SkillUp CI"
           git config user.email "actions@users.noreply.github.com"
