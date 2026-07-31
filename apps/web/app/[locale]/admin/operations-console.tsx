@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "./admin.module.css";
@@ -90,7 +90,7 @@ export function OperationsConsole() {
   const [supportUserId, setSupportUserId] = useState("");
   const [supportResult, setSupportResult] = useState<Record<string, unknown> | null>(null);
 
-  async function loadConsole(signal?: AbortSignal) {
+  const loadConsole = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
       const sessionResponse = await fetch("/api/v1/admin/session", {
@@ -142,13 +142,13 @@ export function OperationsConsole() {
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
     void loadConsole(controller.signal);
     return () => controller.abort();
-  }, []);
+  }, [loadConsole]);
 
   async function runOperation(operation: () => Promise<void>, successMessage: string) {
     setBusy(true);
