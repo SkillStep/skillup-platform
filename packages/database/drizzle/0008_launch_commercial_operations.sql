@@ -128,8 +128,7 @@ create table entitlements (
 );
 
 create unique index entitlements_source_order_unique
-  on entitlements(source_order_id)
-  where source_order_id is not null;
+  on entitlements(source_order_id);
 
 create index entitlements_user_status_idx on entitlements(user_id, status, ends_at desc);
 
