@@ -119,7 +119,11 @@ requireText(aiEvaluation, "translation-communication-ur-v1", "AI evaluation fixt
 requireText(commercialMigration, "payment_events_append_only", "commercial migration");
 requireText(commercialMigration, "entitlement_events_append_only", "commercial migration");
 requireText(commercialMigration, "privileged_audit_events_append_only", "commercial migration");
-requireText(commercialMigration, "ai_generated_artifacts_immutable_original", "commercial migration");
+requireText(
+  commercialMigration,
+  "ai_generated_artifacts_immutable_original",
+  "commercial migration",
+);
 requireText(commercialMigration, "active_user_capabilities", "commercial migration");
 requireText(commercialService, "verifyJazzCashSecureHash", "commercial service");
 requireText(commercialService, "source_order_id", "commercial service entitlement idempotency");
