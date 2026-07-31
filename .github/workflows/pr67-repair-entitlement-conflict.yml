@@ -1,0 +1,66 @@
+name: PR 67 entitlement conflict repair
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+
+permissions:
+  contents: write
+
+concurrency:
+  group: pr67-entitlement-conflict-repair
+  cancel-in-progress: false
+
+jobs:
+  repair:
+    if: >-
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'feat/launch-commercial-content-ops'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/launch-commercial-content-ops
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Enable pnpm
+        run: corepack enable
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Repair conflict inference and lint findings
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          commercial_path = Path('apps/api/src/commercial.ts')
+          commercial = commercial_path.read_text(encoding='utf-8')
+          old = '             on conflict (source_order_id) do nothing'
+          new = '             on conflict (source_order_id) where source_order_id is not null do nothing'
+          count = commercial.count(old)
+          if count != 1:
+              raise SystemExit(f'Expected exactly one entitlement ON CONFLICT target, found {count}.')
+          commercial_path.write_text(commercial.replace(old, new, 1), encoding='utf-8')
+          PY
+          pnpm exec biome check --write --unsafe apps/api/src/commercial-lifecycle-smoke.ts
+          pnpm exec biome check apps/api/src/commercial-lifecycle-smoke.ts apps/api/src/commercial.ts
+
+      - name: Commit the repair and remove this workflow
+        shell: bash
+        run: |
+          rm .github/workflows/pr67-repair-entitlement-conflict.yml
+          git config user.name "skillup-ci-repair"
+          git config user.email "skillup-ci-repair@users.noreply.github.com"
+          git add apps/api/src/commercial.ts apps/api/src/commercial-lifecycle-smoke.ts .github/workflows/pr67-repair-entitlement-conflict.yml
+          git diff --cached --check
+          git commit -m "fix(api): align entitlement conflict target with partial index"
+          git push origin HEAD:feat/launch-commercial-content-ops
