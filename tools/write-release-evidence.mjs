@@ -41,6 +41,7 @@ const evidence = {
     "locked dependency installation",
     "reviewed PostgreSQL migrations and deterministic seed",
     "database and pilot journey smoke",
+    "signed payment success, replay, mismatch reconciliation and refund lifecycle smoke",
     "foundation and deployment contracts",
     "committed-secret and high-severity dependency scans",
     "format, lint and strict TypeScript",
