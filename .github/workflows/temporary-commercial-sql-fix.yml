@@ -1,9 +1,9 @@
 name: Temporary commercial SQL repair
 
 on:
-  push:
+  pull_request:
     branches:
-      - feat/launch-commercial-content-ops
+      - main
     paths:
       - .github/workflows/temporary-commercial-sql-fix.yml
 
@@ -13,6 +13,7 @@ permissions:
 jobs:
   repair:
     name: Apply exact PostgreSQL parameter casts
+    if: github.head_ref == 'feat/launch-commercial-content-ops'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
