@@ -173,8 +173,14 @@ export const reconciliationCases = pgTable(
       .references(() => paymentOrders.id, { onDelete: "restrict" }),
     mismatchKind: text("mismatch_kind").notNull(),
     status: text("status").$type<"open" | "resolved" | "ignored">().notNull().default("open"),
-    providerEvidence: jsonb("provider_evidence").$type<Record<string, unknown>>().notNull().default({}),
-    internalEvidence: jsonb("internal_evidence").$type<Record<string, unknown>>().notNull().default({}),
+    providerEvidence: jsonb("provider_evidence")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    internalEvidence: jsonb("internal_evidence")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     resolution: text("resolution"),
     resolvedBy: uuid("resolved_by").references(() => users.id, { onDelete: "restrict" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -286,11 +292,16 @@ export const aiGeneratedArtifacts = pgTable(
     contentDigest: text("content_digest").notNull(),
     originalContent: jsonb("original_content").$type<Record<string, unknown>>().notNull(),
     editedContent: jsonb("edited_content").$type<Record<string, unknown> | null>(),
-    validationReport: jsonb("validation_report").$type<Record<string, unknown>>().notNull().default({}),
+    validationReport: jsonb("validation_report")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     qualityScore: integer("quality_score").notNull(),
     qualityThreshold: integer("quality_threshold").notNull(),
     status: text("status")
-      .$type<"draft" | "held" | "in_review" | "approved" | "rejected" | "published" | "superseded">()
+      .$type<
+        "draft" | "held" | "in_review" | "approved" | "rejected" | "published" | "superseded"
+      >()
       .notNull()
       .default("draft"),
     sourceReferences: jsonb("source_references")

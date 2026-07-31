@@ -343,7 +343,10 @@ export function createAdminService(
         const artifact = selected.rows[0];
         if (!artifact) throw new RequestAuthorizationError(404, "The AI artifact was not found.");
         if (["published", "superseded"].includes(String(artifact["status"]))) {
-          throw new RequestAuthorizationError(409, "Published artifact history cannot be reviewed in place.");
+          throw new RequestAuthorizationError(
+            409,
+            "Published artifact history cannot be reviewed in place.",
+          );
         }
 
         if (
@@ -589,7 +592,8 @@ export function createAdminService(
         [caseId, input.disposition, input.resolution, actor.userId, now()],
       );
       const row = resolved.rows[0];
-      if (!row) throw new RequestAuthorizationError(404, "An open reconciliation case was not found.");
+      if (!row)
+        throw new RequestAuthorizationError(404, "An open reconciliation case was not found.");
       await audit({
         actorUserId: actor.userId,
         actorRole: actor.roles[0],
@@ -630,7 +634,10 @@ export function createAdminService(
               ? null
               : new Date(input.graceEndsAt);
         if (graceEndsAt && graceEndsAt < endsAt) {
-          throw new RequestAuthorizationError(400, "Grace expiry cannot precede entitlement expiry.");
+          throw new RequestAuthorizationError(
+            400,
+            "Grace expiry cannot precede entitlement expiry.",
+          );
         }
 
         const updated = await connection.query<Record<string, unknown>>(
@@ -791,11 +798,7 @@ export function registerAdminRoutes(
   }>,
 ): void {
   app.get("/v1/admin/session", async (request) => {
-    const learner = await requireAuthenticatedLearner(
-      request,
-      options.config,
-      options.authService,
-    );
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     const admin = await options.adminService.resolveIdentity(learner.id);
     if (!admin) throw new RequestAuthorizationError(403, "Administrative access is not allowed.");
     return { admin };

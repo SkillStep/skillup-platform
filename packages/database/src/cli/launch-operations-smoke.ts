@@ -123,10 +123,9 @@ try {
       "The active entitlement must project server-authoritative capabilities.",
     );
 
-    await connection.query(
-      "insert into admin_principals (user_id, created_by) values ($1, $1)",
-      [userId],
-    );
+    await connection.query("insert into admin_principals (user_id, created_by) values ($1, $1)", [
+      userId,
+    ]);
     await connection.query(
       `insert into admin_role_assignments (user_id, role, assigned_by, reason)
        values ($1, 'content_reviewer', $1, 'Synthetic production-readiness smoke')`,

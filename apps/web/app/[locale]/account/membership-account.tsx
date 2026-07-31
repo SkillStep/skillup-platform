@@ -64,9 +64,11 @@ function queryMessage(): string | null {
   if (payment === "pending") return "Payment is still pending. Refresh this page after a moment.";
   if (payment === "failed") return "Payment was not completed. No premium access was granted.";
   if (payment === "cancelled") return "Checkout was cancelled. No payment was recorded.";
-  if (payment === "expired") return "The checkout session expired. Start a new checkout when ready.";
+  if (payment === "expired")
+    return "The checkout session expired. Start a new checkout when ready.";
   if (payment === "refunded") return "The payment was refunded and premium access was updated.";
-  if (payment === "error") return "The provider response could not be verified. Support can review the reference.";
+  if (payment === "error")
+    return "The provider response could not be verified. Support can review the reference.";
   return null;
 }
 
@@ -127,9 +129,7 @@ export function MembershipAccount() {
 
       <section className={styles["panel"]} aria-labelledby="membership-status-title">
         <h2 id="membership-status-title">Membership status</h2>
-        <div
-          className={`${styles["status"]} ${!entitlement ? styles["statusInactive"] : ""}`}
-        >
+        <div className={`${styles["status"]} ${!entitlement ? styles["statusInactive"] : ""}`}>
           <div>
             <strong>{entitlement ? entitlement.planCode.replaceAll("-", " ") : "Free plan"}</strong>
             <span>

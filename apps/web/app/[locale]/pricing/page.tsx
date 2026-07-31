@@ -102,8 +102,8 @@ export default async function PricingPage({ params }: PageProps) {
           <h1>Learn free. Upgrade when premium value is clear.</h1>
           <p>
             The free experience includes useful reviewed learning. Premium expands available levels,
-            progress insights and approved advanced challenges without erasing your history if a plan
-            expires.
+            progress insights and approved advanced challenges without erasing your history if a
+            plan expires.
           </p>
         </header>
 
@@ -124,11 +124,15 @@ export default async function PricingPage({ params }: PageProps) {
           </article>
           <article>
             <h2>Recoverable payment states</h2>
-            <p>Pending, failed, cancelled, expired and refunded payments stay visible and traceable.</p>
+            <p>
+              Pending, failed, cancelled, expired and refunded payments stay visible and traceable.
+            </p>
           </article>
           <article>
             <h2>No learning-history loss</h2>
-            <p>Expiry or refund changes access, not completed attempts, points or earned progress.</p>
+            <p>
+              Expiry or refund changes access, not completed attempts, points or earned progress.
+            </p>
           </article>
         </section>
       </main>

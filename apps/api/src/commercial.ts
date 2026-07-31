@@ -6,10 +6,7 @@ import { z } from "zod";
 
 import type { AuthService } from "./auth.js";
 import type { ApiConfig } from "./config.js";
-import {
-  requireAuthenticatedLearner,
-  requireTrustedRequestOrigin,
-} from "./request-auth.js";
+import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const CreateOrderSchema = z
   .object({
@@ -159,8 +156,7 @@ export function jazzCashSecureHash(
 ): string {
   const values = Object.entries(fields)
     .filter(
-      ([key, value]) =>
-        key !== "pp_SecureHash" && key.startsWith("pp") && value.trim().length > 0,
+      ([key, value]) => key !== "pp_SecureHash" && key.startsWith("pp") && value.trim().length > 0,
     )
     .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
     .map(([, value]) => value);
@@ -418,7 +414,10 @@ export function createCommercialService(
         const row = selectedOrder.rows[0];
         if (!row) throw new Error("The payment order could not be loaded.");
         if (row["status"] !== "pending" && row["status"] !== "created") {
-          throw new CommercialRequestError(409, "This checkout request already reached a final state.");
+          throw new CommercialRequestError(
+            409,
+            "This checkout request already reached a final state.",
+          );
         }
         if (row["checkout_expires_at"] instanceof Date && row["checkout_expires_at"] <= createdAt) {
           throw new CommercialRequestError(409, "This checkout request has expired.");
@@ -785,21 +784,13 @@ export function registerCommercialRoutes(
   }));
 
   app.get("/v1/commercial/account", async (request) => {
-    const learner = await requireAuthenticatedLearner(
-      request,
-      options.config,
-      options.authService,
-    );
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     return options.commercialService.getAccount(learner.id);
   });
 
   app.post("/v1/commercial/orders", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
-    const learner = await requireAuthenticatedLearner(
-      request,
-      options.config,
-      options.authService,
-    );
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     const body = CreateOrderSchema.parse(request.body);
     return reply.status(201).send(
       await options.commercialService.createOrder({
@@ -811,11 +802,7 @@ export function registerCommercialRoutes(
   });
 
   app.get("/v1/commercial/orders/:orderId", async (request) => {
-    const learner = await requireAuthenticatedLearner(
-      request,
-      options.config,
-      options.authService,
-    );
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     const { orderId } = OrderParamsSchema.parse(request.params);
     return {
       order: await options.commercialService.getOrder(learner.id, orderId),
@@ -845,8 +832,6 @@ export function registerCommercialRoutes(
   });
 
   app.post("/v1/commercial/jazzcash/callback", async (request) => ({
-    order: await options.commercialService.handleJazzCashCallback(
-      bodyAsStringRecord(request.body),
-    ),
+    order: await options.commercialService.handleJazzCashCallback(bodyAsStringRecord(request.body)),
   }));
 }

@@ -17,7 +17,8 @@ const sandboxJazzCashEnvironment: NodeJS.ProcessEnv = {
   JAZZCASH_MERCHANT_ID: "MC12345",
   JAZZCASH_PASSWORD: "sandbox-password",
   JAZZCASH_INTEGRITY_SALT: "sandbox-integrity-salt",
-  JAZZCASH_PAYMENT_URL: "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/",
+  JAZZCASH_PAYMENT_URL:
+    "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/",
   JAZZCASH_RETURN_URL: "https://skillup.example/en/account/payment-return",
 };
 

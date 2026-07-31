@@ -20,9 +20,7 @@ function required(name: string): string {
 
 const confirmation = required("ADMIN_BOOTSTRAP_CONFIRM");
 if (confirmation !== "I_UNDERSTAND_THIS_GRANTS_PRIVILEGED_ACCESS") {
-  throw new Error(
-    "ADMIN_BOOTSTRAP_CONFIRM must exactly confirm the privileged-access operation.",
-  );
+  throw new Error("ADMIN_BOOTSTRAP_CONFIRM must exactly confirm the privileged-access operation.");
 }
 
 const email = required("ADMIN_BOOTSTRAP_EMAIL").toLowerCase();
@@ -31,7 +29,13 @@ if (reason.length < 8 || reason.length > 500) {
   throw new Error("ADMIN_BOOTSTRAP_REASON must be between 8 and 500 characters.");
 }
 
-const roles = [...new Set(required("ADMIN_BOOTSTRAP_ROLES").split(",").map((role) => role.trim()))];
+const roles = [
+  ...new Set(
+    required("ADMIN_BOOTSTRAP_ROLES")
+      .split(",")
+      .map((role) => role.trim()),
+  ),
+];
 if (roles.length === 0 || roles.some((role) => !allowedRoles.has(role))) {
   throw new Error(`ADMIN_BOOTSTRAP_ROLES contains an unsupported role: ${roles.join(", ")}`);
 }
@@ -109,7 +113,9 @@ try {
     );
 
     await connection.query("commit");
-    console.log(`Administrative access granted to verified account ${userId} for roles: ${roles.join(", ")}.`);
+    console.log(
+      `Administrative access granted to verified account ${userId} for roles: ${roles.join(", ")}.`,
+    );
   } catch (error) {
     await connection.query("rollback").catch(() => undefined);
     throw error;

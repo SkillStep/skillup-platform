@@ -33,17 +33,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     const body = await request.text();
-    const upstream = await fetch(
-      new URL("/v1/commercial/jazzcash/callback", apiBaseUrl()),
-      {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body,
-        cache: "no-store",
-        redirect: "manual",
-        signal: AbortSignal.timeout(10_000),
-      },
-    );
+    const upstream = await fetch(new URL("/v1/commercial/jazzcash/callback", apiBaseUrl()), {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body,
+      cache: "no-store",
+      redirect: "manual",
+      signal: AbortSignal.timeout(10_000),
+    });
     if (!upstream.ok) return accountRedirect(request, "error");
 
     const payload = (await upstream.json()) as Readonly<{

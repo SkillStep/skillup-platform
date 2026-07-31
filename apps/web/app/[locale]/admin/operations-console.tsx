@@ -171,23 +171,20 @@ export function OperationsConsole() {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     const requestedItems = Number(form.get("requestedItems"));
-    await runOperation(
-      async () => {
-        await requestJson("/api/v1/admin/ai/requests", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            task: form.get("task"),
-            targetType: form.get("targetType"),
-            targetId: form.get("targetId") || null,
-            locale: form.get("locale"),
-            promptVersion: form.get("promptVersion"),
-            requestedItems,
-          }),
-        });
-      },
-      "A bounded AI generation request was queued for worker processing.",
-    );
+    await runOperation(async () => {
+      await requestJson("/api/v1/admin/ai/requests", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          task: form.get("task"),
+          targetType: form.get("targetType"),
+          targetId: form.get("targetId") || null,
+          locale: form.get("locale"),
+          promptVersion: form.get("promptVersion"),
+          requestedItems,
+        }),
+      });
+    }, "A bounded AI generation request was queued for worker processing.");
   }
 
   async function reviewArtifact(artifactId: string, decision: string) {
@@ -196,16 +193,13 @@ export function OperationsConsole() {
       setError("Enter a review reason before recording a decision.");
       return;
     }
-    await runOperation(
-      async () => {
-        await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/reviews`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ decision, reason }),
-        });
-      },
-      `The artifact review decision was recorded as ${decision}.`,
-    );
+    await runOperation(async () => {
+      await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/reviews`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ decision, reason }),
+      });
+    }, `The artifact review decision was recorded as ${decision}.`);
   }
 
   async function publishArtifact(artifactId: string) {
@@ -215,16 +209,13 @@ export function OperationsConsole() {
       setError("Publishing requires a target version UUID and a reason.");
       return;
     }
-    await runOperation(
-      async () => {
-        await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/publish`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ targetType: artifactId, targetVersionId, reason }),
-        });
-      },
-      "The approved artifact was linked to the specified published content version.",
-    );
+    await runOperation(async () => {
+      await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/publish`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ targetType: artifactId, targetVersionId, reason }),
+      });
+    }, "The approved artifact was linked to the specified published content version.");
   }
 
   async function rollbackArtifact(artifactId: string) {
@@ -233,16 +224,13 @@ export function OperationsConsole() {
       setError("Rollback requires an explicit reason.");
       return;
     }
-    await runOperation(
-      async () => {
-        await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/rollback`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ reason }),
-        });
-      },
-      "The current AI artifact publication was rolled back without rewriting history.",
-    );
+    await runOperation(async () => {
+      await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/rollback`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ reason }),
+      });
+    }, "The current AI artifact publication was rolled back without rewriting history.");
   }
 
   async function resolveCase(caseId: string, disposition: "resolved" | "ignored") {
@@ -251,29 +239,23 @@ export function OperationsConsole() {
       setError("Reconciliation requires a resolution explanation.");
       return;
     }
-    await runOperation(
-      async () => {
-        await requestJson(`/api/v1/admin/reconciliation/${caseId}/resolve`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ disposition, resolution }),
-        });
-      },
-      "The reconciliation case was closed with preserved provider evidence.",
-    );
+    await runOperation(async () => {
+      await requestJson(`/api/v1/admin/reconciliation/${caseId}/resolve`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ disposition, resolution }),
+      });
+    }, "The reconciliation case was closed with preserved provider evidence.");
   }
 
   async function lookupLearner(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await runOperation(
-      async () => {
-        const result = await requestJson<Record<string, unknown>>(
-          `/api/v1/admin/learners/${encodeURIComponent(supportUserId)}/support`,
-        );
-        setSupportResult(result);
-      },
-      "The minimum support timeline was loaded.",
-    );
+    await runOperation(async () => {
+      const result = await requestJson<Record<string, unknown>>(
+        `/api/v1/admin/learners/${encodeURIComponent(supportUserId)}/support`,
+      );
+      setSupportResult(result);
+    }, "The minimum support timeline was loaded.");
   }
 
   if (loading) return <p className={styles["message"]}>Loading secure operations console…</p>;
@@ -315,7 +297,10 @@ export function OperationsConsole() {
       {hasCapability(admin, "ai.request") ? (
         <section className={styles["section"]} aria-labelledby="generation-title">
           <h2 id="generation-title">Create bounded AI generation request</h2>
-          <form className={styles["form"]} onSubmit={(event) => void createGenerationRequest(event)}>
+          <form
+            className={styles["form"]}
+            onSubmit={(event) => void createGenerationRequest(event)}
+          >
             <label className={styles["field"]}>
               <span className={styles["label"]}>Task</span>
               <select className={styles["select"]} name="task" defaultValue="generate_level">
@@ -345,7 +330,12 @@ export function OperationsConsole() {
             </label>
             <label className={styles["field"]}>
               <span className={styles["label"]}>Prompt version</span>
-              <input className={styles["input"]} name="promptVersion" defaultValue="launch-v1" required />
+              <input
+                className={styles["input"]}
+                name="promptVersion"
+                defaultValue="launch-v1"
+                required
+              />
             </label>
             <label className={styles["field"]}>
               <span className={styles["label"]}>Items, maximum 100</span>
@@ -379,7 +369,8 @@ export function OperationsConsole() {
                     <div>
                       <h3>{artifact.artifactType}</h3>
                       <p className={styles["meta"]}>
-                        {artifact.status} · score {artifact.qualityScore}/{artifact.qualityThreshold} · {artifact.task} · {artifact.promptVersion}
+                        {artifact.status} · score {artifact.qualityScore}/
+                        {artifact.qualityThreshold} · {artifact.task} · {artifact.promptVersion}
                       </p>
                     </div>
                     <span>{artifact.locale.toUpperCase()}</span>
@@ -391,7 +382,9 @@ export function OperationsConsole() {
                     {JSON.stringify(artifact.validationReport, null, 2)}
                   </pre>
                   <label className={`${styles["field"]} ${styles["fieldFull"]}`}>
-                    <span className={styles["label"]}>Decision, publication or rollback reason</span>
+                    <span className={styles["label"]}>
+                      Decision, publication or rollback reason
+                    </span>
                     <textarea
                       className={styles["textarea"]}
                       value={reviewReasons[artifact.id] ?? ""}
@@ -481,7 +474,8 @@ export function OperationsConsole() {
                 <li className={styles["item"]} key={item.id}>
                   <h3>{item.mismatchKind}</h3>
                   <p className={styles["meta"]}>
-                    {item.merchantReference} · {item.orderStatus} · {item.amountMinor / 100} {item.currency}
+                    {item.merchantReference} · {item.orderStatus} · {item.amountMinor / 100}{" "}
+                    {item.currency}
                   </p>
                   <pre className={styles["code"]}>
                     {JSON.stringify(

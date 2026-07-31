@@ -27,17 +27,12 @@ describe("JazzCash request authentication", () => {
 
     expect(verifyJazzCashSecureHash({ ...fields, pp_SecureHash: secureHash }, salt)).toBe(true);
     expect(
-      verifyJazzCashSecureHash(
-        { ...fields, pp_Amount: "1", pp_SecureHash: secureHash },
-        salt,
-      ),
+      verifyJazzCashSecureHash({ ...fields, pp_Amount: "1", pp_SecureHash: secureHash }, salt),
     ).toBe(false);
   });
 
   it("rejects missing and malformed secure hashes", () => {
-    expect(verifyJazzCashSecureHash({ pp_Amount: "59900" }, "test-integrity-salt")).toBe(
-      false,
-    );
+    expect(verifyJazzCashSecureHash({ pp_Amount: "59900" }, "test-integrity-salt")).toBe(false);
     expect(
       verifyJazzCashSecureHash(
         { pp_Amount: "59900", pp_SecureHash: "not-a-hash" },
