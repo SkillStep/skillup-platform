@@ -61,7 +61,11 @@ for (const required of [
   requireText(environmentExample, required, ".env.example");
 }
 
-requireText(webDockerfile, "/workspace/apps/web/public ./apps/web/public", "web production Dockerfile");
+requireText(
+  webDockerfile,
+  "/workspace/apps/web/public ./apps/web/public",
+  "web production Dockerfile",
+);
 requireText(aiWorkerDockerfile, "USER skillup-ai", "AI worker production Dockerfile");
 requireText(aiWorkerDockerfile, "skillup_ai_worker.health", "AI worker production Dockerfile");
 requireText(workflow, "Reject high-severity production dependency findings", "Quality CI");
@@ -104,6 +108,10 @@ requireText(aiEvaluation, "translation-communication-ur-v1", "AI evaluation fixt
 for (const script of ["production:check", "security:secrets", "release:evidence"]) {
   if (!packageJson.scripts?.[script]) throw new Error(`Root scripts must expose ${script}.`);
 }
-requireText(packageJson.scripts["container:build"], "ai-worker.Dockerfile", "container build script");
+requireText(
+  packageJson.scripts["container:build"],
+  "ai-worker.Dockerfile",
+  "container build script",
+);
 
 console.log("SkillUp pre-deployment production-readiness contract passed.");
