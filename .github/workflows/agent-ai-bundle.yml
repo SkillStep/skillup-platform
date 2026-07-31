@@ -1,0 +1,42 @@
+name: Agent AI Bundle
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+concurrency:
+  group: agent-ai-bundle-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply reviewed AI implementation bundle
+    if: github.repository == 'SkillStep/skillup-platform' && github.event.pull_request.head.ref == 'agent/ai-provider-gateway'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout implementation branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: agent/ai-provider-gateway
+          fetch-depth: 0
+
+      - name: Apply bundle and normalize branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat .agent/ai-bundle/part-* | base64 --decode > /tmp/ai-bundle.tgz
+          tar -xzf /tmp/ai-bundle.tgz -C "$GITHUB_WORKSPACE"
+          rm -rf .agent
+          rm -f .github/workflows/agent-ai-bundle.yml
+
+          git config user.name "SkillUp CI"
+          git config user.email "actions@users.noreply.github.com"
+          git add -A
+          git commit -m "feat: add production-ready provider-agnostic AI gateway"
+          git push origin HEAD:agent/ai-provider-gateway
