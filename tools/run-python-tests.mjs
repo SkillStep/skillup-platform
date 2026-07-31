@@ -1,11 +1,13 @@
-import { delimiter, join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { delimiter, join } from "node:path";
 import process from "node:process";
 
 const workerSource = join(process.cwd(), "services", "ai-worker", "src");
 const environment = {
   ...process.env,
   AI_PROVIDER: "disabled",
+  AI_FALLBACK_PROVIDER: "disabled",
+  FEATURE_AI_GENERATION_ENABLED: "false",
   PYTHONPATH: [workerSource, process.env.PYTHONPATH].filter(Boolean).join(delimiter),
   RELEASE_SHA: process.env.RELEASE_SHA ?? "local",
 };
@@ -44,5 +46,16 @@ run(command, [
   "services/ai-worker/src",
   "services/ai-worker/tests",
 ]);
-run(command, [...prefix, "-m", "unittest", "discover", "-s", "services/ai-worker/tests", "-v"]);
+run(command, [
+  ...prefix,
+  "-W",
+  "error::ResourceWarning",
+  "-m",
+  "unittest",
+  "discover",
+  "-s",
+  "services/ai-worker/tests",
+  "-v",
+]);
+run(command, [...prefix, "-m", "skillup_ai_worker.evaluate"]);
 run(command, [...prefix, "-m", "skillup_ai_worker.health"]);

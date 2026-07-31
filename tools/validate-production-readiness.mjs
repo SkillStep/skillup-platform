@@ -22,9 +22,16 @@ const workflow = read(".github/workflows/foundation.yml");
 const codeowners = read(".github/CODEOWNERS");
 const pullRequestTemplate = read(".github/pull_request_template.md");
 const webDockerfile = read("infra/docker/web.Dockerfile");
+const aiWorkerDockerfile = read("infra/docker/ai-worker.Dockerfile");
 const environmentExample = read(".env.example");
 const liveSmoke = read("tools/smoke-live.mjs");
 const secretScan = read("tools/scan-secrets.mjs");
+const pythonTestRunner = read("tools/run-python-tests.mjs");
+const aiConfig = read("services/ai-worker/src/skillup_ai_worker/config.py");
+const aiGateway = read("services/ai-worker/src/skillup_ai_worker/gateway.py");
+const aiQueue = read("services/ai-worker/src/skillup_ai_worker/queue.py");
+const aiPolicies = read("services/ai-worker/src/skillup_ai_worker/policies.py");
+const aiEvaluation = read("services/ai-worker/evaluation/fixtures.jsonl");
 
 const requiredOperationsDocuments = [
   "docs/operations/PRODUCTION_READINESS.md",
@@ -34,6 +41,10 @@ const requiredOperationsDocuments = [
   "docs/operations/ACCESS_AND_SECRETS.md",
   "docs/operations/OBSERVABILITY.md",
   "docs/operations/RELEASE_EVIDENCE_TEMPLATE.md",
+  "docs/ai/AI_PROVIDER_GATEWAY.md",
+  "docs/ai/AI_PRIVACY_AND_COST_POLICY.md",
+  "docs/ai/AI_MODEL_APPROVAL_RUNBOOK.md",
+  "docs/ai/AI_WORKER_OPERATIONS.md",
 ];
 for (const path of requiredOperationsDocuments) read(path);
 
@@ -42,6 +53,9 @@ for (const required of [
   "FEATURE_PREMIUM_ENABLED=false",
   "FEATURE_JAZZCASH_ENABLED=false",
   "AI_PROVIDER=disabled",
+  "AI_FALLBACK_PROVIDER=disabled",
+  "AI_MAX_COST_USD_PER_JOB=0.02",
+  "AI_EVALUATION_LIVE=false",
   "JAZZCASH_MODE=disabled",
 ]) {
   requireText(environmentExample, required, ".env.example");
@@ -52,14 +66,19 @@ requireText(
   "/workspace/apps/web/public ./apps/web/public",
   "web production Dockerfile",
 );
+requireText(aiWorkerDockerfile, "USER skillup-ai", "AI worker production Dockerfile");
+requireText(aiWorkerDockerfile, "skillup_ai_worker.health", "AI worker production Dockerfile");
 requireText(workflow, "Reject high-severity production dependency findings", "Quality CI");
 requireText(workflow, "pnpm audit --prod --audit-level=high", "Quality CI");
-requireText(workflow, "Run production containers and end-to-end smoke", "Quality CI");
+requireText(workflow, "Build reviewed production containers", "Quality CI");
+requireText(workflow, "skillup-ai-worker:${{ github.sha }}", "Quality CI");
+requireText(workflow, "Smoke disabled AI worker image", "Quality CI");
 requireText(workflow, "pnpm smoke:live", "Quality CI");
 requireText(workflow, "pnpm release:evidence", "Quality CI");
 requireText(workflow, "actions/upload-artifact@", "Quality CI");
 rejectText(workflow, "skillup-api:latest", "Quality CI");
 rejectText(workflow, "skillup-web:latest", "Quality CI");
+rejectText(workflow, "skillup-ai-worker:latest", "Quality CI");
 
 requireText(codeowners, "/.github/", "CODEOWNERS");
 requireText(codeowners, "/apps/api/", "CODEOWNERS");
@@ -75,8 +94,24 @@ requireText(liveSmoke, "robots.txt", "live production smoke");
 requireText(liveSmoke, "sitemap.xml", "live production smoke");
 requireText(liveSmoke, "Skip to main content", "live production smoke");
 
+requireText(pythonTestRunner, "skillup_ai_worker.evaluate", "Python quality gate");
+requireText(pythonTestRunner, "error::ResourceWarning", "Python quality gate");
+requireText(aiConfig, "FEATURE_AI_GENERATION_ENABLED", "AI worker configuration");
+requireText(aiGateway, "self.store.reserve(", "AI gateway budget reservation");
+requireText(aiGateway, "CircuitBreakers", "AI gateway circuit breaker");
+requireText(aiQueue, "lease", "AI durable queue");
+requireText(aiQueue, "cancel", "AI durable queue");
+requireText(aiPolicies, "deepseek-v4-flash", "AI model policy");
+requireText(aiPolicies, "openrouter/free", "AI model policy");
+requireText(aiEvaluation, "translation-communication-ur-v1", "AI evaluation fixture set");
+
 for (const script of ["production:check", "security:secrets", "release:evidence"]) {
   if (!packageJson.scripts?.[script]) throw new Error(`Root scripts must expose ${script}.`);
 }
+requireText(
+  packageJson.scripts["container:build"],
+  "ai-worker.Dockerfile",
+  "container build script",
+);
 
 console.log("SkillUp pre-deployment production-readiness contract passed.");

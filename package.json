@@ -24,7 +24,7 @@
     "test": "pnpm shared:build && pnpm -r --if-present test && node tools/run-python-tests.mjs",
     "build": "pnpm -r --if-present build",
     "check": "pnpm foundation:check && pnpm deployment:check && pnpm production:check && pnpm security:secrets && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "container:build": "docker build --file infra/docker/api.Dockerfile --tag skillup-api:local . && docker build --file infra/docker/web.Dockerfile --tag skillup-web:local .",
+    "container:build": "docker build --file infra/docker/api.Dockerfile --tag skillup-api:local . && docker build --file infra/docker/web.Dockerfile --tag skillup-web:local . && docker build --file infra/docker/ai-worker.Dockerfile --tag skillup-ai-worker:local .",
     "clean": "node tools/clean.mjs",
     "db:generate": "pnpm --filter @skillup/database db:generate",
     "db:wait": "pnpm --filter @skillup/database db:wait",
