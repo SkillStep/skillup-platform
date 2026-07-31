@@ -202,7 +202,7 @@ export function OperationsConsole() {
     }, `The artifact review decision was recorded as ${decision}.`);
   }
 
-  async function publishArtifact(artifactId: string) {
+  async function publishArtifact(artifactId: string, targetType: string) {
     const targetVersionId = publicationTargets[artifactId]?.trim();
     const reason = reviewReasons[artifactId]?.trim();
     if (!targetVersionId || !reason) {
@@ -213,7 +213,7 @@ export function OperationsConsole() {
       await requestJson(`/api/v1/admin/ai/artifacts/${artifactId}/publish`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ targetType: artifactId, targetVersionId, reason }),
+        body: JSON.stringify({ targetType, targetVersionId, reason }),
       });
     }, "The approved artifact was linked to the specified published content version.");
   }
@@ -440,7 +440,7 @@ export function OperationsConsole() {
                         className={styles["button"]}
                         type="button"
                         disabled={busy}
-                        onClick={() => void publishArtifact(artifact.id)}
+                        onClick={() => void publishArtifact(artifact.id, artifact.artifactType)}
                       >
                         Publish approved version
                       </button>
