@@ -2,12 +2,8 @@ name: PR 67 index signature repair
 
 on:
   pull_request:
-    branches:
-      - main
-    types:
-      - opened
-      - reopened
-      - synchronize
+    branches: [main]
+    types: [opened, reopened, synchronize]
 
 permissions:
   contents: write
@@ -23,35 +19,32 @@ jobs:
       github.event.pull_request.head.ref == 'feat/launch-commercial-content-ops'
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the PR branch
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: feat/launch-commercial-content-ops
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Node and pnpm
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 24.18.0
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
 
-      - name: Add explicit database row types and typed environment locals
+      - name: Add explicit row types and typed environment locals
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
 
-          auth_path = Path('apps/api/src/auth.ts')
-          auth = auth_path.read_text(encoding='utf-8')
+          path = Path('apps/api/src/auth.ts')
+          text = path.read_text(encoding='utf-8')
           anchor = '''export type AuthenticatedLearner = Readonly<{
             id: string;
             email: string;
             profile: LearnerProfile;
           }>;
           '''
-          addition = anchor + '''
+          typed_rows = anchor + '''
           type LearnerRow = Readonly<{
             user_id: unknown;
             email_display: unknown;
@@ -69,32 +62,23 @@ jobs:
               expires_at: unknown;
             }>;
           '''
-          if auth.count(anchor) != 1:
-              raise SystemExit('AuthenticatedLearner type anchor was not found exactly once.')
-          auth = auth.replace(anchor, addition, 1)
+          changes = [
+            (anchor, typed_rows),
+            ('function profileFromRow(row: Record<string, unknown>): LearnerProfile {', 'function profileFromRow(row: LearnerRow): LearnerProfile {'),
+            ('function learnerFromRow(row: Record<string, unknown>): AuthenticatedLearner {', 'function learnerFromRow(row: LearnerRow): AuthenticatedLearner {'),
+            ('const profile = await client.query<Record<string, unknown>>(', 'const profile = await client.query<LearnerRow>('),
+            ('const result = await options.pool.query<Record<string, unknown>>(', 'const result = await options.pool.query<SessionLearnerRow>('),
+            ('const current = await options.pool.query<Record<string, unknown>>(', 'const current = await options.pool.query<LearnerRow>('),
+            ('const updated = await options.pool.query<Record<string, unknown>>(', 'const updated = await options.pool.query<LearnerRow>('),
+          ]
+          for old, new in changes:
+            if text.count(old) != 1:
+              raise SystemExit(f'Expected exactly one occurrence, found {text.count(old)}: {old!r}')
+            text = text.replace(old, new, 1)
+          path.write_text(text, encoding='utf-8')
 
-          replacements = {
-              'function profileFromRow(row: Record<string, unknown>): LearnerProfile {':
-                  'function profileFromRow(row: LearnerRow): LearnerProfile {',
-              'function learnerFromRow(row: Record<string, unknown>): AuthenticatedLearner {':
-                  'function learnerFromRow(row: LearnerRow): AuthenticatedLearner {',
-              'const profile = await client.query<Record<string, unknown>>(':
-                  'const profile = await client.query<LearnerRow>(',
-              'const result = await options.pool.query<Record<string, unknown>>(':
-                  'const result = await options.pool.query<SessionLearnerRow>(',
-              'const current = await options.pool.query<Record<string, unknown>>(':
-                  'const current = await options.pool.query<LearnerRow>(',
-              'const updated = await options.pool.query<Record<string, unknown>>(':
-                  'const updated = await options.pool.query<LearnerRow>(',
-          }
-          for old, new in replacements.items():
-              if auth.count(old) != 1:
-                  raise SystemExit(f'Expected exactly one auth occurrence: {old!r}; found {auth.count(old)}.')
-              auth = auth.replace(old, new, 1)
-          auth_path.write_text(auth, encoding='utf-8')
-
-          smoke_path = Path('apps/api/src/commercial-lifecycle-smoke.ts')
-          smoke = smoke_path.read_text(encoding='utf-8')
+          path = Path('apps/api/src/commercial-lifecycle-smoke.ts')
+          text = path.read_text(encoding='utf-8')
           old = '''const databaseUrl = requireDatabaseUrl();
           const database = new URL(databaseUrl);
           // CI or an explicit local opt-in must confirm that this database is disposable.
@@ -112,17 +96,18 @@ jobs:
           const disposableDatabaseConfirmed =
             continuousIntegration === "true" || disposableDatabaseOptIn === "true";
           '''
-          if smoke.count(old) != 1:
-              raise SystemExit(f'Expected one environment gate block; found {smoke.count(old)}.')
-          smoke = smoke.replace(old, new, 1)
-          old_assert = '  process.env.APP_ENV === "test" && disposableDatabaseConfirmed && loopbackDatabase,'
-          new_assert = '  appEnvironment === "test" && disposableDatabaseConfirmed && loopbackDatabase,'
-          if smoke.count(old_assert) != 1:
-              raise SystemExit(f'Expected one APP_ENV assertion; found {smoke.count(old_assert)}.')
-          smoke_path.write_text(smoke.replace(old_assert, new_assert, 1), encoding='utf-8')
+          if text.count(old) != 1:
+            raise SystemExit(f'Expected one environment block, found {text.count(old)}.')
+          text = text.replace(old, new, 1)
+          old = '  process.env.APP_ENV === "test" && disposableDatabaseConfirmed && loopbackDatabase,'
+          new = '  appEnvironment === "test" && disposableDatabaseConfirmed && loopbackDatabase,'
+          if text.count(old) != 1:
+            raise SystemExit(f'Expected one APP_ENV assertion, found {text.count(old)}.')
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
           PY
 
           pnpm exec biome check --write apps/api/src/auth.ts apps/api/src/commercial-lifecycle-smoke.ts
+          pnpm shared:build
           pnpm --filter @skillup/api typecheck
           pnpm lint
 
