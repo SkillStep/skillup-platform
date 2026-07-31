@@ -43,6 +43,18 @@ async function expectRejected(
 }
 
 const databaseUrl = requireDatabaseUrl();
+const database = new URL(databaseUrl);
+const disposableDatabaseConfirmed =
+  process.env["CI"] === "true" || process.env["SKILLUP_DISPOSABLE_DATABASE"] === "true";
+const loopbackDatabase =
+  database.hostname === "127.0.0.1" ||
+  database.hostname === "localhost" ||
+  database.hostname === "::1";
+assert(
+  process.env["APP_ENV"] === "test" && disposableDatabaseConfirmed && loopbackDatabase,
+  "The commercial lifecycle smoke may run only against an explicitly disposable local test database.",
+);
+
 const config = readApiConfig({
   APP_ENV: "test",
   API_HOST: "127.0.0.1",
@@ -74,13 +86,11 @@ const service = createCommercialService({ pool: client.pool, config });
 const integritySalt = config.JAZZCASH_INTEGRITY_SALT;
 assert(integritySalt, "The lifecycle smoke requires an integrity salt.");
 
-let userId: string | null = null;
-
 try {
   const user = await client.pool.query<{ id: string }>(
     "insert into users (status) values ('active') returning id",
   );
-  userId = user.rows[0]?.id ?? null;
+  const userId = user.rows[0]?.id;
   assert(userId, "The commercial lifecycle smoke learner could not be created.");
 
   const successIdempotencyKey = `success-${randomUUID()}`;
@@ -281,23 +291,8 @@ try {
     "SkillUp commercial lifecycle smoke passed (idempotent checkout, signed success, replay protection, order/customer binding, mismatch reconciliation and refund revocation verified).",
   );
 } finally {
-  if (userId) {
-    await client.pool.query(
-      "delete from reconciliation_cases where order_id in (select id from payment_orders where user_id = $1)",
-      [userId],
-    );
-    await client.pool.query("delete from commercial_events where user_id = $1", [userId]);
-    await client.pool.query(
-      "delete from entitlement_events where entitlement_id in (select id from entitlements where user_id = $1)",
-      [userId],
-    );
-    await client.pool.query("delete from entitlements where user_id = $1", [userId]);
-    await client.pool.query(
-      "delete from payment_events where order_id in (select id from payment_orders where user_id = $1)",
-      [userId],
-    );
-    await client.pool.query("delete from payment_orders where user_id = $1", [userId]);
-    await client.pool.query("delete from users where id = $1", [userId]);
-  }
+  // The lifecycle intentionally writes append-only evidence. CI tears down this disposable database
+  // volume after the job, so deleting audit/payment history here would violate the same invariant
+  // the smoke is meant to prove.
   await client.close();
 }
