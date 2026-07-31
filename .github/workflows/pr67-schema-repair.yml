@@ -1,0 +1,38 @@
+name: PR67 schema repair
+
+on:
+  pull_request:
+    branches: [main]
+    types: [synchronize]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.event.pull_request.number == 67 && github.head_ref == 'feat/launch-commercial-content-ops'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+      - name: Apply exact schema repair and remove helper
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          path = Path('packages/database/drizzle/0008_launch_commercial_operations.sql')
+          text = path.read_text()
+          old = "create unique index entitlements_source_order_unique\n  on entitlements(source_order_id)\n  where source_order_id is not null;"
+          new = "create unique index entitlements_source_order_unique\n  on entitlements(source_order_id);"
+          if text.count(old) != 1:
+              raise SystemExit(f'Expected one exact index definition, found {text.count(old)}')
+          path.write_text(text.replace(old, new))
+          PY
+          rm .github/workflows/pr67-schema-repair.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/database/drizzle/0008_launch_commercial_operations.sql .github/workflows/pr67-schema-repair.yml
+          git commit -m "fix(db): make entitlement order uniqueness inferable"
+          git push origin HEAD:${{ github.head_ref }}
