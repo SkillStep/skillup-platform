@@ -4,7 +4,7 @@ import type { MetadataRoute } from "next";
 import { launchCategory, publicSkills } from "../lib/public-catalog";
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
-const lastModified = new Date("2026-07-30T00:00:00.000Z");
+const lastModified = new Date("2026-07-31T00:00:00.000Z");
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified,
       changeFrequency: "weekly",
       priority: 0.9,
+    },
+    {
+      url: canonicalUrl(publicAppUrl, "en", "/pricing"),
+      lastModified,
+      changeFrequency: "monthly",
+      priority: 0.8,
     },
     {
       url: canonicalUrl(publicAppUrl, "en", `/categories/${launchCategory.slug}`),
