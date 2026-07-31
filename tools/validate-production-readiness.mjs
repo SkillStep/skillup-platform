@@ -33,6 +33,7 @@ const aiQueue = read("services/ai-worker/src/skillup_ai_worker/queue.py");
 const aiPolicies = read("services/ai-worker/src/skillup_ai_worker/policies.py");
 const aiEvaluation = read("services/ai-worker/evaluation/fixtures.jsonl");
 const commercialService = read("apps/api/src/commercial.ts");
+const adminRoutes = read("apps/api/src/admin.ts");
 const adminService = read("apps/api/src/admin-service.ts");
 const commercialMigration = read("packages/database/drizzle/0008_launch_commercial_operations.sql");
 const pricingPage = read("apps/web/app/[locale]/pricing/page.tsx");
@@ -130,7 +131,7 @@ requireText(commercialMigration, "active_user_capabilities", "commercial migrati
 requireText(commercialService, "verifyJazzCashSecureHash", "commercial service");
 requireText(commercialService, "source_order_id", "commercial service entitlement idempotency");
 requireText(commercialService, "reconciliation_cases", "commercial service reconciliation");
-requireText(adminService, "Missing administrative capability", "admin authorization");
+requireText(adminRoutes, "Missing administrative capability", "admin authorization");
 requireText(adminService, "ai.artifact.publish", "admin publication audit");
 requireText(adminService, "entitlement.correct", "admin entitlement audit");
 requireText(pricingPage, "SkillUp Premium pricing", "public pricing page");
