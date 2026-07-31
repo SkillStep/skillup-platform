@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 import { createDatabaseClient, requireDatabaseUrl } from "../index.js";
 
@@ -24,6 +24,7 @@ if (confirmation !== "I_UNDERSTAND_THIS_GRANTS_PRIVILEGED_ACCESS") {
 }
 
 const email = required("ADMIN_BOOTSTRAP_EMAIL").toLowerCase();
+const emailDigest = createHash("sha256").update(email).digest("hex");
 const reason = required("ADMIN_BOOTSTRAP_REASON");
 if (reason.length < 8 || reason.length > 500) {
   throw new Error("ADMIN_BOOTSTRAP_REASON must be between 8 and 500 characters.");
@@ -107,9 +108,9 @@ try {
          $2,
          $3,
          $4,
-         jsonb_build_object('emailDigest', encode(digest($5, 'sha256'), 'hex'), 'roles', $6::jsonb)
+         jsonb_build_object('emailDigest', $5::text, 'roles', $6::jsonb)
        )`,
-      [userId, reason, randomUUID(), releaseSha, email, JSON.stringify(roles)],
+      [userId, reason, randomUUID(), releaseSha, emailDigest, JSON.stringify(roles)],
     );
 
     await connection.query("commit");
