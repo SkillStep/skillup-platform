@@ -90,7 +90,7 @@ export function OperationsConsole() {
   const [supportUserId, setSupportUserId] = useState("");
   const [supportResult, setSupportResult] = useState<Record<string, unknown> | null>(null);
 
-  const loadConsole = useCallback(async (signal?: AbortSignal) => {
+  const loadConsole = useCallback(async (signal: AbortSignal | null = null) => {
     setError(null);
     try {
       const sessionResponse = await fetch("/api/v1/admin/session", {
