@@ -44,7 +44,6 @@ class GatewayStore:
             self._keeper = sqlite3.connect(self._memory_uri, uri=True, isolation_level=None)
         self._initialize()
 
-
     def close(self) -> None:
         if self._keeper is not None:
             self._keeper.close()
@@ -103,11 +102,13 @@ class GatewayStore:
                     provider_request_id TEXT,
                     status TEXT NOT NULL CHECK (status IN ('reserved','completed','failed')),
                     created_at TEXT NOT NULL,
-                    completed_at TEXT,
-                    UNIQUE(correlation_id, task)
+                    completed_at TEXT
                 );
                 CREATE INDEX IF NOT EXISTS ai_usage_created_at_idx
                     ON ai_usage_ledger(created_at);
+                CREATE UNIQUE INDEX IF NOT EXISTS ai_usage_active_job_idx
+                    ON ai_usage_ledger(correlation_id, task)
+                    WHERE status IN ('reserved','completed');
                 CREATE TABLE IF NOT EXISTS ai_job_results (
                     correlation_id TEXT NOT NULL,
                     task TEXT NOT NULL,
@@ -123,6 +124,57 @@ class GatewayStore:
                 );
                 """
             )
+            self._migrate_legacy_usage_constraint(connection)
+
+    @staticmethod
+    def _migrate_legacy_usage_constraint(connection: sqlite3.Connection) -> None:
+        row = connection.execute(
+            "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'ai_usage_ledger'"
+        ).fetchone()
+        table_sql = str(row["sql"] if row else "")
+        if "UNIQUE(correlation_id, task)" not in table_sql:
+            return
+
+        try:
+            connection.executescript(
+                """
+                BEGIN IMMEDIATE;
+                CREATE TABLE ai_usage_ledger_v2 (
+                    reservation_id TEXT PRIMARY KEY,
+                    correlation_id TEXT NOT NULL,
+                    task TEXT NOT NULL,
+                    provider TEXT NOT NULL,
+                    model TEXT NOT NULL,
+                    prompt_version TEXT NOT NULL,
+                    content_version TEXT NOT NULL,
+                    input_fingerprint TEXT NOT NULL,
+                    release_sha TEXT NOT NULL,
+                    redaction_count INTEGER NOT NULL DEFAULT 0,
+                    reserved_cost_usd TEXT NOT NULL,
+                    actual_cost_usd TEXT,
+                    input_tokens INTEGER NOT NULL DEFAULT 0,
+                    cached_input_tokens INTEGER NOT NULL DEFAULT 0,
+                    output_tokens INTEGER NOT NULL DEFAULT 0,
+                    latency_ms INTEGER,
+                    provider_request_id TEXT,
+                    status TEXT NOT NULL CHECK (status IN ('reserved','completed','failed')),
+                    created_at TEXT NOT NULL,
+                    completed_at TEXT
+                );
+                INSERT INTO ai_usage_ledger_v2 SELECT * FROM ai_usage_ledger;
+                DROP TABLE ai_usage_ledger;
+                ALTER TABLE ai_usage_ledger_v2 RENAME TO ai_usage_ledger;
+                CREATE INDEX ai_usage_created_at_idx ON ai_usage_ledger(created_at);
+                CREATE UNIQUE INDEX ai_usage_active_job_idx
+                    ON ai_usage_ledger(correlation_id, task)
+                    WHERE status IN ('reserved','completed');
+                COMMIT;
+                """
+            )
+        except Exception:
+            if connection.in_transaction:
+                connection.execute("ROLLBACK")
+            raise
 
     @staticmethod
     def _now() -> datetime:
