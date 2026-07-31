@@ -27,6 +27,7 @@ const environmentExample = read(".env.example");
 const liveSmoke = read("tools/smoke-live.mjs");
 const secretScan = read("tools/scan-secrets.mjs");
 const pythonTestRunner = read("tools/run-python-tests.mjs");
+const aiConfig = read("services/ai-worker/src/skillup_ai_worker/config.py");
 const aiGateway = read("services/ai-worker/src/skillup_ai_worker/gateway.py");
 const aiQueue = read("services/ai-worker/src/skillup_ai_worker/queue.py");
 const aiPolicies = read("services/ai-worker/src/skillup_ai_worker/policies.py");
@@ -91,7 +92,7 @@ requireText(liveSmoke, "Skip to main content", "live production smoke");
 
 requireText(pythonTestRunner, "skillup_ai_worker.evaluate", "Python quality gate");
 requireText(pythonTestRunner, "error::ResourceWarning", "Python quality gate");
-requireText(aiGateway, "FEATURE_AI_GENERATION_ENABLED", "AI gateway");
+requireText(aiConfig, "FEATURE_AI_GENERATION_ENABLED", "AI worker configuration");
 requireText(aiGateway, "reserve_budget", "AI gateway");
 requireText(aiGateway, "CircuitBreaker", "AI gateway");
 requireText(aiQueue, "lease", "AI durable queue");
