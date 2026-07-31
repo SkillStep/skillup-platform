@@ -126,10 +126,9 @@ try {
     id: string;
     user_id: string;
     status: string;
-  }>(
-    "select id, user_id, status from entitlements where source_order_id = $1",
-    [checkout.order.id],
-  );
+  }>("select id, user_id, status from entitlements where source_order_id = $1", [
+    checkout.order.id,
+  ]);
   const entitlement = activated.rows[0];
   assert(entitlement, "A verified payment must create an entitlement.");
   assert(
