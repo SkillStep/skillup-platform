@@ -28,25 +28,36 @@ jobs:
           set -euo pipefail
           python - <<'PY'
           from pathlib import Path
+          import re
 
           path = Path("apps/api/src/commercial.ts")
           source = path.read_text(encoding="utf-8")
-          old = """               $4,
-               case when $5 = 'month' then $4 + interval '1 month' else $4 + interval '1 year' end,
-               $4,
-               $4"""
-          new = """               $4::timestamptz,
-               case
-                 when $5::text = 'month'
-                   then $4::timestamptz + interval '1 month'
-                 else $4::timestamptz + interval '1 year'
-               end,
-               $4::timestamptz,
-               $4::timestamptz"""
-          count = source.count(old)
+          pattern = re.compile(
+              r"(?m)^(?P<indent>[ \t]*)\$4,\n"
+              r"(?P=indent)case when \$5 = 'month' then \$4 \+ interval '1 month' else \$4 \+ interval '1 year' end,\n"
+              r"(?P=indent)\$4,\n"
+              r"(?P=indent)\$4$"
+          )
+
+          def replacement(match: re.Match[str]) -> str:
+              indent = match.group("indent")
+              return "\n".join(
+                  [
+                      f"{indent}$4::timestamptz,",
+                      f"{indent}case",
+                      f"{indent}  when $5::text = 'month'",
+                      f"{indent}    then $4::timestamptz + interval '1 month'",
+                      f"{indent}  else $4::timestamptz + interval '1 year'",
+                      f"{indent}end,",
+                      f"{indent}$4::timestamptz,",
+                      f"{indent}$4::timestamptz",
+                  ]
+              )
+
+          updated, count = pattern.subn(replacement, source)
           if count != 1:
               raise SystemExit(f"Expected exactly one SQL expression to patch; found {count}.")
-          path.write_text(source.replace(old, new), encoding="utf-8")
+          path.write_text(updated, encoding="utf-8")
           PY
 
           git diff --check
