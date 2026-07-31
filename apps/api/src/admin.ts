@@ -2,11 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import type { AuthService, AuthenticatedLearner } from "./auth.js";
-import {
-  type AdminIdentity,
-  type AdminService,
-  createAdminService,
-} from "./admin-service.js";
+import { type AdminIdentity, type AdminService, createAdminService } from "./admin-service.js";
 import type { ApiConfig } from "./config.js";
 import {
   RequestAuthorizationError,
@@ -52,9 +48,7 @@ const PublishArtifactSchema = z
   })
   .strict();
 
-const RollbackArtifactSchema = z
-  .object({ reason: z.string().trim().min(3).max(1_000) })
-  .strict();
+const RollbackArtifactSchema = z.object({ reason: z.string().trim().min(3).max(1_000) }).strict();
 
 const ResolveReconciliationSchema = z
   .object({
