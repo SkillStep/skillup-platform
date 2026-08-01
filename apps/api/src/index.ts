@@ -8,6 +8,10 @@ import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
 import { createCapabilityService } from "./capabilities.js";
 import { createCommercialService } from "./commercial.js";
+import {
+  createContentOperationsService,
+  registerContentOperationsRoutes,
+} from "./content-operations.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
@@ -55,6 +59,18 @@ const app = buildApi({
   capabilityService,
   accountLifecycleService,
   analyticsService,
+});
+
+const contentService = createContentOperationsService({
+  pool: database.pool,
+  adminService,
+  releaseSha: config.RELEASE_SHA,
+});
+registerContentOperationsRoutes(app, {
+  config,
+  authService,
+  adminService,
+  contentService,
 });
 
 const workerSecret = process.env["AI_WORKER_SHARED_SECRET"]?.trim();
