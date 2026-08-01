@@ -5,8 +5,5 @@ type FetchCompatibleRequestInit = {
 };
 
 declare global {
-  function fetch(
-    input: RequestInfo | URL,
-    init?: FetchCompatibleRequestInit,
-  ): Promise<Response>;
+  function fetch(input: RequestInfo | URL, init?: FetchCompatibleRequestInit): Promise<Response>;
 }
