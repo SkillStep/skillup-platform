@@ -11,8 +11,10 @@ import {
 import { pilotLearningSeed } from "../pilot-learning-seed.js";
 import { launchCatalogSeed } from "../seed-data.js";
 
-const pilotSeed = launchCatalogSeed.find((item) => item.skill.status === "published");
-if (!pilotSeed) throw new Error("A published pilot seed is required.");
+const pilotSeed = launchCatalogSeed.find(
+  (item) => item.skill.slug === "interview-workplace-communication",
+);
+if (!pilotSeed) throw new Error("The reviewed interview/workplace seed is required.");
 
 const client = createDatabaseClient({
   connectionString: requireDatabaseUrl(),
@@ -72,11 +74,17 @@ try {
     );
   }
 
+  const publishedSlugs = new Set(publishedSkills.map((skill) => skill.slug));
+  const missingPublishedSkills = launchCatalogSeed
+    .map((item) => item.skill.slug)
+    .filter((skillSlug) => !publishedSlugs.has(skillSlug));
   if (
-    publishedSkills.length !== 1 ||
-    publishedSkills[0]?.slug !== "interview-workplace-communication"
+    publishedSkills.length !== launchCatalogSeed.length ||
+    missingPublishedSkills.length > 0
   ) {
-    throw new Error("Exactly the reviewed interview/workplace pilot must be published.");
+    throw new Error(
+      `All reviewed launch skills must be published. Missing: ${missingPublishedSkills.join(", ") || "unexpected count"}.`,
+    );
   }
 
   if (
@@ -140,18 +148,18 @@ try {
   const domain = domainCounts.rows[0];
   if (
     !domain ||
-    domain.categories !== 1 ||
-    domain.modules !== 1 ||
-    domain.lessons !== 1 ||
-    domain.levels !== 1 ||
-    domain.objectives !== 1 ||
-    domain.challenges !== pilotLearningSeed.challenges.length ||
-    domain.evaluations !== pilotLearningSeed.challenges.length ||
-    domain.publications !== 6 + pilotLearningSeed.challenges.length ||
+    domain.categories < 4 ||
+    domain.modules < 1 ||
+    domain.lessons < 1 ||
+    domain.levels < 1 ||
+    domain.objectives < 1 ||
+    domain.challenges < pilotLearningSeed.challenges.length ||
+    domain.evaluations < pilotLearningSeed.challenges.length ||
+    domain.publications < 6 + pilotLearningSeed.challenges.length ||
     domain.forbidden_public_payloads !== 0
   ) {
     throw new Error(
-      `The reviewed pilot learning hierarchy is incomplete: ${JSON.stringify(domain)}`,
+      `The reviewed launch learning hierarchy is incomplete or unsafe: ${JSON.stringify(domain)}`,
     );
   }
 
@@ -280,7 +288,7 @@ try {
   }
 
   console.log(
-    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, ${domain.challenges} protected pilot challenges, version and graph guards verified).`,
+    `SkillUp database smoke passed (${skillCount.value} skills, ${pathCount.value} paths, ${domain.challenges} protected launch challenges, version and graph guards verified).`,
   );
 } finally {
   await client.close();
