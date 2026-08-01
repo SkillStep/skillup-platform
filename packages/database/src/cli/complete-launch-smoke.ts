@@ -9,6 +9,7 @@ const client = createDatabaseClient({
 
 try {
   // Source provenance separates the retained historical pilot from the reviewed full-launch curriculum.
+  // The pilot remains valid history but does not alter the three-challenge launch-content contract.
   const skills = await client.pool.query<{
     slug: string;
     skill_status: string;
