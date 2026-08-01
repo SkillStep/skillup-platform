@@ -115,7 +115,10 @@ def _provider_config(
     base_url = environment.get(f"{prefix}_API_BASE_URL", default_url).strip()
     if not base_url:
         raise AiConfigurationError(f"{prefix}_API_BASE_URL is required for {provider.value}.")
-    model_override = environment.get(f"{prefix}_MODEL", "").strip() or None
+    configured_model = environment.get(f"{prefix}_MODEL", "").strip()
+    model_override = configured_model or (
+        "deepseek-v4-flash" if provider is ProviderName.DEEPSEEK else None
+    )
     return ProviderConfig(
         name=provider,
         api_key=api_key,
@@ -156,9 +159,9 @@ def read_worker_config(environment: Mapping[str, str] | None = None) -> AiWorker
                     f"A secret API key is required for enabled provider {provider.name.value}."
                 )
 
-    max_cost = _read_decimal(source, "AI_MAX_COST_USD_PER_JOB", "0.02", "0", "10")
-    daily_budget = _read_decimal(source, "AI_DAILY_BUDGET_USD", "5", "0", "10000")
-    monthly_budget = _read_decimal(source, "AI_MONTHLY_BUDGET_USD", "100", "0", "100000")
+    max_cost = _read_decimal(source, "AI_MAX_COST_USD_PER_JOB", "0.005", "0", "10")
+    daily_budget = _read_decimal(source, "AI_DAILY_BUDGET_USD", "1", "0", "10000")
+    monthly_budget = _read_decimal(source, "AI_MONTHLY_BUDGET_USD", "20", "0", "100000")
     if daily_budget > monthly_budget:
         raise AiConfigurationError("AI_DAILY_BUDGET_USD cannot exceed AI_MONTHLY_BUDGET_USD.")
 
@@ -170,7 +173,7 @@ def read_worker_config(environment: Mapping[str, str] | None = None) -> AiWorker
         max_cost_per_job_usd=max_cost,
         daily_budget_usd=daily_budget,
         monthly_budget_usd=monthly_budget,
-        max_concurrency=_read_int(source, "AI_MAX_CONCURRENCY", 4, 1, 64),
+        max_concurrency=_read_int(source, "AI_MAX_CONCURRENCY", 1, 1, 64),
         max_retries=_read_int(source, "AI_MAX_RETRIES", 2, 0, 5),
         request_timeout_seconds=_read_int(source, "AI_REQUEST_TIMEOUT_SECONDS", 30, 1, 180),
         circuit_failure_threshold=_read_int(source, "AI_CIRCUIT_FAILURE_THRESHOLD", 5, 1, 100),
