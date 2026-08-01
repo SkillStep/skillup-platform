@@ -157,17 +157,51 @@ function definition(
         prompt: `In one or two sentences, explain how you would ${input.objective}.`,
         instruction: "Include the evidence you would check and the first action you would take.",
         explanation:
-          "A reviewer looks for a clear requirement, relevant evidence, a proportionate action and an explicit boundary or next step.",
+          "A strong answer names the requirement, evidence, proportionate action and an explicit boundary or next step.",
         publicPayload: {
           placeholder: "Write a concise evidence-based response",
           maxLength: 800,
           evaluationNotice:
-            "This response is saved for review and does not receive an automatic score until an approved rubric is applied.",
+            "Clearly strong or weak responses use a deterministic rubric. Borderline responses remain review-only.",
         },
         privateEvaluation: {
-          policy: "manual_review_only",
+          policy: "deterministic_rubric_v1",
+          minimumWords: 8,
+          maximumWords: 120,
+          passScore: 0.65,
+          reviewBand: 0.15,
           uncertaintyMessage:
-            "Your response is saved for review. No automatic score is awarded until an approved reviewer or rubric evaluates it.",
+            "The response falls inside the rubric uncertainty band and is saved for review without an automatic score.",
+          criteria: [
+            {
+              key: "requirement",
+              label: "clear requirement or outcome",
+              keywords: ["requirement", "goal", "outcome", "confirm", "clarify", "understand"],
+              weight: 0.25,
+              minimumKeywordMatches: 1,
+            },
+            {
+              key: "evidence",
+              label: "relevant evidence or verification",
+              keywords: ["evidence", "source", "check", "verify", "example", "details", "facts"],
+              weight: 0.25,
+              minimumKeywordMatches: 1,
+            },
+            {
+              key: "action",
+              label: "proportionate first action",
+              keywords: ["action", "step", "respond", "plan", "ask", "document", "apply"],
+              weight: 0.25,
+              minimumKeywordMatches: 1,
+            },
+            {
+              key: "boundary",
+              label: "boundary, risk or next step",
+              keywords: ["risk", "privacy", "limit", "boundary", "safe", "next", "follow up"],
+              weight: 0.25,
+              minimumKeywordMatches: 1,
+            },
+          ],
         },
         options: [],
       };
