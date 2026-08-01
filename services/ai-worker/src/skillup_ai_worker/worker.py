@@ -7,7 +7,9 @@ import signal
 import socket
 import time
 from dataclasses import dataclass
+from typing import Any
 
+from .api_queue import ApiJobQueue
 from .config import read_worker_config
 from .gateway import AiGateway
 from .observability import emit_event
@@ -22,7 +24,7 @@ class ShutdownState:
 
 def run_once(
     gateway: AiGateway,
-    queue: DurableJobQueue,
+    queue: Any,
     *,
     worker_id: str,
     lease_seconds: int = 120,
@@ -55,7 +57,24 @@ def main() -> int:
         )
         return 0
     store = GatewayStore(config.budget_db_path)
-    queue = DurableJobQueue(config.budget_db_path)
+    job_api_url = os.getenv("AI_JOB_API_URL", "").strip()
+    worker_secret = os.getenv("AI_WORKER_SHARED_SECRET", "").strip()
+    if bool(job_api_url) != bool(worker_secret):
+        raise RuntimeError(
+            "AI_JOB_API_URL and AI_WORKER_SHARED_SECRET must be configured together."
+        )
+    queue: Any = (
+        ApiJobQueue(
+            job_api_url,
+            worker_secret,
+            timeout_seconds=max(
+                1.0,
+                min(float(os.getenv("AI_JOB_API_TIMEOUT_SECONDS", "15")), 120.0),
+            ),
+        )
+        if job_api_url
+        else DurableJobQueue(config.budget_db_path)
+    )
     gateway = AiGateway(config, store=store)
     worker_id = os.getenv("AI_WORKER_ID", f"{socket.gethostname()}:{os.getpid()}")
     poll_seconds = max(0.1, min(float(os.getenv("AI_WORKER_POLL_SECONDS", "1")), 30.0))
@@ -73,6 +92,7 @@ def main() -> int:
         "ai_worker.started",
         {
             "worker_id": worker_id,
+            "queue_mode": "api" if job_api_url else "sqlite",
             "provider": config.primary.name.value,
             "fallback_provider": config.fallback.name.value if config.fallback else None,
             "release_sha": config.release_sha,
