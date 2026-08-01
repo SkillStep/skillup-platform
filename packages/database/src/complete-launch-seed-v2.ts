@@ -4,6 +4,7 @@ import {
   completeLaunchCurriculum,
   launchCategoryDefinitions,
 } from "./complete-launch-curriculum.js";
+import { launchChallenges } from "./complete-launch-challenges.js";
 import { createDatabaseClient, requireDatabaseUrl } from "./index.js";
 import { launchCatalogSeed } from "./seed-data.js";
 
@@ -340,56 +341,12 @@ try {
 
           const strong = strongApproach(objective);
           const weak = weakApproach(objective);
-          const challenges = [
-            {
-              key: "best-practice",
-              type: "multiple_choice",
-              prompt: `Which response best demonstrates how to ${objective}?`,
-              instruction: "Choose the strongest answer.",
-              explanation: `The stronger response confirms the requirement and uses evidence before acting. ${strong}`,
-              publicPayload: { selectionLimit: 1 },
-              privateEvaluation: { correctOptionKeys: ["best"] },
-              options: [
-                ["best", strong],
-                ["mistake", weak],
-                [
-                  "vague",
-                  "Use a confident general statement without checking the requirement, evidence or next action.",
-                ],
-              ],
-            },
-            {
-              key: "check-misconception",
-              type: "true_false",
-              prompt: `True or false: ${weak}`,
-              instruction: "Choose true or false.",
-              explanation:
-                "This is false. A reliable approach confirms the requirement, checks evidence and takes a proportionate action.",
-              publicPayload: {},
-              privateEvaluation: { correctOptionKey: "false" },
-              options: [
-                ["true", "True"],
-                ["false", "False"],
-              ],
-            },
-            {
-              key: "choose-action",
-              type: "scenario",
-              prompt: `A learner needs to ${objective}. Which action should they choose first?`,
-              instruction: "Choose the safest and most useful action.",
-              explanation: `Choose the action that is specific, evidence-based and proportionate. ${strong}`,
-              publicPayload: {},
-              privateEvaluation: { correctOptionKeys: ["best"] },
-              options: [
-                ["best", strong],
-                [
-                  "partial",
-                  "Act immediately with incomplete context and plan to correct the work later.",
-                ],
-                ["risky", weak],
-              ],
-            },
-          ] as const;
+          const challenges = launchChallenges({
+  objective,
+  strong,
+  weak,
+  rotation: curriculum.skillSlug.length + moduleIndex * 4 + levelIndex,
+});
 
           for (const [challengeIndex, definition] of challenges.entries()) {
             const challengeSlug = `${levelSlug}-${definition.key}`;
