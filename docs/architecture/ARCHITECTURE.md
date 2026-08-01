@@ -1,163 +1,178 @@
-# SkillUp Target Architecture
+# SkillUp Current Architecture
 
-**Status:** Proposed foundation architecture. Material changes require an ADR.
+**Status:** Implemented repository architecture. Material runtime, security, data or provider changes require a reviewed ADR and migration/rollback plan.
 
 ## 1. Architecture goals
 
-- Mobile-first, fast, discoverable public web experience.
-- Secure server-authoritative learning, scoring, payments, and entitlements.
-- Low-cost AI generation without hard coupling to one provider.
-- Clear separation between public content, learner operations, AI jobs, and administration.
-- Simple enough for a lean MVP, but structured for Urdu, additional payment providers, native applications, and larger content volume later.
+- Mobile-first, fast and discoverable public web experience.
+- Secure server-authoritative identity, learning, scoring, progress, payments and entitlements.
+- Reviewed, measurable and low-cost AI assistance without hard coupling to one model provider.
+- Clear separation between public content, learner operations, commercial authority, AI execution and administration.
+- English-first launch with stable Urdu-ready content identities, URLs and RTL contracts.
+- Immutable, observable and reversible releases.
 
-## 2. Recommended repository model
+## 2. Repository and runtime model
 
-Use a TypeScript/Python monorepo:
+SkillUp is implemented as a TypeScript/Python monorepo:
 
 ```text
-apps/web               Next.js App Router, TypeScript, React, PWA
-apps/api               Versioned application API and domain services
-services/ai-worker     Python worker for generation, validation, evaluation, and media tasks
-packages/ui            Shared accessible component library and design tokens
-packages/contracts     API schemas, events, generated clients, and compatibility tests
-packages/content-schema Skill/path/lesson/level/challenge/translation definitions
-packages/discoverability Metadata, schema.org, sitemap, canonical, hreflang, and quality rules
-packages/analytics     Event names, payload schemas, and privacy controls
-infra                  Containers, local stack, environments, deployment, and runbooks
+apps/web                 Next.js App Router web/PWA, learner and admin interfaces
+apps/api                 Fastify REST API and server-authoritative domain services
+services/ai-worker       Python generation/evaluation worker
+packages/ui              Accessible components and design tokens
+packages/contracts       Shared API, analytics and job contracts
+packages/content-schema  Versioned learning and localization schemas
+packages/gameplay-engine Deterministic challenge evaluation
+packages/database        PostgreSQL schema, migrations, seed and operations
+packages/discoverability Metadata, JSON-LD, canonical, sitemap and quality utilities
+packages/analytics       Privacy-safe event contracts and reporting helpers
+infra                    Containers, Railway configuration and operational tooling
 ```
 
-The first implementation may colocate lightweight API handlers with the web application where that lowers cost without weakening domain boundaries. Payment callbacks, entitlement changes, AI jobs, and privileged operations remain server-controlled.
+`SkillStep/skillup-platform` is the sole approved source for SkillUp staging and production. Legacy repositories are evidence only and cannot deploy or contribute code without an approved migration-register decision.
 
-## 3. Core runtime components
+## 3. Runtime components
 
 ### Web/PWA
 
-- Next.js App Router with server components where appropriate.
-- Server rendering or static generation for public discovery pages.
-- Responsive mobile-first UI and installable PWA shell.
-- Accessible design system with restrained animation and reduced-motion behavior.
-- Route groups separating public, authenticated learner, checkout, and admin experiences.
+- Next.js App Router and server-rendered public content.
+- Installable PWA with explicit public-cache eligibility and private-route exclusions.
+- Public home, category, skill, path, guide, question, comparison and glossary families.
+- Private sign-in, onboarding, learning, progress, account, checkout and admin surfaces.
+- Same-origin `/api/v1/*` proxy; the browser never receives a private API service host.
+- Mobile-first, keyboard-accessible and reduced-motion presentation.
+- English routes with tested future Urdu canonical, fallback and RTL contracts.
 
 ### Application API
 
-- Versioned REST API, with OpenAPI as the authoritative contract.
-- Domain modules: identity, catalog, learning paths, gameplay, progress, rewards, social sharing, subscriptions, payments, entitlements, administration, analytics, and audit.
+- Versioned Fastify REST API.
 - PostgreSQL as the transactional source of truth.
-- Redis-compatible service only where caching, queues, rate limits, or distributed locks justify it.
-- S3-compatible object storage for reviewed media, generated assets, exports, and temporary processing objects.
+- Domain services for identity, account lifecycle, content, gameplay, assessments, progress, rewards, sharing, entitlements, payments, AI jobs, administration, moderation, analytics and audit.
+- Strict configuration validation, bounded requests, rate limits, origin checks, redacted structured logs and readiness/liveness endpoints.
+- Server-side authorization and capability resolution for every privileged or premium action.
 
-### AI worker and model gateway
+### PostgreSQL
 
-- Durable queue-based jobs for generation and evaluation.
-- Provider-agnostic gateway supporting DeepSeek first where quality and policy allow, with fallback routing only through explicit configuration.
-- Task policies choose model, temperature, token ceiling, timeout, retry, and cost ceiling.
-- Strict JSON-schema output, content-source references, quality scoring, duplicate checks, safety checks, and review status.
-- Model, provider, prompt/template, input hash, output version, latency, token usage, estimated cost, and reviewer decision recorded.
+PostgreSQL stores authoritative:
 
-### Admin and content operations
+- learners, verified email identities, sessions, profiles and privacy settings;
+- policies, acceptances, exports and deletion lifecycle;
+- versioned skills, paths, modules, lessons, levels, challenges, sources and publications;
+- gameplay sessions, attempts, assessment evidence and progress;
+- points, streaks, badges, achievements, sharing and leaderboards;
+- plans, orders, payment events, reconciliation and entitlement ledgers;
+- admin identities, capabilities, review decisions, moderation and privileged audit events;
+- analytics events, maintenance state, commercial jobs and AI job coordination.
 
-- Separate protected route surface inside the same web application for MVP unless risk or scale requires a separate deployment.
-- Server-enforced role and capability checks.
-- Four-eyes approval where public/indexable AI content or payment corrections carry material risk.
-- Append-only audit events for privileged actions.
+Published content and append-only evidence cannot be silently rewritten. Learner attempts remain tied to the exact content versions used.
 
-## 4. Domain model
+### AI worker and gateway
 
-Primary entities:
+- Non-root Python worker built as a production container.
+- Provider-neutral OpenAI-compatible adapters, with DeepSeek as the first economical candidate after approval.
+- Disabled and deterministic adapters for fail-closed operation and CI.
+- Versioned task schemas, minimized inputs, redaction, output validation, quality checks and strict cost ceilings.
+- Idempotency, caching, bounded retries, timeout, fallback, circuit breakers, leases, cancellation and concurrency controls.
+- Worker/API job boundary with shared-secret authentication and auditable status/result persistence.
+- Single worker replica for launch while local SQLite budget/cache state is mounted on encrypted persistent storage; PostgreSQL remains authoritative for application job state.
+- All generated public material remains draft until authorized human review and publication.
 
-- User, Profile, Preference, Session, Role, Capability
-- SkillCategory, Skill, LearningPath, Module, Lesson
-- Level, Challenge, AnswerOption, Explanation, LearningObjective
-- ContentVersion, Translation, SourceReference, ReviewDecision, Publication
-- Enrollment, Attempt, Response, Result, ProgressSnapshot
-- PointLedger, Streak, Badge, Achievement, LeaderboardEntry
-- Plan, Price, PaymentOrder, PaymentTransaction, Entitlement
-- GenerationJob, GenerationArtifact, QualityEvaluation, ModelUsage
-- ShareCard, ModerationReport
-- AuditEvent, AnalyticsEventDefinition
+### Administration and operations
 
-All public learning content is versioned. A learner attempt records the exact content version used so later edits do not rewrite history.
+- Protected admin surface inside the web application.
+- Capability-based authorization with explicit separation of viewing, correction, publication, export and role-management powers.
+- Editorial review, version comparison, publication, rollback and moderation controls.
+- Learner support, entitlement/payment reconciliation and reporting views with minimized data.
+- Append-only privileged audit evidence.
 
-## 5. Public and private content boundaries
+## 4. Identity and account lifecycle
 
-### Public/indexable
+- Passwordless email challenge sign-in.
+- Cryptographically random short-lived codes stored only as protected digests.
+- Opaque browser sessions stored only as digests and delivered through secure `HttpOnly` cookies.
+- Idle and absolute expiry, logout, session listing, revoke-one and revoke-all controls.
+- Profile, locale, learning goal and privacy preferences.
+- Versioned policy acceptance.
+- Bounded authenticated export.
+- Deletion request, cooldown/cancellation, execution and pseudonymization while preserving required payment and audit evidence.
 
-- Skill and category landing pages.
-- Published learning-path summaries.
-- Reviewed guides, questions, glossary terms, and comparisons.
-- Selected public challenge examples where pedagogically useful.
-- Author/reviewer and organization information.
+Live email delivery remains disabled until an approved provider, verified sender domain and protected credentials are supplied.
 
-### Private/noindex
+## 5. Learning and gameplay
 
-- Account, profile, preferences, sessions, and recovery.
-- Learner dashboard, progress, attempt history, personalized recommendations, and detailed results.
-- Checkout, payment status, invoices, and entitlements.
-- Admin, review queues, generation jobs, cost dashboards, support tools, and audit records.
-- Unpublished, draft, rejected, duplicate, or low-quality AI output.
+- Five reviewed launch skills, 68 levels and 204 challenges.
+- Multiple choice, true/false, ordering, matching, scenario, fill-in and short-response formats.
+- Server-authoritative evaluation; protected answers and scoring rules do not enter public browser payloads.
+- Version-pinned sessions, idempotent submissions and safe retry/resume.
+- Baseline and end-path assessment evidence.
+- Hints, remediation, explanations, mastery and deterministic next-step recommendations.
+- Short-response rubrics with bounded confidence, evidence and manual-review fallback.
+- Transactional progress and replay-safe reward effects.
 
-## 6. Request and event flows
+## 6. Commercial authority
 
-### Learning attempt
+- Versioned PKR 599 monthly and PKR 4,999 yearly plans.
+- Server-created payment orders and append-only provider/payment evidence.
+- Entitlement-derived capability projection; client state cannot grant premium.
+- Transactional free daily mission enforcement.
+- Expiry, refund, revocation, correction and reactivation boundaries.
+- JazzCash-ready checkout, callback, status/reconciliation and refund/reversal adapter boundaries.
 
-1. Client requests the next eligible level.
-2. Server verifies identity/guest policy, enrollment, entitlement, prerequisites, and content version.
-3. Client receives a bounded challenge payload without protected answers.
-4. Client submits a response with an idempotency key.
-5. Server evaluates the response, records the attempt, updates progress, and appends point/reward ledger entries transactionally.
-6. Client receives result, explanation, and next-step guidance.
+Merchant-specific endpoints, field rules, signing configuration, credentials and sandbox evidence remain external inputs.
 
-### AI generation
+## 7. Public and private boundaries
 
-1. Authorized content operator or approved automation creates a generation request.
-2. Server records immutable input, policy, expected schema, and cost ceiling.
-3. Worker invokes the configured model through the gateway.
-4. Output is schema-validated, safety-checked, deduplicated, quality-scored, and linked to sources/templates.
-5. Passing output enters review; it is not automatically public/indexable unless the publication policy permits it.
-6. Reviewer approval creates a new content version and publication record.
+### Public and indexable
 
-### JazzCash payment
+- Reviewed skills, categories and learning-path summaries.
+- Reviewed guides, questions, comparisons and glossary terms.
+- Approved organization, author/reviewer, source and freshness information.
+- Privacy-safe public achievement/share projections where the learner opts in.
 
-1. Server creates a unique pending order for one plan and one account.
-2. Client is redirected or presented the approved JazzCash flow.
-3. Provider callback/status is authenticated and recorded.
-4. Idempotent reconciliation transitions the transaction.
-5. Successful settlement creates or extends the entitlement through a ledgered operation.
-6. Client reads the server entitlement; it never activates premium locally.
+### Private, noindex and no-store
 
-## 7. Discoverability architecture
+- Identity, account, privacy, session and deletion routes.
+- Gameplay, assessments, progress, recommendations and detailed results.
+- Checkout, payment history and entitlements.
+- Admin, support, moderation, AI jobs, reporting and audit records.
+- Draft, rejected, duplicate or unreviewed content.
 
-- Stable localized URL hierarchy.
-- Server-rendered textual content for every public page.
-- Canonical, hreflang, robots, sitemap, breadcrumb, and structured-data utilities as shared packages.
-- Content templates require direct answer, summary, learning outcome, related concepts, internal links, and reviewer/source metadata.
-- Automated build and scheduled checks detect broken canonicals, invalid schema, accidental noindex/index exposure, orphan pages, thin content, missing translations, and sitemap drift.
+The service worker refuses API, account, gameplay, progress, checkout, admin, preview and other private responses.
 
-## 8. Security architecture
+## 8. Analytics
 
-- Passwords hashed with an approved adaptive algorithm; no plaintext persistence.
-- Secure session design selected before implementation, preferring protected cookies for the web surface where feasible.
-- CSRF, XSS, injection, SSRF, upload, authorization, enumeration, brute-force, and abuse controls.
-- Secrets supplied only through protected runtime environments.
-- Least-privilege database, storage, queue, and CI identities.
-- Signed/verified payment callbacks and replay protection.
-- Prompt-injection boundaries: public/user content cannot alter system policies, tools, cost limits, publication, or privileged actions.
+- Versioned privacy-safe taxonomy covering discovery, account, learning, rewards, sharing, commercial, AI, support and reliability events.
+- Essential-only operation before product analytics consent.
+- Server-authoritative events for scoring, progress, payment, entitlement and publication outcomes.
+- Deduplication and reconciliation against transactional records.
+- Release/environment segmentation and reproducible KPI queries.
+- Sensitive responses, credentials, OTPs, cookies and provider payloads are prohibited.
 
 ## 9. Delivery architecture
 
-- Pull request required for changes to canonical `main`.
-- Locked dependency installation, format, lint, type, unit, integration, contract, accessibility, SEO/discoverability, security, and production build checks.
-- Immutable artifact built once and promoted through staging and production.
-- Protected environments, explicit production approval, release notes, database migration checks, health verification, and rollback target.
-- Preview environments may use synthetic data only.
+- Locked runtimes and dependencies.
+- Reviewed PostgreSQL migrations and deterministic launch seed/import tooling.
+- Quality CI for foundation, deployment and production contracts, secret scanning, formatting, lint, strict typing, tests, builds and production-container smoke.
+- Non-root web, API and AI-worker images.
+- Release identity and evidence generation.
+- Checked-in Railway configuration for web, API and the single-replica worker.
+- Migration-before-traffic, health/readiness gates and same-artifact staging/production promotion.
+- Backup/restore and rollback verification tooling.
+- No direct editing of a running container or production database.
 
-## 10. Architecture decisions still requiring ADRs
+## 10. External deployment decisions
 
-- Final web authentication/session mechanism.
-- Exact API implementation framework and degree of Next.js API colocation.
-- Queue/worker and Redis-compatible provider.
-- Hosting, database, object storage, and observability providers.
-- JazzCash integration mode and reconciliation contract.
-- First skill catalog and editorial review model.
-- Urdu rollout order and translation workflow.
-- Leaderboard privacy model and eligibility rules.
+The repository is provider-portable, while the checked-in staging reference is Railway. Before staging, authorized owners must decide and supply:
+
+- staging and production project/accounts;
+- domains, DNS and TLS ownership;
+- protected runtime secrets;
+- managed PostgreSQL and backup ownership;
+- encrypted persistent worker volume;
+- SMTP/email provider and verified sender;
+- JazzCash merchant contracts and credentials;
+- optional DeepSeek model/key/budget/privacy approval;
+- monitoring provider, alert recipients and incident ownership;
+- GitHub/environment approvers and independent high-risk reviewers.
+
+Changing from Railway to AWS or another provider requires an ADR and equivalent immutable-container, private-networking, migration, secret, health, backup, monitoring and rollback controls. It does not require changing product/domain contracts.

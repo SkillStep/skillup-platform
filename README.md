@@ -2,7 +2,7 @@
 
 SkillUp is a Pakistan-first, mobile-first web platform that turns practical skill learning into a structured AI-assisted game. Learners choose a skill, complete short levels and challenges, receive useful feedback, earn progress and achievements, and upgrade when premium value is clear.
 
-This repository is the new production source of truth. Earlier QRK repositories may be inspected for reusable ideas, but no legacy code is promoted without security, licensing, architecture, dependency, test and product-fit review.
+This repository is the sole production source of truth. Earlier QRK repositories may be inspected for reusable ideas, but no legacy code, data, provider integration or asset is promoted without the organization migration, ownership, security, licensing and product-fit controls in `docs/organization/`.
 
 ## Product direction
 
@@ -12,14 +12,14 @@ This repository is the new production source of truth. Earlier QRK repositories 
 - Initial premium pricing: PKR 599 monthly and PKR 4,999 yearly.
 - Payment launch: JazzCash.
 - Initial language: English, with Urdu-ready content, URL, data and design architecture from the start.
-- AI strategy: provider-agnostic gateway with DeepSeek as the economical primary candidate, Groq as an approved fallback candidate, OpenRouter free only for local/synthetic evaluation, and a deterministic offline adapter for CI.
+- AI strategy: provider-agnostic gateway with DeepSeek as the economical primary candidate, Groq as an approved fallback candidate, OpenRouter only for controlled evaluation, and a deterministic offline adapter for CI.
 - Discoverability: SEO, AEO and GEO are product architecture requirements, not a later marketing add-on.
 
 ## Repository structure
 
 ```text
 apps/
-  web/                  Next.js mobile-first web/PWA and public discovery pages
+  web/                  Next.js mobile-first web/PWA, learner and admin surfaces
   api/                  Versioned application API and domain services
 services/
   ai-worker/            Provider-neutral generation, validation, evaluation and durable queue
@@ -29,10 +29,26 @@ packages/
   content-schema/       Skill, path, lesson, level, challenge and translation schemas
   discoverability/      Metadata, structured data, sitemap and content-quality utilities
   analytics/            Event taxonomy and privacy-safe tracking helpers
+  database/             PostgreSQL schema, migrations, seed and operational tooling
 infra/                  Reproducible local, staging and production infrastructure
-content/                Reviewed seed content and content-source metadata
+content/                Reviewed launch content and content-source metadata
 docs/                   Product, architecture, security, roadmap and operating decisions
 ```
+
+## Launch implementation
+
+The repository-side launch implementation includes:
+
+- five reviewed launch skills with 68 levels, 204 challenges and all seven challenge formats;
+- baseline and end-path assessments, deterministic scoring, remediation and next-step recommendations;
+- passwordless sessions, onboarding, account settings, session revocation, consent, policy acceptance, export and deletion workflows;
+- server-authoritative progress, points, streaks, badges, achievements, sharing and privacy-aware leaderboards;
+- public skills, paths, guides, questions, comparisons and glossary pages with metadata, sitemap and private-route protections;
+- entitlement-derived capabilities, transactional free mission limits and JazzCash-ready commercial boundaries;
+- capability-based administration, content review/publication, moderation, support, reporting and audit controls;
+- privacy-safe analytics, maintenance runners and durable commercial and AI job processing;
+- provider-neutral AI execution with validation, budgets, cancellation, leases, retries, fallback and human publication review;
+- production web, API and AI-worker containers, migrations, recovery verification and permanent release gates.
 
 ## Non-negotiable engineering principles
 
@@ -45,7 +61,7 @@ docs/                   Product, architecture, security, roadmap and operating d
 
 ## AI gateway
 
-The AI worker is production-built but live generation remains fail-closed. It includes:
+The AI worker is production-built but live provider execution remains fail-closed until approved. It includes:
 
 - DeepSeek, Groq and OpenRouter-compatible adapters through one dependency-free HTTP boundary;
 - deterministic offline evaluation for every supported task;
@@ -61,11 +77,13 @@ See [AI provider gateway](docs/ai/AI_PROVIDER_GATEWAY.md), [privacy and cost pol
 
 ## Engineering and operations
 
-- [Target architecture](docs/architecture/ARCHITECTURE.md)
+- [Current architecture](docs/architecture/ARCHITECTURE.md)
 - [Delivery roadmap](docs/roadmap/ROADMAP.md)
 - [Local development bootstrap](docs/engineering/LOCAL_DEVELOPMENT.md)
+- [Pre-deployment handoff](docs/operations/PRE_DEPLOYMENT_HANDOFF.md)
 - [Railway staging deployment](docs/operations/RAILWAY_STAGING_DEPLOYMENT.md)
 - [Production readiness](docs/operations/PRODUCTION_READINESS.md)
+- [Organization governance](docs/organization/README.md)
 - [Security baseline](SECURITY.md)
 - [Agent instructions](AGENTS.md)
 
@@ -80,8 +98,8 @@ pnpm check
 pnpm container:build
 ```
 
-The quality pipeline validates locked dependencies, migrations, deterministic seed data, database constraints, formatting, linting, strict TypeScript, unit/integration/Python tests, deterministic AI evaluation, production builds, non-root API/web/AI-worker images, API/PostgreSQL smoke and production-like web/API smoke.
+The quality pipeline validates locked dependencies, migrations, deterministic launch data, database constraints, formatting, linting, strict TypeScript, unit/integration/Python tests, deterministic AI evaluation, production builds, non-root API/web/AI-worker images, API/PostgreSQL smokes and production-container end-to-end smoke.
 
 ## Current phase
 
-The executable beta includes public discovery, privacy-safe PWA, passwordless sessions, onboarding, reviewed learning content, server-authoritative gameplay/resume, progress/rewards, production operations, and a production-built provider-neutral AI worker. Live SMTP, live AI generation, provider credentials, final provider/model/task approval, premium, JazzCash, infrastructure and production traffic promotion remain separately gated.
+Repository-side product development is ready for deployment preparation. Live infrastructure, domains, protected runtime secrets and provider-specific acceptance remain external gates. Staging should begin only from the checklist in `docs/operations/PRE_DEPLOYMENT_HANDOFF.md`; no legacy repository is an authorized fallback deployment source.

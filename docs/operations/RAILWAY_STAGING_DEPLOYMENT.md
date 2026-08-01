@@ -1,61 +1,82 @@
 # Railway Staging Deployment Runbook
 
-**Status:** Implementation-ready. Provider accounts, domains and secrets require authorized human configuration.
+**Status:** Repository implementation is ready. Provider accounts, domains, secrets and human acceptance require authorized configuration.
 
-This runbook deploys the reviewed SkillUp web and API containers to an isolated staging environment with managed PostgreSQL. Staging must not contain production learner, payment or provider data.
+This runbook deploys the reviewed SkillUp web, API, PostgreSQL and optional AI-worker containers to an isolated staging environment. Staging must never contain production learner, payment or provider data.
 
-## 1. Required access and approvals
+## 1. Required access and owners
 
-Before deployment, an authorized operator must have:
+Before deployment, record these items in the owner handoff and organization registers:
 
-- Railway project administration with MFA enabled;
-- permission to connect `SkillStep/skillup-platform`;
-- an approved staging hostname or the temporary Railway-generated web hostname;
-- a cryptographically random staging session secret;
-- a reviewed SMTP account and verified sender domain when real sign-in testing is required;
-- agreement that JazzCash and live AI providers remain disabled;
-- a named rollback owner.
+- Railway organization/project administrator with MFA;
+- permission to connect `SkillStep/skillup-platform` only;
+- staging hostname or temporary Railway web hostname;
+- named deployment and rollback owners;
+- managed PostgreSQL and backup owner;
+- monitoring/alert owner;
+- a cryptographically random staging `SESSION_SECRET`;
+- a separate cryptographically random `AI_WORKER_SHARED_SECRET` when the worker is connected;
+- approved SMTP account and verified sender domain for real sign-in testing;
+- JazzCash sandbox pack and credentials before payment testing;
+- DeepSeek key/model/privacy/budget approval before live AI testing.
 
 Never paste credentials into GitHub issues, pull requests, source files, screenshots or chat logs.
 
 ## 2. Create the staging project
 
-Create one Railway project named `skillup-staging` with three services:
+Create one Railway project named `skillup-staging` with:
 
 1. `postgres` — managed PostgreSQL;
-2. `api` — connected to this GitHub repository;
-3. `web` — connected to this GitHub repository.
+2. `api` — connected to this repository;
+3. `web` — connected to this repository;
+4. `ai-worker` — connected to this repository when AI staging evaluation begins.
 
-Both application services use the repository root as their source directory. Configure these Railway configuration-file paths:
+Application services use the repository root and these configuration files:
 
 - API: `/infra/railway/api.railway.json`
 - Web: `/infra/railway/web.railway.json`
+- AI worker: `/infra/railway/ai-worker.railway.json`
 
-The API configuration builds `infra/docker/api.Dockerfile`, applies checked-in migrations before traffic is switched, and waits for `/v1/ready`. The web configuration builds `infra/docker/web.Dockerfile` and waits for `/api/health`.
+The API applies checked-in migrations before traffic and gates on `/v1/ready`. The web gates on `/api/health`. The worker runs a single replica with zero deployment overlap.
 
-## 3. API variables
+## 3. PostgreSQL
 
-Set these variables only on the `api` service:
+- Provision an isolated managed PostgreSQL database.
+- Use private networking for API access.
+- Enable encrypted backups and the strongest supported point-in-time recovery appropriate for staging.
+- Restrict access to the API, named database owner and approved recovery operators.
+- Do not load production data. Use checked-in migrations and deterministic reviewed launch data only.
+
+## 4. API variables
+
+Set on the `api` service:
 
 ```dotenv
 APP_ENV=staging
 API_HOST=0.0.0.0
 PUBLIC_APP_URL=https://<staging-web-hostname>
-DATABASE_URL=<private managed PostgreSQL connection URL>
+DATABASE_URL=<private-managed-postgresql-url>
 DATABASE_MAX_CONNECTIONS=10
+MAINTENANCE_INTERVAL_SECONDS=60
 SESSION_COOKIE_NAME=skillup_session
 SESSION_SECRET=<at-least-32-random-bytes>
 SESSION_IDLE_MINUTES=60
 SESSION_ABSOLUTE_HOURS=168
 AUTH_CHALLENGE_MINUTES=10
 EMAIL_PROVIDER=disabled
-RELEASE_SHA=<deployed-git-commit-sha>
+FEATURE_PREMIUM_ENABLED=false
+FEATURE_JAZZCASH_ENABLED=false
+JAZZCASH_MODE=disabled
+AI_WORKER_SHARED_SECRET=
+RELEASE_SHA=<approved-main-commit-sha>
 LOG_LEVEL=info
 ```
 
 Do not set `API_PORT`; the runtime accepts the provider-injected `PORT` value.
 
-For real passwordless sign-in testing, replace only the email section with the approved SMTP values:
+### Enable staging email
+
+For real passwordless sign-in testing, replace the email section with approved SMTP values:
 
 ```dotenv
 EMAIL_PROVIDER=smtp
@@ -65,106 +86,211 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_REQUIRE_TLS=true
 SMTP_USERNAME=<smtp-username>
-SMTP_PASSWORD=<smtp-password>
+SMTP_PASSWORD=<smtp-secret>
 ```
 
-Use port `465` with `SMTP_SECURE=true` only when the provider explicitly requires implicit TLS. Never use a personal mailbox password.
+Use port `465` with `SMTP_SECURE=true` only when the provider requires implicit TLS. Never use a personal mailbox password.
 
-## 4. Web variables
+### Enable premium without payments
 
-Set these variables only on the `web` service:
+`FEATURE_PREMIUM_ENABLED=true` may be enabled in staging after the entitlement/capability test plan is approved. Keep JazzCash disabled and use only authorized synthetic/admin entitlement operations to test locked and unlocked experiences.
+
+### Enable JazzCash sandbox
+
+Set these only after the merchant-specific sandbox contract is reviewed:
+
+```dotenv
+FEATURE_PREMIUM_ENABLED=true
+FEATURE_JAZZCASH_ENABLED=true
+JAZZCASH_MODE=sandbox
+JAZZCASH_MERCHANT_ID=<protected-sandbox-value>
+JAZZCASH_PASSWORD=<protected-sandbox-value>
+JAZZCASH_INTEGRITY_SALT=<protected-sandbox-value>
+JAZZCASH_PAYMENT_URL=<approved-sandbox-https-endpoint>
+JAZZCASH_RETURN_URL=https://<staging-web-hostname>/en/account/payment-return
+JAZZCASH_VERSION=<merchant-approved-version>
+JAZZCASH_TXN_TYPE=<merchant-approved-type>
+JAZZCASH_BANK_ID=<merchant-approved-bank-id>
+JAZZCASH_PRODUCT_ID=<merchant-approved-product-id>
+JAZZCASH_CHECKOUT_MINUTES=15
+```
+
+Sandbox and production credentials must use separate secret scopes.
+
+## 5. Web variables
+
+Set on the `web` service:
 
 ```dotenv
 PUBLIC_APP_URL=https://<staging-web-hostname>
 API_BASE_URL=http://<private-api-service-host-and-port>
-RELEASE_SHA=<same-deployed-git-commit-sha>
+RELEASE_SHA=<same-approved-main-commit-sha>
 ```
 
-`API_BASE_URL` is server-only. It must point to the API over Railway private networking where available. Do not create a `NEXT_PUBLIC_API_*` variable and do not expose the private API host in browser code.
+`API_BASE_URL` is server-only. Do not create a `NEXT_PUBLIC_API_*` variable or expose the private API host in browser code.
 
-## 5. Initial deployment order
+## 6. AI-worker service
 
-Deploy in this order:
+Create the worker only when AI staging evaluation is authorized. Attach one encrypted persistent volume mounted at:
+
+```text
+/var/lib/skillup-ai
+```
+
+Set on both API and worker:
+
+```dotenv
+AI_WORKER_SHARED_SECRET=<same-separate-random-secret>
+```
+
+Set on the worker:
+
+```dotenv
+APP_ENV=staging
+FEATURE_AI_GENERATION_ENABLED=true
+AI_PROVIDER=deepseek
+AI_FALLBACK_PROVIDER=disabled
+DEEPSEEK_API_KEY=<protected-key>
+DEEPSEEK_API_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=<approved-model>
+AI_MAX_COST_USD_PER_JOB=<approved-limit>
+AI_DAILY_BUDGET_USD=<approved-limit>
+AI_MONTHLY_BUDGET_USD=<approved-limit>
+AI_MAX_CONCURRENCY=1
+AI_MAX_RETRIES=2
+AI_REQUEST_TIMEOUT_SECONDS=30
+AI_CIRCUIT_FAILURE_THRESHOLD=5
+AI_CIRCUIT_RESET_SECONDS=60
+AI_CACHE_TTL_SECONDS=86400
+AI_BUDGET_DB_PATH=/var/lib/skillup-ai/ai-gateway.sqlite3
+AI_JOB_API_URL=http://<private-api-service-host-and-port>
+AI_JOB_API_TIMEOUT_SECONDS=15
+AI_WORKER_SHARED_SECRET=<same-secret-as-api>
+AI_WORKER_ID=skillup-staging-worker-1
+AI_WORKER_POLL_SECONDS=1
+AI_WORKER_LEASE_SECONDS=120
+AI_WORKER_MAX_ATTEMPTS=3
+OPENROUTER_APP_NAME=SkillUp
+RELEASE_SHA=<same-approved-main-commit-sha>
+```
+
+The worker must remain one replica while its budget/cache ledger uses SQLite. Do not share the SQLite file over NFS. If AI remains disabled, the worker is intentionally not required for initial web/API staging.
+
+## 7. Observability
+
+Configure approved endpoints on applicable services:
+
+```dotenv
+OTEL_EXPORTER_OTLP_ENDPOINT=<approved-endpoint>
+SENTRY_DSN=<approved-project-dsn>
+```
+
+Verify that logs and traces redact cookies, authorization, OTPs, provider credentials, payment secrets and private responses. Alerts must reach named owners for web/API health, database saturation, authentication failure spikes, payment/reconciliation failures, AI queue/cost failures and backup failures.
+
+## 8. Initial deployment order
 
 1. PostgreSQL becomes healthy.
-2. API builds its immutable container.
-3. API pre-deployment migration completes successfully.
-4. API `/v1/ready` returns HTTP 200.
-5. Web builds its immutable container.
-6. Web `/api/health` returns HTTP 200.
-7. Attach the staging web domain and update `PUBLIC_APP_URL` on both services if the final hostname changed.
-8. Redeploy both services from the same Git commit so release identifiers match.
+2. Deploy API from the approved commit.
+3. Confirm the migration command completes.
+4. Confirm API `/v1/ready` returns HTTP 200.
+5. Deploy web from the same commit.
+6. Confirm web `/api/health` returns HTTP 200.
+7. Attach the staging web domain and set the final `PUBLIC_APP_URL` on web and API.
+8. Redeploy both from the same commit and confirm matching release identities.
+9. Configure SMTP and run account testing.
+10. Enable premium capability staging tests.
+11. Add the worker only after DeepSeek approval.
+12. Enable JazzCash only after sandbox credentials and mapping are approved.
 
-A migration failure, readiness failure or release-SHA mismatch blocks testing. Do not bypass the health gate by changing the endpoint.
+A migration failure, readiness failure or release-SHA mismatch blocks testing. Do not bypass a gate by changing health endpoints or editing a running service.
 
-## 6. Automated live smoke
+## 9. Automated live smoke
 
-From a clean checkout of the same commit:
+From a clean checkout of the exact deployed commit:
 
 ```bash
 corepack enable
 corepack prepare pnpm@11.17.0 --activate
 pnpm install --frozen-lockfile
 SKILLUP_WEB_URL=https://<staging-web-hostname> \
-SKILLUP_EXPECTED_RELEASE_SHA=<deployed-git-commit-sha> \
+SKILLUP_EXPECTED_RELEASE_SHA=<deployed-commit-sha> \
 pnpm smoke:live
 ```
 
-Set `SKILLUP_API_URL` only when the API intentionally has a protected public staging URL. The standard smoke path verifies the API through the same-origin web proxy.
+Set `SKILLUP_API_URL` only if the API intentionally has a protected public staging URL. The standard smoke verifies it through the same-origin web proxy.
 
-The smoke test verifies:
+The smoke verifies release identity, public HTML, security/cache/index boundaries, PWA assets, API liveness/readiness and key public content routes.
 
-- web liveness and release identity;
-- meaningful server-rendered homepage HTML;
-- private progress pages remain `noindex` and `no-store`;
-- API liveness through the web proxy;
-- database-backed API readiness;
-- web/API release-SHA consistency.
+## 10. Complete manual staging acceptance
 
-The same smoke can be run through the manually dispatched `Live Staging Smoke` GitHub Actions workflow.
+Use dedicated staging accounts and record browser, viewport, network profile, deployed SHA, tester, timestamp and evidence. Never record codes, cookies or secrets.
 
-## 7. Manual staging journey
+### Public and PWA
 
-Use a dedicated staging learner account and complete this journey:
+- Verify home, five skill pages, path pages, guides, questions, comparisons and glossary pages.
+- Verify canonical, robots, sitemap, structured data and no unsupported claims.
+- Verify install, offline fallback, update and private-cache exclusion.
+- Verify mobile widths, keyboard, screen reader, 200% zoom, reduced motion, long text and future RTL layout safety.
 
-1. Open `/en` on a mobile-width browser and confirm the page renders without console errors.
-2. Open `/en/sign-in`, request a code and verify delivery from the approved sender.
-3. Enter one invalid code and confirm it fails without revealing account existence or secrets.
-4. Enter the valid code and complete onboarding.
-5. Start the reviewed interview pilot.
-6. Refresh during a challenge and confirm the exact session resumes.
-7. Submit a correct response and confirm the server explanation and score.
-8. Complete the level and open `/en/progress`.
-9. Confirm points, streak and achievements explain their source.
-10. Confirm leaderboard participation is off by default.
-11. Opt in with a staging alias and confirm no name, email, age or learning history appears.
-12. Log out and confirm private pages cannot load learner data.
+### Account and privacy
 
-Record browser, viewport, network profile, commit SHA, tester, timestamp and defects. Do not record sign-in codes, cookies or SMTP credentials.
+- Test valid, invalid, expired, reused and rate-limited email codes.
+- Complete onboarding and update profile/privacy preferences.
+- List sessions; revoke one and revoke all.
+- Accept each policy from the relevant flow.
+- Request and retrieve a bounded privacy export.
+- Test deletion request, cooldown/cancellation and execution with retained payment/audit evidence.
 
-## 8. Rollback
+### Learning
 
-Rollback is required when readiness, sign-in, gameplay, data integrity or private-route controls fail.
+- Start and complete all five launch paths through representative levels.
+- Exercise every challenge type.
+- Verify baseline/end assessment evidence, scoring, hints, remediation and recommendations.
+- Interrupt and resume exact sessions across refresh and reauthentication.
+- Verify duplicate/replayed submissions cannot duplicate progress or rewards.
+- Verify short-response confidence/evidence and manual-review fallback.
 
-1. Stop promotion and mark the release failed.
-2. Restore the previous known-good web and API deployment from its immutable image/commit.
-3. Do not reverse a database migration blindly. Confirm backward compatibility or apply a reviewed forward repair migration.
-4. Run `pnpm smoke:live` against the rollback target.
-5. Record failed SHA, rollback SHA, migration state, evidence and owner.
+### Progress, sharing and moderation
 
-Direct editing inside a running container or database is prohibited.
+- Verify progress, points, streaks, badges and achievements.
+- Confirm leaderboard and achievement sharing are off by default.
+- Opt in using an alias and confirm no private profile/contact/history is exposed.
+- Submit content/share reports and verify authorized moderation and audit records.
 
-## 9. Production gate
+### Premium and commercial
 
-Staging success does not authorize production. Production additionally requires:
+- Verify the transactional free daily mission limit.
+- Verify entitlement-derived locked/unlocked experiences and revocation/refund effects.
+- Verify order, timeout, pending recovery, scheduled reconciliation and operator views.
+- When JazzCash sandbox is enabled, execute success, cancellation, failure, pending-to-success, expiry, duplicate callback, tampered signature, wrong amount/currency, outage, refund/reversal and settlement reconciliation scenarios.
 
-- final domain and DNS ownership;
-- protected GitHub/Railway production environments and explicit approver;
-- least-privilege team access and MFA;
-- encrypted backup and tested restore evidence;
-- monitoring and alert ownership;
-- incident, privacy and account-deletion runbooks;
-- approved email sender and abuse operations;
-- human review of reward economy and leaderboard moderation;
-- legal/privacy acceptance and beta support contact;
-- JazzCash sandbox approval before any payment work is enabled.
+### AI and administration
+
+- Verify admin role/capability positive and negative matrices.
+- Verify content draft, review, publication, correction, scheduling, archive and rollback.
+- Verify AI request, worker lease, result, artifact, review, publication and cancellation.
+- Verify provider timeout, malformed output, budget exhaustion, retry, circuit breaker and outage behavior.
+- Confirm model output cannot change scoring, progress, entitlement, authorization or publication directly.
+
+## 11. Backup and rollback
+
+- Create an encrypted PostgreSQL backup.
+- Restore it into an isolated database and run the repository recovery verification.
+- Snapshot/online-back up the worker SQLite volume when AI is enabled.
+- Record the previous known-good web/API/worker artifact identities.
+- Roll back application artifacts without rebuilding.
+- Do not reverse a database migration blindly; use backward compatibility or a reviewed forward repair migration.
+- Run live smoke after restore and after rollback.
+
+## 12. Staging completion gate
+
+Staging is accepted only when:
+
+- exact release identities match across deployed services;
+- all required automated and manual journeys pass;
+- no unresolved P0/P1 security, privacy, payment, accessibility or data-integrity defect remains;
+- alerts, backup, restore and rollback have evidence and named owners;
+- every enabled external provider passes its approved failure and recovery scenarios;
+- accepted lower risks have owner, rationale, control and review date.
+
+Staging success does not itself authorize production. Production promotion requires the exact staging-approved artifacts, production secrets, production domains, controlled provider transactions and explicit named approval.
