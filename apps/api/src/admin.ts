@@ -49,6 +49,10 @@ const GenerateRequestSchema = z
     }
   });
 
+const CancelRequestSchema = z
+  .object({ reason: z.string().trim().min(3).max(1_000) })
+  .strict();
+
 const ReviewArtifactSchema = z
   .object({
     decision: z.enum(["approve", "reject", "request_changes", "escalate"]),
@@ -151,6 +155,21 @@ export function registerAdminRoutes(
     return reply
       .status(202)
       .send(await options.adminService.createGenerationRequest(admin, body, request.id));
+  });
+
+  app.post("/v1/admin/ai/requests/:id/cancel", async (request) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requireAdmin(request, options, "ai.request");
+    const { id } = IdParamsSchema.parse(request.params);
+    const body = CancelRequestSchema.parse(request.body);
+    return {
+      request: await options.adminService.cancelGenerationRequest(
+        admin,
+        id,
+        body.reason,
+        request.id,
+      ),
+    };
   });
 
   app.get("/v1/admin/ai/artifacts", async (request) => {
