@@ -2,6 +2,7 @@ import { canonicalUrl } from "@skillup/discoverability";
 import type { MetadataRoute } from "next";
 
 import { launchCategory, publicSkills } from "../lib/public-catalog";
+import { publicContentRoutes } from "../lib/public-content";
 import { publicPolicies } from "../lib/public-policies";
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
@@ -55,6 +56,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: skill.status === "pilot" ? 0.9 : 0.65,
       },
     ]),
+    ...publicContentRoutes.map((entry) => ({
+      url: canonicalUrl(publicAppUrl, "en", `/${entry.segment}/${entry.slug}`),
+      lastModified,
+      changeFrequency: "monthly" as const,
+      priority: 0.65,
+    })),
     ...publicPolicies.map((policy) => ({
       url: canonicalUrl(publicAppUrl, "en", `/legal/${policy.slug}`),
       lastModified,
