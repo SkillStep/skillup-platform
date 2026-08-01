@@ -21,11 +21,11 @@ describe("AI job status service", () => {
     });
   });
 
-  it("reports cancellation without allowing a stale worker to continue", async () => {
+  it("reports a requested cancellation while preserving the worker lease for acknowledgement", async () => {
     const service = createAiJobStatusService({
       pool: pool([
         {
-          status: "cancelled",
+          status: "running",
           lease_token: "lease-a",
           cancelled_at: new Date("2026-08-01T00:00:00.000Z"),
         },
@@ -38,7 +38,23 @@ describe("AI job status service", () => {
     });
   });
 
-  it("rejects missing requests and mismatched leases", async () => {
+  it("atomically acknowledges a cancelled worker lease", async () => {
+    const database = pool([{ id: "11111111-1111-4111-8111-111111111111" }]);
+    const service = createAiJobStatusService({
+      pool: database,
+      now: () => new Date("2026-08-01T00:00:00.000Z"),
+    });
+
+    await expect(
+      service.acknowledgeCancellation(
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ),
+    ).resolves.toEqual({ cancelled: true });
+    expect(database.query).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects missing requests, mismatched leases and stale cancellation acknowledgements", async () => {
     const missing = createAiJobStatusService({ pool: pool([]) });
     await expect(
       missing.status("11111111-1111-4111-8111-111111111111", "lease-a"),
@@ -49,6 +65,13 @@ describe("AI job status service", () => {
     });
     await expect(
       stale.status("11111111-1111-4111-8111-111111111111", "lease-a"),
+    ).rejects.toMatchObject({ statusCode: 409 });
+
+    await expect(
+      missing.acknowledgeCancellation(
+        "11111111-1111-4111-8111-111111111111",
+        "22222222-2222-4222-8222-222222222222",
+      ),
     ).rejects.toMatchObject({ statusCode: 409 });
   });
 });
