@@ -23,6 +23,7 @@ const codeowners = read(".github/CODEOWNERS");
 const pullRequestTemplate = read(".github/pull_request_template.md");
 const webDockerfile = read("infra/docker/web.Dockerfile");
 const aiWorkerDockerfile = read("infra/docker/ai-worker.Dockerfile");
+const aiWorkerRailway = read("infra/railway/ai-worker.railway.json");
 const environmentExample = read(".env.example");
 const liveSmoke = read("tools/smoke-live.mjs");
 const secretScan = read("tools/scan-secrets.mjs");
@@ -66,7 +67,13 @@ for (const required of [
   "FEATURE_JAZZCASH_ENABLED=false",
   "AI_PROVIDER=disabled",
   "AI_FALLBACK_PROVIDER=disabled",
-  "AI_MAX_COST_USD_PER_JOB=0.02",
+  "DEEPSEEK_MODEL=deepseek-v4-flash",
+  "AI_MAX_COST_USD_PER_JOB=0.005",
+  "AI_DAILY_BUDGET_USD=1",
+  "AI_MONTHLY_BUDGET_USD=20",
+  "AI_MAX_CONCURRENCY=1",
+  "AI_JOB_API_URL=http://localhost:3001",
+  "AI_WORKER_SHARED_SECRET=",
   "AI_EVALUATION_LIVE=false",
   "JAZZCASH_MODE=disabled",
   "JAZZCASH_PAYMENT_URL=",
@@ -82,6 +89,8 @@ requireText(
 );
 requireText(aiWorkerDockerfile, "USER skillup-ai", "AI worker production Dockerfile");
 requireText(aiWorkerDockerfile, "skillup_ai_worker.health", "AI worker production Dockerfile");
+requireText(aiWorkerRailway, '"overlapSeconds": 0', "Railway AI worker config");
+requireText(aiWorkerRailway, "skillup_ai_worker.worker", "Railway AI worker config");
 requireText(workflow, "Reject high-severity production dependency findings", "Quality CI");
 requireText(workflow, "pnpm audit --prod --audit-level=high", "Quality CI");
 requireText(workflow, "Build reviewed production containers", "Quality CI");
@@ -111,6 +120,7 @@ requireText(liveSmoke, "Skip to main content", "live production smoke");
 requireText(pythonTestRunner, "skillup_ai_worker.evaluate", "Python quality gate");
 requireText(pythonTestRunner, "error::ResourceWarning", "Python quality gate");
 requireText(aiConfig, "FEATURE_AI_GENERATION_ENABLED", "AI worker configuration");
+requireText(aiConfig, '"deepseek-v4-flash"', "AI worker configuration");
 requireText(aiGateway, "self.store.reserve(", "AI gateway budget reservation");
 requireText(aiGateway, "CircuitBreakers", "AI gateway circuit breaker");
 requireText(aiQueue, "lease", "AI durable queue");
