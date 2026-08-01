@@ -66,6 +66,48 @@ export function createAdminService(
 
   return {
     ...base,
+    metrics: async () => {
+      const [baseMetrics, expanded] = await Promise.all([
+        base.metrics(),
+        options.pool.query<Record<string, unknown>>(
+          `select
+             (select count(*)::integer from analytics_events) as "analyticsEvents",
+             (select count(*)::integer from analytics_events where authority = 'client') as "clientAnalyticsEvents",
+             (select count(*)::integer from analytics_events where authority = 'server') as "serverAnalyticsEvents",
+             (select count(*)::integer from analytics_events where event_name = 'registration_started') as "registrationStarts",
+             (select count(*)::integer from analytics_events where event_name = 'registration_completed') as "registrationsCompleted",
+             (select count(*)::integer from analytics_events where event_name = 'onboarding_completed') as "onboardingCompletions",
+             (select count(*)::integer from analytics_events where event_name = 'level_started') as "levelStarts",
+             (select count(*)::integer from analytics_events where event_name = 'level_completed') as "levelCompletions",
+             (select count(*)::integer from analytics_events where event_name = 'path_completed') as "pathCompletions",
+             (select count(*)::integer from analytics_events where event_name = 'pricing_viewed') as "pricingViews",
+             (select count(*)::integer from analytics_events where event_name = 'upgrade_started') as "upgradeStarts",
+             (select count(*)::integer from analytics_events where event_name = 'payment_started') as "paymentStarts",
+             (select count(*)::integer from analytics_events where event_name = 'payment_verified') as "verifiedPaymentEvents",
+             (select count(*)::integer from analytics_events where event_name = 'premium_activated') as "premiumActivationEvents",
+             (select count(*)::integer from analytics_events where event_name = 'first_premium_action') as "firstPremiumActions",
+             (select count(*)::integer from analytics_consents where consent_state = 'product') as "productAnalyticsConsents",
+             (select count(*)::integer from analytics_consents where consent_state = 'essential') as "essentialOnlyConsents",
+             (select count(*)::integer from experiment_assignments where status = 'active') as "activeExperimentAssignments",
+             (select count(*)::integer from public_content_entries where status = 'published') as "publishedPublicContentEntries",
+             (select count(*)::integer from content_reports where status = 'open') as "openContentReports",
+             (select count(*)::integer from ai_generation_requests where status = 'queued') as "queuedAiJobs",
+             (select count(*)::integer from ai_generation_requests where status = 'running') as "runningAiJobs",
+             (select count(*)::integer from ai_generation_requests where status = 'completed') as "completedAiJobs",
+             (select count(*)::integer from ai_generation_requests where status = 'failed') as "failedAiJobs",
+             (select count(*)::integer from ai_job_attempts where status = 'cancelled') as "cancelledAiAttempts",
+             (select coalesce(sum(estimated_cost_usd), 0)::numeric(12,6) from ai_job_attempts where status = 'completed') as "estimatedAiCostUsd",
+             (select count(*)::integer
+                from analytics_events
+               where received_at > occurred_at + interval '5 minutes') as "analyticsEventsDelayedOverFiveMinutes",
+             (select max(received_at) from analytics_events) as "analyticsDataFreshness",
+             (select max(updated_at) from public_content_entries where status = 'published') as "publicContentFreshness",
+             (select max(completed_at) from ai_job_attempts) as "aiJobDataFreshness"`,
+        ),
+      ]);
+      return { ...baseMetrics, ...(expanded.rows[0] ?? {}) };
+    },
+
     createGenerationRequest: async (actor, input, correlationId) => {
       const encodedPayload = JSON.stringify(input.inputPayload);
       if (Buffer.byteLength(encodedPayload, "utf8") > 40_000) {
