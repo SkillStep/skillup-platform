@@ -7,6 +7,7 @@ import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
 import { createCapabilityService } from "./capabilities.js";
+import { createCommercialAutomationService } from "./commercial-automation.js";
 import { createCommercialService } from "./commercial.js";
 import {
   createContentOperationsService,
@@ -15,6 +16,7 @@ import {
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
+import { createMaintenanceRunner } from "./maintenance.js";
 import { createProgressService } from "./progress.js";
 
 const config = readApiConfig();
@@ -34,6 +36,7 @@ const authService = createAuthService({
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
 const commercialService = createCommercialService({ pool: database.pool, config });
+const commercialAutomationService = createCommercialAutomationService({ pool: database.pool });
 const adminService = createAdminService({
   pool: database.pool,
   releaseSha: config.RELEASE_SHA,
@@ -81,8 +84,31 @@ if (workerSecret) {
   });
 }
 
+const maintenance = createMaintenanceRunner({
+  intervalMs: config.MAINTENANCE_INTERVAL_SECONDS * 1_000,
+  logger: {
+    info: (context, message) => app.log.info(context, message),
+    error: (context, message) => app.log.error(context, message),
+  },
+  tasks: [
+    {
+      name: "commercial-automation",
+      run: () => commercialAutomationService.run(100),
+    },
+    {
+      name: "scheduled-publication",
+      run: () => contentService.processScheduled(100),
+    },
+    {
+      name: "account-deletion",
+      run: () => accountLifecycleService.processDueDeletions(25),
+    },
+  ],
+});
+
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   app.log.info({ signal }, "Shutting down SkillUp API");
+  maintenance.stop();
   await app.close();
   await database.close();
   process.exit(0);
@@ -93,8 +119,10 @@ process.once("SIGTERM", () => void shutdown("SIGTERM"));
 
 try {
   await app.listen({ host: config.API_HOST, port: config.API_PORT });
+  maintenance.start();
 } catch (error) {
   app.log.fatal({ error }, "SkillUp API failed to start");
+  maintenance.stop();
   await database.close().catch(() => undefined);
   process.exit(1);
 }
