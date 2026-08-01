@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const url = canonicalUrl(publicAppUrl, "en", "/skills");
   const title = "Practical skill paths";
   const description =
-    "Browse SkillUp's small reviewed launch catalog for interview, English, AI, freelancing and digital marketing practice.";
+    "Browse SkillUp's reviewed launch catalog for interview, English, AI, freelancing and digital marketing practice.";
 
   return {
     title,
@@ -48,9 +48,9 @@ export default async function SkillsPage({ params }: PageProps) {
           <p className={styles["eyebrow"]}>Reviewed launch catalog</p>
           <h1 id="skills-title">Choose one practical skill to improve.</h1>
           <p className={styles["heroSummary"]}>
-            SkillUp starts with a small catalog rather than hundreds of shallow course titles. The
-            interview path is the first playable pilot; the remaining paths publish only after
-            content review and learner testing.
+            Every listed path now includes reviewed modules, playable levels, varied challenges and
+            version-pinned learner progress. Start with the skill that best matches your current
+            study or work goal.
           </p>
         </section>
 
