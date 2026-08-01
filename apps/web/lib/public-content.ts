@@ -32,7 +32,11 @@ function requireString(value: unknown, field: string): string {
 function parseEntry(value: unknown): PublicContentEntry {
   if (!isRecord(value)) throw new Error("Public content response is not an object.");
   const kind = requireString(value["kind"], "kind");
-  if (!(["guide", "question", "glossary", "comparison"] as const).includes(kind as PublicContentKind)) {
+  if (
+    !(["guide", "question", "glossary", "comparison"] as const).includes(
+      kind as PublicContentKind,
+    )
+  ) {
     throw new Error("Public content response has an unsupported kind.");
   }
   const locale = requireString(value["locale"], "locale");
@@ -51,7 +55,9 @@ function parseEntry(value: unknown): PublicContentEntry {
     title: requireString(value["title"], "title"),
     summary: requireString(value["summary"], "summary"),
     directAnswer:
-      value["directAnswer"] === null ? null : requireString(value["directAnswer"], "direct answer"),
+      value["directAnswer"] === null
+        ? null
+        : requireString(value["directAnswer"], "direct answer"),
     body: value["body"],
     sourceReferences: value["sourceReferences"].filter(isRecord),
     authorName: requireString(value["authorName"], "author"),
@@ -91,9 +97,17 @@ export async function fetchPublicContent(
 
 export const publicContentRoutes = [
   { kind: "guide", segment: "guides", slug: "prepare-evidence-based-interview-answer" },
-  { kind: "question", segment: "questions", slug: "how-do-i-answer-tell-me-about-yourself" },
+  {
+    kind: "question",
+    segment: "questions",
+    slug: "how-do-i-answer-tell-me-about-yourself",
+  },
   { kind: "glossary", segment: "glossary", slug: "evidence-based-answer" },
-  { kind: "comparison", segment: "comparisons", slug: "vague-vs-evidence-based-interview-answer" },
+  {
+    kind: "comparison",
+    segment: "comparisons",
+    slug: "vague-vs-evidence-based-interview-answer",
+  },
 ] as const satisfies readonly Readonly<{
   kind: PublicContentKind;
   segment: string;
