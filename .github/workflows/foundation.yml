@@ -154,6 +154,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p artifacts
+
+          capture_e2e_diagnostics() {
+            docker inspect skillup-api-ci > artifacts/e2e-api-inspect.json 2>&1 || true
+            docker inspect skillup-web-ci > artifacts/e2e-web-inspect.json 2>&1 || true
+            docker logs skillup-api-ci > artifacts/e2e-api.log 2>&1 || true
+            docker logs skillup-web-ci > artifacts/e2e-web.log 2>&1 || true
+          }
+          trap 'status=$?; if [ "$status" -ne 0 ]; then capture_e2e_diagnostics; fi; exit "$status"' EXIT
+
           docker rm -f skillup-api-ci skillup-web-ci >/dev/null 2>&1 || true
           docker run --detach --name skillup-api-ci --network host \
             --env APP_ENV=staging \
@@ -174,10 +184,7 @@ jobs:
             fi
             sleep 1
           done
-          if [ "$api_ready" != true ]; then
-            docker logs skillup-api-ci
-            exit 1
-          fi
+          test "$api_ready" = true
 
           docker run --detach --name skillup-web-ci --network host \
             --env PORT=3000 \
@@ -195,15 +202,22 @@ jobs:
             fi
             sleep 1
           done
-          if [ "$web_ready" != true ]; then
-            docker logs skillup-web-ci
-            exit 1
-          fi
+          test "$web_ready" = true
 
           SKILLUP_WEB_URL=http://127.0.0.1:3000 \
           SKILLUP_API_URL=http://127.0.0.1:3001 \
           SKILLUP_EXPECTED_RELEASE_SHA="$RELEASE_SHA" \
-          pnpm smoke:live
+          pnpm smoke:live 2>&1 | tee artifacts/e2e-smoke.log
+          trap - EXIT
+
+      - name: Upload end-to-end diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-diagnostics-${{ github.sha }}
+          path: artifacts/e2e-*
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Write release evidence
         shell: bash
