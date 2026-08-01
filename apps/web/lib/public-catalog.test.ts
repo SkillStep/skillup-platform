@@ -9,13 +9,26 @@ describe("reviewed public launch catalog", () => {
     expect(launchCategory.slug).toBe("launch-skills");
   });
 
-  it("publishes only one playable pilot identifier", () => {
+  it("publishes every approved path with a playable identifier and complete structure", () => {
     const pilots = publicSkills.filter((skill) => skill.status === "pilot");
     expect(pilots).toHaveLength(1);
     expect(pilotSkill().levelId).toMatch(/^[0-9a-f-]{36}$/);
-    expect(
-      publicSkills.filter((skill) => skill.status === "planned").every((skill) => !skill.levelId),
-    ).toBe(true);
+
+    for (const skill of publicSkills) {
+      expect(skill.levelId).toMatch(/^[0-9a-f-]{36}$/);
+      expect(skill.modules.length).toBeGreaterThanOrEqual(3);
+      expect(skill.challengeTypes).toEqual(
+        expect.arrayContaining([
+          "Multiple choice",
+          "True or false",
+          "Scenario decisions",
+          "Ordering",
+          "Matching",
+          "Fill in the blank",
+          "Short-response practice with review-aware feedback",
+        ]),
+      );
+    }
   });
 
   it("provides useful outcomes and explicit editorial boundaries", () => {
@@ -28,10 +41,10 @@ describe("reviewed public launch catalog", () => {
     }
 
     expect(publicSkill("practical-english-study-work")?.editorialNote).toContain(
-      "not promise fluency",
+      "does not promise fluency",
     );
     expect(publicSkill("freelancing-foundations")?.editorialNote).toContain(
-      "not make guaranteed-income claims",
+      "does not make guaranteed-income claims",
     );
   });
 });
