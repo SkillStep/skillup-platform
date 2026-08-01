@@ -3,6 +3,7 @@ import { createDatabaseClient } from "@skillup/database";
 import { createAccountLifecycleService } from "./account-lifecycle-service.js";
 import { createAdminService } from "./admin.js";
 import { createAiJobService, registerAiJobRoutes } from "./ai-job-service.js";
+import { createAiJobStatusService, registerAiJobStatusRoutes } from "./ai-job-status.js";
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
@@ -81,6 +82,10 @@ if (workerSecret) {
   registerAiJobRoutes(app, {
     workerSecret,
     aiJobService: createAiJobService({ pool: database.pool }),
+  });
+  registerAiJobStatusRoutes(app, {
+    workerSecret,
+    statusService: createAiJobStatusService({ pool: database.pool }),
   });
 }
 
