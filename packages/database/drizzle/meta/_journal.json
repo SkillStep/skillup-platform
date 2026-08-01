@@ -2,117 +2,22 @@
   "version": "7",
   "dialect": "postgresql",
   "entries": [
-    {
-      "idx": 0,
-      "version": "7",
-      "when": 1785404044593,
-      "tag": "0000_acoustic_power_pack",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1785406619866,
-      "tag": "0001_funny_nocturne",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1785410241398,
-      "tag": "0002_familiar_wolfpack",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1785413746373,
-      "tag": "0003_right_doorman",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1785420540000,
-      "tag": "0004_steady_compass",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1785421080000,
-      "tag": "0005_reward_guardian",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1785421800000,
-      "tag": "0006_immutable_progress_events",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1785440400000,
-      "tag": "0007_pilot_analytics_guard",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1785508800000,
-      "tag": "0008_launch_commercial_operations",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1785582900000,
-      "tag": "0009_internal_go_live_authorities",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1785583200000,
-      "tag": "0010_capability_enforcement",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1785583500000,
-      "tag": "0011_policy_seed_and_deletion_history",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1785583800000,
-      "tag": "0012_admin_audit_and_job_guards",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "7",
-      "when": 1785584100000,
-      "tag": "0013_seed_membership_authority",
-      "breakpoints": true
-    },
-    {
-      "idx": 14,
-      "version": "7",
-      "when": 1785584400000,
-      "tag": "0014_repeatable_seed_ordering",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "7",
-      "when": 1785584700000,
-      "tag": "0015_challenge_type_publication_guards",
-      "breakpoints": true
-    }
+    { "idx": 0, "version": "7", "when": 1785404044593, "tag": "0000_acoustic_power_pack", "breakpoints": true },
+    { "idx": 1, "version": "7", "when": 1785406619866, "tag": "0001_funny_nocturne", "breakpoints": true },
+    { "idx": 2, "version": "7", "when": 1785410241398, "tag": "0002_familiar_wolfpack", "breakpoints": true },
+    { "idx": 3, "version": "7", "when": 1785413746373, "tag": "0003_right_doorman", "breakpoints": true },
+    { "idx": 4, "version": "7", "when": 1785420540000, "tag": "0004_steady_compass", "breakpoints": true },
+    { "idx": 5, "version": "7", "when": 1785421080000, "tag": "0005_reward_guardian", "breakpoints": true },
+    { "idx": 6, "version": "7", "when": 1785421800000, "tag": "0006_immutable_progress_events", "breakpoints": true },
+    { "idx": 7, "version": "7", "when": 1785440400000, "tag": "0007_pilot_analytics_guard", "breakpoints": true },
+    { "idx": 8, "version": "7", "when": 1785508800000, "tag": "0008_launch_commercial_operations", "breakpoints": true },
+    { "idx": 9, "version": "7", "when": 1785582900000, "tag": "0009_internal_go_live_authorities", "breakpoints": true },
+    { "idx": 10, "version": "7", "when": 1785583200000, "tag": "0010_capability_enforcement", "breakpoints": true },
+    { "idx": 11, "version": "7", "when": 1785583500000, "tag": "0011_policy_seed_and_deletion_history", "breakpoints": true },
+    { "idx": 12, "version": "7", "when": 1785583800000, "tag": "0012_admin_audit_and_job_guards", "breakpoints": true },
+    { "idx": 13, "version": "7", "when": 1785584100000, "tag": "0013_seed_membership_authority", "breakpoints": true },
+    { "idx": 14, "version": "7", "when": 1785584400000, "tag": "0014_repeatable_seed_ordering", "breakpoints": true },
+    { "idx": 15, "version": "7", "when": 1785584700000, "tag": "0015_challenge_type_publication_guards", "breakpoints": true },
+    { "idx": 16, "version": "7", "when": 1785585000000, "tag": "0016_reviewed_public_content_seed", "breakpoints": true }
   ]
 }
