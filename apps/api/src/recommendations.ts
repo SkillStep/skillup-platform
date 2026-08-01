@@ -80,6 +80,14 @@ type RecommendationContext = Readonly<{
   startAllowedToday: boolean;
 }>;
 
+type RecommendationServiceOptions = Readonly<{
+  pool: DatabaseClient["pool"];
+  capabilityService: CapabilityService;
+  now?: () => Date;
+}>;
+
+type CapabilityView = Awaited<ReturnType<CapabilityService["get"]>>;
+
 function startAllowed(tier: "free" | "premium", remaining: number | null): boolean {
   return tier === "premium" || (remaining ?? 0) > 0;
 }
@@ -207,139 +215,167 @@ function buildNextRecommendation(
   });
 }
 
+async function loadActiveSession(
+  pool: DatabaseClient["pool"],
+  userId: string,
+): Promise<ActiveSessionRow | null> {
+  const result = await pool.query<ActiveSessionRow>(
+    `select ls.id as session_id,
+            lv.level_id,
+            lv.id as level_version_id,
+            lv.title,
+            s.slug as skill_slug,
+            lp.slug as path_slug,
+            ls.current_challenge_ordinal,
+            ls.awarded_points,
+            ls.max_points,
+            ls.updated_at
+       from level_play_sessions ls
+       join level_versions lv on lv.id = ls.level_version_id
+       join levels l on l.id = lv.level_id
+       join lessons le on le.id = l.lesson_id
+       join learning_modules lm on lm.id = le.module_id
+       join learning_paths lp on lp.id = lm.learning_path_id
+       join skills s on s.id = lp.skill_id
+      where ls.user_id = $1 and ls.status = 'active'
+      order by ls.updated_at desc
+      limit 1`,
+    [userId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function loadLatestCompletion(
+  pool: DatabaseClient["pool"],
+  userId: string,
+): Promise<CompletionRow | null> {
+  const result = await pool.query<CompletionRow>(
+    `select lv.level_id,
+            lv.id as level_version_id,
+            lv.title,
+            s.slug as skill_slug,
+            lp.slug as path_slug,
+            lp.id as path_id,
+            ls.awarded_points,
+            ls.max_points,
+            ls.completed_at
+       from level_play_sessions ls
+       join level_versions lv on lv.id = ls.level_version_id
+       join levels l on l.id = lv.level_id
+       join lessons le on le.id = l.lesson_id
+       join learning_modules lm on lm.id = le.module_id
+       join learning_paths lp on lp.id = lm.learning_path_id
+       join skills s on s.id = lp.skill_id
+      where ls.user_id = $1 and ls.status = 'completed'
+      order by ls.completed_at desc
+      limit 1`,
+    [userId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function loadCandidates(
+  pool: DatabaseClient["pool"],
+  userId: string,
+  latestPathId: string | null,
+): Promise<readonly CandidateRow[]> {
+  const result = await pool.query<CandidateRow>(
+    `select l.id as level_id,
+            lv.id as level_version_id,
+            lv.title,
+            s.slug as skill_slug,
+            lp.slug as path_slug
+       from levels l
+       join level_versions lv on lv.level_id = l.id and lv.state = 'published'
+       join lessons le on le.id = l.lesson_id
+       join learning_modules lm on lm.id = le.module_id
+       join learning_paths lp on lp.id = lm.learning_path_id
+       join skills s on s.id = lp.skill_id
+      where not exists (
+              select 1
+                from learner_enrollments completed
+               where completed.user_id = $1
+                 and completed.level_id = l.id
+                 and completed.state = 'completed'
+            )
+        and not exists (
+              select 1
+                from level_prerequisites prerequisite
+               where prerequisite.level_id = l.id
+                 and not exists (
+                       select 1
+                         from learner_enrollments prerequisite_completion
+                        where prerequisite_completion.user_id = $1
+                          and prerequisite_completion.level_id = prerequisite.prerequisite_level_id
+                          and prerequisite_completion.state = 'completed'
+                     )
+            )
+      order by case when lp.id = $2::uuid then 0 else 1 end,
+               s.slug,
+               lp.slug,
+               lm.sort_order,
+               le.sort_order,
+               l.sort_order,
+               lv.version desc
+      limit 4`,
+    [userId, latestPathId],
+  );
+  return result.rows;
+}
+
+function createContext(
+  now: () => Date,
+  capability: CapabilityView,
+  candidates: readonly CandidateRow[],
+): RecommendationContext {
+  return {
+    generatedAt: now().toISOString(),
+    capability: {
+      tier: capability.tier,
+      missionsRemainingToday: capability.missionsRemainingToday,
+      aiPersonalization: capability.aiPersonalization,
+    },
+    candidates,
+    startAllowedToday: startAllowed(capability.tier, capability.missionsRemainingToday),
+  };
+}
+
+function selectRecommendation(
+  context: RecommendationContext,
+  activeRow: ActiveSessionRow | null,
+  latestRow: CompletionRow | null,
+): RecommendationView {
+  if (activeRow) return buildResumeRecommendation(context, activeRow);
+  if (requiresRemediation(latestRow)) return buildRemediationRecommendation(context, latestRow);
+
+  const next = context.candidates[0];
+  if (!next) return buildCompleteRecommendation(context);
+  return buildNextRecommendation(context, latestRow, next);
+}
+
+async function getRecommendation(
+  options: RecommendationServiceOptions,
+  now: () => Date,
+  userId: string,
+): Promise<RecommendationView> {
+  const [capability, activeRow, latestRow] = await Promise.all([
+    options.capabilityService.get(userId),
+    loadActiveSession(options.pool, userId),
+    loadLatestCompletion(options.pool, userId),
+  ]);
+  const candidates = await loadCandidates(options.pool, userId, latestRow?.path_id ?? null);
+  return selectRecommendation(createContext(now, capability, candidates), activeRow, latestRow);
+}
+
 export type RecommendationService = Readonly<{
   get: (userId: string) => Promise<RecommendationView>;
 }>;
 
 export function createRecommendationService(
-  options: Readonly<{
-    pool: DatabaseClient["pool"];
-    capabilityService: CapabilityService;
-    now?: () => Date;
-  }>,
+  options: RecommendationServiceOptions,
 ): RecommendationService {
   const now = options.now ?? (() => new Date());
-
-  return {
-    get: async (userId) => {
-      const [capability, active, latest] = await Promise.all([
-        options.capabilityService.get(userId),
-        options.pool.query<ActiveSessionRow>(
-          `select ls.id as session_id,
-                  lv.level_id,
-                  lv.id as level_version_id,
-                  lv.title,
-                  s.slug as skill_slug,
-                  lp.slug as path_slug,
-                  ls.current_challenge_ordinal,
-                  ls.awarded_points,
-                  ls.max_points,
-                  ls.updated_at
-             from level_play_sessions ls
-             join level_versions lv on lv.id = ls.level_version_id
-             join levels l on l.id = lv.level_id
-             join lessons le on le.id = l.lesson_id
-             join learning_modules lm on lm.id = le.module_id
-             join learning_paths lp on lp.id = lm.learning_path_id
-             join skills s on s.id = lp.skill_id
-            where ls.user_id = $1 and ls.status = 'active'
-            order by ls.updated_at desc
-            limit 1`,
-          [userId],
-        ),
-        options.pool.query<CompletionRow>(
-          `select lv.level_id,
-                  lv.id as level_version_id,
-                  lv.title,
-                  s.slug as skill_slug,
-                  lp.slug as path_slug,
-                  lp.id as path_id,
-                  ls.awarded_points,
-                  ls.max_points,
-                  ls.completed_at
-             from level_play_sessions ls
-             join level_versions lv on lv.id = ls.level_version_id
-             join levels l on l.id = lv.level_id
-             join lessons le on le.id = l.lesson_id
-             join learning_modules lm on lm.id = le.module_id
-             join learning_paths lp on lp.id = lm.learning_path_id
-             join skills s on s.id = lp.skill_id
-            where ls.user_id = $1 and ls.status = 'completed'
-            order by ls.completed_at desc
-            limit 1`,
-          [userId],
-        ),
-      ]);
-
-      const activeRow = active.rows[0] ?? null;
-      const latestRow = latest.rows[0] ?? null;
-      const candidateResult = await options.pool.query<CandidateRow>(
-        `select l.id as level_id,
-                lv.id as level_version_id,
-                lv.title,
-                s.slug as skill_slug,
-                lp.slug as path_slug
-           from levels l
-           join level_versions lv on lv.level_id = l.id and lv.state = 'published'
-           join lessons le on le.id = l.lesson_id
-           join learning_modules lm on lm.id = le.module_id
-           join learning_paths lp on lp.id = lm.learning_path_id
-           join skills s on s.id = lp.skill_id
-          where not exists (
-                  select 1
-                    from learner_enrollments completed
-                   where completed.user_id = $1
-                     and completed.level_id = l.id
-                     and completed.state = 'completed'
-                )
-            and not exists (
-                  select 1
-                    from level_prerequisites prerequisite
-                   where prerequisite.level_id = l.id
-                     and not exists (
-                           select 1
-                             from learner_enrollments prerequisite_completion
-                            where prerequisite_completion.user_id = $1
-                              and prerequisite_completion.level_id = prerequisite.prerequisite_level_id
-                              and prerequisite_completion.state = 'completed'
-                         )
-                )
-          order by case when lp.id = $2::uuid then 0 else 1 end,
-                   s.slug,
-                   lp.slug,
-                   lm.sort_order,
-                   le.sort_order,
-                   l.sort_order,
-                   lv.version desc
-          limit 4`,
-        [userId, latestRow?.path_id ?? null],
-      );
-      const candidates = candidateResult.rows;
-      const context: RecommendationContext = {
-        generatedAt: now().toISOString(),
-        capability: {
-          tier: capability.tier,
-          missionsRemainingToday: capability.missionsRemainingToday,
-          aiPersonalization: capability.aiPersonalization,
-        },
-        candidates,
-        startAllowedToday: startAllowed(capability.tier, capability.missionsRemainingToday),
-      };
-
-      if (activeRow) {
-        return buildResumeRecommendation(context, activeRow);
-      }
-      if (requiresRemediation(latestRow)) {
-        return buildRemediationRecommendation(context, latestRow);
-      }
-
-      const next = candidates[0] ?? null;
-      if (!next) {
-        return buildCompleteRecommendation(context);
-      }
-      return buildNextRecommendation(context, latestRow, next);
-    },
-  };
+  return { get: (userId) => getRecommendation(options, now, userId) };
 }
 
 export function registerRecommendationRoutes(
