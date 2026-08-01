@@ -73,6 +73,13 @@ type CandidateRow = Readonly<{
   path_slug: string;
 }>;
 
+type RecommendationContext = Readonly<{
+  generatedAt: string;
+  capability: RecommendationView["capability"];
+  candidates: readonly CandidateRow[];
+  startAllowedToday: boolean;
+}>;
+
 function startAllowed(tier: "free" | "premium", remaining: number | null): boolean {
   return tier === "premium" || (remaining ?? 0) > 0;
 }
@@ -90,6 +97,114 @@ function alternatives(
       skillSlug: row.skill_slug,
       pathSlug: row.path_slug,
     }));
+}
+
+function buildResumeRecommendation(
+  context: RecommendationContext,
+  activeRow: ActiveSessionRow,
+): RecommendationView {
+  return RecommendationSchema.parse({
+    generatedAt: context.generatedAt,
+    policyVersion: "deterministic-v1",
+    mode: "resume",
+    recommendation: {
+      levelId: activeRow.level_id,
+      levelVersionId: activeRow.level_version_id,
+      title: activeRow.title,
+      skillSlug: activeRow.skill_slug,
+      pathSlug: activeRow.path_slug,
+      reason: "Resume the exact reviewed level version already in progress.",
+      evidence: [
+        `Saved at challenge ${activeRow.current_challenge_ordinal + 1}.`,
+        `${activeRow.awarded_points} of ${activeRow.max_points} available points are currently recorded.`,
+        `Last activity: ${activeRow.updated_at.toISOString()}.`,
+      ],
+      startAllowedToday: true,
+    },
+    alternatives: alternatives(context.candidates, activeRow.level_id),
+    capability: context.capability,
+  });
+}
+
+function requiresRemediation(latestRow: CompletionRow | null): latestRow is CompletionRow {
+  return (
+    latestRow !== null &&
+    latestRow.max_points > 0 &&
+    latestRow.awarded_points / latestRow.max_points < 0.7
+  );
+}
+
+function buildRemediationRecommendation(
+  context: RecommendationContext,
+  latestRow: CompletionRow,
+): RecommendationView {
+  return RecommendationSchema.parse({
+    generatedAt: context.generatedAt,
+    policyVersion: "deterministic-v1",
+    mode: "remediate",
+    recommendation: {
+      levelId: latestRow.level_id,
+      levelVersionId: latestRow.level_version_id,
+      title: latestRow.title,
+      skillSlug: latestRow.skill_slug,
+      pathSlug: latestRow.path_slug,
+      reason: "Repeat the recent level before advancing because the verified score is below 70%.",
+      evidence: [
+        `Verified score: ${latestRow.awarded_points} of ${latestRow.max_points}.`,
+        `Completed: ${latestRow.completed_at.toISOString()}.`,
+        "The learner can still choose another eligible level.",
+      ],
+      startAllowedToday: context.startAllowedToday,
+    },
+    alternatives: alternatives(context.candidates, latestRow.level_id),
+    capability: context.capability,
+  });
+}
+
+function buildCompleteRecommendation(context: RecommendationContext): RecommendationView {
+  return RecommendationSchema.parse({
+    generatedAt: context.generatedAt,
+    policyVersion: "deterministic-v1",
+    mode: "complete",
+    recommendation: null,
+    alternatives: [],
+    capability: context.capability,
+  });
+}
+
+function buildNextRecommendation(
+  context: RecommendationContext,
+  latestRow: CompletionRow | null,
+  next: CandidateRow,
+): RecommendationView {
+  const samePath = latestRow?.path_slug === next.path_slug;
+  return RecommendationSchema.parse({
+    generatedAt: context.generatedAt,
+    policyVersion: "deterministic-v1",
+    mode: samePath ? "continue" : "explore",
+    recommendation: {
+      levelId: next.level_id,
+      levelVersionId: next.level_version_id,
+      title: next.title,
+      skillSlug: next.skill_slug,
+      pathSlug: next.path_slug,
+      reason: samePath
+        ? "Continue the same reviewed learning path with all prerequisites completed."
+        : "Start the earliest eligible reviewed level in the launch catalog.",
+      evidence: [
+        "The level is published and its prerequisite levels are complete.",
+        latestRow
+          ? `The latest completed path was ${latestRow.path_slug}.`
+          : "No prior completed level was found, so the catalog order is used.",
+        context.startAllowedToday
+          ? "The current capability state allows another mission today."
+          : "The daily free mission allowance is exhausted; the recommendation remains visible for later.",
+      ],
+      startAllowedToday: context.startAllowedToday,
+    },
+    alternatives: alternatives(context.candidates, next.level_id),
+    capability: context.capability,
+  });
 }
 
 export type RecommendationService = Readonly<{
@@ -200,107 +315,29 @@ export function createRecommendationService(
         [userId, latestRow?.path_id ?? null],
       );
       const candidates = candidateResult.rows;
-      const allowed = startAllowed(capability.tier, capability.missionsRemainingToday);
-      const generatedAt = now().toISOString();
-      const capabilityView = {
-        tier: capability.tier,
-        missionsRemainingToday: capability.missionsRemainingToday,
-        aiPersonalization: capability.aiPersonalization,
+      const context: RecommendationContext = {
+        generatedAt: now().toISOString(),
+        capability: {
+          tier: capability.tier,
+          missionsRemainingToday: capability.missionsRemainingToday,
+          aiPersonalization: capability.aiPersonalization,
+        },
+        candidates,
+        startAllowedToday: startAllowed(capability.tier, capability.missionsRemainingToday),
       };
 
       if (activeRow) {
-        return RecommendationSchema.parse({
-          generatedAt,
-          policyVersion: "deterministic-v1",
-          mode: "resume",
-          recommendation: {
-            levelId: activeRow.level_id,
-            levelVersionId: activeRow.level_version_id,
-            title: activeRow.title,
-            skillSlug: activeRow.skill_slug,
-            pathSlug: activeRow.path_slug,
-            reason: "Resume the exact reviewed level version already in progress.",
-            evidence: [
-              `Saved at challenge ${activeRow.current_challenge_ordinal + 1}.`,
-              `${activeRow.awarded_points} of ${activeRow.max_points} available points are currently recorded.`,
-              `Last activity: ${activeRow.updated_at.toISOString()}.`,
-            ],
-            startAllowedToday: true,
-          },
-          alternatives: alternatives(candidates, activeRow.level_id),
-          capability: capabilityView,
-        });
+        return buildResumeRecommendation(context, activeRow);
       }
-
-      if (
-        latestRow &&
-        latestRow.max_points > 0 &&
-        latestRow.awarded_points / latestRow.max_points < 0.7
-      ) {
-        return RecommendationSchema.parse({
-          generatedAt,
-          policyVersion: "deterministic-v1",
-          mode: "remediate",
-          recommendation: {
-            levelId: latestRow.level_id,
-            levelVersionId: latestRow.level_version_id,
-            title: latestRow.title,
-            skillSlug: latestRow.skill_slug,
-            pathSlug: latestRow.path_slug,
-            reason:
-              "Repeat the recent level before advancing because the verified score is below 70%.",
-            evidence: [
-              `Verified score: ${latestRow.awarded_points} of ${latestRow.max_points}.`,
-              `Completed: ${latestRow.completed_at.toISOString()}.`,
-              "The learner can still choose another eligible level.",
-            ],
-            startAllowedToday: allowed,
-          },
-          alternatives: alternatives(candidates, latestRow.level_id),
-          capability: capabilityView,
-        });
+      if (requiresRemediation(latestRow)) {
+        return buildRemediationRecommendation(context, latestRow);
       }
 
       const next = candidates[0] ?? null;
       if (!next) {
-        return RecommendationSchema.parse({
-          generatedAt,
-          policyVersion: "deterministic-v1",
-          mode: "complete",
-          recommendation: null,
-          alternatives: [],
-          capability: capabilityView,
-        });
+        return buildCompleteRecommendation(context);
       }
-
-      const samePath = latestRow?.path_slug === next.path_slug;
-      return RecommendationSchema.parse({
-        generatedAt,
-        policyVersion: "deterministic-v1",
-        mode: samePath ? "continue" : "explore",
-        recommendation: {
-          levelId: next.level_id,
-          levelVersionId: next.level_version_id,
-          title: next.title,
-          skillSlug: next.skill_slug,
-          pathSlug: next.path_slug,
-          reason: samePath
-            ? "Continue the same reviewed learning path with all prerequisites completed."
-            : "Start the earliest eligible reviewed level in the launch catalog.",
-          evidence: [
-            "The level is published and its prerequisite levels are complete.",
-            latestRow
-              ? `The latest completed path was ${latestRow.path_slug}.`
-              : "No prior completed level was found, so the catalog order is used.",
-            allowed
-              ? "The current capability state allows another mission today."
-              : "The daily free mission allowance is exhausted; the recommendation remains visible for later.",
-          ],
-          startAllowedToday: allowed,
-        },
-        alternatives: alternatives(candidates, next.level_id),
-        capability: capabilityView,
-      });
+      return buildNextRecommendation(context, latestRow, next);
     },
   };
 }
