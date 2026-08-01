@@ -19,10 +19,7 @@ import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
 import { createMaintenanceRunner } from "./maintenance.js";
 import { createProgressService } from "./progress.js";
-import {
-  createRecommendationService,
-  registerRecommendationRoutes,
-} from "./recommendations.js";
+import { createRecommendationService, registerRecommendationRoutes } from "./recommendations.js";
 
 const config = readApiConfig();
 const database = createDatabaseClient({
