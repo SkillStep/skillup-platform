@@ -95,13 +95,12 @@ async function usageToday(
   return result.rows[0]?.missions_started ?? 0;
 }
 
-function viewFrom(
-  entitlement: EntitlementRow | null,
-  used: number,
-): CapabilityView {
+function viewFrom(entitlement: EntitlementRow | null, used: number): CapabilityView {
   const planCapabilities = entitlement ? stringSet(entitlement.capabilities) : new Set<string>();
   const premium = entitlement !== null;
-  const has = (key: string): boolean => premium && (planCapabilities.size === 0 || planCapabilities.has(key) || PREMIUM_CAPABILITIES.has(key));
+  const has = (key: string): boolean =>
+    premium &&
+    (planCapabilities.size === 0 || planCapabilities.has(key) || PREMIUM_CAPABILITIES.has(key));
 
   return CapabilityViewSchema.parse({
     tier: premium ? "premium" : "free",

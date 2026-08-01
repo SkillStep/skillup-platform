@@ -130,7 +130,9 @@ try {
     [launchCatalogSeed.map((item) => item.skill.slug)],
   );
   if (incomplete.rows.length > 0) {
-    throw new Error(`Published launch level is incomplete: ${incomplete.rows[0]?.title ?? "unknown"}.`);
+    throw new Error(
+      `Published launch level is incomplete: ${incomplete.rows[0]?.title ?? "unknown"}.`,
+    );
   }
 
   const types = await client.pool.query<{ type: string; count: number }>(

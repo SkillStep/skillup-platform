@@ -279,7 +279,8 @@ export function createAccountLifecycleService(
         [input.policyKey, input.version, input.locale],
       );
       const policyId = policy.rows[0]?.id;
-      if (!policyId) throw new AccountLifecycleError(409, "The requested policy version is not active.");
+      if (!policyId)
+        throw new AccountLifecycleError(409, "The requested policy version is not active.");
       const acceptedAt = now();
       const evidenceDigest = sha256(
         `${userId}:${policyId}:${input.source}:${acceptedAt.toISOString()}`,
@@ -303,54 +304,55 @@ export function createAccountLifecycleService(
         [requestId, userId, requestedAt],
       );
 
-      const [identity, profile, privacy, policies, sessions, progress, payments] = await Promise.all([
-        options.pool.query(
-          `select email_display, verified_at, created_at
+      const [identity, profile, privacy, policies, sessions, progress, payments] =
+        await Promise.all([
+          options.pool.query(
+            `select email_display, verified_at, created_at
              from user_email_identities where user_id = $1`,
-          [userId],
-        ),
-        options.pool.query(
-          `select display_name, locale, age_band, avatar_key, learning_goal,
+            [userId],
+          ),
+          options.pool.query(
+            `select display_name, locale, age_band, avatar_key, learning_goal,
                   onboarding_status, created_at, updated_at
              from learner_profiles where user_id = $1`,
-          [userId],
-        ),
-        options.pool.query(
-          `select analytics_consent, marketing_consent, leaderboard_sharing,
+            [userId],
+          ),
+          options.pool.query(
+            `select analytics_consent, marketing_consent, leaderboard_sharing,
                   achievement_sharing, ai_personalization, updated_at
              from learner_privacy_settings where user_id = $1`,
-          [userId],
-        ),
-        options.pool.query(
-          `select pd.policy_key, pd.version, pd.locale, upa.accepted_at, upa.acceptance_source
+            [userId],
+          ),
+          options.pool.query(
+            `select pd.policy_key, pd.version, pd.locale, upa.accepted_at, upa.acceptance_source
              from user_policy_acceptances upa
              join policy_documents pd on pd.id = upa.policy_document_id
             where upa.user_id = $1
             order by upa.accepted_at`,
-          [userId],
-        ),
-        options.pool.query(
-          `select id, client_label, created_at, last_seen_at, expires_at, revoked_at
+            [userId],
+          ),
+          options.pool.query(
+            `select id, client_label, created_at, last_seen_at, expires_at, revoked_at
              from auth_sessions where user_id = $1 order by created_at`,
-          [userId],
-        ),
-        options.pool.query(
-          `select level_id, level_version_id, best_awarded_points, max_points,
+            [userId],
+          ),
+          options.pool.query(
+            `select level_id, level_version_id, best_awarded_points, max_points,
                   completion_count, first_completed_at, last_completed_at
              from learner_level_progress where user_id = $1 order by last_completed_at`,
-          [userId],
-        ),
-        options.pool.query(
-          `select po.merchant_reference, po.status, po.amount_minor, po.currency,
+            [userId],
+          ),
+          options.pool.query(
+            `select po.merchant_reference, po.status, po.amount_minor, po.currency,
                   cp.code as plan_code, po.created_at, po.completed_at
              from payment_orders po
              join commercial_plan_versions cpv on cpv.id = po.plan_version_id
              join commercial_plans cp on cp.id = cpv.plan_id
             where po.user_id = $1
             order by po.created_at`,
-          [userId],
-        ),
-      ]);
+            [userId],
+          ),
+        ]);
 
       const payload = {
         generatedAt: requestedAt.toISOString(),
@@ -470,7 +472,9 @@ export function createAccountLifecycleService(
           await database.query(`delete from learner_privacy_settings where user_id = $1`, [
             request.user_id,
           ]);
-          await database.query(`delete from analytics_consents where user_id = $1`, [request.user_id]);
+          await database.query(`delete from analytics_consents where user_id = $1`, [
+            request.user_id,
+          ]);
           await database.query(
             `delete from analytics_events where user_id = $1 and authority = 'client'`,
             [request.user_id],
@@ -531,7 +535,9 @@ export function registerAccountLifecycleRoutes(
 ): void {
   app.get("/v1/account/sessions", async (request) => {
     const auth = await requireLearnerAndToken(request, options.config, options.authService);
-    return { sessions: await options.accountLifecycleService.sessions(auth.learner.id, auth.sessionToken) };
+    return {
+      sessions: await options.accountLifecycleService.sessions(auth.learner.id, auth.sessionToken),
+    };
   });
 
   app.delete("/v1/account/sessions/:sessionId", async (request, reply) => {
@@ -581,12 +587,14 @@ export function registerAccountLifecycleRoutes(
   app.post("/v1/account/deletion", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const auth = await requireLearnerAndToken(request, options.config, options.authService);
-    return reply.status(202).send(
-      await options.accountLifecycleService.requestDeletion(
-        auth.learner.id,
-        RequestDeletionSchema.parse(request.body),
-      ),
-    );
+    return reply
+      .status(202)
+      .send(
+        await options.accountLifecycleService.requestDeletion(
+          auth.learner.id,
+          RequestDeletionSchema.parse(request.body),
+        ),
+      );
   });
 
   app.delete("/v1/account/deletion", async (request) => {

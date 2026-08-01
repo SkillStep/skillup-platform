@@ -29,7 +29,10 @@ const ContentStatusSchema = z.enum([
 const ContentInputSchema = z
   .object({
     kind: KindSchema,
-    slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
+    slug: z
+      .string()
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+      .max(120),
     locale: LocaleSchema.default("en"),
     title: z.string().trim().min(3).max(160),
     summary: z.string().trim().min(10).max(1000),
@@ -273,21 +276,59 @@ async function loadForUpdate(database: PoolClient, id: string): Promise<ContentR
 }
 
 export type ContentOperationsService = Readonly<{
-  listPublic: (query: z.infer<typeof PublicListQuerySchema>) => Promise<readonly Record<string, unknown>[]>;
+  listPublic: (
+    query: z.infer<typeof PublicListQuerySchema>,
+  ) => Promise<readonly Record<string, unknown>[]>;
   getPublic: (kind: string, slug: string, locale: string) => Promise<Record<string, unknown>>;
-  listAdmin: (query: z.infer<typeof AdminListQuerySchema>) => Promise<readonly Record<string, unknown>[]>;
-  create: (actor: AdminIdentity, input: z.infer<typeof ContentInputSchema>) => Promise<Record<string, unknown>>;
-  patch: (actor: AdminIdentity, id: string, patch: z.infer<typeof ContentPatchSchema>) => Promise<Record<string, unknown>>;
-  transition: (actor: AdminIdentity, id: string, action: "submit" | "approve" | "publish" | "archive") => Promise<Record<string, unknown>>;
+  listAdmin: (
+    query: z.infer<typeof AdminListQuerySchema>,
+  ) => Promise<readonly Record<string, unknown>[]>;
+  create: (
+    actor: AdminIdentity,
+    input: z.infer<typeof ContentInputSchema>,
+  ) => Promise<Record<string, unknown>>;
+  patch: (
+    actor: AdminIdentity,
+    id: string,
+    patch: z.infer<typeof ContentPatchSchema>,
+  ) => Promise<Record<string, unknown>>;
+  transition: (
+    actor: AdminIdentity,
+    id: string,
+    action: "submit" | "approve" | "publish" | "archive",
+  ) => Promise<Record<string, unknown>>;
   schedule: (actor: AdminIdentity, id: string, publishAt: Date) => Promise<Record<string, unknown>>;
   processScheduled: (limit?: number) => Promise<number>;
-  report: (reporterUserId: string | null, input: z.infer<typeof ReportInputSchema>) => Promise<{ id: string; status: string }>;
+  report: (
+    reporterUserId: string | null,
+    input: z.infer<typeof ReportInputSchema>,
+  ) => Promise<{ id: string; status: string }>;
   listReports: (status: string, limit: number) => Promise<readonly Record<string, unknown>[]>;
-  resolveReport: (actor: AdminIdentity, id: string, input: z.infer<typeof ResolveReportSchema>) => Promise<Record<string, unknown>>;
-  assignRole: (actor: AdminIdentity, userId: string, input: z.infer<typeof RoleAssignmentSchema>, correlationId: string) => Promise<Record<string, unknown>>;
-  revokeRole: (actor: AdminIdentity, userId: string, role: string, reason: string, correlationId: string) => Promise<Record<string, unknown>>;
-  auditEvents: (query: z.infer<typeof AuditQuerySchema>) => Promise<readonly Record<string, unknown>[]>;
-  createExport: (actor: AdminIdentity, input: z.infer<typeof ExportInputSchema>) => Promise<Record<string, unknown>>;
+  resolveReport: (
+    actor: AdminIdentity,
+    id: string,
+    input: z.infer<typeof ResolveReportSchema>,
+  ) => Promise<Record<string, unknown>>;
+  assignRole: (
+    actor: AdminIdentity,
+    userId: string,
+    input: z.infer<typeof RoleAssignmentSchema>,
+    correlationId: string,
+  ) => Promise<Record<string, unknown>>;
+  revokeRole: (
+    actor: AdminIdentity,
+    userId: string,
+    role: string,
+    reason: string,
+    correlationId: string,
+  ) => Promise<Record<string, unknown>>;
+  auditEvents: (
+    query: z.infer<typeof AuditQuerySchema>,
+  ) => Promise<readonly Record<string, unknown>[]>;
+  createExport: (
+    actor: AdminIdentity,
+    input: z.infer<typeof ExportInputSchema>,
+  ) => Promise<Record<string, unknown>>;
 }>;
 
 export function createContentOperationsService(
@@ -382,8 +423,11 @@ export function createContentOperationsService(
         if (!hasAnyRole(actor, ["content_editor"])) {
           throw new ContentOperationsError(403, "Only content editors may change draft content.");
         }
-        if (!['draft', 'in_review'].includes(existing.status)) {
-          throw new ContentOperationsError(409, "Published or approved content must be versioned, not edited in place.");
+        if (!["draft", "in_review"].includes(existing.status)) {
+          throw new ContentOperationsError(
+            409,
+            "Published or approved content must be versioned, not edited in place.",
+          );
         }
         const result = await database.query<ContentRow>(
           `update public_content_entries
@@ -428,10 +472,16 @@ export function createContentOperationsService(
         }
         if (action === "approve") {
           if (!hasAnyRole(actor, ["content_reviewer"]) || existing.status !== "in_review") {
-            throw new ContentOperationsError(409, "Only in-review content may be approved by a reviewer.");
+            throw new ContentOperationsError(
+              409,
+              "Only in-review content may be approved by a reviewer.",
+            );
           }
           if (existing.source_references.length === 0) {
-            throw new ContentOperationsError(409, "Reviewed public content requires at least one source reference.");
+            throw new ContentOperationsError(
+              409,
+              "Reviewed public content requires at least one source reference.",
+            );
           }
           const result = await database.query<ContentRow>(
             `update public_content_entries
@@ -442,8 +492,14 @@ export function createContentOperationsService(
           return adminView(result.rows[0] ?? existing);
         }
         if (action === "publish") {
-          if (!hasAnyRole(actor, ["publisher"]) || !["approved", "scheduled"].includes(existing.status)) {
-            throw new ContentOperationsError(409, "Only approved or scheduled content may be published.");
+          if (
+            !hasAnyRole(actor, ["publisher"]) ||
+            !["approved", "scheduled"].includes(existing.status)
+          ) {
+            throw new ContentOperationsError(
+              409,
+              "Only approved or scheduled content may be published.",
+            );
           }
           await database.query(
             `update public_content_entries
@@ -475,7 +531,10 @@ export function createContentOperationsService(
         throw new ContentOperationsError(403, "Only publishers may schedule content.");
       }
       if (publishAt.getTime() <= now().getTime()) {
-        throw new ContentOperationsError(400, "A scheduled publication time must be in the future.");
+        throw new ContentOperationsError(
+          400,
+          "A scheduled publication time must be in the future.",
+        );
       }
       const result = await options.pool.query<ContentRow>(
         `update public_content_entries
@@ -544,17 +603,26 @@ export function createContentOperationsService(
 
     resolveReport: async (actor, id, input) =>
       transaction(options.pool, async (database) => {
-        const selected = await database.query<{ id: string; target_type: string; target_id: string }>(
-          `select id, target_type, target_id from content_reports where id = $1 for update`,
-          [id],
-        );
+        const selected = await database.query<{
+          id: string;
+          target_type: string;
+          target_id: string;
+        }>(`select id, target_type, target_id from content_reports where id = $1 for update`, [id]);
         const report = selected.rows[0];
         if (!report) throw new ContentOperationsError(404, "The report was not found.");
         await database.query(
           `insert into moderation_actions
             (report_id, actor_user_id, action, target_type, target_id, reason, metadata)
            values ($1, $2, $3, $4, $5, $6, $7::jsonb)`,
-          [id, actor.userId, input.action, report.target_type, report.target_id, input.reason, JSON.stringify(input.metadata)],
+          [
+            id,
+            actor.userId,
+            input.action,
+            report.target_type,
+            report.target_id,
+            input.reason,
+            JSON.stringify(input.metadata),
+          ],
         );
         const result = await database.query<Record<string, unknown>>(
           `update content_reports
@@ -580,7 +648,14 @@ export function createContentOperationsService(
             (user_id, role, granted_by, reason, granted_at, expires_at)
            values ($1, $2, $3, $4, $5, $6)
            returning user_id as "userId", role, granted_at as "grantedAt", expires_at as "expiresAt"`,
-          [userId, input.role, actor.userId, input.reason, changedAt, input.expiresAt ? new Date(input.expiresAt) : null],
+          [
+            userId,
+            input.role,
+            actor.userId,
+            input.reason,
+            changedAt,
+            input.expiresAt ? new Date(input.expiresAt) : null,
+          ],
         );
         await options.adminService.audit({
           actorUserId: actor.userId,
@@ -604,7 +679,8 @@ export function createContentOperationsService(
           returning user_id as "userId", role, revoked_at as "revokedAt"`,
         [userId, role, actor.userId, now(), reason],
       );
-      if (result.rowCount === 0) throw new ContentOperationsError(404, "The active role assignment was not found.");
+      if (result.rowCount === 0)
+        throw new ContentOperationsError(404, "The active role assignment was not found.");
       await options.adminService.audit({
         actorUserId: actor.userId,
         actorRole: actor.roles[0] ?? null,
@@ -631,7 +707,13 @@ export function createContentOperationsService(
             and ($3::text is null or result = $3)
           order by created_at desc
           limit $4 offset $5`,
-        [query.action ?? null, query.actorUserId ?? null, query.result ?? null, query.limit, query.offset],
+        [
+          query.action ?? null,
+          query.actorUserId ?? null,
+          query.result ?? null,
+          query.limit,
+          query.offset,
+        ],
       );
       return result.rows;
     },
@@ -640,14 +722,30 @@ export function createContentOperationsService(
       const createdAt = now();
       const exportId = randomUUID();
       const digest = createHash("sha256")
-        .update(JSON.stringify({ exportId, type: input.exportType, filters: input.filters, createdAt: createdAt.toISOString() }))
+        .update(
+          JSON.stringify({
+            exportId,
+            type: input.exportType,
+            filters: input.filters,
+            createdAt: createdAt.toISOString(),
+          }),
+        )
         .digest("hex");
       await options.pool.query(
         `insert into admin_exports
           (id, requested_by, export_type, filters, reason, status, row_count,
            content_digest, created_at, completed_at, expires_at)
          values ($1, $2, $3, $4::jsonb, $5, 'completed', 0, $6, $7, $7, $8)`,
-        [exportId, actor.userId, input.exportType, JSON.stringify(input.filters), input.reason, digest, createdAt, new Date(createdAt.getTime() + 86_400_000)],
+        [
+          exportId,
+          actor.userId,
+          input.exportType,
+          JSON.stringify(input.filters),
+          input.reason,
+          digest,
+          createdAt,
+          new Date(createdAt.getTime() + 86_400_000),
+        ],
       );
       return {
         id: exportId,
@@ -679,38 +777,56 @@ export function registerContentOperationsRoutes(
   app.get("/v1/public/content/:kind/:slug", async (request) => {
     const params = PublicParamsSchema.parse(request.params);
     const query = z.object({ locale: LocaleSchema.default("en") }).parse(request.query);
-    return { entry: await options.contentService.getPublic(params.kind, params.slug, query.locale) };
+    return {
+      entry: await options.contentService.getPublic(params.kind, params.slug, query.locale),
+    };
   });
 
   app.post("/v1/public/content/reports", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
     const learner = await optionalLearner(request, options.config, options.authService);
-    const report = await options.contentService.report(learner?.id ?? null, ReportInputSchema.parse(request.body));
+    const report = await options.contentService.report(
+      learner?.id ?? null,
+      ReportInputSchema.parse(request.body),
+    );
     return reply.status(202).send(report);
   });
 
   app.get("/v1/admin/content", async (request) => {
     await requireAdminRoles(request, options, ["content_editor", "content_reviewer", "publisher"]);
-    return { entries: await options.contentService.listAdmin(AdminListQuerySchema.parse(request.query)) };
+    return {
+      entries: await options.contentService.listAdmin(AdminListQuerySchema.parse(request.query)),
+    };
   });
 
   app.post("/v1/admin/content", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["content_editor"]);
-    return reply.status(201).send({ entry: await options.contentService.create(admin, ContentInputSchema.parse(request.body)) });
+    return reply
+      .status(201)
+      .send({
+        entry: await options.contentService.create(admin, ContentInputSchema.parse(request.body)),
+      });
   });
 
   app.patch("/v1/admin/content/:id", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["content_editor"]);
     const { id } = IdParamsSchema.parse(request.params);
-    return { entry: await options.contentService.patch(admin, id, ContentPatchSchema.parse(request.body)) };
+    return {
+      entry: await options.contentService.patch(admin, id, ContentPatchSchema.parse(request.body)),
+    };
   });
 
   for (const action of ["submit", "approve", "publish", "archive"] as const) {
     app.post(`/v1/admin/content/:id/${action}`, async (request) => {
       requireTrustedRequestOrigin(request, options.config);
-      const roles = action === "submit" ? ["content_editor"] : action === "approve" ? ["content_reviewer"] : ["publisher"];
+      const roles =
+        action === "submit"
+          ? ["content_editor"]
+          : action === "approve"
+            ? ["content_reviewer"]
+            : ["publisher"];
       const { admin } = await requireAdminRoles(request, options, roles);
       const { id } = IdParamsSchema.parse(request.params);
       return { entry: await options.contentService.transition(admin, id, action) };
@@ -727,40 +843,88 @@ export function registerContentOperationsRoutes(
 
   app.get("/v1/admin/moderation/reports", async (request) => {
     await requireAdminRoles(request, options, ["content_reviewer", "publisher", "security_admin"]);
-    const query = z.object({ status: z.enum(["open", "in_review", "resolved", "dismissed"]).default("open"), limit: z.coerce.number().int().min(1).max(100).default(50) }).parse(request.query);
+    const query = z
+      .object({
+        status: z.enum(["open", "in_review", "resolved", "dismissed"]).default("open"),
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+      })
+      .parse(request.query);
     return { reports: await options.contentService.listReports(query.status, query.limit) };
   });
 
   app.post("/v1/admin/moderation/reports/:id/resolve", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
-    const { admin } = await requireAdminRoles(request, options, ["content_reviewer", "publisher", "security_admin"]);
+    const { admin } = await requireAdminRoles(request, options, [
+      "content_reviewer",
+      "publisher",
+      "security_admin",
+    ]);
     const { id } = IdParamsSchema.parse(request.params);
-    return { report: await options.contentService.resolveReport(admin, id, ResolveReportSchema.parse(request.body)) };
+    return {
+      report: await options.contentService.resolveReport(
+        admin,
+        id,
+        ResolveReportSchema.parse(request.body),
+      ),
+    };
   });
 
   app.post("/v1/admin/access/:userId/roles", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["security_admin"]);
     const { userId } = UserParamsSchema.parse(request.params);
-    return { assignment: await options.contentService.assignRole(admin, userId, RoleAssignmentSchema.parse(request.body), request.id) };
+    return {
+      assignment: await options.contentService.assignRole(
+        admin,
+        userId,
+        RoleAssignmentSchema.parse(request.body),
+        request.id,
+      ),
+    };
   });
 
   app.delete("/v1/admin/access/:userId/roles/:role", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["security_admin"]);
-    const params = z.object({ userId: z.string().uuid(), role: RoleAssignmentSchema.shape.role }).parse(request.params);
-    const body = z.object({ reason: z.string().trim().min(3).max(500) }).strict().parse(request.body);
-    return { assignment: await options.contentService.revokeRole(admin, params.userId, params.role, body.reason, request.id) };
+    const params = z
+      .object({ userId: z.string().uuid(), role: RoleAssignmentSchema.shape.role })
+      .parse(request.params);
+    const body = z
+      .object({ reason: z.string().trim().min(3).max(500) })
+      .strict()
+      .parse(request.body);
+    return {
+      assignment: await options.contentService.revokeRole(
+        admin,
+        params.userId,
+        params.role,
+        body.reason,
+        request.id,
+      ),
+    };
   });
 
   app.get("/v1/admin/audit", async (request) => {
     await requireAdminRoles(request, options, ["security_admin"]);
-    return { events: await options.contentService.auditEvents(AuditQuerySchema.parse(request.query)) };
+    return {
+      events: await options.contentService.auditEvents(AuditQuerySchema.parse(request.query)),
+    };
   });
 
   app.post("/v1/admin/exports", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
-    const { admin } = await requireAdminRoles(request, options, ["analyst", "payment_operator", "security_admin"]);
-    return reply.status(202).send({ export: await options.contentService.createExport(admin, ExportInputSchema.parse(request.body)) });
+    const { admin } = await requireAdminRoles(request, options, [
+      "analyst",
+      "payment_operator",
+      "security_admin",
+    ]);
+    return reply
+      .status(202)
+      .send({
+        export: await options.contentService.createExport(
+          admin,
+          ExportInputSchema.parse(request.body),
+        ),
+      });
   });
 }

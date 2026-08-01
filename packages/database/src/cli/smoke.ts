@@ -78,10 +78,7 @@ try {
   const missingPublishedSkills = launchCatalogSeed
     .map((item) => item.skill.slug)
     .filter((skillSlug) => !publishedSlugs.has(skillSlug));
-  if (
-    publishedSkills.length !== launchCatalogSeed.length ||
-    missingPublishedSkills.length > 0
-  ) {
+  if (publishedSkills.length !== launchCatalogSeed.length || missingPublishedSkills.length > 0) {
     throw new Error(
       `All reviewed launch skills must be published. Missing: ${missingPublishedSkills.join(", ") || "unexpected count"}.`,
     );

@@ -239,7 +239,9 @@ export function createCommercialAutomationService(
             where id = $1`,
           [
             job.id,
-            new Date(now().getTime() + Math.min(900, 2 ** Math.min(job.attempt_count, 10) * 5) * 1000),
+            new Date(
+              now().getTime() + Math.min(900, 2 ** Math.min(job.attempt_count, 10) * 5) * 1000,
+            ),
             message.slice(0, 2000),
             now(),
           ],

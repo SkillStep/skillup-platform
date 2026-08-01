@@ -259,7 +259,8 @@ export function createAiJobService(
             [requestId],
           );
           const artifactId = existing.rows[0]?.id;
-          if (!artifactId) throw new AiJobServiceError(409, "The completed request has no artifact.");
+          if (!artifactId)
+            throw new AiJobServiceError(409, "The completed request has no artifact.");
           return { completed: true, artifactId } as const;
         }
         if (request.status !== "running" || request.lease_token !== input.leaseToken) {

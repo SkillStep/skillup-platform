@@ -36,18 +36,36 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Interview Evidence",
         levels: [
-          ["Build a Situation Action Result Answer", "structure an interview example with context, action and result"],
-          ["Choose Relevant Evidence", "select an example that directly answers the interview question"],
-          ["Quantify Results Honestly", "describe outcomes with accurate and proportionate evidence"],
-          ["Explain Learning from Failure", "discuss a setback with accountability and improvement"],
+          [
+            "Build a Situation Action Result Answer",
+            "structure an interview example with context, action and result",
+          ],
+          [
+            "Choose Relevant Evidence",
+            "select an example that directly answers the interview question",
+          ],
+          [
+            "Quantify Results Honestly",
+            "describe outcomes with accurate and proportionate evidence",
+          ],
+          [
+            "Explain Learning from Failure",
+            "discuss a setback with accountability and improvement",
+          ],
         ],
       },
       {
         title: "Professional Introductions",
         levels: [
-          ["Write a Clear Professional Introduction", "introduce a current focus, relevant strength and intended value"],
+          [
+            "Write a Clear Professional Introduction",
+            "introduce a current focus, relevant strength and intended value",
+          ],
           ["Tailor an Introduction to the Role", "adapt an introduction to the employer and role"],
-          ["Answer Tell Me About Yourself", "give a concise present-past-future interview response"],
+          [
+            "Answer Tell Me About Yourself",
+            "give a concise present-past-future interview response",
+          ],
           ["Close an Interview Confidently", "close with interest, fit and a useful question"],
         ],
       },
@@ -57,14 +75,20 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
           ["Write a Useful Status Update", "report progress, next action and risk clearly"],
           ["Ask for Clarification", "clarify an unclear task without creating delay"],
           ["Escalate a Blocker Early", "escalate a material blocker with evidence and options"],
-          ["Follow Up Professionally", "send a polite follow-up with context and an actionable request"],
+          [
+            "Follow Up Professionally",
+            "send a polite follow-up with context and an actionable request",
+          ],
         ],
       },
       {
         title: "Difficult Conversations",
         levels: [
           ["Give Specific Feedback", "give behavior-based feedback with impact and next step"],
-          ["Receive Feedback Constructively", "respond to feedback with clarification and an improvement action"],
+          [
+            "Receive Feedback Constructively",
+            "respond to feedback with clarification and an improvement action",
+          ],
           ["Disagree Respectfully", "challenge an idea while protecting working relationships"],
           ["Set a Work Boundary", "set a clear boundary while offering a workable alternative"],
         ],
@@ -72,10 +96,19 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Assessment and Next Steps",
         levels: [
-          ["Diagnose a Weak Interview Answer", "identify missing evidence, relevance and result in an answer"],
+          [
+            "Diagnose a Weak Interview Answer",
+            "identify missing evidence, relevance and result in an answer",
+          ],
           ["Improve a Workplace Message", "edit a vague message into a concise actionable update"],
-          ["Prepare an Interview Evidence Bank", "prepare reusable examples without memorizing scripts"],
-          ["Create a Communication Improvement Plan", "select a specific communication habit and measure improvement"],
+          [
+            "Prepare an Interview Evidence Bank",
+            "prepare reusable examples without memorizing scripts",
+          ],
+          [
+            "Create a Communication Improvement Plan",
+            "select a specific communication habit and measure improvement",
+          ],
         ],
       },
     ],
@@ -87,8 +120,14 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Instructions and Clarification",
         levels: [
-          ["Identify the Action in an Instruction", "identify the required action, object and deadline in an English instruction"],
-          ["Ask a Focused Clarifying Question", "ask for missing information in clear simple English"],
+          [
+            "Identify the Action in an Instruction",
+            "identify the required action, object and deadline in an English instruction",
+          ],
+          [
+            "Ask a Focused Clarifying Question",
+            "ask for missing information in clear simple English",
+          ],
           ["Confirm Understanding", "confirm a task in your own words"],
           ["Follow Multi Step Instructions", "sequence and complete multi-step instructions"],
         ],
@@ -96,7 +135,10 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Professional Messages",
         levels: [
-          ["Write a Useful Subject Line", "write a concise subject line that states topic and action"],
+          [
+            "Write a Useful Subject Line",
+            "write a concise subject line that states topic and action",
+          ],
           ["Write a Concise Request", "make a polite request with context, action and timing"],
           ["Report a Problem Clearly", "describe a problem, impact and attempted solution"],
           ["Write a Polite Follow Up", "follow up without sounding demanding or vague"],
@@ -121,7 +163,10 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
         title: "Prompt Foundations",
         levels: [
           ["State a Clear Goal", "write an AI instruction with one clear outcome"],
-          ["Provide Relevant Context", "supply enough context without exposing sensitive information"],
+          [
+            "Provide Relevant Context",
+            "supply enough context without exposing sensitive information",
+          ],
           ["Specify an Output Format", "request a usable structure and length"],
           ["Iterate with Evidence", "improve a prompt using observed output problems"],
         ],
@@ -138,8 +183,14 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Safe AI Workflows",
         levels: [
-          ["Protect Private Information", "identify information that should not be sent to an AI provider"],
-          ["Keep Humans in Important Decisions", "place human approval at high-impact decision points"],
+          [
+            "Protect Private Information",
+            "identify information that should not be sent to an AI provider",
+          ],
+          [
+            "Keep Humans in Important Decisions",
+            "place human approval at high-impact decision points",
+          ],
           ["Record AI Use and Sources", "keep a useful audit trail for AI-assisted work"],
           ["Control Cost and Failure", "design a bounded AI workflow with fallback behavior"],
         ],
@@ -153,9 +204,18 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Offer and Client Brief",
         levels: [
-          ["Define a Specific Service", "describe a service by client problem, deliverable and boundary"],
-          ["Read a Client Brief", "extract goals, deliverables, constraints and unanswered questions"],
-          ["Ask High Value Discovery Questions", "ask questions that reduce delivery and commercial risk"],
+          [
+            "Define a Specific Service",
+            "describe a service by client problem, deliverable and boundary",
+          ],
+          [
+            "Read a Client Brief",
+            "extract goals, deliverables, constraints and unanswered questions",
+          ],
+          [
+            "Ask High Value Discovery Questions",
+            "ask questions that reduce delivery and commercial risk",
+          ],
           ["Decide Whether the Project Fits", "evaluate capability, capacity, risk and client fit"],
         ],
       },
@@ -165,7 +225,10 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
           ["Write a Clear Scope", "write deliverables, acceptance criteria and boundaries"],
           ["Estimate with Assumptions", "estimate effort while making dependencies visible"],
           ["Define Revisions and Change Control", "separate included revisions from new scope"],
-          ["Use Milestones and Payment Protection", "structure payment around verified delivery stages"],
+          [
+            "Use Milestones and Payment Protection",
+            "structure payment around verified delivery stages",
+          ],
         ],
       },
       {
@@ -173,7 +236,10 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
         levels: [
           ["Send Useful Progress Updates", "communicate progress, decisions, risks and next steps"],
           ["Handle Feedback and Disagreement", "turn feedback into an agreed actionable change"],
-          ["Deliver a Professional Handover", "provide verified files, instructions and ownership records"],
+          [
+            "Deliver a Professional Handover",
+            "provide verified files, instructions and ownership records",
+          ],
           ["Recognize Freelancing Scams", "identify unsafe payment, identity and access requests"],
         ],
       },
@@ -186,8 +252,14 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Audience and Offer",
         levels: [
-          ["Define a Useful Audience Segment", "describe an audience by situation, need and behavior"],
-          ["Identify the Real Customer Problem", "distinguish a customer problem from a product feature"],
+          [
+            "Define a Useful Audience Segment",
+            "describe an audience by situation, need and behavior",
+          ],
+          [
+            "Identify the Real Customer Problem",
+            "distinguish a customer problem from a product feature",
+          ],
           ["Write a Clear Value Proposition", "connect audience, outcome and differentiator"],
           ["Choose a Specific Call to Action", "match one call to action to the audience stage"],
         ],
@@ -195,9 +267,15 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
       {
         title: "Funnel and Content",
         levels: [
-          ["Map the Customer Journey", "map awareness, consideration, conversion and retention needs"],
+          [
+            "Map the Customer Journey",
+            "map awareness, consideration, conversion and retention needs",
+          ],
           ["Set a Content Objective", "give each content item one measurable purpose"],
-          ["Match Channel to Behavior", "select a channel based on audience behavior and content format"],
+          [
+            "Match Channel to Behavior",
+            "select a channel based on audience behavior and content format",
+          ],
           ["Build a Testable Content Plan", "plan themes, formats, cadence and hypotheses"],
         ],
       },
@@ -205,9 +283,18 @@ export const completeLaunchCurriculum: readonly SkillDefinition[] = [
         title: "Measurement and Improvement",
         levels: [
           ["Choose a Decision Useful KPI", "select a metric connected to a business decision"],
-          ["Use Clean Campaign Attribution", "use consistent campaign parameters and source records"],
-          ["Run a Controlled Experiment", "test one meaningful change with a clear success measure"],
-          ["Report Insight and Next Action", "turn results into evidence, interpretation and action"],
+          [
+            "Use Clean Campaign Attribution",
+            "use consistent campaign parameters and source records",
+          ],
+          [
+            "Run a Controlled Experiment",
+            "test one meaningful change with a clear success measure",
+          ],
+          [
+            "Report Insight and Next Action",
+            "turn results into evidence, interpretation and action",
+          ],
         ],
       },
     ],

@@ -66,7 +66,10 @@ async function isPublished(table: string, id: string): Promise<boolean> {
     "challenge_versions",
   ]);
   if (!allowed.has(table)) throw new Error(`Unsupported version table: ${table}.`);
-  const result = await database.query<{ state: string }>(`select state from ${table} where id = $1`, [id]);
+  const result = await database.query<{ state: string }>(
+    `select state from ${table} where id = $1`,
+    [id],
+  );
   return result.rows[0]?.state === "published";
 }
 
@@ -113,7 +116,13 @@ async function resolveCategoryIds(): Promise<Map<string, string>> {
          select 1 from skill_category_versions
           where category_id = $2 and version = 1 and locale = 'en'
        )`,
-      [stableUuid(`category:${categorySlug}:v1`), categoryId, definition[0], definition[1], reviewedAt],
+      [
+        stableUuid(`category:${categorySlug}:v1`),
+        categoryId,
+        definition[0],
+        definition[1],
+        reviewedAt,
+      ],
     );
     const categoryVersionId = await queryId(
       `select id from skill_category_versions

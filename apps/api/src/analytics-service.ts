@@ -99,7 +99,10 @@ const FORBIDDEN_KEYS = new Set([
 const AnalyticsInputSchema = z.object({
   eventName: EventNameSchema,
   occurredAt: z.iso.datetime(),
-  anonymousId: z.string().regex(/^[A-Za-z0-9_-]{8,128}$/).optional(),
+  anonymousId: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{8,128}$/)
+    .optional(),
   sessionId: z.string().max(128).optional(),
   deduplicationKey: z.string().min(8).max(200),
   consent: z.enum(["essential", "product"]),
@@ -117,9 +120,23 @@ const AnalyticsInputSchema = z.object({
 });
 
 const ExperimentInputSchema = z.object({
-  experimentKey: z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/).max(80),
-  variants: z.array(z.string().regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/).max(40)).min(2).max(10),
-  anonymousId: z.string().regex(/^[A-Za-z0-9_-]{8,128}$/).optional(),
+  experimentKey: z
+    .string()
+    .regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/)
+    .max(80),
+  variants: z
+    .array(
+      z
+        .string()
+        .regex(/^[a-z0-9]+(?:_[a-z0-9]+)*$/)
+        .max(40),
+    )
+    .min(2)
+    .max(10),
+  anonymousId: z
+    .string()
+    .regex(/^[A-Za-z0-9_-]{8,128}$/)
+    .optional(),
   expiresAt: z.iso.datetime().optional(),
 });
 
@@ -137,12 +154,15 @@ function inspectValue(value: unknown, path: string, depth: number): void {
   if (depth > 5) throw new AnalyticsServiceError(400, `Analytics nesting is too deep at ${path}.`);
   if (value === null || typeof value === "boolean" || typeof value === "number") return;
   if (typeof value === "string") {
-    if (value.length > 500) throw new AnalyticsServiceError(400, `Analytics text is too long at ${path}.`);
+    if (value.length > 500)
+      throw new AnalyticsServiceError(400, `Analytics text is too long at ${path}.`);
     return;
   }
   if (Array.isArray(value)) {
-    if (value.length > 50) throw new AnalyticsServiceError(400, `Analytics array is too large at ${path}.`);
-    for (const [index, entry] of value.entries()) inspectValue(entry, `${path}[${index}]`, depth + 1);
+    if (value.length > 50)
+      throw new AnalyticsServiceError(400, `Analytics array is too large at ${path}.`);
+    for (const [index, entry] of value.entries())
+      inspectValue(entry, `${path}[${index}]`, depth + 1);
     return;
   }
   if (typeof value === "object") {
@@ -183,7 +203,8 @@ function requireTrustedOrigin(request: FastifyRequest, config: ApiConfig): void 
 
 function subjectKey(userId: string | null, anonymousId: string | undefined): string {
   const raw = userId ? `user:${userId}` : anonymousId ? `anonymous:${anonymousId}` : null;
-  if (!raw) throw new AnalyticsServiceError(400, "A signed-in user or anonymous identifier is required.");
+  if (!raw)
+    throw new AnalyticsServiceError(400, "A signed-in user or anonymous identifier is required.");
   return createHash("sha256").update(raw).digest("hex");
 }
 
@@ -213,7 +234,10 @@ export function createAnalyticsService(
 ): AnalyticsService {
   const now = options.now ?? (() => new Date());
 
-  async function consentFor(userId: string | null, supplied: "essential" | "product"): Promise<"essential" | "product"> {
+  async function consentFor(
+    userId: string | null,
+    supplied: "essential" | "product",
+  ): Promise<"essential" | "product"> {
     if (!userId) return supplied;
     const result = await options.pool.query<{ consent_state: "essential" | "product" }>(
       `select consent_state from analytics_consents where user_id = $1`,
@@ -230,7 +254,10 @@ export function createAnalyticsService(
       const receivedAt = now();
       const skew = Math.abs(receivedAt.getTime() - occurredAt.getTime());
       if (skew > 7 * 86_400_000) {
-        throw new AnalyticsServiceError(400, "The analytics timestamp is outside the accepted window.");
+        throw new AnalyticsServiceError(
+          400,
+          "The analytics timestamp is outside the accepted window.",
+        );
       }
       const consent = await consentFor(userId, input.consent);
       if (consent !== "product" && !ESSENTIAL_EVENTS.has(input.eventName)) {
@@ -251,7 +278,7 @@ export function createAnalyticsService(
         [
           input.eventName,
           userId,
-          userId ? null : input.anonymousId ?? null,
+          userId ? null : (input.anonymousId ?? null),
           input.sessionId ?? null,
           input.deduplicationKey,
           options.environment,
@@ -328,7 +355,10 @@ export function registerAnalyticsRoutes(
   app.post("/v1/analytics/events", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const input = AnalyticsInputSchema.parse(request.body);
-    const result = await options.analyticsService.ingestClient(await optionalUserId(request), input);
+    const result = await options.analyticsService.ingestClient(
+      await optionalUserId(request),
+      input,
+    );
     return reply.status(result.accepted ? 202 : 204).send(result.accepted ? result : undefined);
   });
 
