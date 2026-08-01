@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../discovery-shell";
+import { AccountControls } from "./account-controls";
 import styles from "./account.module.css";
 import { MembershipAccount } from "./membership-account";
 
@@ -12,8 +13,9 @@ type PageProps = Readonly<{
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your SkillUp membership",
-  description: "Review your private SkillUp premium status and payment references.",
+  title: "Your SkillUp account",
+  description:
+    "Manage your private SkillUp membership, sessions, privacy choices, export and account deletion.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
@@ -27,13 +29,15 @@ export default async function AccountPage({ params }: PageProps) {
       <main className={styles["main"]}>
         <header className={styles["header"]}>
           <p className="eyebrow">Private account</p>
-          <h1>Your membership and payment status</h1>
+          <h1>Your account, privacy and membership</h1>
           <p>
-            This page reads server-authoritative payment and entitlement records. It is never
-            indexed or placed in the public offline cache.
+            Review server-authoritative access, payment references, devices, sharing choices,
+            policy evidence, export and deletion. This page is never indexed or placed in the
+            public offline cache.
           </p>
         </header>
         <MembershipAccount />
+        <AccountControls />
       </main>
       <PublicFooter />
     </>
