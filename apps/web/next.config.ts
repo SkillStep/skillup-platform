@@ -12,10 +12,22 @@ const publicRouteHeaders = [
   { key: "X-SkillUp-Cacheable", value: "public" },
 ];
 
+function paymentFormOrigin(): string | null {
+  const value = process.env["JAZZCASH_PAYMENT_URL"];
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" ? url.origin : null;
+  } catch {
+    return null;
+  }
+}
+
 const scriptPolicy =
   process.env.NODE_ENV === "production"
     ? "script-src 'self' 'unsafe-inline'"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+const formAction = ["form-action 'self'", paymentFormOrigin()].filter(Boolean).join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   scriptPolicy,
@@ -27,7 +39,7 @@ const contentSecurityPolicy = [
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  formAction,
   "frame-ancestors 'none'",
 ].join("; ");
 
@@ -65,7 +77,7 @@ const nextConfig: NextConfig = {
         headers: publicRouteHeaders,
       },
       {
-        source: "/en/(skills|categories|paths)/:path*",
+        source: "/en/(skills|categories|paths|pricing)/:path*",
         headers: publicRouteHeaders,
       },
       {
@@ -73,7 +85,7 @@ const nextConfig: NextConfig = {
         headers: publicRouteHeaders,
       },
       {
-        source: "/:locale(en|ur)/(sign-in|onboarding|progress)",
+        source: "/:locale(en|ur)/(sign-in|onboarding|progress|account|admin)/:path*",
         headers: privateRouteHeaders,
       },
       {

@@ -19,8 +19,9 @@ export function PublicHeader(): ReactNode {
 
       <nav className={styles["desktopNav"]} aria-label="Primary navigation">
         <Link href="/en/skills">Browse skills</Link>
-        <Link href="/en/categories/launch-skills">Launch catalog</Link>
+        <Link href="/en/pricing">Premium</Link>
         <Link href="/en/progress">Your progress</Link>
+        <Link href="/en/account">Membership</Link>
         <Link className={styles["navAction"]} href="/en/sign-in">
           Sign in
         </Link>
@@ -30,8 +31,9 @@ export function PublicHeader(): ReactNode {
         <summary aria-label="Open navigation">Menu</summary>
         <nav aria-label="Mobile navigation">
           <Link href="/en/skills">Browse skills</Link>
-          <Link href="/en/categories/launch-skills">Launch catalog</Link>
+          <Link href="/en/pricing">Premium</Link>
           <Link href="/en/progress">Your progress</Link>
+          <Link href="/en/account">Membership</Link>
           <Link href="/en/sign-in">Sign in</Link>
         </nav>
       </details>
@@ -66,6 +68,7 @@ export function PublicFooter(): ReactNode {
       </div>
       <nav aria-label="Footer navigation">
         <Link href="/en/skills">Skills</Link>
+        <Link href="/en/pricing">Premium pricing</Link>
         <Link href="/en/categories/launch-skills">Launch catalog</Link>
         <Link href="/offline">Offline help</Link>
       </nav>

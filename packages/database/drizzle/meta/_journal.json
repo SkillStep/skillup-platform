@@ -57,6 +57,13 @@
       "when": 1785440400000,
       "tag": "0007_pilot_analytics_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785508800000,
+      "tag": "0008_launch_commercial_operations",
+      "breakpoints": true
     }
   ]
 }

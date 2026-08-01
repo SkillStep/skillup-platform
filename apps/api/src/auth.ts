@@ -47,6 +47,23 @@ export type AuthenticatedLearner = Readonly<{
   profile: LearnerProfile;
 }>;
 
+type LearnerRow = Readonly<{
+  user_id: unknown;
+  email_display: unknown;
+  display_name: unknown;
+  locale: unknown;
+  age_band: unknown;
+  avatar_key: unknown;
+  learning_goal: unknown;
+  onboarding_status: unknown;
+}>;
+
+type SessionLearnerRow = LearnerRow &
+  Readonly<{
+    session_id: unknown;
+    expires_at: unknown;
+  }>;
+
 export type AuthCodeDelivery = Readonly<{
   sendSignInCode: (
     input: Readonly<{ email: string; code: string; expiresAt: Date }>,
@@ -119,34 +136,34 @@ function addHours(date: Date, hours: number): Date {
   return new Date(date.getTime() + hours * 3_600_000);
 }
 
-function profileFromRow(row: Record<string, unknown>): LearnerProfile {
+function profileFromRow(row: LearnerRow): LearnerProfile {
   return {
-    displayName: typeof row["display_name"] === "string" ? row["display_name"] : null,
-    locale: row["locale"] === "ur" ? "ur" : "en",
+    displayName: typeof row.display_name === "string" ? row.display_name : null,
+    locale: row.locale === "ur" ? "ur" : "en",
     ageBand:
-      row["age_band"] === "16_17" ||
-      row["age_band"] === "18_24" ||
-      row["age_band"] === "25_34" ||
-      row["age_band"] === "35_plus"
-        ? row["age_band"]
+      row.age_band === "16_17" ||
+      row.age_band === "18_24" ||
+      row.age_band === "25_34" ||
+      row.age_band === "35_plus"
+        ? row.age_band
         : "unspecified",
-    avatarKey: typeof row["avatar_key"] === "string" ? row["avatar_key"] : null,
-    learningGoal: typeof row["learning_goal"] === "string" ? row["learning_goal"] : null,
+    avatarKey: typeof row.avatar_key === "string" ? row.avatar_key : null,
+    learningGoal: typeof row.learning_goal === "string" ? row.learning_goal : null,
     onboardingStatus:
-      row["onboarding_status"] === "in_progress" || row["onboarding_status"] === "completed"
-        ? row["onboarding_status"]
+      row.onboarding_status === "in_progress" || row.onboarding_status === "completed"
+        ? row.onboarding_status
         : "not_started",
   };
 }
 
-function learnerFromRow(row: Record<string, unknown>): AuthenticatedLearner {
-  if (typeof row["user_id"] !== "string" || typeof row["email_display"] !== "string") {
+function learnerFromRow(row: LearnerRow): AuthenticatedLearner {
+  if (typeof row.user_id !== "string" || typeof row.email_display !== "string") {
     throw new Error("The authentication query returned an invalid learner record.");
   }
 
   return {
-    id: row["user_id"],
-    email: row["email_display"],
+    id: row.user_id,
+    email: row.email_display,
     profile: profileFromRow(row),
   };
 }
@@ -303,7 +320,7 @@ export function createAuthService(
           [userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
         );
 
-        const profile = await client.query<Record<string, unknown>>(
+        const profile = await client.query<LearnerRow>(
           `select $1::uuid as user_id, $2::text as email_display,
                   display_name, locale, age_band, avatar_key, learning_goal, onboarding_status
              from learner_profiles where user_id = $1`,
@@ -329,7 +346,7 @@ export function createAuthService(
     resolveSession: async (sessionToken) => {
       const seenAt = now();
       const tokenDigest = digest(options.secret, `session:${sessionToken}`);
-      const result = await options.pool.query<Record<string, unknown>>(
+      const result = await options.pool.query<SessionLearnerRow>(
         `select s.id as session_id, s.expires_at, u.id as user_id, e.email_display,
                 p.display_name, p.locale, p.age_band, p.avatar_key, p.learning_goal, p.onboarding_status
            from auth_sessions s
@@ -345,7 +362,7 @@ export function createAuthService(
         [tokenDigest, seenAt],
       );
       const row = result.rows[0];
-      if (!row || typeof row["session_id"] !== "string" || !(row["expires_at"] instanceof Date)) {
+      if (!row || typeof row.session_id !== "string" || !(row.expires_at instanceof Date)) {
         return null;
       }
 
@@ -354,7 +371,7 @@ export function createAuthService(
         `update auth_sessions
             set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
           where id = $1 and last_seen_at < $2 - interval '5 minutes'`,
-        [row["session_id"], seenAt, extendedIdle],
+        [row.session_id, seenAt, extendedIdle],
       );
 
       return learnerFromRow(row);
@@ -370,7 +387,7 @@ export function createAuthService(
 
     updateProfile: async (userId, patch) => {
       const updatedAt = now();
-      const current = await options.pool.query<Record<string, unknown>>(
+      const current = await options.pool.query<LearnerRow>(
         `select u.id as user_id, e.email_display, p.display_name, p.locale, p.age_band,
                 p.avatar_key, p.learning_goal, p.onboarding_status
            from users u
@@ -398,7 +415,7 @@ export function createAuthService(
         onboardingStatus: patch.onboardingStatus ?? profileFromRow(existing).onboardingStatus,
       };
 
-      const updated = await options.pool.query<Record<string, unknown>>(
+      const updated = await options.pool.query<LearnerRow>(
         `update learner_profiles
             set display_name = $2, locale = $3, age_band = $4, avatar_key = $5,
                 learning_goal = $6, onboarding_status = $7, updated_at = $8
@@ -414,7 +431,7 @@ export function createAuthService(
           merged.learningGoal,
           merged.onboardingStatus,
           updatedAt,
-          existing["email_display"],
+          existing.email_display,
         ],
       );
       const row = updated.rows[0];

@@ -3,7 +3,9 @@ import { randomUUID } from "node:crypto";
 import { ApiErrorSchema, ServiceHealthSchema } from "@skillup/contracts";
 import Fastify, { type FastifyInstance } from "fastify";
 
+import { type AdminService, registerAdminRoutes } from "./admin.js";
 import { type AuthService, registerAuthRoutes } from "./auth.js";
+import { type CommercialService, registerCommercialRoutes } from "./commercial.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
 import { type ProgressService, registerProgressRoutes } from "./progress.js";
@@ -21,6 +23,8 @@ export type BuildApiOptions = Readonly<{
   authService?: AuthService | undefined;
   gameplayService?: GameplayService | undefined;
   progressService?: ProgressService | undefined;
+  commercialService?: CommercialService | undefined;
+  adminService?: AdminService | undefined;
   rateLimit?: RateLimitOptions;
 }>;
 
@@ -57,6 +61,22 @@ function isPublicRuntime(config: ApiConfig): boolean {
   return config.APP_ENV === "staging" || config.APP_ENV === "production";
 }
 
+function formUrlEncodedParser(
+  _request: unknown,
+  body: string,
+  done: (error: Error | null, value?: unknown) => void,
+): void {
+  try {
+    const fields: Record<string, string> = {};
+    for (const [key, value] of new URLSearchParams(body)) {
+      if (key.length <= 100 && value.length <= 2_000) fields[key] = value;
+    }
+    done(null, fields);
+  } catch (error) {
+    done(error instanceof Error ? error : new Error("Invalid form payload."));
+  }
+}
+
 export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   const config = options.config ?? readApiConfig();
   const now = options.now ?? (() => new Date());
@@ -85,6 +105,8 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
                 "otp",
                 "secret",
                 "secretDigest",
+                "pp_Password",
+                "pp_SecureHash",
               ],
               censor: "[redacted]",
             },
@@ -93,6 +115,12 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
     requestTimeout: API_REQUEST_TIMEOUT_MS,
     trustProxy: isPublicRuntime(config),
   });
+
+  app.addContentTypeParser(
+    "application/x-www-form-urlencoded",
+    { parseAs: "string" },
+    formUrlEncodedParser,
+  );
 
   app.addHook(
     "onRequest",
@@ -173,6 +201,20 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       progressService: options.progressService,
+    });
+  }
+  if (options.authService && options.commercialService) {
+    registerCommercialRoutes(app, {
+      config,
+      authService: options.authService,
+      commercialService: options.commercialService,
+    });
+  }
+  if (options.authService && options.adminService) {
+    registerAdminRoutes(app, {
+      config,
+      authService: options.authService,
+      adminService: options.adminService,
     });
   }
 

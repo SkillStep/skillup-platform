@@ -1,0 +1,153 @@
+.main {
+  margin: 0 auto;
+  max-width: 920px;
+  min-height: 70vh;
+  padding: clamp(2.5rem, 7vw, 5rem) 1.25rem 6rem;
+}
+
+.header h1 {
+  font-size: clamp(2.3rem, 7vw, 4.6rem);
+}
+
+.header p:last-child {
+  color: var(--ink-700);
+  font-size: 1.05rem;
+  max-width: 680px;
+}
+
+.panel {
+  background: var(--surface-0);
+  border: 1px solid var(--line);
+  border-radius: 1.35rem;
+  box-shadow: var(--shadow);
+  margin-top: 1.5rem;
+  padding: clamp(1.25rem, 4vw, 2rem);
+}
+
+.panel h2,
+.panel h3 {
+  margin-top: 0;
+}
+
+.status {
+  align-items: center;
+  background: var(--progress-100);
+  border: 1px solid #a3e635;
+  border-radius: 0.9rem;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem;
+}
+
+.statusInactive {
+  background: var(--surface-50);
+  border-color: var(--line);
+}
+
+.status strong {
+  display: block;
+}
+
+.status span {
+  color: var(--ink-700);
+  font-size: 0.9rem;
+}
+
+.capabilities {
+  display: grid;
+  gap: 0.6rem;
+  list-style: none;
+  padding: 0;
+}
+
+.capabilities li::before {
+  color: #4d7c0f;
+  content: "✓";
+  font-weight: 900;
+  margin-right: 0.5rem;
+}
+
+.orders {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.orders th,
+.orders td {
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 0.4rem;
+  text-align: left;
+}
+
+.orders th {
+  color: var(--ink-500);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.reference {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.message {
+  background: var(--brand-100);
+  border-radius: 0.8rem;
+  color: #312e81;
+  padding: 0.9rem;
+}
+
+.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.button {
+  align-items: center;
+  background: var(--brand-700);
+  border: 0;
+  border-radius: 0.8rem;
+  color: white;
+  display: inline-flex;
+  font-weight: 800;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  text-decoration: none;
+}
+
+.secondary {
+  background: var(--surface-0);
+  border: 1px solid var(--line);
+  color: var(--ink-950);
+}
+
+@media (max-width: 680px) {
+  .orders,
+  .orders tbody,
+  .orders tr,
+  .orders td {
+    display: block;
+  }
+
+  .orders thead {
+    display: none;
+  }
+
+  .orders tr {
+    border-bottom: 1px solid var(--line);
+    padding: 0.7rem 0;
+  }
+
+  .orders td {
+    border: 0;
+    padding: 0.2rem 0;
+  }
+}

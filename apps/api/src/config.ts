@@ -5,6 +5,8 @@ const EnvironmentBooleanSchema = z
   .default("false")
   .transform((value) => value === "true");
 
+const OptionalUrlSchema = z.string().url().optional();
+
 const ApiConfigSchema = z
   .object({
     APP_ENV: z.enum(["local", "test", "staging", "production"]).default("local"),
@@ -37,35 +39,133 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
+    FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
+    FEATURE_JAZZCASH_ENABLED: EnvironmentBooleanSchema,
+    JAZZCASH_MODE: z.enum(["disabled", "sandbox", "production"]).default("disabled"),
+    JAZZCASH_MERCHANT_ID: z.string().trim().min(1).max(100).optional(),
+    JAZZCASH_PASSWORD: z.string().min(1).max(500).optional(),
+    JAZZCASH_INTEGRITY_SALT: z.string().min(8).max(500).optional(),
+    JAZZCASH_PAYMENT_URL: OptionalUrlSchema,
+    JAZZCASH_RETURN_URL: OptionalUrlSchema,
+    JAZZCASH_VERSION: z.string().trim().min(1).max(20).default("1.1"),
+    JAZZCASH_TXN_TYPE: z.enum(["MWALLET", "MIGS", "OTC"]).default("MWALLET"),
+    JAZZCASH_BANK_ID: z.string().trim().min(1).max(40).default("TBANK"),
+    JAZZCASH_PRODUCT_ID: z.string().trim().min(1).max(40).default("RETL"),
+    JAZZCASH_CHECKOUT_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
     RELEASE_SHA: z.string().min(1).default("local"),
     LOG_LEVEL: z
       .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
       .default("info"),
   })
   .superRefine((config, context) => {
-    if (config.EMAIL_PROVIDER !== "smtp") return;
+    if (config.EMAIL_PROVIDER === "smtp") {
+      const requiredFields: ReadonlyArray<keyof typeof config> = [
+        "EMAIL_FROM",
+        "SMTP_HOST",
+        "SMTP_USERNAME",
+        "SMTP_PASSWORD",
+      ];
+      for (const field of requiredFields) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when EMAIL_PROVIDER=smtp.`,
+          });
+        }
+      }
 
-    const requiredFields: ReadonlyArray<keyof typeof config> = [
-      "EMAIL_FROM",
-      "SMTP_HOST",
-      "SMTP_USERNAME",
-      "SMTP_PASSWORD",
-    ];
-    for (const field of requiredFields) {
-      if (!config[field]) {
+      if (config.SMTP_SECURE && config.SMTP_PORT !== 465) {
         context.addIssue({
           code: "custom",
-          path: [field],
-          message: `${field} is required when EMAIL_PROVIDER=smtp.`,
+          path: ["SMTP_PORT"],
+          message: "SMTP_SECURE=true requires the implicit TLS port 465.",
         });
       }
     }
 
-    if (config.SMTP_SECURE && config.SMTP_PORT !== 465) {
+    if (config.FEATURE_JAZZCASH_ENABLED && !config.FEATURE_PREMIUM_ENABLED) {
       context.addIssue({
         code: "custom",
-        path: ["SMTP_PORT"],
-        message: "SMTP_SECURE=true requires the implicit TLS port 465.",
+        path: ["FEATURE_PREMIUM_ENABLED"],
+        message: "Premium must be enabled before JazzCash checkout can be enabled.",
+      });
+    }
+
+    if (!config.FEATURE_JAZZCASH_ENABLED) {
+      if (config.JAZZCASH_MODE !== "disabled") {
+        context.addIssue({
+          code: "custom",
+          path: ["JAZZCASH_MODE"],
+          message: "JAZZCASH_MODE must remain disabled while the feature flag is off.",
+        });
+      }
+      return;
+    }
+
+    if (config.JAZZCASH_MODE === "disabled") {
+      context.addIssue({
+        code: "custom",
+        path: ["JAZZCASH_MODE"],
+        message: "An enabled JazzCash integration requires sandbox or production mode.",
+      });
+    }
+
+    const requiredJazzCashFields: ReadonlyArray<keyof typeof config> = [
+      "JAZZCASH_MERCHANT_ID",
+      "JAZZCASH_PASSWORD",
+      "JAZZCASH_INTEGRITY_SALT",
+      "JAZZCASH_PAYMENT_URL",
+      "JAZZCASH_RETURN_URL",
+    ];
+    for (const field of requiredJazzCashFields) {
+      if (!config[field]) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `${field} is required when JazzCash is enabled.`,
+        });
+      }
+    }
+
+    if (config.APP_ENV === "production" && config.JAZZCASH_MODE !== "production") {
+      context.addIssue({
+        code: "custom",
+        path: ["JAZZCASH_MODE"],
+        message: "Production requires JAZZCASH_MODE=production.",
+      });
+    }
+    if (config.APP_ENV !== "production" && config.JAZZCASH_MODE === "production") {
+      context.addIssue({
+        code: "custom",
+        path: ["JAZZCASH_MODE"],
+        message: "Production JazzCash mode is not allowed outside production.",
+      });
+    }
+
+    for (const field of ["JAZZCASH_PAYMENT_URL", "JAZZCASH_RETURN_URL"] as const) {
+      const value = config[field];
+      if (
+        value &&
+        (config.APP_ENV === "staging" || config.APP_ENV === "production") &&
+        !value.startsWith("https://")
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: [field],
+          message: `${field} must use HTTPS outside local/test environments.`,
+        });
+      }
+    }
+
+    if (
+      config.JAZZCASH_RETURN_URL &&
+      new URL(config.JAZZCASH_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["JAZZCASH_RETURN_URL"],
+        message: "The JazzCash return URL must use the public SkillUp origin.",
       });
     }
   });
