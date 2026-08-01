@@ -26,32 +26,32 @@ const ContentStatusSchema = z.enum([
   "archived",
 ]);
 
-const ContentInputSchema = z
+const SourceReferenceSchema = z
   .object({
-    kind: KindSchema,
-    slug: z
-      .string()
-      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
-      .max(120),
-    locale: LocaleSchema.default("en"),
-    title: z.string().trim().min(3).max(160),
-    summary: z.string().trim().min(10).max(1000),
-    directAnswer: z.string().trim().min(10).max(2000).nullable().optional(),
-    body: z.record(z.string(), z.unknown()),
-    sourceReferences: z
-      .array(
-        z
-          .object({
-            title: z.string().trim().min(3).max(300),
-            publisher: z.string().trim().min(2).max(200).optional(),
-            url: z.string().url().startsWith("https://").optional(),
-            locator: z.string().trim().min(1).max(300).optional(),
-            retrievedAt: z.iso.datetime().optional(),
-          })
-          .strict(),
-      )
-      .max(30),
+    title: z.string().trim().min(3).max(300),
+    publisher: z.string().trim().min(2).max(200).optional(),
+    url: z.string().url().startsWith("https://").optional(),
+    locator: z.string().trim().min(1).max(300).optional(),
+    retrievedAt: z.iso.datetime().optional(),
   })
+  .strict();
+
+const ContentEditableFieldsSchema = z.object({
+  title: z.string().trim().min(3).max(160),
+  summary: z.string().trim().min(10).max(1000),
+  directAnswer: z.string().trim().min(10).max(2000).nullable().optional(),
+  body: z.record(z.string(), z.unknown()),
+  sourceReferences: z.array(SourceReferenceSchema).max(30),
+});
+
+const ContentInputSchema = ContentEditableFieldsSchema.extend({
+  kind: KindSchema,
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .max(120),
+  locale: LocaleSchema.default("en"),
+})
   .strict()
   .superRefine((value, context) => {
     if (Buffer.byteLength(JSON.stringify(value.body), "utf8") > 100_000) {
@@ -59,10 +59,26 @@ const ContentInputSchema = z
     }
   });
 
-const ContentPatchSchema = ContentInputSchema.omit({ kind: true, slug: true, locale: true })
-  .partial()
+const ContentPatchSchema = ContentEditableFieldsSchema.partial()
   .strict()
-  .refine((value) => Object.keys(value).length > 0, "At least one content field is required.");
+  .superRefine((value, context) => {
+    if (Object.keys(value).length === 0) {
+      context.addIssue({
+        code: "custom",
+        message: "At least one content field is required.",
+      });
+    }
+    if (
+      value.body !== undefined &&
+      Buffer.byteLength(JSON.stringify(value.body), "utf8") > 100_000
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["body"],
+        message: "Content body exceeds 100 KB.",
+      });
+    }
+  });
 
 const PublicListQuerySchema = z.object({
   kind: KindSchema.optional(),
