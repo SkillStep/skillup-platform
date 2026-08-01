@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { createMaintenanceRunner } from "./maintenance";
+import { createMaintenanceRunner } from "./maintenance.js";
 
 function logger() {
   return {
