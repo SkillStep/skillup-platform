@@ -67,7 +67,7 @@ RETURNS trigger
 LANGUAGE plpgsql
 AS $$
 BEGIN
-  IF NEW.state <> 'completed' THEN
+  IF NEW.state <> 'completed' OR NEW.max_points <= 0 THEN
     RETURN NEW;
   END IF;
 
