@@ -19,6 +19,10 @@ import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
 import { createMaintenanceRunner } from "./maintenance.js";
 import { createProgressService } from "./progress.js";
+import {
+  createRecommendationService,
+  registerRecommendationRoutes,
+} from "./recommendations.js";
 
 const config = readApiConfig();
 const database = createDatabaseClient({
@@ -63,6 +67,15 @@ const app = buildApi({
   capabilityService,
   accountLifecycleService,
   analyticsService,
+});
+
+registerRecommendationRoutes(app, {
+  config,
+  authService,
+  recommendationService: createRecommendationService({
+    pool: database.pool,
+    capabilityService,
+  }),
 });
 
 const contentService = createContentOperationsService({
