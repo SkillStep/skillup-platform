@@ -12,6 +12,12 @@ update admin_role_assignments
        granted_at = created_at
  where granted_by is null;
 
+update admin_role_assignments
+   set revoked_by = coalesce(assigned_by, user_id),
+       revocation_reason = coalesce(revocation_reason, 'Legacy revocation record')
+ where revoked_at is not null
+   and (revoked_by is null or revocation_reason is null);
+
 alter table admin_role_assignments
   add constraint admin_role_assignments_revocation_reason_length
     check (revocation_reason is null or char_length(revocation_reason) between 3 and 500),
