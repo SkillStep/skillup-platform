@@ -89,10 +89,9 @@ begin
   insert into learner_daily_mission_usage
     (user_id, usage_date, missions_started, last_session_id, updated_at)
   values
-    (new.user_id, (new.started_at at time zone 'UTC')::date, 1, new.id, new.started_at)
+    (new.user_id, (new.started_at at time zone 'UTC')::date, 1, null, new.started_at)
   on conflict (user_id, usage_date) do update
     set missions_started = learner_daily_mission_usage.missions_started + 1,
-        last_session_id = excluded.last_session_id,
         updated_at = excluded.updated_at
   where learner_daily_mission_usage.missions_started < 3
   returning missions_started into updated_count;
@@ -110,3 +109,23 @@ $$;
 create trigger level_play_sessions_enforce_mission_allowance
 before insert on level_play_sessions
 for each row execute function skillup_enforce_mission_allowance_trigger();
+
+create or replace function skillup_link_mission_usage_session_trigger()
+returns trigger
+language plpgsql
+as $$
+begin
+  if not skillup_has_active_premium(new.user_id, new.started_at) then
+    update learner_daily_mission_usage
+       set last_session_id = new.id,
+           updated_at = new.started_at
+     where user_id = new.user_id
+       and usage_date = (new.started_at at time zone 'UTC')::date;
+  end if;
+  return new;
+end;
+$$;
+
+create trigger level_play_sessions_link_mission_usage
+after insert on level_play_sessions
+for each row execute function skillup_link_mission_usage_session_trigger();
