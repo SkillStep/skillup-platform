@@ -2,6 +2,7 @@ import { createDatabaseClient } from "@skillup/database";
 
 import { createAccountLifecycleService } from "./account-lifecycle-service.js";
 import { createAdminService } from "./admin.js";
+import { createAiJobService, registerAiJobRoutes } from "./ai-job-service.js";
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
@@ -55,6 +56,14 @@ const app = buildApi({
   accountLifecycleService,
   analyticsService,
 });
+
+const workerSecret = process.env["AI_WORKER_SHARED_SECRET"]?.trim();
+if (workerSecret) {
+  registerAiJobRoutes(app, {
+    workerSecret,
+    aiJobService: createAiJobService({ pool: database.pool }),
+  });
+}
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
   app.log.info({ signal }, "Shutting down SkillUp API");
