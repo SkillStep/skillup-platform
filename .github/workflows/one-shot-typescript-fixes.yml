@@ -23,78 +23,81 @@ jobs:
           python - <<'PY'
           from pathlib import Path
 
-          replacements = {
-              Path("apps/web/app/[locale]/account/account-controls.tsx"): [
-                  (
-                      '''async function accountRequest(path: string, init?: RequestInit): Promise<Response> {
-            const response = await fetch(`/api/v1${path}`, {
-              credentials: "same-origin",
-              cache: "no-store",
-              ...init,
-              headers: init?.body
-                ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
-                : init?.headers,
-            });''',
-                      '''async function accountRequest(path: string, init?: RequestInit): Promise<Response> {
-            const headers = new Headers(init?.headers);
-            if (init?.body && !headers.has("Content-Type")) {
-              headers.set("Content-Type", "application/json");
-            }
-            const response = await fetch(`/api/v1${path}`, {
-              credentials: "same-origin",
-              cache: "no-store",
-              ...init,
-              headers,
-            });''',
-                  ),
-                  (
-                      '''accountRequest("/account/sessions", { signal }),
-                    accountRequest("/account/privacy", { signal }),''',
-                      '''accountRequest("/account/sessions", signal ? { signal } : {}),
-                    accountRequest("/account/privacy", signal ? { signal } : {}),''',
-                  ),
-                  (
-                      '''.map(([slug, title]) => (''',
-                      '''.map(([slug = "", title = ""]) => (''',
-                  ),
-              ],
-              Path("apps/web/app/[locale]/admin/governance-console.tsx"): [
-                  (
-                      '''async function adminRequest(path: string, init?: RequestInit): Promise<Response> {
-            return fetch(`/api/v1${path}`, {
-              credentials: "same-origin",
-              cache: "no-store",
-              ...init,
-              headers: init?.body
-                ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
-                : init?.headers,
-            });
-          }''',
-                      '''async function adminRequest(path: string, init?: RequestInit): Promise<Response> {
-            const headers = new Headers(init?.headers);
-            if (init?.body && !headers.has("Content-Type")) {
-              headers.set("Content-Type", "application/json");
-            }
-            return fetch(`/api/v1${path}`, {
-              credentials: "same-origin",
-              cache: "no-store",
-              ...init,
-              headers,
-            });
-          }''',
-                  ),
-              ],
-          }
+          def replace_once(text: str, old: str, new: str, label: str) -> str:
+              count = text.count(old)
+              if count != 1:
+                  raise SystemExit(f"Expected one {label} match, found {count}")
+              return text.replace(old, new, 1)
 
-          for path, changes in replacements.items():
-              text = path.read_text()
-              for old, new in changes:
-                  old = old.replace("          ", "")
-                  new = new.replace("          ", "")
-                  if old not in text:
-                      raise SystemExit(f"Expected snippet not found in {path}: {old[:80]!r}")
-                  text = text.replace(old, new, 1)
-              path.write_text(text)
+          account_path = Path("apps/web/app/[locale]/account/account-controls.tsx")
+          account = account_path.read_text()
+          account = replace_once(
+              account,
+              '''  const response = await fetch(`/api/v1${path}`, {
+            credentials: "same-origin",
+            cache: "no-store",
+            ...init,
+            headers: init?.body
+              ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
+              : init?.headers,
+          });'''.replace("        ", ""),
+              '''  const headers = new Headers(init?.headers);
+          if (init?.body && !headers.has("Content-Type")) {
+            headers.set("Content-Type", "application/json");
+          }
+          const response = await fetch(`/api/v1${path}`, {
+            credentials: "same-origin",
+            cache: "no-store",
+            ...init,
+            headers,
+          });'''.replace("        ", ""),
+              "account request block",
+          )
+          account = replace_once(
+              account,
+              'accountRequest("/account/sessions", { signal })',
+              'accountRequest("/account/sessions", signal ? { signal } : {})',
+              "sessions signal",
+          )
+          account = replace_once(
+              account,
+              'accountRequest("/account/privacy", { signal })',
+              'accountRequest("/account/privacy", signal ? { signal } : {})',
+              "privacy signal",
+          )
+          account = replace_once(
+              account,
+              '.map(([slug, title]) => (',
+              '.map(([slug = "", title = ""]) => (',
+              "policy tuple defaults",
+          )
+          account_path.write_text(account)
+
+          admin_path = Path("apps/web/app/[locale]/admin/governance-console.tsx")
+          admin = admin_path.read_text()
+          admin = replace_once(
+              admin,
+              '''  return fetch(`/api/v1${path}`, {
+            credentials: "same-origin",
+            cache: "no-store",
+            ...init,
+            headers: init?.body
+              ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
+              : init?.headers,
+          });'''.replace("        ", ""),
+              '''  const headers = new Headers(init?.headers);
+          if (init?.body && !headers.has("Content-Type")) {
+            headers.set("Content-Type", "application/json");
+          }
+          return fetch(`/api/v1${path}`, {
+            credentials: "same-origin",
+            cache: "no-store",
+            ...init,
+            headers,
+          });'''.replace("        ", ""),
+              "admin request block",
+          )
+          admin_path.write_text(admin)
           PY
 
           rm .github/workflows/one-shot-typescript-fixes.yml
