@@ -81,7 +81,15 @@ try {
   console.log("Restoring into the isolated verification target…");
   run(
     "pg_restore",
-    ["--clean", "--if-exists", "--no-owner", "--no-privileges", "--dbname", restore.pathname.slice(1), archive],
+    [
+      "--clean",
+      "--if-exists",
+      "--no-owner",
+      "--no-privileges",
+      "--dbname",
+      restore.pathname.slice(1),
+      archive,
+    ],
     postgresEnvironment(restore),
     "PostgreSQL restore",
   );

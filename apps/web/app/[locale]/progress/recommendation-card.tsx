@@ -135,7 +135,10 @@ export function RecommendationCard({ locale }: Readonly<{ locale: "en" | "ur" }>
       </div>
       <div>
         {recommendation.startAllowedToday ? (
-          <Link className={styles["primaryButton"]} href={`/${locale}/learn/${recommendation.levelId}`}>
+          <Link
+            className={styles["primaryButton"]}
+            href={`/${locale}/learn/${recommendation.levelId}`}
+          >
             {view.mode === "resume" ? "Resume exact level" : "Start recommended level"}
           </Link>
         ) : (

@@ -77,7 +77,10 @@ function startAllowed(tier: "free" | "premium", remaining: number | null): boole
   return tier === "premium" || (remaining ?? 0) > 0;
 }
 
-function alternatives(rows: readonly CandidateRow[], excludedLevelId?: string): RecommendationView["alternatives"] {
+function alternatives(
+  rows: readonly CandidateRow[],
+  excludedLevelId?: string,
+): RecommendationView["alternatives"] {
   return rows
     .filter((row) => row.level_id !== excludedLevelId)
     .slice(0, 3)
@@ -244,7 +247,8 @@ export function createRecommendationService(
             title: latestRow.title,
             skillSlug: latestRow.skill_slug,
             pathSlug: latestRow.path_slug,
-            reason: "Repeat the recent level before advancing because the verified score is below 70%.",
+            reason:
+              "Repeat the recent level before advancing because the verified score is below 70%.",
             evidence: [
               `Verified score: ${latestRow.awarded_points} of ${latestRow.max_points}.`,
               `Completed: ${latestRow.completed_at.toISOString()}.`,
