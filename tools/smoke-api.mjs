@@ -10,7 +10,7 @@ const child = spawn(process.execPath, ["apps/api/dist/index.js"], {
     ...process.env,
     API_HOST: "127.0.0.1",
     API_PORT: String(port),
-    LOG_LEVEL: "silent",
+    LOG_LEVEL: "info",
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
