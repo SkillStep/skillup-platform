@@ -1,0 +1,111 @@
+name: One-shot TypeScript fixes
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/internal-go-live-authorities
+
+      - name: Apply exact TypeScript fixes
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path("apps/web/app/[locale]/account/account-controls.tsx"): [
+                  (
+                      '''async function accountRequest(path: string, init?: RequestInit): Promise<Response> {
+            const response = await fetch(`/api/v1${path}`, {
+              credentials: "same-origin",
+              cache: "no-store",
+              ...init,
+              headers: init?.body
+                ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
+                : init?.headers,
+            });''',
+                      '''async function accountRequest(path: string, init?: RequestInit): Promise<Response> {
+            const headers = new Headers(init?.headers);
+            if (init?.body && !headers.has("Content-Type")) {
+              headers.set("Content-Type", "application/json");
+            }
+            const response = await fetch(`/api/v1${path}`, {
+              credentials: "same-origin",
+              cache: "no-store",
+              ...init,
+              headers,
+            });''',
+                  ),
+                  (
+                      '''accountRequest("/account/sessions", { signal }),
+                    accountRequest("/account/privacy", { signal }),''',
+                      '''accountRequest("/account/sessions", signal ? { signal } : {}),
+                    accountRequest("/account/privacy", signal ? { signal } : {}),''',
+                  ),
+                  (
+                      '''.map(([slug, title]) => (''',
+                      '''.map(([slug = "", title = ""]) => (''',
+                  ),
+              ],
+              Path("apps/web/app/[locale]/admin/governance-console.tsx"): [
+                  (
+                      '''async function adminRequest(path: string, init?: RequestInit): Promise<Response> {
+            return fetch(`/api/v1${path}`, {
+              credentials: "same-origin",
+              cache: "no-store",
+              ...init,
+              headers: init?.body
+                ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
+                : init?.headers,
+            });
+          }''',
+                      '''async function adminRequest(path: string, init?: RequestInit): Promise<Response> {
+            const headers = new Headers(init?.headers);
+            if (init?.body && !headers.has("Content-Type")) {
+              headers.set("Content-Type", "application/json");
+            }
+            return fetch(`/api/v1${path}`, {
+              credentials: "same-origin",
+              cache: "no-store",
+              ...init,
+              headers,
+            });
+          }''',
+                  ),
+              ],
+          }
+
+          for path, changes in replacements.items():
+              text = path.read_text()
+              for old, new in changes:
+                  old = old.replace("          ", "")
+                  new = new.replace("          ", "")
+                  if old not in text:
+                      raise SystemExit(f"Expected snippet not found in {path}: {old[:80]!r}")
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+          PY
+
+          rm .github/workflows/one-shot-typescript-fixes.yml
+
+      - name: Commit fixes and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/app/[locale]/account/account-controls.tsx \
+                  apps/web/app/[locale]/admin/governance-console.tsx \
+                  .github/workflows/one-shot-typescript-fixes.yml
+          git commit -m "fix(web): satisfy strict request typing"
+          git push origin HEAD:feat/internal-go-live-authorities
