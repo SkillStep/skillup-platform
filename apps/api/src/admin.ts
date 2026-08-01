@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import type { AuthService, AuthenticatedLearner } from "./auth.js";
-import { type AdminIdentity, type AdminService, createAdminService } from "./admin-service.js";
+import { type AdminIdentity, type AdminService, createAdminService } from "./admin-service-v2.js";
 import type { ApiConfig } from "./config.js";
 import {
   RequestAuthorizationError,
@@ -29,8 +29,25 @@ const GenerateRequestSchema = z
     locale: z.enum(["en", "ur"]).default("en"),
     promptVersion: z.string().trim().min(1).max(80),
     requestedItems: z.number().int().min(1).max(100).default(1),
+    inputPayload: z.record(z.string(), z.unknown()),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    if (Object.keys(value.inputPayload).length > 30) {
+      context.addIssue({
+        code: "custom",
+        path: ["inputPayload"],
+        message: "AI input may contain at most 30 top-level fields.",
+      });
+    }
+    if (Buffer.byteLength(JSON.stringify(value.inputPayload), "utf8") > 40_000) {
+      context.addIssue({
+        code: "custom",
+        path: ["inputPayload"],
+        message: "AI input exceeds the 40 KB limit.",
+      });
+    }
+  });
 
 const ReviewArtifactSchema = z
   .object({
