@@ -118,16 +118,8 @@ class ApiJobQueue:
     def mark_cancelled(self, queued: ApiQueuedJob) -> None:
         self._request(
             "POST",
-            f"/v1/internal/ai/jobs/{queued.request_id}/fail",
-            {
-                "leaseToken": queued.lease_token,
-                "provider": "worker",
-                "model": "cancelled",
-                "errorCode": "cancelled",
-                "errorMessage": "The AI job was cancelled before completion.",
-                "retryable": False,
-                "maxAttempts": queued.attempt_number,
-            },
+            f"/v1/internal/ai/jobs/{queued.request_id}/cancelled",
+            {"leaseToken": queued.lease_token},
         )
 
     def complete(self, queued: ApiQueuedJob, result: AiResult) -> None:
