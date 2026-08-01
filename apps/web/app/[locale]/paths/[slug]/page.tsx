@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   const url = canonicalUrl(publicAppUrl, "en", `/paths/${skill.slug}`);
   const title = `${skill.title} learning path`;
-  const description = `${skill.summary} Review the planned outcomes, learning structure and publication status.`;
+  const description = `${skill.summary} Review the learning outcomes, modules and practice formats.`;
   return {
     title,
     description,
@@ -48,33 +48,21 @@ export default async function PathPage({ params }: PageProps) {
   const skillUrl = canonicalUrl(publicAppUrl, "en", `/skills/${skill.slug}`);
   const pathUrl = canonicalUrl(publicAppUrl, "en", `/paths/${skill.slug}`);
 
-  const structuredPath =
-    skill.status === "pilot"
-      ? {
-          "@context": "https://schema.org",
-          "@type": "Course",
-          name: `${skill.title} learning path`,
-          description: skill.summary,
-          url: pathUrl,
-          inLanguage: "en-PK",
-          provider: { "@type": "Organization", name: "SkillUp", url: homeUrl },
-          teaches: skill.outcomes,
-          hasCourseInstance: {
-            "@type": "CourseInstance",
-            courseMode: "online",
-            courseWorkload: "Short self-paced practice sessions",
-          },
-        }
-      : {
-          "@context": "https://schema.org",
-          "@type": "LearningResource",
-          name: `${skill.title} planned learning path`,
-          description: skill.summary,
-          url: pathUrl,
-          inLanguage: "en-PK",
-          learningResourceType: "Planned learning path summary",
-          teaches: skill.outcomes,
-        };
+  const structuredPath = {
+    "@context": "https://schema.org",
+    "@type": "Course",
+    name: `${skill.title} learning path`,
+    description: skill.summary,
+    url: pathUrl,
+    inLanguage: "en-PK",
+    provider: { "@type": "Organization", name: "SkillUp", url: homeUrl },
+    teaches: skill.outcomes,
+    hasCourseInstance: {
+      "@type": "CourseInstance",
+      courseMode: "online",
+      courseWorkload: "Short self-paced practice sessions",
+    },
+  };
 
   return (
     <>
@@ -90,23 +78,17 @@ export default async function PathPage({ params }: PageProps) {
         />
 
         <section className={styles["detailHero"]} aria-labelledby="path-title">
-          <p className={styles["eyebrow"]}>Learning path</p>
+          <p className={styles["eyebrow"]}>Reviewed learning path</p>
           <h1 id="path-title">{skill.title}</h1>
           <p className={styles["detailSummary"]}>{skill.summary}</p>
           <div className={styles["detailMeta"]}>
-            <span>{skill.status === "pilot" ? "First reviewed pilot" : "Not yet published"}</span>
+            <span>{skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}</span>
             <span>{skill.reviewCadence}</span>
           </div>
           <div className={styles["cardLinks"]}>
-            {skill.status === "pilot" && skill.levelId ? (
-              <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
-                Start reviewed practice
-              </Link>
-            ) : (
-              <Link className={styles["primaryLink"]} href="/en/skills">
-                Browse available skills
-              </Link>
-            )}
+            <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
+              Start reviewed practice
+            </Link>
             <Link className={styles["secondaryLink"]} href={`/en/skills/${skill.slug}`}>
               Read skill overview
             </Link>
@@ -125,30 +107,21 @@ export default async function PathPage({ params }: PageProps) {
 
           <section className={styles["contentCard"]} aria-labelledby="path-structure-title">
             <h2 id="path-structure-title">Path structure</h2>
-            {skill.modules.length > 0 ? (
-              <ol>
-                {skill.modules.map((module) => (
-                  <li key={module}>{module}</li>
-                ))}
-              </ol>
-            ) : (
-              <p>
-                A detailed module structure has not been published. This path remains planned until
-                outcomes, scenarios, explanations and reviewer evidence pass the content standard.
-              </p>
-            )}
+            <ol>
+              {skill.modules.map((module) => (
+                <li key={module}>{module}</li>
+              ))}
+            </ol>
           </section>
 
-          {skill.challengeTypes.length > 0 ? (
-            <section className={styles["contentCard"]} aria-labelledby="challenge-types-title">
-              <h2 id="challenge-types-title">Practice formats</h2>
-              <ul>
-                {skill.challengeTypes.map((challengeType) => (
-                  <li key={challengeType}>{challengeType}</li>
-                ))}
-              </ul>
-            </section>
-          ) : null}
+          <section className={styles["contentCard"]} aria-labelledby="challenge-types-title">
+            <h2 id="challenge-types-title">Practice formats</h2>
+            <ul>
+              {skill.challengeTypes.map((challengeType) => (
+                <li key={challengeType}>{challengeType}</li>
+              ))}
+            </ul>
+          </section>
 
           <section className={styles["contentCard"]} aria-labelledby="publication-title">
             <h2 id="publication-title">Publication standard</h2>
