@@ -1,7 +1,7 @@
 import type { DatabaseClient } from "@skillup/database";
 import { describe, expect, it, vi } from "vitest";
 
-import { createAiJobStatusService } from "./ai-job-status";
+import { createAiJobStatusService } from "./ai-job-status.js";
 
 function pool(rows: readonly Record<string, unknown>[]): DatabaseClient["pool"] {
   return {
