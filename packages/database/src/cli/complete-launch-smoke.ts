@@ -22,13 +22,21 @@ try {
             lp.status as path_status,
             count(distinct l.id)::int as levels,
             count(distinct c.id)::int as challenges,
-            count(distinct l.id) filter (where lm.sort_order >= 10)::int as generated_levels,
-            count(distinct c.id) filter (where lm.sort_order >= 10)::int as generated_challenges
+            count(distinct l.id) filter (
+              where csr.kind = 'internal_editorial'
+                and csr.title like 'SkillUp reviewed % launch curriculum'
+            )::int as generated_levels,
+            count(distinct c.id) filter (
+              where csr.kind = 'internal_editorial'
+                and csr.title like 'SkillUp reviewed % launch curriculum'
+            )::int as generated_challenges
        from skills s
        join learning_paths lp on lp.skill_id = s.id
        left join learning_modules lm on lm.learning_path_id = lp.id
        left join lessons le on le.module_id = lm.id
        left join levels l on l.lesson_id = le.id
+       left join level_versions lv on lv.level_id = l.id and lv.state = 'published'
+       left join content_source_references csr on csr.level_version_id = lv.id
        left join challenges c on c.level_id = l.id
       where s.slug = any($1::text[])
       group by s.slug, s.status, lp.status
@@ -47,9 +55,9 @@ try {
     if (row.levels < requiredLevels) {
       throw new Error(`${row.slug} has ${row.levels} levels; ${requiredLevels} are required.`);
     }
-    if (row.generated_levels < requiredLevels) {
+    if (row.generated_levels !== requiredLevels) {
       throw new Error(
-        `${row.slug} has ${row.generated_levels} generated launch levels; ${requiredLevels} are required.`,
+        `${row.slug} has ${row.generated_levels} generated launch levels; exactly ${requiredLevels} are required.`,
       );
     }
     if (row.generated_challenges !== row.generated_levels * 3) {
@@ -71,10 +79,13 @@ try {
        join learning_modules lm on lm.id = le.module_id
        join learning_paths lp on lp.id = lm.learning_path_id
        join skills s on s.id = lp.skill_id
+       join content_source_references csr
+         on csr.level_version_id = lv.id
+        and csr.kind = 'internal_editorial'
+        and csr.title like 'SkillUp reviewed % launch curriculum'
        left join challenge_versions cv
          on cv.level_version_id = lv.id and cv.state = 'published'
       where s.slug = any($1::text[])
-        and lm.sort_order >= 10
         and lv.state = 'published'
       group by lv.id, lv.title
      having count(distinct cv.id) <> 3
