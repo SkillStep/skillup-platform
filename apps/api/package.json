@@ -12,7 +12,6 @@
     "smoke:commercial": "node --env-file-if-exists=../../.env --import tsx src/commercial-lifecycle-smoke.ts"
   },
   "dependencies": {
-    "@skillup/analytics": "workspace:*",
     "@skillup/content-schema": "workspace:*",
     "@skillup/contracts": "workspace:*",
     "@skillup/database": "workspace:*",
