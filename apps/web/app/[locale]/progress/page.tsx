@@ -28,9 +28,14 @@ export default async function ProgressPage({ params }: PageProps) {
         <Link className={styles["homeLink"]} href="/en" aria-label="SkillUp home">
           <BrandMark className="brand-mark" />
         </Link>
-        <Link className={styles["backLink"]} href="/en">
-          Return home
-        </Link>
+        <nav aria-label="Progress actions">
+          <Link className={styles["backLink"]} href="/en/progress/share">
+            Share achievement
+          </Link>
+          <Link className={styles["backLink"]} href="/en">
+            Return home
+          </Link>
+        </nav>
       </header>
       <RecommendationCard locale="en" />
       <ProgressDashboard locale="en" />
