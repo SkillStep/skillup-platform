@@ -8,6 +8,7 @@ import {
   registerAccountLifecycleRoutes,
 } from "./account-lifecycle-service.js";
 import { type AdminService, registerAdminRoutes } from "./admin.js";
+import { type AnalyticsService, registerAnalyticsRoutes } from "./analytics-service.js";
 import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type CapabilityService, registerCapabilityRoutes } from "./capabilities.js";
 import { type CommercialService, registerCommercialRoutes } from "./commercial.js";
@@ -32,6 +33,7 @@ export type BuildApiOptions = Readonly<{
   adminService?: AdminService | undefined;
   capabilityService?: CapabilityService | undefined;
   accountLifecycleService?: AccountLifecycleService | undefined;
+  analyticsService?: AnalyticsService | undefined;
   rateLimit?: RateLimitOptions;
 }>;
 
@@ -243,6 +245,13 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       accountLifecycleService: options.accountLifecycleService,
+    });
+  }
+  if (options.authService && options.analyticsService) {
+    registerAnalyticsRoutes(app, {
+      config,
+      authService: options.authService,
+      analyticsService: options.analyticsService,
     });
   }
 
