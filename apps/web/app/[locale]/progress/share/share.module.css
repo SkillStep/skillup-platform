@@ -1,0 +1,177 @@
+.shell {
+  min-height: 100svh;
+  padding: 1rem 1rem 4rem;
+}
+
+.header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto 2rem;
+  max-width: 1120px;
+}
+
+.header a {
+  border-radius: 0.75rem;
+  color: var(--ink-700);
+  font-weight: 750;
+  min-height: 44px;
+  padding: 0.65rem;
+  text-decoration: none;
+}
+
+.layout {
+  align-items: stretch;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  margin: 0 auto;
+  max-width: 1120px;
+}
+
+.controls,
+.card,
+.panel {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 1.35rem;
+  box-shadow: 0 14px 40px rgba(15, 23, 42, 0.07);
+  padding: clamp(1.25rem, 4vw, 2.25rem);
+}
+
+.panel {
+  margin: 4rem auto;
+  max-width: 720px;
+}
+
+.controls h1,
+.panel h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  letter-spacing: -0.055em;
+  line-height: 1;
+  margin: 0;
+}
+
+.controls > p:not(.eyebrow),
+.panel > p {
+  color: var(--ink-700);
+  line-height: 1.65;
+}
+
+.eyebrow {
+  color: var(--brand-700);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.6rem;
+  text-transform: uppercase;
+}
+
+.controls label {
+  display: block;
+  font-weight: 800;
+  margin: 1.5rem 0 0.45rem;
+}
+
+.controls select {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 0.8rem;
+  color: var(--ink-900);
+  font: inherit;
+  min-height: 48px;
+  padding: 0.65rem 0.8rem;
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1rem;
+}
+
+.actions button,
+.primaryButton {
+  align-items: center;
+  background: var(--brand-700);
+  border: 0;
+  border-radius: 0.8rem;
+  color: white;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  font-weight: 800;
+  justify-content: center;
+  min-height: 46px;
+  padding: 0.7rem 1rem;
+  text-decoration: none;
+}
+
+.actions button + button {
+  background: var(--ink-900);
+}
+
+.status {
+  min-height: 1.5rem;
+}
+
+.card {
+  align-content: center;
+  background: linear-gradient(140deg, #eef2ff, #ffffff 52%, #ecfccb);
+  display: grid;
+  gap: 0.8rem;
+  min-height: 430px;
+  position: relative;
+}
+
+.card h2 {
+  font-size: clamp(2.35rem, 7vw, 5rem);
+  letter-spacing: -0.065em;
+  line-height: 0.94;
+  margin: 0;
+  max-width: 720px;
+}
+
+.card > p:not(.eyebrow) {
+  color: var(--ink-700);
+  font-size: 1.1rem;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 620px;
+}
+
+.card strong {
+  font-size: 1.05rem;
+  margin-top: 1.25rem;
+}
+
+.card small {
+  color: var(--ink-500);
+  line-height: 1.5;
+}
+
+.seal {
+  align-items: center;
+  background: var(--brand-700);
+  border-radius: 999px;
+  color: white;
+  display: inline-flex;
+  font-size: 2rem;
+  height: 4.5rem;
+  justify-content: center;
+  position: absolute;
+  right: 2rem;
+  top: 2rem;
+  width: 4.5rem;
+}
+
+@media (max-width: 800px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
+  .card {
+    min-height: 360px;
+  }
+}

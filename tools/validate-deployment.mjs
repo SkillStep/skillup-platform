@@ -17,8 +17,10 @@ function rejectText(source, forbidden, label) {
 
 const apiDockerfile = read("infra/docker/api.Dockerfile");
 const webDockerfile = read("infra/docker/web.Dockerfile");
+const aiWorkerDockerfile = read("infra/docker/ai-worker.Dockerfile");
 const apiRailway = JSON.parse(read("infra/railway/api.railway.json"));
 const webRailway = JSON.parse(read("infra/railway/web.railway.json"));
+const aiWorkerRailway = JSON.parse(read("infra/railway/ai-worker.railway.json"));
 const environmentExample = read(".env.example");
 const proxy = read("apps/web/app/api/v1/[...path]/route.ts");
 
@@ -39,6 +41,16 @@ requireText(
   "web production Dockerfile",
 );
 
+requireText(aiWorkerDockerfile, "FROM python:3.13.14-slim-bookworm", "AI worker Dockerfile");
+requireText(aiWorkerDockerfile, "USER skillup-ai", "AI worker Dockerfile");
+requireText(aiWorkerDockerfile, "HEALTHCHECK", "AI worker Dockerfile");
+requireText(
+  aiWorkerDockerfile,
+  'CMD ["python", "-m", "skillup_ai_worker.worker"]',
+  "AI worker Dockerfile",
+);
+rejectText(aiWorkerDockerfile, "COPY .env", "AI worker Dockerfile");
+
 if (apiRailway.build?.dockerfilePath !== "/infra/docker/api.Dockerfile") {
   throw new Error("Railway API config must select the reviewed API Dockerfile.");
 }
@@ -54,6 +66,18 @@ if (webRailway.build?.dockerfilePath !== "/infra/docker/web.Dockerfile") {
 if (webRailway.deploy?.healthcheckPath !== "/api/health") {
   throw new Error("Railway web config must use the bounded web health endpoint.");
 }
+if (aiWorkerRailway.build?.dockerfilePath !== "/infra/docker/ai-worker.Dockerfile") {
+  throw new Error("Railway AI worker config must select the reviewed worker Dockerfile.");
+}
+if (aiWorkerRailway.deploy?.startCommand !== "python -m skillup_ai_worker.worker") {
+  throw new Error("Railway AI worker must run the continuous reviewed worker entrypoint.");
+}
+if (aiWorkerRailway.deploy?.restartPolicyType !== "ON_FAILURE") {
+  throw new Error("Railway AI worker must restart only after failure.");
+}
+if (aiWorkerRailway.deploy?.overlapSeconds !== 0) {
+  throw new Error("Railway AI worker must not overlap replicas while using a single worker lease.");
+}
 
 for (const required of [
   "EMAIL_PROVIDER=disabled",
@@ -63,6 +87,13 @@ for (const required of [
   "FEATURE_PREMIUM_ENABLED=false",
   "FEATURE_JAZZCASH_ENABLED=false",
   "AI_PROVIDER=disabled",
+  "DEEPSEEK_MODEL=deepseek-v4-flash",
+  "AI_MAX_COST_USD_PER_JOB=0.005",
+  "AI_DAILY_BUDGET_USD=1",
+  "AI_MONTHLY_BUDGET_USD=20",
+  "AI_JOB_API_URL=http://localhost:3001",
+  "AI_WORKER_SHARED_SECRET=",
+  "MAINTENANCE_INTERVAL_SECONDS=60",
   "JAZZCASH_MODE=disabled",
   "RELEASE_SHA=local",
 ]) {

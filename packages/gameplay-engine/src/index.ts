@@ -3,6 +3,11 @@ import { createHash } from "node:crypto";
 import { PublicChallengeSchema, type PublicChallenge } from "@skillup/content-schema";
 import { z } from "zod";
 
+import {
+  ShortResponseEvaluationSchema,
+  evaluateShortResponseRubric,
+} from "./short-response-rubric.js";
+
 const OptionKeySchema = z.string().regex(/^[a-z0-9_]{1,40}$/);
 const IdempotencyKeySchema = z.string().uuid();
 
@@ -96,6 +101,9 @@ export const ChallengeEvaluationResultSchema = z.object({
   retryAllowed: z.boolean(),
   attemptNumber: z.number().int().min(1),
   evaluatedAt: z.iso.datetime(),
+  confidence: z.number().min(0).max(1).optional(),
+  matchedCriteria: z.array(z.string().min(1).max(120)).max(12).optional(),
+  reviewReason: z.string().min(1).max(120).nullable().optional(),
 });
 
 export type ChallengeEvaluationResult = z.infer<typeof ChallengeEvaluationResultSchema>;
@@ -141,11 +149,6 @@ const FillBlankEvaluationSchema = z.object({
   caseSensitive: z.boolean().default(false),
   trim: z.boolean().default(true),
   collapseWhitespace: z.boolean().default(true),
-});
-
-const ShortResponseEvaluationSchema = z.object({
-  policy: z.literal("manual_review_only"),
-  uncertaintyMessage: z.string().min(20).max(300),
 });
 
 export class GameplayRuleError extends Error {
@@ -431,18 +434,21 @@ export function evaluateChallenge(
     }
     case "short_response": {
       const evaluation = ShortResponseEvaluationSchema.parse(input.privateEvaluation);
-      ShortResponseSchema.parse(response);
-      status = "needs_review";
+      const typedResponse = ShortResponseSchema.parse(response);
+      const rubric = evaluateShortResponseRubric(evaluation, typedResponse.value);
       return ChallengeEvaluationResultSchema.parse({
         challengeId: challenge.id,
         challengeVersionId: challenge.versionId,
-        status,
-        awardedPoints: 0,
+        status: rubric.status,
+        awardedPoints: rubric.status === "correct" ? challenge.points : 0,
         maxPoints: challenge.points,
-        explanation: evaluation.uncertaintyMessage,
-        retryAllowed: false,
+        explanation: rubric.explanation,
+        retryAllowed: rubric.status === "incorrect" && attemptNumber < maxAttempts,
         attemptNumber,
         evaluatedAt,
+        confidence: rubric.confidence,
+        matchedCriteria: rubric.matchedCriteria,
+        reviewReason: rubric.reviewReason,
       });
     }
   }

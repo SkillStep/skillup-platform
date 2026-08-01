@@ -4,7 +4,7 @@ export type LaunchPath = Readonly<{
   slug: string;
   title: string;
   summary: string;
-  status: "pilot" | "planned";
+  status: "pilot" | "launch";
   levelId?: string;
 }>;
 

@@ -11,13 +11,15 @@ describe("launch path content", () => {
   it("selects the playable interview and workplace communication pilot", () => {
     expect(featuredPath()).toMatchObject({
       slug: "interview-workplace-communication",
-      levelId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7",
+      levelId: "3c315a1a-824a-413e-836d-69a9fc8bad1f",
     });
   });
 
-  it("does not expose unreviewed paths as playable", () => {
+  it("exposes only reviewed launch or pilot paths with playable identifiers", () => {
     expect(
-      launchPaths.filter((path) => path.status === "planned").every((path) => !path.levelId),
+      launchPaths.every(
+        (path) => (path.status === "pilot" || path.status === "launch") && Boolean(path.levelId),
+      ),
     ).toBe(true);
   });
 });

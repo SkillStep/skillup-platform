@@ -1,25 +1,52 @@
 import { spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import process from "node:process";
 import { setTimeout as delay } from "node:timers/promises";
 
 const port = 3101;
+const diagnosticsPath = "artifacts/api-smoke-diagnostics.txt";
 const child = spawn(process.execPath, ["apps/api/dist/index.js"], {
   env: {
     ...process.env,
     API_HOST: "127.0.0.1",
     API_PORT: String(port),
-    LOG_LEVEL: "silent",
+    LOG_LEVEL: "info",
   },
   stdio: ["ignore", "pipe", "pipe"],
 });
 
-let output = "";
+let stdout = "";
+let stderr = "";
+let spawnError = "";
 child.stdout.on("data", (chunk) => {
-  output += chunk.toString();
+  stdout += chunk.toString();
 });
 child.stderr.on("data", (chunk) => {
-  output += chunk.toString();
+  stderr += chunk.toString();
 });
+child.on("error", (error) => {
+  spawnError = error.stack ?? error.message;
+});
+
+function diagnosticText(error) {
+  return [
+    `error=${error instanceof Error ? (error.stack ?? error.message) : String(error)}`,
+    `exitCode=${String(child.exitCode)}`,
+    `signalCode=${String(child.signalCode)}`,
+    `spawnError=${spawnError}`,
+    "--- stdout ---",
+    stdout,
+    "--- stderr ---",
+    stderr,
+  ].join("\n");
+}
+
+async function persistDiagnostics(error) {
+  const text = diagnosticText(error);
+  await mkdir("artifacts", { recursive: true });
+  await writeFile(diagnosticsPath, `${text}\n`, "utf8");
+  console.error(text);
+}
 
 async function stop() {
   if (child.exitCode === null) child.kill("SIGTERM");
@@ -39,8 +66,8 @@ try {
   let readyResponse;
 
   for (let attempt = 1; attempt <= 30; attempt += 1) {
-    if (child.exitCode !== null) {
-      throw new Error(`SkillUp API exited before readiness.\n${output}`);
+    if (child.exitCode !== null || spawnError) {
+      throw new Error("SkillUp API exited before readiness.");
     }
 
     try {
@@ -56,7 +83,7 @@ try {
   }
 
   if (!readyResponse?.ok) {
-    throw new Error(`SkillUp API did not become ready.\n${output}`);
+    throw new Error("SkillUp API did not become ready.");
   }
 
   const ready = await readyResponse.json();
@@ -70,6 +97,9 @@ try {
   }
 
   console.log("SkillUp API/PostgreSQL startup smoke passed.");
+} catch (error) {
+  await persistDiagnostics(error);
+  throw error;
 } finally {
   await stop();
 }

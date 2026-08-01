@@ -47,13 +47,13 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
                 skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
               }`}
             >
-              {skill.status === "pilot" ? "Reviewed pilot" : "Planned path"}
+              {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
             </span>
             <h2>{skill.title}</h2>
             <p>{skill.summary}</p>
             <div className={styles["cardLinks"]}>
-              <Link className={styles["primaryLink"]} href={`/en/skills/${skill.slug}`}>
-                Explore skill
+              <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
+                Start practice
               </Link>
               <Link className={styles["secondaryLink"]} href={`/en/paths/${skill.slug}`}>
                 View learning path

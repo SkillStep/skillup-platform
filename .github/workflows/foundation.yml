@@ -79,8 +79,32 @@ jobs:
           pnpm db:seed
           pnpm db:smoke
 
-      - name: Validate repository and application quality
-        run: pnpm check
+      - name: Validate repository foundation
+        run: pnpm foundation:check
+
+      - name: Validate deployment configuration
+        run: pnpm deployment:check
+
+      - name: Validate production-readiness contract
+        run: pnpm production:check
+
+      - name: Scan committed content for secrets
+        run: pnpm security:secrets
+
+      - name: Check repository formatting
+        run: pnpm format:check
+
+      - name: Lint repository
+        run: pnpm lint
+
+      - name: Typecheck workspace
+        run: pnpm typecheck
+
+      - name: Run workspace tests
+        run: pnpm test
+
+      - name: Build workspace
+        run: pnpm build
 
       - name: Build reviewed production containers
         shell: bash
@@ -108,13 +132,38 @@ jobs:
           printf '%s\n' "$output"
           HEALTH_OUTPUT="$output" node -e "const health=JSON.parse(process.env.HEALTH_OUTPUT); if(health.status!=='disabled'||health.provider!=='disabled'||health.release_sha!==process.env.RELEASE_SHA) process.exit(1)"
 
-      - name: Smoke API against migrated PostgreSQL
-        run: pnpm smoke:api
+      - name: Smoke commercial API against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:commercial
+
+      - name: Smoke gameplay resume against migrated PostgreSQL
+        run: node tools/smoke-gameplay-resume.mjs
+
+      - name: Smoke API routes against migrated PostgreSQL
+        run: node tools/smoke-api.mjs
+
+      - name: Upload API smoke diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: api-smoke-diagnostics-${{ github.sha }}
+          path: artifacts/api-smoke-diagnostics.txt
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Run production containers and end-to-end smoke
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p artifacts
+
+          capture_e2e_diagnostics() {
+            docker inspect skillup-api-ci > artifacts/e2e-api-inspect.json 2>&1 || true
+            docker inspect skillup-web-ci > artifacts/e2e-web-inspect.json 2>&1 || true
+            docker logs skillup-api-ci > artifacts/e2e-api.log 2>&1 || true
+            docker logs skillup-web-ci > artifacts/e2e-web.log 2>&1 || true
+          }
+          trap 'status=$?; if [ "$status" -ne 0 ]; then capture_e2e_diagnostics; fi; exit "$status"' EXIT
+
           docker rm -f skillup-api-ci skillup-web-ci >/dev/null 2>&1 || true
           docker run --detach --name skillup-api-ci --network host \
             --env APP_ENV=staging \
@@ -135,10 +184,7 @@ jobs:
             fi
             sleep 1
           done
-          if [ "$api_ready" != true ]; then
-            docker logs skillup-api-ci
-            exit 1
-          fi
+          test "$api_ready" = true
 
           docker run --detach --name skillup-web-ci --network host \
             --env PORT=3000 \
@@ -156,15 +202,22 @@ jobs:
             fi
             sleep 1
           done
-          if [ "$web_ready" != true ]; then
-            docker logs skillup-web-ci
-            exit 1
-          fi
+          test "$web_ready" = true
 
           SKILLUP_WEB_URL=http://127.0.0.1:3000 \
           SKILLUP_API_URL=http://127.0.0.1:3001 \
           SKILLUP_EXPECTED_RELEASE_SHA="$RELEASE_SHA" \
-          pnpm smoke:live
+          pnpm smoke:live 2>&1 | tee artifacts/e2e-smoke.log
+          trap - EXIT
+
+      - name: Upload end-to-end diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: e2e-diagnostics-${{ github.sha }}
+          path: artifacts/e2e-*
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Write release evidence
         shell: bash

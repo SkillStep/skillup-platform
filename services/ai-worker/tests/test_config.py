@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+from decimal import Decimal
 
 from skillup_ai_worker.config import read_worker_config
 from skillup_ai_worker.contracts import ProviderName
@@ -13,6 +14,10 @@ class ConfigTests(unittest.TestCase):
         self.assertFalse(config.feature_enabled)
         self.assertEqual(config.primary.name, ProviderName.DISABLED)
         self.assertIsNone(config.fallback)
+        self.assertEqual(config.max_cost_per_job_usd, Decimal("0.005"))
+        self.assertEqual(config.daily_budget_usd, Decimal("1"))
+        self.assertEqual(config.monthly_budget_usd, Decimal("20"))
+        self.assertEqual(config.max_concurrency, 1)
 
     def test_enabled_deepseek_requires_secret(self) -> None:
         with self.assertRaisesRegex(AiConfigurationError, "secret API key"):
@@ -37,6 +42,7 @@ class ConfigTests(unittest.TestCase):
         )
         self.assertTrue(config.feature_enabled)
         self.assertEqual(config.primary.name, ProviderName.DEEPSEEK)
+        self.assertEqual(config.primary.model_override, "deepseek-v4-flash")
         self.assertEqual(config.fallback.name if config.fallback else None, ProviderName.GROQ)
         self.assertNotIn("secret", repr(config))
 

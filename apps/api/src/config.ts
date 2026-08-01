@@ -20,6 +20,7 @@ const ApiConfigSchema = z
         message: "DATABASE_URL must use PostgreSQL.",
       }),
     DATABASE_MAX_CONNECTIONS: z.coerce.number().int().min(1).max(50).default(10),
+    MAINTENANCE_INTERVAL_SECONDS: z.coerce.number().int().min(15).max(3_600).default(60),
     SESSION_COOKIE_NAME: z
       .string()
       .regex(/^[A-Za-z0-9_-]+$/)
@@ -170,7 +171,10 @@ const ApiConfigSchema = z
     }
   });
 
-export type ApiConfig = z.infer<typeof ApiConfigSchema>;
+type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
+
+export type ApiConfig = Omit<ParsedApiConfig, "MAINTENANCE_INTERVAL_SECONDS"> &
+  Readonly<{ MAINTENANCE_INTERVAL_SECONDS?: number }>;
 
 export function readApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
   return ApiConfigSchema.parse({

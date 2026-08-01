@@ -11,7 +11,7 @@ const database = createDatabaseClient({
 });
 
 const userId = "17171717-1717-4171-8171-171717171717";
-const levelId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7";
+const levelId = "3c315a1a-824a-413e-836d-69a9fc8bad1f";
 const startedAt = new Date("2026-07-30T15:00:00.000Z");
 
 try {

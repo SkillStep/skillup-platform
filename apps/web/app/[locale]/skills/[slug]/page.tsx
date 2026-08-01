@@ -65,7 +65,7 @@ export default async function SkillPage({ params }: PageProps) {
               skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
             }`}
           >
-            {skill.status === "pilot" ? "Reviewed pilot" : "Planned path"}
+            {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
           </span>
           <h1 id="skill-title">{skill.title}</h1>
           <p className={styles["detailSummary"]}>{skill.summary}</p>
@@ -77,11 +77,9 @@ export default async function SkillPage({ params }: PageProps) {
             <Link className={styles["primaryLink"]} href={`/en/paths/${skill.slug}`}>
               View learning path
             </Link>
-            {skill.status === "pilot" && skill.levelId ? (
-              <Link className={styles["secondaryLink"]} href={`/en/learn/${skill.levelId}`}>
-                Practice reviewed level
-              </Link>
-            ) : null}
+            <Link className={styles["secondaryLink"]} href={`/en/learn/${skill.levelId}`}>
+              Start reviewed practice
+            </Link>
           </div>
         </section>
 

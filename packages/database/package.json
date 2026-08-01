@@ -24,8 +24,8 @@
     "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "db:wait": "node --env-file-if-exists=../../.env --import tsx src/cli/wait.ts",
     "db:migrate": "node --env-file-if-exists=../../.env --import tsx src/cli/migrate.ts",
-    "db:seed": "node --env-file-if-exists=../../.env --import tsx src/cli/seed.ts",
-    "db:smoke": "node --env-file-if-exists=../../.env --import tsx src/cli/smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/gameplay-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/pilot-journey-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/analytics-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/progress-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/launch-operations-smoke.ts",
+    "db:seed": "node --env-file-if-exists=../../.env --import tsx src/cli/seed.ts && node --env-file-if-exists=../../.env --import tsx src/complete-launch-seed-v2.ts",
+    "db:smoke": "node --env-file-if-exists=../../.env --import tsx src/cli/smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/gameplay-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/pilot-journey-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/analytics-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/progress-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/launch-operations-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/complete-launch-smoke.ts && node --env-file-if-exists=../../.env --import tsx src/cli/assessment-smoke.ts",
     "admin:bootstrap": "node --env-file-if-exists=../../.env --import tsx src/cli/admin-bootstrap.ts"
   },
   "dependencies": {
