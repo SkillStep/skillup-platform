@@ -139,7 +139,7 @@ export function evaluateShortResponseRubric(
   const lowerBound = policy.passScore - policy.reviewBand;
   const upperBound = policy.passScore + policy.reviewBand;
 
-  if (score >= upperBound) {
+  if (score > upperBound) {
     return {
       status: "correct",
       confidence: confidenceFromDistance(score - policy.passScore, policy.reviewBand),
@@ -148,7 +148,7 @@ export function evaluateShortResponseRubric(
       reviewReason: null,
     };
   }
-  if (score <= lowerBound) {
+  if (score < lowerBound) {
     return {
       status: "incorrect",
       confidence: confidenceFromDistance(policy.passScore - score, policy.reviewBand),
