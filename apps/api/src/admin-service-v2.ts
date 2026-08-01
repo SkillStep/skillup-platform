@@ -44,6 +44,12 @@ export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
       input: GenerationRequestInput,
       correlationId: string,
     ) => Promise<Readonly<{ id: string; status: string; correlationId: string }>>;
+    cancelGenerationRequest: (
+      actor: AdminIdentity,
+      requestId: string,
+      reason: string,
+      correlationId: string,
+    ) => Promise<Readonly<{ id: string; status: "running" | "cancelled"; cancellationRequested: true }>>;
   }>;
 
 export function createAdminService(
@@ -54,6 +60,7 @@ export function createAdminService(
   }>,
 ): AdminService {
   const base = createBaseAdminService(options);
+  const now = options.now ?? (() => new Date());
 
   return {
     ...base,
@@ -115,6 +122,53 @@ export function createAdminService(
         },
       });
       return { id: row.id, status: row.status, correlationId: row.correlation_id };
+    },
+
+    cancelGenerationRequest: async (actor, requestId, reason, correlationId) => {
+      const cancelledAt = now();
+      const result = await options.pool.query<{ id: string; status: "running" | "cancelled" }>(
+        `update ai_generation_requests
+            set cancelled_at = $2,
+                status = case when status = 'queued' then 'cancelled' else status end,
+                completed_at = case when status = 'queued' then $2 else completed_at end,
+                lease_token = case when status = 'queued' then null else lease_token end,
+                lease_expires_at = case when status = 'queued' then null else lease_expires_at end,
+                last_error = $3
+          where id = $1
+            and status in ('queued', 'running')
+            and cancelled_at is null
+          returning id, status`,
+        [requestId, cancelledAt, `Cancellation requested: ${reason}`],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        const existing = await options.pool.query<{ status: string }>(
+          `select status from ai_generation_requests where id = $1`,
+          [requestId],
+        );
+        if (!existing.rows[0]) {
+          throw Object.assign(new Error("The AI generation request was not found."), {
+            statusCode: 404,
+          });
+        }
+        throw Object.assign(
+          new Error(`The AI generation request cannot be cancelled from ${existing.rows[0].status}.`),
+          { statusCode: 409 },
+        );
+      }
+
+      await base.audit({
+        actorUserId: actor.userId,
+        actorRole: actor.roles[0] ?? null,
+        action: "ai.generation.cancel",
+        targetType: "ai_generation_request",
+        targetId: requestId,
+        result: "succeeded",
+        reason,
+        correlationId,
+        metadata: { resultingStatus: row.status },
+      });
+      return { id: row.id, status: row.status, cancellationRequested: true };
     },
   };
 }
