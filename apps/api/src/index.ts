@@ -100,7 +100,7 @@ if (workerSecret) {
 }
 
 const maintenance = createMaintenanceRunner({
-  intervalMs: config.MAINTENANCE_INTERVAL_SECONDS * 1_000,
+  intervalMs: (config.MAINTENANCE_INTERVAL_SECONDS ?? 60) * 1_000,
   logger: {
     info: (context, message) => app.log.info(context, message),
     error: (context, message) => app.log.error(context, message),
