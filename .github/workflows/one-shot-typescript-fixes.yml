@@ -22,6 +22,7 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
 
           def replace_once(text: str, old: str, new: str, label: str) -> str:
               count = text.count(old)
@@ -29,28 +30,27 @@ jobs:
                   raise SystemExit(f"Expected one {label} match, found {count}")
               return text.replace(old, new, 1)
 
+          def regex_once(text: str, pattern: str, replacement: str, label: str) -> str:
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
+              if count != 1:
+                  raise SystemExit(f"Expected one {label} regex match, found {count}")
+              return updated
+
           account_path = Path("apps/web/app/[locale]/account/account-controls.tsx")
           account = account_path.read_text()
-          account = replace_once(
+          account = regex_once(
               account,
-              '''  const response = await fetch(`/api/v1${path}`, {
-            credentials: "same-origin",
-            cache: "no-store",
-            ...init,
-            headers: init?.body
-              ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
-              : init?.headers,
-          });'''.replace("        ", ""),
+              r'  const response = await fetch\(`/api/v1\$\{path\}`, \{\n.*?\n  \}\);',
               '''  const headers = new Headers(init?.headers);
-          if (init?.body && !headers.has("Content-Type")) {
-            headers.set("Content-Type", "application/json");
-          }
-          const response = await fetch(`/api/v1${path}`, {
-            credentials: "same-origin",
-            cache: "no-store",
-            ...init,
-            headers,
-          });'''.replace("        ", ""),
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const response = await fetch(`/api/v1${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...init,
+    headers,
+  });''',
               "account request block",
           )
           account = replace_once(
@@ -75,26 +75,19 @@ jobs:
 
           admin_path = Path("apps/web/app/[locale]/admin/governance-console.tsx")
           admin = admin_path.read_text()
-          admin = replace_once(
+          admin = regex_once(
               admin,
-              '''  return fetch(`/api/v1${path}`, {
-            credentials: "same-origin",
-            cache: "no-store",
-            ...init,
-            headers: init?.body
-              ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
-              : init?.headers,
-          });'''.replace("        ", ""),
+              r'  return fetch\(`/api/v1\$\{path\}`, \{\n.*?\n  \}\);',
               '''  const headers = new Headers(init?.headers);
-          if (init?.body && !headers.has("Content-Type")) {
-            headers.set("Content-Type", "application/json");
-          }
-          return fetch(`/api/v1${path}`, {
-            credentials: "same-origin",
-            cache: "no-store",
-            ...init,
-            headers,
-          });'''.replace("        ", ""),
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  return fetch(`/api/v1${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...init,
+    headers,
+  });''',
               "admin request block",
           )
           admin_path.write_text(admin)
