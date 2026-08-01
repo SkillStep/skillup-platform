@@ -63,9 +63,7 @@ export function PublicContentReport({ targetId }: Readonly<{ targetId: string }>
             Concern category
             <select
               value={category}
-              onChange={(event) =>
-                setCategory(event.currentTarget.value as typeof category)
-              }
+              onChange={(event) => setCategory(event.currentTarget.value as typeof category)}
             >
               {categories.map(([value, label]) => (
                 <option key={value} value={value}>
