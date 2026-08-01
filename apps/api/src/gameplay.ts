@@ -141,6 +141,9 @@ type AttemptRow = Readonly<{
   max_points: number;
   explanation: string;
   retry_allowed: boolean;
+  confidence: string | null;
+  matched_criteria: unknown;
+  review_reason: string | null;
   attempt_number: number;
   evaluated_at: Date;
 }>;
