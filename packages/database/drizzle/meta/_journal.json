@@ -92,6 +92,13 @@
       "when": 1785583800000,
       "tag": "0012_admin_audit_and_job_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785584100000,
+      "tag": "0013_seed_membership_authority",
+      "breakpoints": true
     }
   ]
 }
