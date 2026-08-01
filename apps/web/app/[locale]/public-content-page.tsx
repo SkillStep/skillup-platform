@@ -175,8 +175,10 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
             {dateLabel(entry.freshnessReviewAt)}.
           </p>
           <ul>
-            {entry.sourceReferences.map((source, index) => (
-              <li key={`${String(source["title"] ?? "Source")}:${index}`}>
+            {entry.sourceReferences.map((source) => (
+              <li
+                key={`${String(source["title"] ?? "Source")}:${String(source["publisher"] ?? "Unknown publisher")}:${String(source["locator"] ?? "No locator")}`}
+              >
                 <strong>{String(source["title"] ?? "Reviewed source")}</strong>
                 {source["publisher"] ? ` — ${String(source["publisher"])}` : ""}
                 {source["locator"] ? `, ${String(source["locator"])}` : ""}
