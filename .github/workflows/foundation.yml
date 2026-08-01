@@ -79,8 +79,32 @@ jobs:
           pnpm db:seed
           pnpm db:smoke
 
-      - name: Validate repository and application quality
-        run: pnpm check
+      - name: Validate repository foundation
+        run: pnpm foundation:check
+
+      - name: Validate deployment configuration
+        run: pnpm deployment:check
+
+      - name: Validate production-readiness contract
+        run: pnpm production:check
+
+      - name: Scan committed content for secrets
+        run: pnpm security:secrets
+
+      - name: Check repository formatting
+        run: pnpm format:check
+
+      - name: Lint repository
+        run: pnpm lint
+
+      - name: Typecheck workspace
+        run: pnpm typecheck
+
+      - name: Run workspace tests
+        run: pnpm test
+
+      - name: Build workspace
+        run: pnpm build
 
       - name: Build reviewed production containers
         shell: bash
