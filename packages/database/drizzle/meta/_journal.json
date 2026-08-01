@@ -127,6 +127,13 @@
       "when": 1785585300000,
       "tag": "0017_short_response_attempt_evidence",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785585600000,
+      "tag": "0018_assessment_lifecycle",
+      "breakpoints": true
     }
   ]
 }
