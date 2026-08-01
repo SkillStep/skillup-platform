@@ -50,7 +50,7 @@ type ActiveSessionRow = Readonly<{
   current_challenge_ordinal: number;
   awarded_points: number;
   max_points: number;
-  updated_at: Date;
+  last_activity_at: Date;
 }>;
 
 type CompletionRow = Readonly<{
@@ -125,7 +125,7 @@ function buildResumeRecommendation(
       evidence: [
         `Saved at challenge ${activeRow.current_challenge_ordinal + 1}.`,
         `${activeRow.awarded_points} of ${activeRow.max_points} available points are currently recorded.`,
-        `Last activity: ${activeRow.updated_at.toISOString()}.`,
+        `Last activity: ${activeRow.last_activity_at.toISOString()}.`,
       ],
       startAllowedToday: true,
     },
@@ -229,7 +229,7 @@ async function loadActiveSession(
             ls.current_challenge_ordinal,
             ls.awarded_points,
             ls.max_points,
-            ls.updated_at
+            ls.last_activity_at
        from level_play_sessions ls
        join level_versions lv on lv.id = ls.level_version_id
        join levels l on l.id = lv.level_id
@@ -237,8 +237,8 @@ async function loadActiveSession(
        join learning_modules lm on lm.id = le.module_id
        join learning_paths lp on lp.id = lm.learning_path_id
        join skills s on s.id = lp.skill_id
-      where ls.user_id = $1 and ls.status = 'active'
-      order by ls.updated_at desc
+      where ls.user_id = $1 and ls.state = 'active'
+      order by ls.last_activity_at desc
       limit 1`,
     [userId],
   );
@@ -266,7 +266,7 @@ async function loadLatestCompletion(
        join learning_modules lm on lm.id = le.module_id
        join learning_paths lp on lp.id = lm.learning_path_id
        join skills s on s.id = lp.skill_id
-      where ls.user_id = $1 and ls.status = 'completed'
+      where ls.user_id = $1 and ls.state = 'completed'
       order by ls.completed_at desc
       limit 1`,
     [userId],
@@ -286,17 +286,20 @@ async function loadCandidates(
             s.slug as skill_slug,
             lp.slug as path_slug
        from levels l
-       join level_versions lv on lv.level_id = l.id and lv.state = 'published'
+       join level_versions lv
+         on lv.level_id = l.id
+        and lv.state = 'published'
+        and lv.locale = 'en'
        join lessons le on le.id = l.lesson_id
        join learning_modules lm on lm.id = le.module_id
        join learning_paths lp on lp.id = lm.learning_path_id
        join skills s on s.id = lp.skill_id
       where not exists (
               select 1
-                from learner_enrollments completed
+                from learner_level_progress completed
                where completed.user_id = $1
                  and completed.level_id = l.id
-                 and completed.state = 'completed'
+                 and completed.completion_count > 0
             )
         and not exists (
               select 1
@@ -304,10 +307,10 @@ async function loadCandidates(
                where prerequisite.level_id = l.id
                  and not exists (
                        select 1
-                         from learner_enrollments prerequisite_completion
+                         from learner_level_progress prerequisite_completion
                         where prerequisite_completion.user_id = $1
                           and prerequisite_completion.level_id = prerequisite.prerequisite_level_id
-                          and prerequisite_completion.state = 'completed'
+                          and prerequisite_completion.completion_count > 0
                      )
             )
       order by case when lp.id = $2::uuid then 0 else 1 end,
