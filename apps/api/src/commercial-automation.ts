@@ -246,7 +246,7 @@ export function createCommercialAutomationService(
             now(),
           ],
         );
-        processed.failed = (processed.failed ?? 0) + 1;
+        processed["failed"] = (processed["failed"] ?? 0) + 1;
       }
     }
 
