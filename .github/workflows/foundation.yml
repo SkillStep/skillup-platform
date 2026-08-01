@@ -132,8 +132,14 @@ jobs:
           printf '%s\n' "$output"
           HEALTH_OUTPUT="$output" node -e "const health=JSON.parse(process.env.HEALTH_OUTPUT); if(health.status!=='disabled'||health.provider!=='disabled'||health.release_sha!==process.env.RELEASE_SHA) process.exit(1)"
 
-      - name: Smoke API against migrated PostgreSQL
-        run: pnpm smoke:api
+      - name: Smoke commercial API against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:commercial
+
+      - name: Smoke gameplay resume against migrated PostgreSQL
+        run: node tools/smoke-gameplay-resume.mjs
+
+      - name: Smoke API routes against migrated PostgreSQL
+        run: node tools/smoke-api.mjs
 
       - name: Run production containers and end-to-end smoke
         shell: bash
