@@ -11,7 +11,7 @@ describe("launch path content", () => {
   it("selects the playable interview and workplace communication pilot", () => {
     expect(featuredPath()).toMatchObject({
       slug: "interview-workplace-communication",
-      levelId: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaa7",
+      levelId: "3c315a1a-824a-413e-836d-69a9fc8bad1f",
     });
   });
 
