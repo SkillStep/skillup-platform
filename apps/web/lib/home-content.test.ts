@@ -15,9 +15,11 @@ describe("launch path content", () => {
     });
   });
 
-  it("does not expose unreviewed paths as playable", () => {
+  it("exposes only reviewed launch or pilot paths with playable identifiers", () => {
     expect(
-      launchPaths.filter((path) => path.status === "planned").every((path) => !path.levelId),
+      launchPaths.every(
+        (path) => (path.status === "pilot" || path.status === "launch") && Boolean(path.levelId),
+      ),
     ).toBe(true);
   });
 });
