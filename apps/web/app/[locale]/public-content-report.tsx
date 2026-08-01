@@ -61,9 +61,16 @@ export function PublicContentReport({ targetId }: Readonly<{ targetId: string }>
         <div>
           <label>
             Concern category
-            <select value={category} onChange={(event) => setCategory(event.currentTarget.value as typeof category)}>
+            <select
+              value={category}
+              onChange={(event) =>
+                setCategory(event.currentTarget.value as typeof category)
+              }
+            >
               {categories.map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
+                <option key={value} value={value}>
+                  {label}
+                </option>
               ))}
             </select>
           </label>
@@ -85,7 +92,11 @@ export function PublicContentReport({ targetId }: Readonly<{ targetId: string }>
             >
               {submitting ? "Submitting…" : "Submit report"}
             </button>
-            <button className={styles["secondaryLink"]} type="button" onClick={() => setOpen(false)}>
+            <button
+              className={styles["secondaryLink"]}
+              type="button"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </button>
           </div>
