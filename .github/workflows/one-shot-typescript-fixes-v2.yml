@@ -1,0 +1,108 @@
+name: One-shot strict typing codemod
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/internal-go-live-authorities
+
+      - name: Apply bounded transformations
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          def literal_once(text: str, old: str, new: str, label: str) -> str:
+              if text.count(old) != 1:
+                  raise SystemExit(f"Expected one {label} match, found {text.count(old)}")
+              return text.replace(old, new, 1)
+
+          def regex_once(text: str, pattern: str, replacement: str, label: str) -> str:
+              updated, count = re.subn(pattern, replacement, text, count=1, flags=re.DOTALL)
+              if count != 1:
+                  raise SystemExit(f"Expected one {label} match, found {count}")
+              return updated
+
+          account_path = Path("apps/web/app/[locale]/account/account-controls.tsx")
+          account = account_path.read_text()
+          account = regex_once(
+              account,
+              r'  const response = await fetch\(`/api/v1\$\{path\}`, \{\n.*?\n  \}\);',
+              '''  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const response = await fetch(`/api/v1${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...init,
+    headers,
+  });''',
+              "account request block",
+          )
+          account = literal_once(
+              account,
+              'accountRequest("/account/sessions", { signal })',
+              'accountRequest("/account/sessions", signal ? { signal } : {})',
+              "sessions signal",
+          )
+          account = literal_once(
+              account,
+              'accountRequest("/account/privacy", { signal })',
+              'accountRequest("/account/privacy", signal ? { signal } : {})',
+              "privacy signal",
+          )
+          account = literal_once(
+              account,
+              '.map(([slug, title]) => (',
+              '.map(([slug = "", title = ""]) => (',
+              "policy tuple defaults",
+          )
+          account_path.write_text(account)
+
+          admin_path = Path("apps/web/app/[locale]/admin/governance-console.tsx")
+          admin = admin_path.read_text()
+          admin = regex_once(
+              admin,
+              r'  return fetch\(`/api/v1\$\{path\}`, \{\n.*?\n  \}\);',
+              '''  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  return fetch(`/api/v1${path}`, {
+    credentials: "same-origin",
+    cache: "no-store",
+    ...init,
+    headers,
+  });''',
+              "admin request block",
+          )
+          admin_path.write_text(admin)
+          PY
+
+          rm .github/workflows/one-shot-typescript-fixes.yml
+          rm .github/workflows/one-shot-typescript-fixes-v2.yml
+
+      - name: Commit source fixes and remove helpers
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/web/app/[locale]/account/account-controls.tsx \
+                  apps/web/app/[locale]/admin/governance-console.tsx \
+                  .github/workflows/one-shot-typescript-fixes.yml \
+                  .github/workflows/one-shot-typescript-fixes-v2.yml
+          git commit -m "fix(web): satisfy strict request typing"
+          git push origin HEAD:feat/internal-go-live-authorities
