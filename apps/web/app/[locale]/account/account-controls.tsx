@@ -37,13 +37,15 @@ function dateTimeLabel(value: string): string {
 }
 
 async function accountRequest(path: string, init?: RequestInit): Promise<Response> {
+  const headers = new Headers(init?.headers);
+  if (init?.body && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
   const response = await fetch(`/api/v1${path}`, {
     credentials: "same-origin",
     cache: "no-store",
     ...init,
-    headers: init?.body
-      ? { "Content-Type": "application/json", ...(init.headers ?? {}) }
-      : init?.headers,
+    headers,
   });
   if (response.status === 401) {
     window.location.replace(withReturnTo("/en/sign-in", "/en/account"));
@@ -65,9 +67,10 @@ export function AccountControls() {
   const load = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
+      const requestInit = signal ? { signal } : undefined;
       const [sessionsResponse, privacyResponse] = await Promise.all([
-        accountRequest("/account/sessions", { signal }),
-        accountRequest("/account/privacy", { signal }),
+        accountRequest("/account/sessions", requestInit),
+        accountRequest("/account/privacy", requestInit),
       ]);
       if (!sessionsResponse.ok || !privacyResponse.ok) {
         throw new Error("Account controls are temporarily unavailable.");
@@ -370,7 +373,7 @@ export function AccountControls() {
             ["ai-disclosure", "AI Use Disclosure"],
             ["sharing", "Leaderboard and Sharing"],
             ["fair-use", "Fair Use"],
-          ].map(([slug, title]) => (
+          ].map(([slug = "", title = ""]) => (
             <div className={styles["policyCard"]} key={slug}>
               <Link href={`/en/legal/${slug}`}>{title}</Link>
               <button
