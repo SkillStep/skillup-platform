@@ -3,8 +3,13 @@ import { randomUUID } from "node:crypto";
 import { ApiErrorSchema, ServiceHealthSchema } from "@skillup/contracts";
 import Fastify, { type FastifyInstance } from "fastify";
 
+import {
+  type AccountLifecycleService,
+  registerAccountLifecycleRoutes,
+} from "./account-lifecycle-service.js";
 import { type AdminService, registerAdminRoutes } from "./admin.js";
 import { type AuthService, registerAuthRoutes } from "./auth.js";
+import { type CapabilityService, registerCapabilityRoutes } from "./capabilities.js";
 import { type CommercialService, registerCommercialRoutes } from "./commercial.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
@@ -25,6 +30,8 @@ export type BuildApiOptions = Readonly<{
   progressService?: ProgressService | undefined;
   commercialService?: CommercialService | undefined;
   adminService?: AdminService | undefined;
+  capabilityService?: CapabilityService | undefined;
+  accountLifecycleService?: AccountLifecycleService | undefined;
   rateLimit?: RateLimitOptions;
 }>;
 
@@ -44,6 +51,13 @@ function normalizeError(error: unknown): NormalizedError {
       const statusCode = (error as Error & { statusCode?: unknown }).statusCode;
       if (typeof statusCode === "number") candidateStatusCode = statusCode;
     }
+  }
+
+  if (candidateMessage.includes("daily_free_mission_limit_reached")) {
+    return {
+      statusCode: 402,
+      message: "The daily free mission limit has been reached. Upgrade to continue learning today.",
+    };
   }
 
   const statusCode =
@@ -215,6 +229,20 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       adminService: options.adminService,
+    });
+  }
+  if (options.authService && options.capabilityService) {
+    registerCapabilityRoutes(app, {
+      config,
+      authService: options.authService,
+      capabilityService: options.capabilityService,
+    });
+  }
+  if (options.authService && options.accountLifecycleService) {
+    registerAccountLifecycleRoutes(app, {
+      config,
+      authService: options.authService,
+      accountLifecycleService: options.accountLifecycleService,
     });
   }
 
