@@ -85,6 +85,13 @@
       "when": 1785583500000,
       "tag": "0011_policy_seed_and_deletion_history",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1785583800000,
+      "tag": "0012_admin_audit_and_job_guards",
+      "breakpoints": true
     }
   ]
 }
