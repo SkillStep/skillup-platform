@@ -45,14 +45,7 @@ begin
       'UTC',
       case when skillup_has_active_premium(p_user_id, p_at) then 'premium' else 'free' end,
       false,
-      'Learner-' || substr(
-        encode(
-          digest(('skillup-leaderboard:' || p_user_id::text)::text, 'sha256'::text),
-          'hex'::text
-        ),
-        1,
-        10
-      ),
+      'Learner-' || substr(md5('skillup-leaderboard:' || p_user_id::text), 1, 10),
       'eligible'
     )
   on conflict (user_id) do update
