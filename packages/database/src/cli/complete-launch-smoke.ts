@@ -8,6 +8,7 @@ const client = createDatabaseClient({
 });
 
 try {
+  // Source provenance separates the retained historical pilot from the reviewed full-launch curriculum.
   const skills = await client.pool.query<{
     slug: string;
     skill_status: string;
