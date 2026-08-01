@@ -33,9 +33,7 @@ function parseEntry(value: unknown): PublicContentEntry {
   if (!isRecord(value)) throw new Error("Public content response is not an object.");
   const kind = requireString(value["kind"], "kind");
   if (
-    !(["guide", "question", "glossary", "comparison"] as const).includes(
-      kind as PublicContentKind,
-    )
+    !(["guide", "question", "glossary", "comparison"] as const).includes(kind as PublicContentKind)
   ) {
     throw new Error("Public content response has an unsupported kind.");
   }
@@ -55,9 +53,7 @@ function parseEntry(value: unknown): PublicContentEntry {
     title: requireString(value["title"], "title"),
     summary: requireString(value["summary"], "summary"),
     directAnswer:
-      value["directAnswer"] === null
-        ? null
-        : requireString(value["directAnswer"], "direct answer"),
+      value["directAnswer"] === null ? null : requireString(value["directAnswer"], "direct answer"),
     body: value["body"],
     sourceReferences: value["sourceReferences"].filter(isRecord),
     authorName: requireString(value["authorName"], "author"),
@@ -115,7 +111,6 @@ export const publicContentRoutes = [
 }>[];
 
 export function publicContentPath(kind: PublicContentKind, slug: string): string {
-  const segment =
-    publicContentRoutes.find((route) => route.kind === kind)?.segment ?? `${kind}s`;
+  const segment = publicContentRoutes.find((route) => route.kind === kind)?.segment ?? `${kind}s`;
   return `/en/${segment}/${slug}`;
 }
