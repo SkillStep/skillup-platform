@@ -802,11 +802,9 @@ export function registerContentOperationsRoutes(
   app.post("/v1/admin/content", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["content_editor"]);
-    return reply
-      .status(201)
-      .send({
-        entry: await options.contentService.create(admin, ContentInputSchema.parse(request.body)),
-      });
+    return reply.status(201).send({
+      entry: await options.contentService.create(admin, ContentInputSchema.parse(request.body)),
+    });
   });
 
   app.patch("/v1/admin/content/:id", async (request) => {
@@ -918,13 +916,11 @@ export function registerContentOperationsRoutes(
       "payment_operator",
       "security_admin",
     ]);
-    return reply
-      .status(202)
-      .send({
-        export: await options.contentService.createExport(
-          admin,
-          ExportInputSchema.parse(request.body),
-        ),
-      });
+    return reply.status(202).send({
+      export: await options.contentService.createExport(
+        admin,
+        ExportInputSchema.parse(request.body),
+      ),
+    });
   });
 }
