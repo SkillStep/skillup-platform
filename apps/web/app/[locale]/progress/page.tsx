@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 
 import { ProgressDashboard } from "./progress-dashboard";
 import styles from "./progress.module.css";
+import { RecommendationCard } from "./recommendation-card";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -12,7 +13,8 @@ type PageProps = Readonly<{
 
 export const metadata: Metadata = {
   title: "Your learning progress",
-  description: "Review your private SkillUp progress, verified points, streak and achievements.",
+  description:
+    "Review your private SkillUp progress, verified points, streak, achievements and next learning step.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
@@ -30,6 +32,7 @@ export default async function ProgressPage({ params }: PageProps) {
           Return home
         </Link>
       </header>
+      <RecommendationCard locale="en" />
       <ProgressDashboard locale="en" />
     </main>
   );
