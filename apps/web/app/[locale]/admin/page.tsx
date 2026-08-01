@@ -32,8 +32,9 @@ export default async function AdminPage({ params }: PageProps) {
           <h1>Review, reconcile and publish safely.</h1>
           <p>
             Every action on this page is re-authorized by the API and written to append-only audit
-            evidence. The browser cannot grant roles, premium access, payment outcomes or
-            publication status.
+            evidence. Each operator sees only the workflows allowed by their current server-side
+            role; the browser cannot grant roles, premium access, payment outcomes or publication
+            status.
           </p>
         </header>
         <OperationsConsole />
