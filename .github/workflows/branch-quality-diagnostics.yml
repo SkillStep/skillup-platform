@@ -1,0 +1,82 @@
+name: Branch quality diagnostics
+
+on:
+  push:
+    branches:
+      - feat/internal-go-live-authorities
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/internal-go-live-authorities
+          fetch-depth: 0
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.17.0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.x
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run each quality gate and capture diagnostics
+        shell: bash
+        run: |
+          set +e
+          mkdir -p .quality-diagnostics
+          : > .quality-diagnostics/results.tsv
+          run_gate() {
+            name="$1"
+            shift
+            "$@" > ".quality-diagnostics/${name}.log" 2>&1
+            code=$?
+            printf '%s\t%s\n' "$name" "$code" >> .quality-diagnostics/results.tsv
+          }
+          run_gate foundation pnpm foundation:check
+          run_gate deployment pnpm deployment:check
+          run_gate production pnpm production:check
+          run_gate secrets pnpm security:secrets
+          run_gate format pnpm format:check
+          run_gate lint pnpm lint
+          run_gate typecheck pnpm typecheck
+          run_gate test pnpm test
+          run_gate build pnpm build
+
+          python - <<'PY'
+          from pathlib import Path
+
+          root = Path('.quality-diagnostics')
+          lines = ['# Branch quality diagnostics', '']
+          for row in (root / 'results.tsv').read_text().splitlines():
+              name, code = row.split('\t')
+              status = 'PASS' if code == '0' else f'FAIL ({code})'
+              lines.extend([f'## {name}: {status}', ''])
+              if code != '0':
+                  log = (root / f'{name}.log').read_text(errors='replace').splitlines()
+                  lines.extend(['```text', *log[-160:], '```', ''])
+          Path('tools/quality-diagnostics.md').write_text('\n'.join(lines) + '\n')
+          PY
+
+      - name: Commit diagnostics and remove diagnostic workflow
+        run: |
+          rm .github/workflows/branch-quality-diagnostics.yml
+          rm -rf .quality-diagnostics
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "ci: record branch quality diagnostics"
+          git push origin HEAD:feat/internal-go-live-authorities
