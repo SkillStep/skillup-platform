@@ -1,4 +1,5 @@
 import { canonicalUrl } from "@skillup/discoverability";
+import type { Route } from "next";
 import Link from "next/link";
 
 import { type PublicContentEntry, publicContentPath } from "../../lib/public-content";
@@ -55,7 +56,7 @@ function RelatedLinks({ body }: Readonly<{ body: PublicContentEntry["body"] }>) 
           }
           return (
             <li key={`${kind}:${slug}`}>
-              <Link href={publicContentPath(kind as PublicContentEntry["kind"], slug)}>
+              <Link href={publicContentPath(kind as PublicContentEntry["kind"], slug) as Route}>
                 {slug.replaceAll("-", " ")}
               </Link>
             </li>
