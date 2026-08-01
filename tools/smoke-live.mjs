@@ -179,7 +179,7 @@ const pilotPath = await request("/en/paths/interview-workplace-communication", {
   accept: "text/html",
 });
 const pilotPathHtml = await pilotPath.text();
-requireContains(pilotPathHtml, "Interview answers with evidence", "Pilot path modules");
+requireContains(pilotPathHtml, "Interview Evidence", "Pilot path modules");
 requireContains(pilotPathHtml, '"@type":"Course"', "Pilot path course data");
 requirePublicCacheBoundary(pilotPath, "Pilot path");
 
