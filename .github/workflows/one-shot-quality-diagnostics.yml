@@ -1,0 +1,66 @@
+name: One-shot quality diagnostics
+
+on:
+  push:
+    branches:
+      - feat/internal-go-live-authorities
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout branch
+        uses: actions/checkout@v4
+        with:
+          ref: feat/internal-go-live-authorities
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+
+      - name: Install pinned pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11.17.0
+
+      - name: Install locked dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Capture concise quality diagnostics
+        shell: bash
+        run: |
+          set +e
+          : > .ci-quality-diagnostics.txt
+          for command in "pnpm format:check" "pnpm lint" "pnpm typecheck"; do
+            echo "## ${command}" >> .ci-quality-diagnostics.txt
+            bash -lc "${command}" > /tmp/quality-command.log 2>&1
+            status=$?
+            echo "exit=${status}" >> .ci-quality-diagnostics.txt
+            if [ "${status}" -ne 0 ]; then
+              sed -n '1,260p' /tmp/quality-command.log >> .ci-quality-diagnostics.txt
+            fi
+            echo >> .ci-quality-diagnostics.txt
+          done
+          exit 0
+
+      - name: Upload diagnostic artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-diagnostics
+          path: .ci-quality-diagnostics.txt
+          if-no-files-found: error
+
+      - name: Commit diagnostics and remove this workflow
+        shell: bash
+        run: |
+          rm .github/workflows/one-shot-quality-diagnostics.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .ci-quality-diagnostics.txt .github/workflows/one-shot-quality-diagnostics.yml
+          git commit -m "chore(ci): capture quality diagnostics"
+          git push origin HEAD:feat/internal-go-live-authorities
