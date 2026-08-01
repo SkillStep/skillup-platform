@@ -137,8 +137,8 @@ try {
     );
   }
 
-  const types = await client.pool.query<{ type: string; count: number }>(
-    `select cv.type, count(*)::int as count
+  const types = await client.pool.query<{ slug: string; type: string; count: number }>(
+    `select s.slug, cv.type, count(*)::int as count
        from challenge_versions cv
        join level_versions lv on lv.id = cv.level_version_id
        join levels l on l.id = lv.level_id
@@ -146,20 +146,37 @@ try {
        join learning_modules lm on lm.id = le.module_id
        join learning_paths lp on lp.id = lm.learning_path_id
        join skills s on s.id = lp.skill_id
+       join content_source_references csr
+         on csr.level_version_id = lv.id
+        and csr.kind = 'internal_editorial'
+        and csr.title like 'SkillUp reviewed % launch curriculum'
       where s.slug = any($1::text[])
         and cv.state = 'published'
-      group by cv.type`,
+      group by s.slug, cv.type`,
     [launchCatalogSeed.map((item) => item.skill.slug)],
   );
-  const typeSet = new Set(types.rows.map((row) => row.type));
-  for (const requiredType of ["multiple_choice", "true_false", "scenario"]) {
-    if (!typeSet.has(requiredType)) {
-      throw new Error(`Launch curriculum is missing ${requiredType} challenges.`);
+  const requiredTypes = [
+    "multiple_choice",
+    "true_false",
+    "ordering",
+    "matching",
+    "scenario",
+    "fill_blank",
+    "short_response",
+  ] as const;
+  for (const skill of launchCatalogSeed) {
+    const typeSet = new Set(
+      types.rows.filter((row) => row.slug === skill.skill.slug).map((row) => row.type),
+    );
+    for (const requiredType of requiredTypes) {
+      if (!typeSet.has(requiredType)) {
+        throw new Error(`${skill.skill.slug} is missing ${requiredType} challenges.`);
+      }
     }
   }
 
   console.log(
-    `Complete launch curriculum verified (${skills.rows.reduce((sum, row) => sum + row.levels, 0)} levels, ${skills.rows.reduce((sum, row) => sum + row.challenges, 0)} challenges).`,
+    `Complete launch curriculum verified (${skills.rows.reduce((sum, row) => sum + row.levels, 0)} levels, ${skills.rows.reduce((sum, row) => sum + row.challenges, 0)} challenges, all seven challenge formats per skill).`,
   );
 } finally {
   await client.close();
