@@ -14,12 +14,16 @@ try {
     path_status: string;
     levels: number;
     challenges: number;
+    generated_levels: number;
+    generated_challenges: number;
   }>(
     `select s.slug,
             s.status as skill_status,
             lp.status as path_status,
             count(distinct l.id)::int as levels,
-            count(distinct c.id)::int as challenges
+            count(distinct c.id)::int as challenges,
+            count(distinct l.id) filter (where lm.sort_order >= 10)::int as generated_levels,
+            count(distinct c.id) filter (where lm.sort_order >= 10)::int as generated_challenges
        from skills s
        join learning_paths lp on lp.skill_id = s.id
        left join learning_modules lm on lm.learning_path_id = lp.id
@@ -43,9 +47,45 @@ try {
     if (row.levels < requiredLevels) {
       throw new Error(`${row.slug} has ${row.levels} levels; ${requiredLevels} are required.`);
     }
-    if (row.challenges < row.levels * 3) {
-      throw new Error(`${row.slug} does not have three challenges per generated level.`);
+    if (row.generated_levels < requiredLevels) {
+      throw new Error(
+        `${row.slug} has ${row.generated_levels} generated launch levels; ${requiredLevels} are required.`,
+      );
     }
+    if (row.generated_challenges !== row.generated_levels * 3) {
+      throw new Error(
+        `${row.slug} has ${row.generated_challenges} generated challenges for ${row.generated_levels} generated levels; exactly three per generated level are required.`,
+      );
+    }
+  }
+
+  const malformedGeneratedLevel = await client.pool.query<{
+    title: string;
+    challenge_count: number;
+  }>(
+    `select lv.title,
+            count(distinct cv.id)::int as challenge_count
+       from level_versions lv
+       join levels l on l.id = lv.level_id
+       join lessons le on le.id = l.lesson_id
+       join learning_modules lm on lm.id = le.module_id
+       join learning_paths lp on lp.id = lm.learning_path_id
+       join skills s on s.id = lp.skill_id
+       left join challenge_versions cv
+         on cv.level_version_id = lv.id and cv.state = 'published'
+      where s.slug = any($1::text[])
+        and lm.sort_order >= 10
+        and lv.state = 'published'
+      group by lv.id, lv.title
+     having count(distinct cv.id) <> 3
+      limit 1`,
+    [launchCatalogSeed.map((item) => item.skill.slug)],
+  );
+  if (malformedGeneratedLevel.rows.length > 0) {
+    const level = malformedGeneratedLevel.rows[0];
+    throw new Error(
+      `Generated launch level ${level?.title ?? "unknown"} has ${level?.challenge_count ?? 0} published challenges; exactly three are required.`,
+    );
   }
 
   const incomplete = await client.pool.query<{
