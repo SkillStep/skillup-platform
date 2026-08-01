@@ -1,10 +1,7 @@
 import { canonicalUrl } from "@skillup/discoverability";
 import Link from "next/link";
 
-import {
-  type PublicContentEntry,
-  publicContentPath,
-} from "../../lib/public-content";
+import { type PublicContentEntry, publicContentPath } from "../../lib/public-content";
 import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "./discovery-shell";
 import styles from "./discovery.module.css";
 import { PublicContentReport } from "./public-content-report";
@@ -19,7 +16,9 @@ function records(value: unknown): readonly Readonly<Record<string, unknown>>[] {
 }
 
 function strings(value: unknown): readonly string[] {
-  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : [];
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === "string")
+    : [];
 }
 
 function label(kind: PublicContentEntry["kind"]): string {
@@ -74,7 +73,8 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
   const sections = records(entry.body["sections"]);
   const examples = records(entry.body["examples"]);
   const comparison = records(entry.body["comparison"]);
-  const introduction = typeof entry.body["introduction"] === "string" ? entry.body["introduction"] : null;
+  const introduction =
+    typeof entry.body["introduction"] === "string" ? entry.body["introduction"] : null;
   const singleExample = typeof entry.body["example"] === "string" ? entry.body["example"] : null;
 
   return (
@@ -117,7 +117,8 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
 
         <div className={styles["contentGrid"]}>
           {sections.map((section) => {
-            const heading = typeof section["heading"] === "string" ? section["heading"] : "Reviewed guidance";
+            const heading =
+              typeof section["heading"] === "string" ? section["heading"] : "Reviewed guidance";
             return (
               <section className={styles["contentCard"]} key={heading}>
                 <h2>{heading}</h2>
@@ -129,7 +130,8 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
           })}
 
           {examples.map((example) => {
-            const exampleLabel = typeof example["label"] === "string" ? example["label"] : "Example";
+            const exampleLabel =
+              typeof example["label"] === "string" ? example["label"] : "Example";
             const text = typeof example["text"] === "string" ? example["text"] : "";
             return (
               <section className={styles["contentCard"]} key={`${exampleLabel}:${text}`}>
@@ -147,12 +149,18 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
           ) : null}
 
           {comparison.map((row) => {
-            const dimension = typeof row["dimension"] === "string" ? row["dimension"] : "Comparison";
+            const dimension =
+              typeof row["dimension"] === "string" ? row["dimension"] : "Comparison";
             return (
               <section className={styles["contentCard"]} key={dimension}>
                 <h2>{dimension}</h2>
-                <p><strong>Vague:</strong> {typeof row["vague"] === "string" ? row["vague"] : ""}</p>
-                <p><strong>Evidence-based:</strong> {typeof row["evidenceBased"] === "string" ? row["evidenceBased"] : ""}</p>
+                <p>
+                  <strong>Vague:</strong> {typeof row["vague"] === "string" ? row["vague"] : ""}
+                </p>
+                <p>
+                  <strong>Evidence-based:</strong>{" "}
+                  {typeof row["evidenceBased"] === "string" ? row["evidenceBased"] : ""}
+                </p>
               </section>
             );
           })}
@@ -163,7 +171,8 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
         <section className={styles["contentCard"]} aria-labelledby="evidence-title">
           <h2 id="evidence-title">Source and freshness evidence</h2>
           <p>
-            Published {dateLabel(entry.publishedAt)}. Next freshness review: {dateLabel(entry.freshnessReviewAt)}.
+            Published {dateLabel(entry.publishedAt)}. Next freshness review:{" "}
+            {dateLabel(entry.freshnessReviewAt)}.
           </p>
           <ul>
             {entry.sourceReferences.map((source, index) => (
