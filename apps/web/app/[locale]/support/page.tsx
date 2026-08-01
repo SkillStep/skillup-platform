@@ -61,8 +61,8 @@ export default async function SupportPage({ params }: PageProps) {
             <h2>Learning and progress</h2>
             <p>
               Keep the level, challenge and approximate time of the issue. Do not include protected
-              answers or another learner&apos;s information. Server-authoritative progress and reward
-              records are used for investigation.
+              answers or another learner&apos;s information. Server-authoritative progress and
+              reward records are used for investigation.
             </p>
           </section>
           <section className={styles["contentCard"]}>

@@ -31,9 +31,9 @@ export default async function AccountPage({ params }: PageProps) {
           <p className="eyebrow">Private account</p>
           <h1>Your account, privacy and membership</h1>
           <p>
-            Review server-authoritative access, payment references, devices, sharing choices,
-            policy evidence, export and deletion. This page is never indexed or placed in the
-            public offline cache.
+            Review server-authoritative access, payment references, devices, sharing choices, policy
+            evidence, export and deletion. This page is never indexed or placed in the public
+            offline cache.
           </p>
         </header>
         <MembershipAccount />

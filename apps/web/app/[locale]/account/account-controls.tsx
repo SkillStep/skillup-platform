@@ -72,12 +72,18 @@ export function AccountControls() {
       if (!sessionsResponse.ok || !privacyResponse.ok) {
         throw new Error("Account controls are temporarily unavailable.");
       }
-      const sessionBody = (await sessionsResponse.json()) as { sessions: readonly AccountSession[] };
+      const sessionBody = (await sessionsResponse.json()) as {
+        sessions: readonly AccountSession[];
+      };
       setSessions(sessionBody.sessions);
       setPrivacy((await privacyResponse.json()) as PrivacySettings);
     } catch (requestError) {
       if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
-        setError(requestError instanceof Error ? requestError.message : "Account controls are unavailable.");
+        setError(
+          requestError instanceof Error
+            ? requestError.message
+            : "Account controls are unavailable.",
+        );
       }
     } finally {
       setLoading(false);
@@ -103,7 +109,9 @@ export function AccountControls() {
       setPrivacy((await response.json()) as PrivacySettings);
       setMessage("Privacy preferences saved.");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "Privacy preferences failed.");
+      setError(
+        requestError instanceof Error ? requestError.message : "Privacy preferences failed.",
+      );
     } finally {
       setSaving(false);
     }
@@ -222,7 +230,10 @@ export function AccountControls() {
 
       <section className={styles["panel"]} aria-labelledby="privacy-settings-title">
         <h2 id="privacy-settings-title">Privacy and sharing</h2>
-        <p>Essential security and transaction records always remain enabled. Optional uses are controlled below.</p>
+        <p>
+          Essential security and transaction records always remain enabled. Optional uses are
+          controlled below.
+        </p>
         {privacy ? (
           <div className={styles["settingsGrid"]}>
             <label className={styles["setting"]}>
@@ -231,46 +242,73 @@ export function AccountControls() {
                 checked={privacy.analyticsConsent === "product"}
                 disabled={saving}
                 onChange={(event) =>
-                  void updatePrivacy({ analyticsConsent: event.currentTarget.checked ? "product" : "essential" })
+                  void updatePrivacy({
+                    analyticsConsent: event.currentTarget.checked ? "product" : "essential",
+                  })
                 }
               />
-              <span><strong>Product analytics</strong><small>Help improve learning flows using minimized events.</small></span>
+              <span>
+                <strong>Product analytics</strong>
+                <small>Help improve learning flows using minimized events.</small>
+              </span>
             </label>
             <label className={styles["setting"]}>
               <input
                 type="checkbox"
                 checked={privacy.marketingConsent}
                 disabled={saving}
-                onChange={(event) => void updatePrivacy({ marketingConsent: event.currentTarget.checked })}
+                onChange={(event) =>
+                  void updatePrivacy({ marketingConsent: event.currentTarget.checked })
+                }
               />
-              <span><strong>Marketing messages</strong><small>Receive optional SkillUp product communication.</small></span>
+              <span>
+                <strong>Marketing messages</strong>
+                <small>Receive optional SkillUp product communication.</small>
+              </span>
             </label>
             <label className={styles["setting"]}>
               <input
                 type="checkbox"
                 checked={privacy.leaderboardSharing}
                 disabled={saving}
-                onChange={(event) => void updatePrivacy({ leaderboardSharing: event.currentTarget.checked })}
+                onChange={(event) =>
+                  void updatePrivacy({ leaderboardSharing: event.currentTarget.checked })
+                }
               />
-              <span><strong>Leaderboard alias</strong><small>Share only an approved alias and verified points.</small></span>
+              <span>
+                <strong>Leaderboard alias</strong>
+                <small>Share only an approved alias and verified points.</small>
+              </span>
             </label>
             <label className={styles["setting"]}>
               <input
                 type="checkbox"
                 checked={privacy.achievementSharing}
                 disabled={saving}
-                onChange={(event) => void updatePrivacy({ achievementSharing: event.currentTarget.checked })}
+                onChange={(event) =>
+                  void updatePrivacy({ achievementSharing: event.currentTarget.checked })
+                }
               />
-              <span><strong>Achievement sharing</strong><small>Allow privacy-safe public achievement cards.</small></span>
+              <span>
+                <strong>Achievement sharing</strong>
+                <small>Allow privacy-safe public achievement cards.</small>
+              </span>
             </label>
             <label className={styles["setting"]}>
               <input
                 type="checkbox"
                 checked={privacy.aiPersonalization}
                 disabled={saving}
-                onChange={(event) => void updatePrivacy({ aiPersonalization: event.currentTarget.checked })}
+                onChange={(event) =>
+                  void updatePrivacy({ aiPersonalization: event.currentTarget.checked })
+                }
               />
-              <span><strong>AI-assisted recommendations</strong><small>Allow approved model assistance after deterministic eligibility checks.</small></span>
+              <span>
+                <strong>AI-assisted recommendations</strong>
+                <small>
+                  Allow approved model assistance after deterministic eligibility checks.
+                </small>
+              </span>
             </label>
           </div>
         ) : null}
@@ -278,8 +316,15 @@ export function AccountControls() {
 
       <section className={styles["panel"]} aria-labelledby="sessions-title">
         <div className={styles["sectionHeading"]}>
-          <div><h2 id="sessions-title">Active devices and sessions</h2><p>Revoke access you no longer recognize or use.</p></div>
-          <button className={`${styles["button"]} ${styles["secondary"]}`} type="button" onClick={() => void revokeAllSessions()}>
+          <div>
+            <h2 id="sessions-title">Active devices and sessions</h2>
+            <p>Revoke access you no longer recognize or use.</p>
+          </div>
+          <button
+            className={`${styles["button"]} ${styles["secondary"]}`}
+            type="button"
+            onClick={() => void revokeAllSessions()}
+          >
             Sign out everywhere
           </button>
         </div>
@@ -287,12 +332,22 @@ export function AccountControls() {
           {sessions.map((session) => (
             <li key={session.id}>
               <div>
-                <strong>{session.clientLabel ?? "Web browser"}{session.current ? " — current" : ""}</strong>
-                <span>Last used {dateTimeLabel(session.lastSeenAt)} · expires {dateTimeLabel(session.idleExpiresAt)}</span>
+                <strong>
+                  {session.clientLabel ?? "Web browser"}
+                  {session.current ? " — current" : ""}
+                </strong>
+                <span>
+                  Last used {dateTimeLabel(session.lastSeenAt)} · expires{" "}
+                  {dateTimeLabel(session.idleExpiresAt)}
+                </span>
                 {session.revokedAt ? <span>Revoked {dateTimeLabel(session.revokedAt)}</span> : null}
               </div>
               {!session.revokedAt ? (
-                <button className={`${styles["button"]} ${styles["secondary"]}`} type="button" onClick={() => void revokeSession(session.id, session.current)}>
+                <button
+                  className={`${styles["button"]} ${styles["secondary"]}`}
+                  type="button"
+                  onClick={() => void revokeSession(session.id, session.current)}
+                >
                   Revoke
                 </button>
               ) : null}
@@ -303,7 +358,10 @@ export function AccountControls() {
 
       <section className={styles["panel"]} aria-labelledby="policies-title">
         <h2 id="policies-title">Policies and disclosures</h2>
-        <p>These provisional launch documents are versioned. Final legal copy can replace them without rewriting your evidence.</p>
+        <p>
+          These provisional launch documents are versioned. Final legal copy can replace them
+          without rewriting your evidence.
+        </p>
         <div className={styles["policyGrid"]}>
           {[
             ["terms", "Terms of Use"],
@@ -315,7 +373,19 @@ export function AccountControls() {
           ].map(([slug, title]) => (
             <div className={styles["policyCard"]} key={slug}>
               <Link href={`/en/legal/${slug}`}>{title}</Link>
-              <button className={styles["textButton"]} type="button" onClick={() => void acceptPolicy(slug === "ai-disclosure" ? "ai_disclosure" : slug === "sharing" ? "leaderboard_sharing" : slug.replaceAll("-", "_"))}>
+              <button
+                className={styles["textButton"]}
+                type="button"
+                onClick={() =>
+                  void acceptPolicy(
+                    slug === "ai-disclosure"
+                      ? "ai_disclosure"
+                      : slug === "sharing"
+                        ? "leaderboard_sharing"
+                        : slug.replaceAll("-", "_"),
+                  )
+                }
+              >
                 Record acknowledgement
               </button>
             </div>
@@ -325,26 +395,64 @@ export function AccountControls() {
 
       <section className={styles["panel"]} aria-labelledby="export-title">
         <h2 id="export-title">Download your data</h2>
-        <p>The export contains bounded account, preference, session, progress and payment-reference data. It excludes credentials and protected answer logic.</p>
-        <button className={styles["button"]} type="button" onClick={() => void exportData()}>Prepare private JSON export</button>
+        <p>
+          The export contains bounded account, preference, session, progress and payment-reference
+          data. It excludes credentials and protected answer logic.
+        </p>
+        <button className={styles["button"]} type="button" onClick={() => void exportData()}>
+          Prepare private JSON export
+        </button>
       </section>
 
-      <section className={`${styles["panel"]} ${styles["dangerPanel"]}`} aria-labelledby="deletion-title">
+      <section
+        className={`${styles["panel"]} ${styles["dangerPanel"]}`}
+        aria-labelledby="deletion-title"
+      >
         <h2 id="deletion-title">Delete your account</h2>
-        <p>Deletion has a seven-day cooldown. Sessions and personal profile data are removed or pseudonymized; required payment and audit evidence is retained.</p>
+        <p>
+          Deletion has a seven-day cooldown. Sessions and personal profile data are removed or
+          pseudonymized; required payment and audit evidence is retained.
+        </p>
         {deletionDue ? (
           <div>
-            <p><strong>Scheduled for {dateTimeLabel(deletionDue)}</strong></p>
-            <button className={`${styles["button"]} ${styles["secondary"]}`} type="button" onClick={() => void cancelDeletion()}>Cancel deletion</button>
+            <p>
+              <strong>Scheduled for {dateTimeLabel(deletionDue)}</strong>
+            </p>
+            <button
+              className={`${styles["button"]} ${styles["secondary"]}`}
+              type="button"
+              onClick={() => void cancelDeletion()}
+            >
+              Cancel deletion
+            </button>
           </div>
         ) : (
           <div className={styles["deletionForm"]}>
-            <label>Optional reason<textarea value={deleteReason} maxLength={500} onChange={(event) => setDeleteReason(event.currentTarget.value)} /></label>
-            <label className={styles["setting"]}>
-              <input type="checkbox" checked={deleteConfirmed} onChange={(event) => setDeleteConfirmed(event.currentTarget.checked)} />
-              <span><strong>I understand the cooldown and retained records.</strong></span>
+            <label>
+              Optional reason
+              <textarea
+                value={deleteReason}
+                maxLength={500}
+                onChange={(event) => setDeleteReason(event.currentTarget.value)}
+              />
             </label>
-            <button className={`${styles["button"]} ${styles["dangerButton"]}`} type="button" onClick={() => void requestDeletion()}>Schedule account deletion</button>
+            <label className={styles["setting"]}>
+              <input
+                type="checkbox"
+                checked={deleteConfirmed}
+                onChange={(event) => setDeleteConfirmed(event.currentTarget.checked)}
+              />
+              <span>
+                <strong>I understand the cooldown and retained records.</strong>
+              </span>
+            </label>
+            <button
+              className={`${styles["button"]} ${styles["dangerButton"]}`}
+              type="button"
+              onClick={() => void requestDeletion()}
+            >
+              Schedule account deletion
+            </button>
           </div>
         )}
       </section>

@@ -342,11 +342,11 @@ try {
           const strong = strongApproach(objective);
           const weak = weakApproach(objective);
           const challenges = launchChallenges({
-  objective,
-  strong,
-  weak,
-  rotation: curriculum.skillSlug.length + moduleIndex * 4 + levelIndex,
-});
+            objective,
+            strong,
+            weak,
+            rotation: curriculum.skillSlug.length + moduleIndex * 4 + levelIndex,
+          });
 
           for (const [challengeIndex, definition] of challenges.entries()) {
             const challengeSlug = `${levelSlug}-${definition.key}`;

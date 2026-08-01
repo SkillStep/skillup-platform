@@ -81,7 +81,10 @@ function definition(
         privateEvaluation: { correctOptionKeys: ["best"] },
         options: [
           ["best", input.strong],
-          ["partial", "Act immediately with incomplete context and plan to correct the work later."],
+          [
+            "partial",
+            "Act immediately with incomplete context and plan to correct the work later.",
+          ],
           ["risky", input.weak],
         ],
       };

@@ -15,7 +15,9 @@ describe("AI job status service", () => {
       pool: pool([{ status: "running", lease_token: "lease-a", cancelled_at: null }]),
     });
 
-    await expect(service.status("11111111-1111-4111-8111-111111111111", "lease-a")).resolves.toEqual({
+    await expect(
+      service.status("11111111-1111-4111-8111-111111111111", "lease-a"),
+    ).resolves.toEqual({
       active: true,
       cancelled: false,
     });
@@ -32,7 +34,9 @@ describe("AI job status service", () => {
       ]),
     });
 
-    await expect(service.status("11111111-1111-4111-8111-111111111111", "lease-a")).resolves.toEqual({
+    await expect(
+      service.status("11111111-1111-4111-8111-111111111111", "lease-a"),
+    ).resolves.toEqual({
       active: false,
       cancelled: true,
     });

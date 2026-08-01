@@ -69,9 +69,7 @@ export function createAiJobStatusService(
 
     acknowledgeCancellation: async (requestId, leaseToken) => {
       const completedAt = now();
-      const inputDigest = createHash("sha256")
-        .update(`${requestId}:cancelled`)
-        .digest("hex");
+      const inputDigest = createHash("sha256").update(`${requestId}:cancelled`).digest("hex");
       const result = await options.pool.query<{ id: string }>(
         `with cancelled as (
            update ai_generation_requests

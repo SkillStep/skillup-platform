@@ -49,7 +49,9 @@ export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
       requestId: string,
       reason: string,
       correlationId: string,
-    ) => Promise<Readonly<{ id: string; status: "running" | "cancelled"; cancellationRequested: true }>>;
+    ) => Promise<
+      Readonly<{ id: string; status: "running" | "cancelled"; cancellationRequested: true }>
+    >;
   }>;
 
 export function createAdminService(
@@ -152,7 +154,9 @@ export function createAdminService(
           });
         }
         throw Object.assign(
-          new Error(`The AI generation request cannot be cancelled from ${existing.rows[0].status}.`),
+          new Error(
+            `The AI generation request cannot be cancelled from ${existing.rows[0].status}.`,
+          ),
           { statusCode: 409 },
         );
       }

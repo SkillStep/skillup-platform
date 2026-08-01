@@ -49,9 +49,7 @@ const GenerateRequestSchema = z
     }
   });
 
-const CancelRequestSchema = z
-  .object({ reason: z.string().trim().min(3).max(1_000) })
-  .strict();
+const CancelRequestSchema = z.object({ reason: z.string().trim().min(3).max(1_000) }).strict();
 
 const ReviewArtifactSchema = z
   .object({

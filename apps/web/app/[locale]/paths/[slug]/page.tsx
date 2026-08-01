@@ -82,7 +82,9 @@ export default async function PathPage({ params }: PageProps) {
           <h1 id="path-title">{skill.title}</h1>
           <p className={styles["detailSummary"]}>{skill.summary}</p>
           <div className={styles["detailMeta"]}>
-            <span>{skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}</span>
+            <span>
+              {skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}
+            </span>
             <span>{skill.reviewCadence}</span>
           </div>
           <div className={styles["cardLinks"]}>

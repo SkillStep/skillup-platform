@@ -61,7 +61,11 @@ describe("maintenance runner", () => {
 
   it("rejects unsafe configuration", () => {
     expect(() =>
-      createMaintenanceRunner({ intervalMs: 999, logger: logger(), tasks: [{ name: "a", run: vi.fn() }] }),
+      createMaintenanceRunner({
+        intervalMs: 999,
+        logger: logger(),
+        tasks: [{ name: "a", run: vi.fn() }],
+      }),
     ).toThrow("at least one second");
     expect(() =>
       createMaintenanceRunner({
