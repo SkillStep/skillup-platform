@@ -1,8 +1,10 @@
 import { createDatabaseClient } from "@skillup/database";
 
+import { createAccountLifecycleService } from "./account-lifecycle-service.js";
 import { createAdminService } from "./admin.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
+import { createCapabilityService } from "./capabilities.js";
 import { createCommercialService } from "./commercial.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
@@ -30,6 +32,11 @@ const adminService = createAdminService({
   pool: database.pool,
   releaseSha: config.RELEASE_SHA,
 });
+const capabilityService = createCapabilityService({ pool: database.pool });
+const accountLifecycleService = createAccountLifecycleService({
+  pool: database.pool,
+  sessionSecret: config.SESSION_SECRET,
+});
 const app = buildApi({
   config,
   readiness: database.ping,
@@ -38,6 +45,8 @@ const app = buildApi({
   progressService,
   commercialService,
   adminService,
+  capabilityService,
+  accountLifecycleService,
 });
 
 async function shutdown(signal: NodeJS.Signals): Promise<void> {
