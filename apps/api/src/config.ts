@@ -171,7 +171,10 @@ const ApiConfigSchema = z
     }
   });
 
-export type ApiConfig = z.infer<typeof ApiConfigSchema>;
+type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
+
+export type ApiConfig = Omit<ParsedApiConfig, "MAINTENANCE_INTERVAL_SECONDS"> &
+  Readonly<{ MAINTENANCE_INTERVAL_SECONDS?: number }>;
 
 export function readApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
   return ApiConfigSchema.parse({
