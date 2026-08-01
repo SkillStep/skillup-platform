@@ -6,6 +6,7 @@ import json
 from dataclasses import asdict, dataclass
 from typing import Any
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from .contracts import AiJob, AiResult, TaskName
@@ -104,8 +105,15 @@ class ApiJobQueue:
         )
 
     def cancellation_requested(self, queued: ApiQueuedJob) -> bool:
-        del queued
-        return False
+        query = urlencode({"leaseToken": queued.lease_token})
+        response = self._request(
+            "GET",
+            f"/v1/internal/ai/jobs/{queued.request_id}/status?{query}",
+            None,
+        )
+        if response is None:
+            raise RuntimeError("AI job status response was empty.")
+        return bool(response.get("cancelled")) or not bool(response.get("active"))
 
     def mark_cancelled(self, queued: ApiQueuedJob) -> None:
         self._request(
