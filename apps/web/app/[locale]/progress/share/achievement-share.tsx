@@ -98,7 +98,9 @@ export function AchievementShare() {
       })
       .catch((requestError) => {
         if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
-          setError(requestError instanceof Error ? requestError.message : "Sharing is unavailable.");
+          setError(
+            requestError instanceof Error ? requestError.message : "Sharing is unavailable.",
+          );
         }
       });
     return () => controller.abort();
