@@ -134,6 +134,20 @@
       "when": 1785585600000,
       "tag": "0018_assessment_lifecycle",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1785730800000,
+      "tag": "0019_premium_reporting_authority",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1785731100000,
+      "tag": "0020_premium_plan_scheduling",
+      "breakpoints": true
     }
   ]
 }
