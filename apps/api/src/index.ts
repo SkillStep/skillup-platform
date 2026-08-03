@@ -18,6 +18,7 @@ import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
 import { createMaintenanceRunner } from "./maintenance.js";
+import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
 import { createProgressService } from "./progress.js";
@@ -56,6 +57,10 @@ const analyticsService = createAnalyticsService({
   releaseSha: config.RELEASE_SHA,
 });
 const premiumReportingService = createPremiumReportingService({
+  pool: database.pool,
+  adminService,
+});
+const premiumMembershipService = createPremiumMembershipService({
   pool: database.pool,
   adminService,
 });
@@ -98,6 +103,7 @@ registerPremiumReportingRoutes(app, {
   authService,
   adminService,
   reportingService: premiumReportingService,
+  membershipService: premiumMembershipService,
 });
 
 const workerSecret = process.env["AI_WORKER_SHARED_SECRET"]?.trim();
