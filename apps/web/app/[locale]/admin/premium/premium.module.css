@@ -473,9 +473,10 @@ button:disabled {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  .main,
+  .main *,
+  .main *::before,
+  .main *::after {
     scroll-behavior: auto !important;
     transition: none !important;
   }
