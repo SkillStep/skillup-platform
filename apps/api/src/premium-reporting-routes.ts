@@ -5,6 +5,10 @@ import type { AdminIdentity, AdminService } from "./admin.js";
 import type { AuthService, AuthenticatedLearner } from "./auth.js";
 import type { ApiConfig } from "./config.js";
 import {
+  ManualGrantInputSchema,
+  type PremiumMembershipService,
+} from "./premium-membership-service.js";
+import {
   PremiumExportInputSchema,
   PremiumLedgerQuerySchema,
   PremiumPlanTransitionSchema,
@@ -79,6 +83,7 @@ export function registerPremiumReportingRoutes(
     authService: AuthService;
     adminService: AdminService;
     reportingService: PremiumReportingService;
+    membershipService: PremiumMembershipService;
   }>,
 ): void {
   app.get("/v1/admin/reports/premium/access", async (request) => {
@@ -101,6 +106,17 @@ export function registerPremiumReportingRoutes(
   app.get("/v1/admin/reports/premium/memberships", async (request) => {
     await requirePremiumAdmin(request, options, "subscription.read");
     return options.reportingService.memberships(PremiumLedgerQuerySchema.parse(request.query));
+  });
+
+  app.post("/v1/admin/reports/premium/memberships/manual-grants", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requirePremiumAdmin(request, options, "subscription.adjust");
+    const grant = await options.membershipService.createManualGrant(
+      admin,
+      ManualGrantInputSchema.parse(request.body),
+      request.id,
+    );
+    return reply.status(201).send({ grant });
   });
 
   app.get("/v1/admin/reports/premium/recurring-customers", async (request) => {
