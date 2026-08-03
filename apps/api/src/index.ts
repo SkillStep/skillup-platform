@@ -18,6 +18,8 @@ import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
 import { createMaintenanceRunner } from "./maintenance.js";
+import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
+import { createPremiumReportingService } from "./premium-reporting-service.js";
 import { createProgressService } from "./progress.js";
 import { createRecommendationService, registerRecommendationRoutes } from "./recommendations.js";
 
@@ -53,6 +55,10 @@ const analyticsService = createAnalyticsService({
   environment: config.APP_ENV,
   releaseSha: config.RELEASE_SHA,
 });
+const premiumReportingService = createPremiumReportingService({
+  pool: database.pool,
+  adminService,
+});
 const app = buildApi({
   config,
   readiness: database.ping,
@@ -87,6 +93,13 @@ registerContentOperationsRoutes(app, {
   contentService,
 });
 
+registerPremiumReportingRoutes(app, {
+  config,
+  authService,
+  adminService,
+  reportingService: premiumReportingService,
+});
+
 const workerSecret = process.env["AI_WORKER_SHARED_SECRET"]?.trim();
 if (workerSecret) {
   registerAiJobRoutes(app, {
@@ -109,6 +122,10 @@ const maintenance = createMaintenanceRunner({
     {
       name: "commercial-automation",
       run: () => commercialAutomationService.run(100),
+    },
+    {
+      name: "scheduled-plan-activation",
+      run: () => premiumReportingService.activateDuePlanVersions(20),
     },
     {
       name: "scheduled-publication",
