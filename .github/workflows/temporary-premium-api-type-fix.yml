@@ -1,0 +1,61 @@
+name: Temporary premium API type fix
+
+on:
+  push:
+    branches:
+      - feat/premium-admin-reporting
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/premium-admin-reporting
+          fetch-depth: 0
+      - name: Apply premium API type fixes and restore web build
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          contract = Path('apps/api/src/premium-reporting-contract.ts')
+          content = contract.read_text(encoding='utf-8')
+          old = 'from?: string; to?: string'
+          new = 'from?: string | undefined; to?: string | undefined'
+          if old not in content:
+              raise SystemExit('Expected reporting range type was not found')
+          contract.write_text(content.replace(old, new, 1), encoding='utf-8')
+
+          queries = Path('apps/api/src/premium-reporting-queries.ts')
+          content = queries.read_text(encoding='utf-8')
+          old = '''              ${membershipFilters}`,
+            values,
+          ),'''
+          new = '''              ${membershipFilters}`,
+            [...values],
+          ),'''
+          if old not in content:
+              raise SystemExit('Expected readonly query values call was not found')
+          queries.write_text(content.replace(old, new, 1), encoding='utf-8')
+
+          package = Path('apps/web/package.json')
+          content = package.read_text(encoding='utf-8')
+          old = '"build": "pnpm --dir ../.. typecheck"'
+          new = '"build": "next build"'
+          if old not in content:
+              raise SystemExit('Expected diagnostic web build script was not found')
+          package.write_text(content.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit fixes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/api/src/premium-reporting-contract.ts apps/api/src/premium-reporting-queries.ts apps/web/package.json
+          git commit -m "fix(api): satisfy premium reporting type contracts"
+          git push origin HEAD:feat/premium-admin-reporting
