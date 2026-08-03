@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../../discovery-shell";
@@ -33,6 +34,11 @@ export default async function PremiumAdminPage({ params }: PageProps) {
             Collections, refunds, recurring customers, MRR, memberships and exports come from the
             backend payment and entitlement authority. Browser events and visible table rows never
             determine finance totals.
+          </p>
+          <p>
+            <Link href="/en/admin/premium/manual-grant">
+              Create an audited temporary non-paid Premium grant
+            </Link>
           </p>
         </header>
         <PremiumWorkspace />
