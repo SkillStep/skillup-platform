@@ -32,7 +32,7 @@
     "db:seed": "pnpm --filter @skillup/database db:seed",
     "db:smoke": "pnpm --filter @skillup/database db:smoke",
     "admin:bootstrap": "pnpm --filter @skillup/database admin:bootstrap",
-    "smoke:api": "pnpm --filter @skillup/api smoke:commercial && node tools/smoke-gameplay-resume.mjs && node tools/smoke-api.mjs",
+    "smoke:api": "pnpm --filter @skillup/api smoke:commercial && pnpm --filter @skillup/api smoke:premium-reporting && node tools/smoke-gameplay-resume.mjs && node tools/smoke-api.mjs",
     "smoke:live": "node tools/smoke-live.mjs",
     "release:evidence": "node tools/write-release-evidence.mjs",
     "recovery:verify": "node tools/verify-backup-restore.mjs",
