@@ -29,7 +29,9 @@ describe("premium reporting date authority", () => {
   });
 
   it("rejects custom ranges without both boundaries", () => {
-    expect(() => PremiumReportQuerySchema.parse({ preset: "custom", from: now.toISOString() })).toThrow();
+    expect(() =>
+      PremiumReportQuerySchema.parse({ preset: "custom", from: now.toISOString() }),
+    ).toThrow();
   });
 
   it("rejects ranges longer than the reporting limit", () => {

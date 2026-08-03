@@ -58,7 +58,9 @@ function asIso(value: unknown): string | null {
   return typeof value === "string" ? value : null;
 }
 
-function reportItems(report: Readonly<Record<string, unknown>>): readonly Readonly<Record<string, unknown>>[] {
+function reportItems(
+  report: Readonly<Record<string, unknown>>,
+): readonly Readonly<Record<string, unknown>>[] {
   const items = report["items"];
   if (!Array.isArray(items)) return [];
   return items.filter(
@@ -104,12 +106,14 @@ async function rowsForExport(
   return reportItems(await queryService.reconciliation(ledgerQuery));
 }
 
-export function createPremiumExportService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  adminService: AdminService;
-  queryService: PremiumQueryService;
-  now?: () => Date;
-}>): PremiumExportService {
+export function createPremiumExportService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    adminService: AdminService;
+    queryService: PremiumQueryService;
+    now?: () => Date;
+  }>,
+): PremiumExportService {
   const now = options.now ?? (() => new Date());
 
   return {

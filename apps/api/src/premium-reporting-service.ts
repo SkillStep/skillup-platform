@@ -50,11 +50,13 @@ export type PremiumReportingService = Readonly<{
   ) => Promise<Readonly<{ filename: string; contentType: string; payload: Buffer }>>;
 }>;
 
-export function createPremiumReportingService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  adminService: AdminService;
-  now?: () => Date;
-}>): PremiumReportingService {
+export function createPremiumReportingService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    adminService: AdminService;
+    now?: () => Date;
+  }>,
+): PremiumReportingService {
   const queryService = createPremiumQueryService(options.pool);
   const planService = createPremiumPlanService(options);
   const exportService = createPremiumExportService({

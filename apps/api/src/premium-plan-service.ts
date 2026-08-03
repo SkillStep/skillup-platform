@@ -96,11 +96,13 @@ async function activateInTransaction(
   return row;
 }
 
-export function createPremiumPlanService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  adminService: AdminService;
-  now?: () => Date;
-}>): PremiumPlanService {
+export function createPremiumPlanService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    adminService: AdminService;
+    now?: () => Date;
+  }>,
+): PremiumPlanService {
   const now = options.now ?? (() => new Date());
 
   return {

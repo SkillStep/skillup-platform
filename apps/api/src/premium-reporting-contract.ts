@@ -67,9 +67,8 @@ function validateRangeFields(
   }
 }
 
-export const PremiumReportQuerySchema = PremiumReportQueryBaseSchema.strict().superRefine(
-  validateRangeFields,
-);
+export const PremiumReportQuerySchema =
+  PremiumReportQueryBaseSchema.strict().superRefine(validateRangeFields);
 
 export const PremiumLedgerQuerySchema = PremiumReportQueryBaseSchema.extend({
   limit: z.coerce.number().int().min(1).max(200).default(50),
@@ -290,14 +289,11 @@ export function metricDefinitions(): Readonly<Record<string, string>> {
       "Completed captures divided by terminal payment attempts. Pending and created attempts are excluded.",
     newPaidActivations:
       "First paid membership periods classified as activation. Audited manual grants are excluded.",
-    successfulRenewals:
-      "Completed paid membership periods classified and linked as renewals.",
-    renewalSuccessRate:
-      "Successful paid renewals divided by terminal renewal attempts.",
+    successfulRenewals: "Completed paid membership periods classified and linked as renewals.",
+    renewalSuccessRate: "Successful paid renewals divided by terminal renewal attempts.",
     recurringCustomers:
       "Distinct learners with at least one completed paid renewal. Auto-renew consent is not used.",
-    mrr:
-      "Normalized value of active paid membership periods at the report end: monthly price in full and yearly price divided by 12.",
+    mrr: "Normalized value of active paid membership periods at the report end: monthly price in full and yearly price divided by 12.",
     arr: "MRR multiplied by 12.",
     cashCollections:
       "Cash captured in the selected calendar period. This is separate from normalized recurring revenue.",

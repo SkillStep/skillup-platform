@@ -94,9 +94,7 @@ const membershipFilters = `
   and ($5::text is null or mp.purpose = $5)
   and ($7::text is null or mp.status = $7)`;
 
-export function createPremiumQueryService(
-  pool: DatabaseClient["pool"],
-): PremiumQueryService {
+export function createPremiumQueryService(pool: DatabaseClient["pool"]): PremiumQueryService {
   return {
     summary: async (query) => {
       const range = resolvePremiumReportRange(query);

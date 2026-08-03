@@ -51,7 +51,8 @@ export function ManualGrantForm() {
             signal: controller.signal,
           }),
         ]);
-        if (!accessResponse.ok) throw new Error(await message(accessResponse, "Access could not be verified."));
+        if (!accessResponse.ok)
+          throw new Error(await message(accessResponse, "Access could not be verified."));
         const access = (await accessResponse.json()) as AccessResponse;
         setAllowed(access.premium.canAdjustSubscriptions);
         if (plansResponse.ok) {
@@ -63,7 +64,9 @@ export function ManualGrantForm() {
         }
       } catch (requestError) {
         if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
-          setError(requestError instanceof Error ? requestError.message : "The grant form could not load.");
+          setError(
+            requestError instanceof Error ? requestError.message : "The grant form could not load.",
+          );
         }
       }
     })();
@@ -90,22 +93,31 @@ export function ManualGrantForm() {
           evidenceReference: evidenceReference.trim() || null,
         }),
       });
-      if (!response.ok) throw new Error(await message(response, "The manual grant was not created."));
-      setStatus("The non-paid Premium grant was created with entitlement and privileged audit evidence.");
+      if (!response.ok)
+        throw new Error(await message(response, "The manual grant was not created."));
+      setStatus(
+        "The non-paid Premium grant was created with entitlement and privileged audit evidence.",
+      );
       setUserId("");
       setStartsAt("");
       setEndsAt("");
       setReason("");
       setEvidenceReference("");
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "The manual grant failed safely.");
+      setError(
+        requestError instanceof Error ? requestError.message : "The manual grant failed safely.",
+      );
     } finally {
       setBusy(false);
     }
   }
 
   if (allowed === false) {
-    return <p className={`${styles["message"]} ${styles["error"]}`}>Your role cannot create manual Premium grants.</p>;
+    return (
+      <p className={`${styles["message"]} ${styles["error"]}`}>
+        Your role cannot create manual Premium grants.
+      </p>
+    );
   }
 
   return (
@@ -124,21 +136,36 @@ export function ManualGrantForm() {
         </label>
         <label>
           <span>Approved active plan version</span>
-          <select value={planVersionId} onChange={(event) => setPlanVersionId(event.target.value)} required>
+          <select
+            value={planVersionId}
+            onChange={(event) => setPlanVersionId(event.target.value)}
+            required
+          >
             {plans.map((plan) => (
               <option value={String(plan["versionId"])} key={String(plan["versionId"])}>
-                {String(plan["planName"])} v{String(plan["version"])} — PKR {Number(plan["amountMinor"] ?? 0) / 100}
+                {String(plan["planName"])} v{String(plan["version"])} — PKR{" "}
+                {Number(plan["amountMinor"] ?? 0) / 100}
               </option>
             ))}
           </select>
         </label>
         <label>
           <span>Starts at</span>
-          <input type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} required />
+          <input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(event) => setStartsAt(event.target.value)}
+            required
+          />
         </label>
         <label>
           <span>Ends at</span>
-          <input type="datetime-local" value={endsAt} onChange={(event) => setEndsAt(event.target.value)} required />
+          <input
+            type="datetime-local"
+            value={endsAt}
+            onChange={(event) => setEndsAt(event.target.value)}
+            required
+          />
         </label>
         <label className={styles["full"]}>
           <span>Reason</span>
@@ -156,7 +183,8 @@ export function ManualGrantForm() {
           Confirm non-paid grant
         </button>
         <p className={styles["hint"]}>
-          This operation never creates a payment or revenue effect and cannot be used to mark a payment successful.
+          This operation never creates a payment or revenue effect and cannot be used to mark a
+          payment successful.
         </p>
       </form>
     </section>

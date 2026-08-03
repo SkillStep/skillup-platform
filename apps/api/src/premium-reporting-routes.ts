@@ -121,7 +121,9 @@ export function registerPremiumReportingRoutes(
 
   app.get("/v1/admin/reports/premium/recurring-customers", async (request) => {
     await requirePremiumAdmin(request, options, "report.read");
-    return options.reportingService.recurringCustomers(PremiumLedgerQuerySchema.parse(request.query));
+    return options.reportingService.recurringCustomers(
+      PremiumLedgerQuerySchema.parse(request.query),
+    );
   });
 
   app.get("/v1/admin/reports/premium/reconciliation", async (request) => {
@@ -168,12 +170,7 @@ export function registerPremiumReportingRoutes(
     const { id } = IdParamsSchema.parse(request.params);
     const body = PremiumPlanTransitionSchema.parse(request.body);
     return {
-      version: await options.reportingService.retirePlanVersion(
-        admin,
-        id,
-        body.reason,
-        request.id,
-      ),
+      version: await options.reportingService.retirePlanVersion(admin, id, body.reason, request.id),
     };
   });
 

@@ -14,7 +14,14 @@ type Tab =
   | "exports";
 
 type Filters = Readonly<{
-  preset: "today" | "yesterday" | "last_7_days" | "last_30_days" | "current_month" | "previous_month" | "custom";
+  preset:
+    | "today"
+    | "yesterday"
+    | "last_7_days"
+    | "last_30_days"
+    | "current_month"
+    | "previous_month"
+    | "custom";
   aggregation: "daily" | "monthly";
   from: string;
   to: string;
@@ -247,7 +254,9 @@ export function PremiumWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [reconciliationReasons, setReconciliationReasons] = useState<Record<string, string>>({});
-  const [selectedMembership, setSelectedMembership] = useState<Readonly<Record<string, unknown>> | null>(null);
+  const [selectedMembership, setSelectedMembership] = useState<Readonly<
+    Record<string, unknown>
+  > | null>(null);
   const [adjustStatus, setAdjustStatus] = useState("active");
   const [adjustEnd, setAdjustEnd] = useState("");
   const [adjustGrace, setAdjustGrace] = useState("");
@@ -336,7 +345,9 @@ export function PremiumWorkspace() {
         }
       } catch (requestError) {
         if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
-          setError(requestError instanceof Error ? requestError.message : "The report could not load.");
+          setError(
+            requestError instanceof Error ? requestError.message : "The report could not load.",
+          );
         }
       } finally {
         setLoading(false);
@@ -365,7 +376,9 @@ export function PremiumWorkspace() {
       setMessage(success);
       await loadCurrent();
     } catch (requestError) {
-      setError(requestError instanceof Error ? requestError.message : "The operation failed safely.");
+      setError(
+        requestError instanceof Error ? requestError.message : "The operation failed safely.",
+      );
     } finally {
       setBusy(null);
     }
@@ -593,7 +606,10 @@ export function PremiumWorkspace() {
           </label>
           <label>
             <span>Plan</span>
-            <select value={filters.planCode} onChange={(event) => setFilter("planCode", event.target.value)}>
+            <select
+              value={filters.planCode}
+              onChange={(event) => setFilter("planCode", event.target.value)}
+            >
               <option value="">All plans</option>
               <option value="premium-monthly">Premium monthly</option>
               <option value="premium-yearly">Premium yearly</option>
@@ -640,13 +656,11 @@ export function PremiumWorkspace() {
               onChange={(event) => setFilter("membershipStatus", event.target.value)}
             >
               <option value="">All membership statuses</option>
-              {["active", "grace", "expired", "cancelled", "refunded", "revoked"].map(
-                (status) => (
-                  <option value={status} key={status}>
-                    {status}
-                  </option>
-                ),
-              )}
+              {["active", "grace", "expired", "cancelled", "refunded", "revoked"].map((status) => (
+                <option value={status} key={status}>
+                  {status}
+                </option>
+              ))}
             </select>
           </label>
           {tab !== "summary" && tab !== "reconciliation" ? (
@@ -667,11 +681,13 @@ export function PremiumWorkspace() {
 
       {summary || ledger ? (
         <p className={styles["range"]}>
-          Reporting timezone: <strong>{summary?.timezone ?? ledger?.timezone ?? "Asia/Karachi"}</strong>
+          Reporting timezone:{" "}
+          <strong>{summary?.timezone ?? ledger?.timezone ?? "Asia/Karachi"}</strong>
           {summary?.effectiveRange || ledger?.effectiveRange ? (
             <>
               {" "}
-              · Effective range {dateTime(summary?.effectiveRange.from ?? ledger?.effectiveRange.from)} to{" "}
+              · Effective range{" "}
+              {dateTime(summary?.effectiveRange.from ?? ledger?.effectiveRange.from)} to{" "}
               {dateTime(summary?.effectiveRange.to ?? ledger?.effectiveRange.to)}
             </>
           ) : null}
@@ -691,19 +707,39 @@ export function PremiumWorkspace() {
           <section aria-labelledby="premium-kpis">
             <h2 id="premium-kpis">Premium and collections summary</h2>
             <div className={styles["kpiGrid"]}>
-              <KpiCard label="Gross collections" value={money(summaryMetrics["grossCollectionsMinor"])} />
+              <KpiCard
+                label="Gross collections"
+                value={money(summaryMetrics["grossCollectionsMinor"])}
+              />
               <KpiCard label="Refunds" value={money(summaryMetrics["refundsMinor"])} />
-              <KpiCard label="Net collections" value={money(summaryMetrics["netCollectionsMinor"])} />
+              <KpiCard
+                label="Net collections"
+                value={money(summaryMetrics["netCollectionsMinor"])}
+              />
               <KpiCard
                 label="Payment success"
-                value={summaryMetrics["paymentSuccessRate"] === null ? "—" : `${text(summaryMetrics["paymentSuccessRate"])}%`}
+                value={
+                  summaryMetrics["paymentSuccessRate"] === null
+                    ? "—"
+                    : `${text(summaryMetrics["paymentSuccessRate"])}%`
+                }
                 explanation={metricDefinitions["paymentSuccessRate"]}
               />
-              <KpiCard label="New paid activations" value={text(summaryMetrics["newPaidActivations"])} />
-              <KpiCard label="Successful renewals" value={text(summaryMetrics["successfulRenewals"])} />
+              <KpiCard
+                label="New paid activations"
+                value={text(summaryMetrics["newPaidActivations"])}
+              />
+              <KpiCard
+                label="Successful renewals"
+                value={text(summaryMetrics["successfulRenewals"])}
+              />
               <KpiCard
                 label="Renewal success"
-                value={summaryMetrics["renewalSuccessRate"] === null ? "—" : `${text(summaryMetrics["renewalSuccessRate"])}%`}
+                value={
+                  summaryMetrics["renewalSuccessRate"] === null
+                    ? "—"
+                    : `${text(summaryMetrics["renewalSuccessRate"])}%`
+                }
                 explanation={metricDefinitions["renewalSuccessRate"]}
               />
               <KpiCard
@@ -711,9 +747,15 @@ export function PremiumWorkspace() {
                 value={text(summaryMetrics["recurringCustomers"])}
                 explanation={metricDefinitions["recurringCustomers"]}
               />
-              <KpiCard label="Active memberships" value={text(summaryMetrics["activeMemberships"])} />
+              <KpiCard
+                label="Active memberships"
+                value={text(summaryMetrics["activeMemberships"])}
+              />
               <KpiCard label="Grace memberships" value={text(summaryMetrics["graceMemberships"])} />
-              <KpiCard label="Approaching renewal" value={text(summaryMetrics["approachingRenewal"])} />
+              <KpiCard
+                label="Approaching renewal"
+                value={text(summaryMetrics["approachingRenewal"])}
+              />
               <KpiCard label="Manual grants" value={text(summaryMetrics["manualGrants"])} />
               <KpiCard
                 label="MRR"
@@ -735,9 +777,13 @@ export function PremiumWorkspace() {
 
           <section aria-labelledby="collections-chart">
             <h2 id="collections-chart">Collections over time</h2>
-            <p className={styles["hint"]}>Cash collected in a month is not MRR. These bars show authoritative capture effects.</p>
+            <p className={styles["hint"]}>
+              Cash collected in a month is not MRR. These bars show authoritative capture effects.
+            </p>
             <div className={styles["bars"]}>
-              {summary.buckets.length === 0 ? <p>No collection effects match the selected filters.</p> : null}
+              {summary.buckets.length === 0 ? (
+                <p>No collection effects match the selected filters.</p>
+              ) : null}
               {summary.buckets.map((bucket) => {
                 const gross = Number(bucket["grossMinor"] ?? 0);
                 return (
@@ -810,7 +856,9 @@ export function PremiumWorkspace() {
       {!loading && tab === "payments" && ledger ? (
         <section aria-labelledby="payment-ledger">
           <h2 id="payment-ledger">Authoritative payment ledger</h2>
-          <p className={styles["hint"]}>Provider payloads and secure hashes are intentionally excluded.</p>
+          <p className={styles["hint"]}>
+            Provider payloads and secure hashes are intentionally excluded.
+          </p>
           <div className={styles["tableWrap"]}>
             <table>
               <thead>
@@ -836,7 +884,9 @@ export function PremiumWorkspace() {
                     <td>{text(item["purpose"])}</td>
                     <td>{money(item["amountMinor"])}</td>
                     <td>
-                      <span className={`${styles["status"]} ${statusClass(item["internalStatus"])}`}>
+                      <span
+                        className={`${styles["status"]} ${statusClass(item["internalStatus"])}`}
+                      >
                         {text(item["internalStatus"])}
                       </span>
                     </td>
@@ -886,7 +936,8 @@ export function PremiumWorkspace() {
                       {dateTime(item["periodStart"])} → {dateTime(item["periodEnd"])}
                     </td>
                     <td>
-                      {text(item["renewalCount"])} successful / {text(item["failedRenewalCount"])} failed
+                      {text(item["renewalCount"])} successful / {text(item["failedRenewalCount"])}{" "}
+                      failed
                     </td>
                     <td>{money(item["lifetimeCollectedMinor"])}</td>
                     {access?.canAdjustSubscriptions ? (
@@ -920,15 +971,21 @@ export function PremiumWorkspace() {
           </div>
 
           {selectedMembership ? (
-            <form className={styles["panelForm"]} onSubmit={(event) => void submitAdjustment(event)}>
+            <form
+              className={styles["panelForm"]}
+              onSubmit={(event) => void submitAdjustment(event)}
+            >
               <h3>Audited membership adjustment</h3>
               <p>
-                Current: {text(selectedMembership["status"])} · {text(selectedMembership["origin"])} · entitlement{" "}
-                {text(selectedMembership["entitlementId"])}
+                Current: {text(selectedMembership["status"])} · {text(selectedMembership["origin"])}{" "}
+                · entitlement {text(selectedMembership["entitlementId"])}
               </p>
               <label>
                 <span>Next status</span>
-                <select value={adjustStatus} onChange={(event) => setAdjustStatus(event.target.value)}>
+                <select
+                  value={adjustStatus}
+                  onChange={(event) => setAdjustStatus(event.target.value)}
+                >
                   {["active", "grace", "expired", "cancelled", "refunded", "revoked"].map(
                     (status) => (
                       <option value={status} key={status}>
@@ -940,29 +997,50 @@ export function PremiumWorkspace() {
               </label>
               <label>
                 <span>Entitlement end</span>
-                <input type="datetime-local" value={adjustEnd} onChange={(event) => setAdjustEnd(event.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={adjustEnd}
+                  onChange={(event) => setAdjustEnd(event.target.value)}
+                />
               </label>
               <label>
                 <span>Grace end</span>
-                <input type="datetime-local" value={adjustGrace} onChange={(event) => setAdjustGrace(event.target.value)} />
+                <input
+                  type="datetime-local"
+                  value={adjustGrace}
+                  onChange={(event) => setAdjustGrace(event.target.value)}
+                />
               </label>
               <label>
                 <span>Reason</span>
-                <textarea value={adjustReason} onChange={(event) => setAdjustReason(event.target.value)} required />
+                <textarea
+                  value={adjustReason}
+                  onChange={(event) => setAdjustReason(event.target.value)}
+                  required
+                />
               </label>
               <label>
                 <span>Evidence reference</span>
-                <input value={adjustEvidence} onChange={(event) => setAdjustEvidence(event.target.value)} />
+                <input
+                  value={adjustEvidence}
+                  onChange={(event) => setAdjustEvidence(event.target.value)}
+                />
               </label>
               <div className={styles["actions"]}>
                 <button type="submit" disabled={busy !== null}>
                   Confirm adjustment
                 </button>
-                <button type="button" className={styles["secondary"]} onClick={() => setSelectedMembership(null)}>
+                <button
+                  type="button"
+                  className={styles["secondary"]}
+                  onClick={() => setSelectedMembership(null)}
+                >
                   Cancel
                 </button>
               </div>
-              <p className={styles["hint"]}>This does not mark a payment successful. Payment authority remains immutable.</p>
+              <p className={styles["hint"]}>
+                This does not mark a payment successful. Payment authority remains immutable.
+              </p>
             </form>
           ) : null}
         </section>
@@ -972,7 +1050,8 @@ export function PremiumWorkspace() {
         <section aria-labelledby="recurring-ledger">
           <h2 id="recurring-ledger">Actual recurring customers</h2>
           <p className={styles["hint"]}>
-            A learner appears here only after at least one completed paid renewal. Auto-renew is not applicable to the current JazzCash model.
+            A learner appears here only after at least one completed paid renewal. Auto-renew is not
+            applicable to the current JazzCash model.
           </p>
           <div className={styles["tableWrap"]}>
             <table>
@@ -1011,7 +1090,9 @@ export function PremiumWorkspace() {
         <section aria-labelledby="reconciliation-ledger">
           <h2 id="reconciliation-ledger">Reconciliation attention queue</h2>
           <div className={styles["cards"]}>
-            {ledger.items.length === 0 ? <p>No reconciliation exception matches the selected filters.</p> : null}
+            {ledger.items.length === 0 ? (
+              <p>No reconciliation exception matches the selected filters.</p>
+            ) : null}
             {ledger.items.map((item) => {
               const id = String(item["id"]);
               return (
@@ -1019,7 +1100,8 @@ export function PremiumWorkspace() {
                   <div>
                     <h3>{text(item["mismatchKind"])}</h3>
                     <p>
-                      {text(item["planName"])} · {money(item["amountMinor"])} · {text(item["orderStatus"])} ·{" "}
+                      {text(item["planName"])} · {money(item["amountMinor"])} ·{" "}
+                      {text(item["orderStatus"])} ·{" "}
                       {Math.floor(Number(item["ageSeconds"] ?? 0) / 60)} minutes old
                     </p>
                   </div>
@@ -1039,12 +1121,18 @@ export function PremiumWorkspace() {
                         aria-label={`Resolution for ${id}`}
                         value={reconciliationReasons[id] ?? ""}
                         onChange={(event) =>
-                          setReconciliationReasons((current) => ({ ...current, [id]: event.target.value }))
+                          setReconciliationReasons((current) => ({
+                            ...current,
+                            [id]: event.target.value,
+                          }))
                         }
                         placeholder="Evidence-based resolution reason"
                       />
                       <div className={styles["actions"]}>
-                        <button type="button" onClick={() => void resolveReconciliation(id, "resolved")}>
+                        <button
+                          type="button"
+                          onClick={() => void resolveReconciliation(id, "resolved")}
+                        >
                           Resolve with evidence
                         </button>
                         <button
@@ -1069,7 +1157,8 @@ export function PremiumWorkspace() {
           <div>
             <h2 id="plan-admin">Immutable Premium plan versions</h2>
             <p className={styles["hint"]}>
-              Runtime Premium and JazzCash kill switches are read-only here. They remain protected deployment configuration.
+              Runtime Premium and JazzCash kill switches are read-only here. They remain protected
+              deployment configuration.
             </p>
           </div>
           <div className={styles["tableWrap"]}>
@@ -1097,7 +1186,9 @@ export function PremiumWorkspace() {
                     <td>{text(plan["versionStatus"])}</td>
                     <td>{text(plan["termsVersion"])}</td>
                     <td>{dateTime(plan["effectiveAt"])}</td>
-                    <td>{Array.isArray(plan["capabilities"]) ? plan["capabilities"].join(", ") : "—"}</td>
+                    <td>
+                      {Array.isArray(plan["capabilities"]) ? plan["capabilities"].join(", ") : "—"}
+                    </td>
                     {access?.canManagePlans ? (
                       <td>
                         <div className={styles["inlineActions"]}>
@@ -1105,7 +1196,9 @@ export function PremiumWorkspace() {
                             <button
                               type="button"
                               className={styles["smallButton"]}
-                              onClick={() => void transitionPlan(String(plan["versionId"]), "activate")}
+                              onClick={() =>
+                                void transitionPlan(String(plan["versionId"]), "activate")
+                              }
                             >
                               Activate
                             </button>
@@ -1114,7 +1207,9 @@ export function PremiumWorkspace() {
                             <button
                               type="button"
                               className={`${styles["smallButton"]} ${styles["danger"]}`}
-                              onClick={() => void transitionPlan(String(plan["versionId"]), "retire")}
+                              onClick={() =>
+                                void transitionPlan(String(plan["versionId"]), "retire")
+                              }
                             >
                               Retire
                             </button>
@@ -1129,7 +1224,10 @@ export function PremiumWorkspace() {
           </div>
 
           {access?.canManagePlans ? (
-            <form className={styles["panelForm"]} onSubmit={(event) => void createPlanVersion(event)}>
+            <form
+              className={styles["panelForm"]}
+              onSubmit={(event) => void createPlanVersion(event)}
+            >
               <h3>Create approved draft version</h3>
               <label>
                 <span>Plan</span>
@@ -1154,7 +1252,9 @@ export function PremiumWorkspace() {
                   min="1"
                   step="1"
                   value={draftPlan.amount}
-                  onChange={(event) => setDraftPlan((current) => ({ ...current, amount: event.target.value }))}
+                  onChange={(event) =>
+                    setDraftPlan((current) => ({ ...current, amount: event.target.value }))
+                  }
                   required
                 />
               </label>
@@ -1190,7 +1290,11 @@ export function PremiumWorkspace() {
               </label>
               <label className={styles["full"]}>
                 <span>Approval reason for create, activate or retire</span>
-                <textarea value={planReason} onChange={(event) => setPlanReason(event.target.value)} required />
+                <textarea
+                  value={planReason}
+                  onChange={(event) => setPlanReason(event.target.value)}
+                  required
+                />
               </label>
               <button type="submit" disabled={busy !== null}>
                 Create draft plan version
@@ -1205,7 +1309,8 @@ export function PremiumWorkspace() {
           <div>
             <h2 id="exports-title">Audited backend-generated exports</h2>
             <p className={styles["hint"]}>
-              Files use the same formulas and filters as the screen and expire after 24 hours. CSV is protected against spreadsheet formula injection.
+              Files use the same formulas and filters as the screen and expire after 24 hours. CSV
+              is protected against spreadsheet formula injection.
             </p>
           </div>
           <form className={styles["panelForm"]} onSubmit={(event) => void createExport(event)}>
@@ -1221,7 +1326,11 @@ export function PremiumWorkspace() {
             </label>
             <label className={styles["full"]}>
               <span>Business reason</span>
-              <textarea value={exportReason} onChange={(event) => setExportReason(event.target.value)} required />
+              <textarea
+                value={exportReason}
+                onChange={(event) => setExportReason(event.target.value)}
+                required
+              />
             </label>
             <button type="submit" disabled={busy !== null}>
               Generate secure CSV

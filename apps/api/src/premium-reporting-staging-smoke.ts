@@ -126,12 +126,7 @@ async function run(): Promise<void> {
        values ($1, $2, $3, 'active', $4, $4 + interval '1 month', $4, $4)`,
       [users.renewal, planVersionId, renewalOrder, new Date("2026-07-01T05:00:00.000Z")],
     );
-    await insertOrder(
-      users.renewal,
-      "100004",
-      "failed",
-      new Date("2026-08-02T05:00:00.000Z"),
-    );
+    await insertOrder(users.renewal, "100004", "failed", new Date("2026-08-02T05:00:00.000Z"));
 
     await connection.query(
       `insert into entitlements

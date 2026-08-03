@@ -60,11 +60,13 @@ async function transaction<T>(
   }
 }
 
-export function createPremiumMembershipService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  adminService: AdminService;
-  now?: () => Date;
-}>): PremiumMembershipService {
+export function createPremiumMembershipService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    adminService: AdminService;
+    now?: () => Date;
+  }>,
+): PremiumMembershipService {
   const now = options.now ?? (() => new Date());
 
   return {
@@ -80,9 +82,12 @@ export function createPremiumMembershipService(options: Readonly<{
           throw Object.assign(new Error("The learner was not found."), { statusCode: 404 });
         }
         if (user.rows[0].status !== "active") {
-          throw Object.assign(new Error("Manual access can only be granted to an active learner."), {
-            statusCode: 409,
-          });
+          throw Object.assign(
+            new Error("Manual access can only be granted to an active learner."),
+            {
+              statusCode: 409,
+            },
+          );
         }
 
         const plan = await database.query<{ status: string; plan_status: string }>(
@@ -94,9 +99,12 @@ export function createPremiumMembershipService(options: Readonly<{
         );
         const planRow = plan.rows[0];
         if (!planRow || planRow.status !== "active" || planRow.plan_status !== "active") {
-          throw Object.assign(new Error("Manual grants require the current active approved plan version."), {
-            statusCode: 409,
-          });
+          throw Object.assign(
+            new Error("Manual grants require the current active approved plan version."),
+            {
+              statusCode: 409,
+            },
+          );
         }
 
         const overlap = await database.query<{ id: string }>(
@@ -136,13 +144,7 @@ export function createPremiumMembershipService(options: Readonly<{
             (entitlement_id, action, actor_type, actor_user_id, reason,
              evidence_reference, previous_status, next_status, created_at)
            values ($1, 'activate', 'admin', $2, $3, $4, null, 'active', $5)`,
-          [
-            entitlementId,
-            actor.userId,
-            input.reason,
-            input.evidenceReference ?? null,
-            createdAt,
-          ],
+          [entitlementId, actor.userId, input.reason, input.evidenceReference ?? null, createdAt],
         );
         await options.adminService.audit({
           actorUserId: actor.userId,
