@@ -301,7 +301,7 @@ export function PremiumWorkspace() {
   }, []);
 
   const loadCurrent = useCallback(
-    async (signal?: AbortSignal) => {
+    async (signal: AbortSignal | null = null) => {
       setLoading(true);
       setError(null);
       try {
