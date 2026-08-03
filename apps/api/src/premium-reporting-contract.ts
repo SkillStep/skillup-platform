@@ -51,10 +51,10 @@ const PremiumReportQueryBaseSchema = z.object({
 
 function validateRangeFields(
   value: Readonly<{
-  preset: z.infer<typeof PremiumPresetSchema>;
-  from?: string | undefined;
-  to?: string | undefined;
-}>,
+    preset: z.infer<typeof PremiumPresetSchema>;
+    from?: string | undefined;
+    to?: string | undefined;
+  }>,
   context: z.RefinementCtx,
 ): void {
   if (value.preset === "custom" && (!value.from || !value.to)) {
