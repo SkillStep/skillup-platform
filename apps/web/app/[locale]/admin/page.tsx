@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../discovery-shell";
@@ -35,6 +36,11 @@ export default async function AdminPage({ params }: PageProps) {
             evidence. Each operator sees only the workflows allowed by their current server-side
             role; the browser cannot grant roles, premium access, payment outcomes or publication
             status.
+          </p>
+          <p>
+            <Link href="/en/admin/premium">
+              Open Premium subscriptions, finance reporting and recurring-customer operations
+            </Link>
           </p>
         </header>
         <OperationsConsole />
