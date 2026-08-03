@@ -37,53 +37,77 @@ export const PremiumMembershipStatusSchema = z.enum([
   "revoked",
 ]);
 
-export const PremiumReportQuerySchema = z
-  .object({
-    preset: PremiumPresetSchema.default("last_30_days"),
-    from: z.iso.datetime().optional(),
-    to: z.iso.datetime().optional(),
-    aggregation: PremiumAggregationSchema.default("daily"),
-    planCode: z.string().trim().min(3).max(80).optional(),
-    planVersionId: z.string().uuid().optional(),
-    paymentPurpose: PremiumPaymentPurposeSchema.optional(),
-    paymentStatus: PremiumPaymentStatusSchema.optional(),
-    membershipStatus: PremiumMembershipStatusSchema.optional(),
-  })
-  .strict()
-  .superRefine((value, context) => {
-    if (value.preset === "custom" && (!value.from || !value.to)) {
-      context.addIssue({
-        code: "custom",
-        message: "Custom reports require both from and to timestamps.",
-      });
-    }
-    if (value.preset !== "custom" && (value.from || value.to)) {
-      context.addIssue({
-        code: "custom",
-        message: "Explicit from/to timestamps are only accepted with the custom preset.",
-      });
-    }
-  });
+const PremiumReportQueryBaseSchema = z.object({
+  preset: PremiumPresetSchema.default("last_30_days"),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
+  aggregation: PremiumAggregationSchema.default("daily"),
+  planCode: z.string().trim().min(3).max(80).optional(),
+  planVersionId: z.string().uuid().optional(),
+  paymentPurpose: PremiumPaymentPurposeSchema.optional(),
+  paymentStatus: PremiumPaymentStatusSchema.optional(),
+  membershipStatus: PremiumMembershipStatusSchema.optional(),
+});
 
-export const PremiumLedgerQuerySchema = PremiumReportQuerySchema.extend({
+function validateRangeFields(
+  value: Readonly<{ preset: z.infer<typeof PremiumPresetSchema>; from?: string; to?: string }>,
+  context: z.RefinementCtx,
+): void {
+  if (value.preset === "custom" && (!value.from || !value.to)) {
+    context.addIssue({
+      code: "custom",
+      message: "Custom reports require both from and to timestamps.",
+    });
+  }
+  if (value.preset !== "custom" && (value.from || value.to)) {
+    context.addIssue({
+      code: "custom",
+      message: "Explicit from/to timestamps are only accepted with the custom preset.",
+    });
+  }
+}
+
+export const PremiumReportQuerySchema = PremiumReportQueryBaseSchema.strict().superRefine(
+  validateRangeFields,
+);
+
+export const PremiumLedgerQuerySchema = PremiumReportQueryBaseSchema.extend({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).max(100_000).default(0),
   search: z.string().trim().min(3).max(120).optional(),
-}).strict();
+})
+  .strict()
+  .superRefine(validateRangeFields);
 
-export const PremiumReconciliationQuerySchema = PremiumReportQuerySchema.extend({
+export const PremiumReconciliationQuerySchema = PremiumReportQueryBaseSchema.extend({
   reconciliationStatus: z.enum(["open", "resolved", "ignored"]).optional(),
   mismatchKind: z
-    .enum(["missing_internal", "missing_provider", "amount", "currency", "status", "entitlement", "duplicate"])
+    .enum([
+      "missing_internal",
+      "missing_provider",
+      "amount",
+      "currency",
+      "status",
+      "entitlement",
+      "duplicate",
+    ])
     .optional(),
   minimumAgeMinutes: z.coerce.number().int().min(0).max(525_600).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).max(100_000).default(0),
-}).strict();
+})
+  .strict()
+  .superRefine(validateRangeFields);
 
 export const PremiumExportInputSchema = z
   .object({
-    reportType: z.enum(["summary", "payments", "memberships", "recurring_customers", "reconciliation"]),
+    reportType: z.enum([
+      "summary",
+      "payments",
+      "memberships",
+      "recurring_customers",
+      "reconciliation",
+    ]),
     filters: PremiumReportQuerySchema,
     reason: z.string().trim().min(3).max(500),
   })
@@ -181,19 +205,12 @@ function karachiParts(value: Date): Readonly<{
   year: number;
   month: number;
   day: number;
-  hour: number;
-  minute: number;
-  second: number;
 }> {
   const formatter = new Intl.DateTimeFormat("en-CA", {
     timeZone: PREMIUM_REPORT_TIMEZONE,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hourCycle: "h23",
   });
   const parts = Object.fromEntries(
     formatter
@@ -205,15 +222,11 @@ function karachiParts(value: Date): Readonly<{
     year: parts["year"] ?? value.getUTCFullYear(),
     month: parts["month"] ?? value.getUTCMonth() + 1,
     day: parts["day"] ?? value.getUTCDate(),
-    hour: parts["hour"] ?? 0,
-    minute: parts["minute"] ?? 0,
-    second: parts["second"] ?? 0,
   };
 }
 
-function karachiDate(year: number, month: number, day: number, endExclusive = false): Date {
-  const utcMilliseconds = Date.UTC(year, month - 1, day, endExclusive ? 24 : 0, 0, 0, 0);
-  return new Date(utcMilliseconds - 5 * 60 * 60 * 1_000);
+function karachiDate(year: number, month: number, day: number): Date {
+  return new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0) - 5 * 60 * 60 * 1_000);
 }
 
 function addKarachiDays(value: Date, days: number): Date {
