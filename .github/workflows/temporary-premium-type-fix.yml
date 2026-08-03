@@ -1,0 +1,41 @@
+name: Temporary premium type fix
+
+on:
+  push:
+    branches:
+      - feat/premium-admin-reporting
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/premium-admin-reporting
+          fetch-depth: 0
+      - name: Apply exact optional property fix
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('apps/web/app/[locale]/admin/premium/premium-workspace.tsx')
+          content = path.read_text(encoding='utf-8')
+          old = '    async (signal?: AbortSignal) => {'
+          new = '    async (signal: AbortSignal | null = null) => {'
+          if old not in content:
+              raise SystemExit('Expected loadCurrent signature was not found')
+          path.write_text(content.replace(old, new, 1), encoding='utf-8')
+          PY
+      - name: Commit fix
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add 'apps/web/app/[locale]/admin/premium/premium-workspace.tsx'
+          git commit -m "fix(web): normalize optional abort signal"
+          git push origin HEAD:feat/premium-admin-reporting
