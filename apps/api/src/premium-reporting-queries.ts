@@ -199,7 +199,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
              join commercial_plans p on p.id = v.plan_id
             where true
               ${membershipFilters}`,
-            values,
+            [...values],
           ),
           pool.query<Record<string, unknown>>(
             `select
