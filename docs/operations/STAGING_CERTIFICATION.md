@@ -29,7 +29,7 @@ The orchestrator is:
 pnpm certify:staging
 ```
 
-The Playwright runner lives outside the pnpm workspace under `qa/staging-certification` so the application lockfile is not coupled to browser-runner dependencies. CI installs the exact pinned Playwright Test version declared there and then installs Chromium.
+The Playwright runner is the `qa/staging-certification` pnpm workspace package. Its exact Playwright dependency and transitive dependency graph are committed in the repository lockfile. Normal Quality CI installs that package but does not run live staging certification; the protected staging workflow installs Chromium and invokes the dedicated `certify` script only after deployment.
 
 The permanent workflow is `.github/workflows/staging-certification.yml`.
 
@@ -61,7 +61,7 @@ RELEASE_IMAGE_DIGEST
 ROLLBACK_ARTIFACT_REF
 ```
 
-Container builds also accept build argument `RELEASE_SHA` and write it to the OCI `org.opencontainers.image.revision` label.
+Container builds also accept build argument `RELEASE_SHA` and write it to the OCI `org.opencontainers.image.revision` label. Quality CI passes the exact candidate SHA into all three reviewed container builds and rejects an image whose OCI revision label does not match.
 
 Certification compares running metadata with the deployment controller's expected values before browser tests start. Missing or mismatched identity is `BLOCKED`.
 
@@ -108,7 +108,7 @@ Do not place DeepSeek, SMTP, JazzCash, database or session credentials in the br
 Prepare three named, non-production accounts:
 
 1. learner QA account;
-2. broad Admin QA account with the explicitly approved roles required by the Admin suite, including `security_admin` and report access;
+2. broad Admin QA account with the explicitly approved roles required by the Admin suite, including `content_editor`, `content_reviewer`, `publisher`, `security_admin` and the required payment/report capabilities;
 3. `analyst` QA account with read-only reporting access.
 
 The learner QA account must have an audited temporary Premium staging entitlement so certification can exercise all five launch levels without being blocked by the intentional three-free-missions-per-day limit.
@@ -171,6 +171,7 @@ Do not include secrets in repository-dispatch payloads.
 - public discovery and reviewed path pages;
 - passwordless email start/delivery/verification;
 - unauthenticated learning protection;
+- account/session/privacy/export/deletion-cooldown behavior;
 - authenticated progress/learning surfaces;
 - Premium capability authority;
 - all five launch entry levels;
@@ -187,6 +188,16 @@ Do not include secrets in repository-dispatch payloads.
 - capability remains server-authoritative.
 
 Provider-specific JazzCash success/pending/failure/cancel/refund/reconciliation certification is mandatory once the merchant sandbox contract is configured. Until then #97 must remain `BLOCKED — PAYMENT SANDBOX NOT CONFIGURED`; internal order/callback smokes are not a substitute for provider sandbox evidence.
+
+### AI
+
+- Admin creates a safe `summarize_content` request tagged with the QA run identifier;
+- the PostgreSQL job is claimed by the AI worker and executed by the configured staging provider;
+- a validated artifact is observed through the Admin API;
+- the artifact is approved, published to a staging-only target and rolled back;
+- the expected provider is DeepSeek unless staging explicitly declares another approved provider.
+
+The API/worker bridge strips queue-envelope metadata before provider policy validation while preserving genuinely invalid user fields so privacy checks still fail closed.
 
 ### Admin
 
