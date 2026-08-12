@@ -77,6 +77,16 @@ function isPublicRuntime(config: ApiConfig): boolean {
   return config.APP_ENV === "staging" || config.APP_ENV === "production";
 }
 
+function releaseMetadata(config: ApiConfig) {
+  return {
+    releaseSha: config.RELEASE_SHA,
+    pipelineId: config.RELEASE_PIPELINE_ID,
+    artifactRef: config.RELEASE_ARTIFACT_REF,
+    imageDigest: config.RELEASE_IMAGE_DIGEST,
+    rollbackRef: config.ROLLBACK_ARTIFACT_REF,
+  } as const;
+}
+
 function formUrlEncodedParser(
   _request: unknown,
   body: string,
@@ -171,7 +181,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       status: "ok",
       service: "skillup-api",
       version: "0.0.0",
-      releaseSha: config.RELEASE_SHA,
+      ...releaseMetadata(config),
       timestamp: now().toISOString(),
     }),
   );
@@ -191,7 +201,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       status: databaseReady ? "ok" : "degraded",
       service: "skillup-api",
       version: "0.0.0",
-      releaseSha: config.RELEASE_SHA,
+      ...releaseMetadata(config),
       timestamp: now().toISOString(),
     });
   });
@@ -199,7 +209,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   app.get("/v1/version", async () => ({
     service: "skillup-api",
     version: "0.0.0",
-    releaseSha: config.RELEASE_SHA,
+    ...releaseMetadata(config),
   }));
 
   if (options.authService) {
