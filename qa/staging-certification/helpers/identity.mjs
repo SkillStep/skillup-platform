@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -10,6 +11,11 @@ function required(name) {
   const value = process.env[name]?.trim();
   if (!value) throw new Error(`${name} is required for authenticated staging certification.`);
   return value;
+}
+
+function certificationUserAgent(email) {
+  const reference = createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 12);
+  return `SkillUp-Staging-Certification/${reference}`;
 }
 
 async function retrieveOtp(email, startedAfter) {
@@ -48,7 +54,10 @@ export async function createAuthenticatedState(email, statePath) {
 
   const context = await requestFactory.newContext({
     baseURL,
-    extraHTTPHeaders: { origin },
+    extraHTTPHeaders: {
+      origin,
+      "user-agent": certificationUserAgent(email),
+    },
   });
 
   try {
