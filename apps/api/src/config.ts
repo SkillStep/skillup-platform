@@ -176,9 +176,21 @@ const ApiConfigSchema = z
   });
 
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
+type OptionalInjectedConfig =
+  | "MAINTENANCE_INTERVAL_SECONDS"
+  | "RELEASE_PIPELINE_ID"
+  | "RELEASE_ARTIFACT_REF"
+  | "RELEASE_IMAGE_DIGEST"
+  | "ROLLBACK_ARTIFACT_REF";
 
-export type ApiConfig = Omit<ParsedApiConfig, "MAINTENANCE_INTERVAL_SECONDS"> &
-  Readonly<{ MAINTENANCE_INTERVAL_SECONDS?: number }>;
+export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
+  Readonly<{
+    MAINTENANCE_INTERVAL_SECONDS?: number;
+    RELEASE_PIPELINE_ID?: string;
+    RELEASE_ARTIFACT_REF?: string;
+    RELEASE_IMAGE_DIGEST?: string;
+    ROLLBACK_ARTIFACT_REF?: string;
+  }>;
 
 export function readApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
   return ApiConfigSchema.parse({
