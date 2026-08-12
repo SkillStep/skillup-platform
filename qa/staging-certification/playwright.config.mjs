@@ -50,7 +50,7 @@ export default defineConfig({
     {
       name: "learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs/,
+      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
