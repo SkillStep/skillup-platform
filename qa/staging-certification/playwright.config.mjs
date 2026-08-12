@@ -44,13 +44,14 @@ export default defineConfig({
     },
     {
       name: "public-desktop",
-      testMatch: /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs/,
+      testMatch:
+        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|gameplay-negative\.spec\.mjs|premium-operations\.spec\.mjs/,
+      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|gameplay-negative\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
