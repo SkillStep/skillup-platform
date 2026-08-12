@@ -8,6 +8,10 @@ export const ServiceHealthSchema = z.object({
   service: z.string().min(1),
   version: z.string().min(1),
   releaseSha: z.string().min(1),
+  pipelineId: z.string().min(1).optional(),
+  artifactRef: z.string().min(1).optional(),
+  imageDigest: z.string().min(1).optional(),
+  rollbackRef: z.string().min(1).optional(),
   timestamp: z.iso.datetime(),
 });
 
