@@ -18,7 +18,7 @@ test("invalid email is rejected before a sign-in request is sent", async ({ page
 });
 
 test("wrong OTP is rejected and a consumed challenge cannot be replayed", async () => {
-  const email = qaIdentity("STAGING_QA_ONBOARDING_EMAIL");
+  const email = qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL");
   const origin = new URL(baseUrl()).origin;
   const context = await requestFactory.newContext({ baseURL: baseUrl(), extraHTTPHeaders: { origin } });
 
@@ -69,7 +69,9 @@ test("anonymous callers cannot access learner or Admin private APIs", async () =
 test("sign-in UI reports a bounded network failure", async ({ page }) => {
   await page.route("**/api/v1/auth/email/start", (route) => route.abort("failed"));
   await page.goto("/en/sign-in");
-  await page.getByLabel("Email address").fill(qaIdentity("STAGING_QA_ONBOARDING_EMAIL"));
+  await page.getByLabel("Email address").fill(qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL"));
   await page.getByRole("button", { name: "Send sign-in code" }).click();
-  await expect(page.getByText("We could not reach SkillUp. Check your connection and try again.")).toBeVisible();
+  await expect(
+    page.getByText("We could not reach SkillUp. Check your connection and try again."),
+  ).toBeVisible();
 });
