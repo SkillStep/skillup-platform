@@ -105,6 +105,24 @@ export default defineConfig({
       },
     },
     {
+      name: "content-editor-desktop",
+      dependencies: ["auth-setup"],
+      testMatch: /content-editor\.spec\.mjs/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(authRoot, "content-editor.json"),
+      },
+    },
+    {
+      name: "content-reviewer-desktop",
+      dependencies: ["auth-setup"],
+      testMatch: /content-reviewer\.spec\.mjs/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(authRoot, "content-reviewer.json"),
+      },
+    },
+    {
       name: "publisher-desktop",
       dependencies: ["auth-setup"],
       testMatch: /publisher\.spec\.mjs/,
