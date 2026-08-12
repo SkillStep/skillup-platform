@@ -20,6 +20,12 @@ const expectedChallengeTypes = new Set([
   "short_response",
 ]);
 
+async function requireOk(response, label) {
+  if (!response.ok()) {
+    throw new Error(`${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`);
+  }
+}
+
 function responseFor(challenge) {
   switch (challenge.type) {
     case "multiple_choice":
@@ -54,13 +60,13 @@ async function submit(request, session, challenge, idempotencyKey = randomUUID()
       response: responseFor(challenge),
     },
   });
-  expect(response.ok(), await response.text()).toBeTruthy();
+  await requireOk(response, "Challenge submission");
   return response.json();
 }
 
 test("QA learner has Premium capability authority", async ({ request }) => {
   const response = await request.get("/api/v1/account/capabilities");
-  expect(response.ok(), await response.text()).toBeTruthy();
+  await requireOk(response, "Capability lookup");
   const capabilities = await response.json();
   expect(capabilities.tier).toBe("premium");
   expect(capabilities.unlimitedMissions).toBe(true);
@@ -75,7 +81,7 @@ test("all five launch entry levels execute and exercise every challenge type", a
     const started = await request.post(`/api/v1/gameplay/levels/${levelId}/sessions`, {
       data: { locale: "en" },
     });
-    expect(started.ok(), await started.text()).toBeTruthy();
+    await requireOk(started, `Gameplay session start for ${levelId}`);
     let session = await started.json();
     let submissions = 0;
 
