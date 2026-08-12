@@ -21,7 +21,8 @@ test("free learner cannot reach Admin authority", async ({ request, page }) => {
   expect(api.status()).toBe(403);
 
   await page.goto("/en/admin");
-  await expect(page).not.toHaveURL(/\/en\/admin$/);
+  await expect(page.getByRole("alert")).toContainText("Your account does not have administrative access.");
+  await expect(page.getByText(/^Roles:/)).toHaveCount(0);
 });
 
 test("free learner can view Premium pricing without client-side tier escalation", async ({
