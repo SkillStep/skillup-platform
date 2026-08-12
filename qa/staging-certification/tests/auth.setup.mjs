@@ -8,17 +8,19 @@ import { createAuthenticatedState, qaIdentity } from "../helpers/identity.mjs";
 const directory = path.dirname(fileURLToPath(import.meta.url));
 const authRoot = path.resolve(directory, "../artifacts/.auth");
 
-test("create learner, admin and analyst browser states", async () => {
-  await createAuthenticatedState(
-    qaIdentity("STAGING_QA_LEARNER_EMAIL"),
-    path.join(authRoot, "learner.json"),
-  );
-  await createAuthenticatedState(
-    qaIdentity("STAGING_QA_ADMIN_EMAIL"),
-    path.join(authRoot, "admin.json"),
-  );
-  await createAuthenticatedState(
-    qaIdentity("STAGING_QA_ANALYST_EMAIL"),
-    path.join(authRoot, "analyst.json"),
-  );
+const identities = [
+  ["STAGING_QA_LEARNER_EMAIL", "learner.json"],
+  ["STAGING_QA_FREE_LEARNER_EMAIL", "free-learner.json"],
+  ["STAGING_QA_ONBOARDING_EMAIL", "onboarding.json"],
+  ["STAGING_QA_ADMIN_EMAIL", "admin.json"],
+  ["STAGING_QA_ANALYST_EMAIL", "analyst.json"],
+  ["STAGING_QA_PUBLISHER_EMAIL", "publisher.json"],
+  ["STAGING_QA_PAYMENT_OPERATOR_EMAIL", "payment-operator.json"],
+  ["STAGING_QA_LEARNER_SUPPORT_EMAIL", "learner-support.json"],
+];
+
+test("create all mandatory staging certification browser states", async () => {
+  for (const [environmentName, filename] of identities) {
+    await createAuthenticatedState(qaIdentity(environmentName), path.join(authRoot, filename));
+  }
 });
