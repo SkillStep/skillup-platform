@@ -54,6 +54,10 @@ const ApiConfigSchema = z
     JAZZCASH_PRODUCT_ID: z.string().trim().min(1).max(40).default("RETL"),
     JAZZCASH_CHECKOUT_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
     RELEASE_SHA: z.string().min(1).default("local"),
+    RELEASE_PIPELINE_ID: z.string().min(1).default("local"),
+    RELEASE_ARTIFACT_REF: z.string().min(1).default("local"),
+    RELEASE_IMAGE_DIGEST: z.string().min(1).default("local"),
+    ROLLBACK_ARTIFACT_REF: z.string().min(1).default("unknown"),
     LOG_LEVEL: z
       .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
       .default("info"),
