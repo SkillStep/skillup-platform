@@ -10,6 +10,7 @@ if (!baseURL) {
   throw new Error("STAGING_WEB_URL is required for staging certification.");
 }
 
+const trustedOrigin = new URL(baseURL).origin;
 const artifactsRoot = path.resolve(directory, "artifacts");
 const authRoot = path.join(artifactsRoot, ".auth");
 
@@ -29,6 +30,7 @@ export default defineConfig({
   ],
   use: {
     baseURL,
+    extraHTTPHeaders: { origin: trustedOrigin },
     ignoreHTTPSErrors: false,
     screenshot: "only-on-failure",
     trace: "off",
