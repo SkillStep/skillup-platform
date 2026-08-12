@@ -319,9 +319,11 @@ async function browserCertification() {
   }
   setArea("http_smoke", "PASS", "Existing deployed live-smoke contract passed.");
 
-  const playwright = runCommand("npm", ["test", "--prefix", "qa/staging-certification"], {
-    STAGING_QA_RUN_ID: runId,
-  });
+  const playwright = runCommand(
+    "pnpm",
+    ["--filter", "@skillup/staging-certification", "certify"],
+    { STAGING_QA_RUN_ID: runId },
+  );
   if (playwright.status === 0) {
     setArea("playwright", "PASS", "All mandatory Playwright projects passed with zero retries.");
     if (bool("STAGING_REQUIRE_VISUALS", true)) {
