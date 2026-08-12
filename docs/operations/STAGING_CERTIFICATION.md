@@ -1,27 +1,25 @@
 # Mandatory staging certification
 
-Status: implementation under #97, #98, #99 and #100.
+Status: repository implementation is tracked by #97, #98, #99 and #100. A live candidate is not ready for UAT until the deployed staging workflow returns `READY FOR UAT`.
 
 ## Release contract
 
-The permanent release flow is:
-
 `Code / PR → Quality CI → immutable staging deployment → deployed identity gate → automated staging certification → READY FOR UAT → human UAT → explicit production approval → promote exact tested artifacts → production smoke`
 
-A staging URL being reachable is not release evidence.
+A reachable staging URL is not release evidence.
 
 ## SkillUp architecture mapped to certification
 
 The canonical source is `SkillStep/skillup-platform`.
 
-- `apps/web` contains public discovery, learner flows, Premium UI and the protected Admin UI.
-- `apps/api` contains the server-authoritative identity, gameplay, progress, commercial, Admin and reporting APIs.
-- `services/ai-worker` is the single-replica AI worker.
-- PostgreSQL is the application authority.
-- Admin is **not** a separate deployment from the Web application.
-- SkillUp has no cart, delivery/take-away, store-branch Dispatcher, Redis or websocket order system. Generic commerce/dispatcher certification scenarios are therefore not applicable and must not be invented.
+- `apps/web`: public discovery, learner flows, Premium UI and protected Admin UI.
+- `apps/api`: server-authoritative identity, gameplay, progress, commercial, Admin and reporting APIs.
+- `services/ai-worker`: Python AI worker.
+- `packages/database`: PostgreSQL/Drizzle authority.
+- Admin is part of the Web artifact at `/en/admin`; there is no separate Admin deployment.
+- SkillUp has no cart, delivery/take-away, branch Dispatcher, Redis or websocket order system. Generic commerce/dispatcher scenarios are not applicable.
 
-## Commands
+## Commands and workflow
 
 The orchestrator is:
 
@@ -29,21 +27,13 @@ The orchestrator is:
 pnpm certify:staging
 ```
 
-The Playwright runner is the `qa/staging-certification` pnpm workspace package. Its exact Playwright dependency and transitive dependency graph are committed in the repository lockfile. Normal Quality CI installs that package but does not run live staging certification; the protected staging workflow installs Chromium and invokes the dedicated `certify` script only after deployment.
+Playwright lives in the `qa/staging-certification` workspace package. The permanent workflow is `.github/workflows/staging-certification.yml` and supports controlled manual reruns, `workflow_call`, and the `skillup-staging-deployed` repository-dispatch event.
 
-The permanent workflow is `.github/workflows/staging-certification.yml`.
+Playwright certification uses zero retries and one worker. A critical test that passes only after retry is therefore never green. Trace and video are disabled for the sensitive certification suite; failure screenshots and sanitized JSON/HTML reports are retained.
 
-It supports:
+## Gate zero: exact deployed identity
 
-- controlled `workflow_dispatch` reruns;
-- `workflow_call` from a GitHub-controlled staging deployment workflow;
-- `repository_dispatch` event `skillup-staging-deployed` from an approved external deployment controller.
-
-The deployment provider should invoke certification only after Web, API, database migrations and AI worker (when required) report healthy.
-
-## Gate zero: deployed release identity
-
-The Web and API runtime expose safe release metadata only:
+Web and API expose only safe release metadata:
 
 - `releaseSha`;
 - `pipelineId`;
@@ -51,7 +41,7 @@ The Web and API runtime expose safe release metadata only:
 - `imageDigest`;
 - `rollbackRef`.
 
-Staging/production deployment automation must set these runtime variables:
+Deployment automation must set:
 
 ```text
 RELEASE_SHA
@@ -61,23 +51,17 @@ RELEASE_IMAGE_DIGEST
 ROLLBACK_ARTIFACT_REF
 ```
 
-Container builds also accept build argument `RELEASE_SHA` and write it to the OCI `org.opencontainers.image.revision` label. Quality CI passes the exact candidate SHA into all three reviewed container builds and rejects an image whose OCI revision label does not match.
+Container builds also carry the source revision in the OCI `org.opencontainers.image.revision` label. Certification compares the running metadata with the deployment controller's expected SHA, pipeline, immutable artifact references and image digests before any browser test runs. Missing or mismatched identity is `BLOCKED`.
 
-Certification compares running metadata with the deployment controller's expected values before browser tests start. Missing or mismatched identity is `BLOCKED`.
+For the AI worker, the deployment controller supplies its safe running SHA, immutable artifact reference and image digest. Provider/platform deployment metadata is the authority for the worker because it is not exposed as a public browser endpoint.
 
-For the AI worker, the deployment controller passes its safe running SHA, immutable artifact reference and image digest to certification. The worker does not expose an Internet-facing health endpoint. Provider/platform deployment metadata remains the authority for the running worker image.
+## Protected GitHub `staging` environment
 
-## Staging GitHub Environment
-
-Create a protected GitHub Environment named `staging`.
-
-### Environment variables
-
-Configure these non-secret values:
+Configure these non-secret environment variables:
 
 ```text
 STAGING_WEB_URL
-STAGING_API_URL                         # optional when direct API is private/unreachable from runner
+STAGING_API_URL                         # optional when the direct API is intentionally private
 STAGING_REQUIRE_EMAIL=true
 STAGING_REQUIRE_AI=true
 STAGING_REQUIRE_JAZZCASH=true
@@ -87,131 +71,168 @@ STAGING_DEEPSEEK_READY=true
 STAGING_JAZZCASH_SANDBOX_READY=true
 STAGING_VISUAL_BASELINES_APPROVED=true
 STAGING_QA_LEARNER_PREMIUM_READY=true
+
 STAGING_QA_LEARNER_EMAIL
+STAGING_QA_FREE_LEARNER_EMAIL
+STAGING_QA_ONBOARDING_EMAIL
+STAGING_QA_AUTH_NEGATIVE_EMAIL
+STAGING_QA_SESSION_EMAIL
 STAGING_QA_ADMIN_EMAIL
 STAGING_QA_ANALYST_EMAIL
+STAGING_QA_CONTENT_EDITOR_EMAIL
+STAGING_QA_CONTENT_REVIEWER_EMAIL
+STAGING_QA_PUBLISHER_EMAIL
+STAGING_QA_PAYMENT_OPERATOR_EMAIL
+STAGING_QA_LEARNER_SUPPORT_EMAIL
+STAGING_QA_SECURITY_ADMIN_EMAIL
+STAGING_QA_REVOKED_ADMIN_EMAIL
 STAGING_QA_MAILBOX_URL
 ```
 
-Readiness variables are assertions owned by the staging deployment/integration procedure. Setting a readiness variable to `true` does not by itself pass certification: the corresponding runtime/browser tests must still pass.
-
-### Environment secrets
+Configure only this browser-certification secret in the GitHub environment:
 
 ```text
 STAGING_QA_MAILBOX_TOKEN
 ```
 
-Do not place DeepSeek, SMTP, JazzCash, database or session credentials in the browser certification workflow. Those belong in the runtime platform's staging secret store. Certification tests the deployed behavior instead of reading provider secrets.
+DeepSeek, SMTP, JazzCash, database and session credentials belong in the staging runtime platform's protected secret store, not in the Playwright workflow. Readiness flags are assertions only; they never substitute for runtime/browser evidence.
 
-## Staging-only identities
+## Staging-only identity matrix
 
-Prepare three named, non-production accounts:
+All identities are named non-production accounts and authenticate through the real passwordless OTP flow. Administrative assignments use the existing audited role machinery.
 
-1. learner QA account;
-2. broad Admin QA account with the explicitly approved roles required by the Admin suite, including `content_editor`, `content_reviewer`, `publisher`, `security_admin` and the required payment/report capabilities;
-3. `analyst` QA account with read-only reporting access.
+- Premium learner: audited temporary Premium entitlement; used for full gameplay and Premium learner journeys.
+- Free learner: no Premium entitlement; verifies free-tier authority and Admin denial.
+- Onboarding learner: deterministic profile used for onboarding completion and recovery tests.
+- Auth-negative learner: isolated identity for invalid/replayed OTP tests.
+- Session learner: isolated identity for session revocation tests.
+- Broad Admin: only the combined roles required for complete operational end-to-end AI/Admin certification.
+- Analyst: read-only reporting identity.
+- Content editor: `content_editor` only.
+- Content reviewer: `content_reviewer` only.
+- Publisher: `publisher` only.
+- Payment operator: `payment_operator` only.
+- Learner support: `learner_support` only.
+- Security Admin: `security_admin` only.
+- Revoked Admin: valid learner login with its previous Admin authority revoked/expired so stale browser state cannot grant access.
 
-The learner QA account must have an audited temporary Premium staging entitlement so certification can exercise all five launch levels without being blocked by the intentional three-free-missions-per-day limit.
-
-Administrative roles must be assigned through the existing audited bootstrap/role process. Never create shared passwords or a static OTP bypass.
+OTP setup requests use deterministic non-identifying certification user-agent fingerprints per account so one certification run does not trip the global IP/user-agent abuse limit. The application email-level rate limits remain unchanged.
 
 ## OTP mailbox contract
 
-Passwordless certification must test real staging email delivery. `STAGING_QA_MAILBOX_URL` points to a protected test-mailbox retrieval service. Certification calls:
+Certification tests real staging email delivery. `STAGING_QA_MAILBOX_URL` is a protected test-mailbox retrieval service called as:
 
 ```text
 GET <mailbox-url>?email=<qa-email>&after=<ISO timestamp>
 Authorization: Bearer <STAGING_QA_MAILBOX_TOKEN>
 ```
 
-The service returns only the latest matching staging test code:
+It returns only the latest matching staging code:
 
 ```json
 {"code":"123456"}
 ```
 
-The code is used in memory and is never logged or written to artifacts. A 404 means no message has arrived yet and is polled for a bounded period. This is a mailbox retrieval mechanism, not an authentication bypass.
+The code is held in memory and never written to reports. This is mailbox retrieval, not an authentication bypass.
 
-## Deployment dispatch payload
+## Playwright coverage
 
-An approved deployment controller may trigger GitHub `repository_dispatch` with event type `skillup-staging-deployed` and safe payload fields equivalent to:
+### Runtime, public and PWA
 
-```json
-{
-  "event_type": "skillup-staging-deployed",
-  "client_payload": {
-    "expected_release_sha": "<git-sha>",
-    "pipeline_id": "<deployment-run-id>",
-    "web_artifact_ref": "<immutable-web-ref>",
-    "web_image_digest": "sha256:<digest>",
-    "api_artifact_ref": "<immutable-api-ref>",
-    "api_image_digest": "sha256:<digest>",
-    "ai_release_sha": "<git-sha>",
-    "ai_artifact_ref": "<immutable-worker-ref>",
-    "ai_image_digest": "sha256:<digest>",
-    "previous_release_ref": "<known-good-rollback-ref>"
-  }
-}
-```
+- Web health metadata/security/no-store headers.
+- API version/readiness and DB-backed preflight through the orchestrator.
+- all five reviewed public skill paths and structured-data boundaries.
+- private route authentication/no-store behavior.
+- PWA manifest and offline route.
+- refresh, back and forward navigation.
+- uncaught page-error smoke on critical public pages.
+- semantic landmark, labelled-control and keyboard-focus accessibility smoke.
 
-Do not include secrets in repository-dispatch payloads.
+### Passwordless authentication and sessions
 
-## Certification coverage
+- real OTP request/delivery/verification.
+- invalid email validation.
+- wrong OTP rejection.
+- consumed OTP replay rejection.
+- anonymous learner/Admin API denial.
+- bounded sign-in network failure UX.
+- current-session revocation and subsequent server-side 401.
+- cleared/expired-style browser authentication redirect to sign-in.
 
-### Runtime/API
+### Onboarding, account and privacy
 
-- Web health;
-- proxied API version and DB-backed readiness;
-- optional direct API identity;
-- all five reviewed launch skills present;
-- existing bounded `smoke:live` contract.
+- onboarding completion and return-to handling.
+- required-field validation.
+- onboarding network failure with form-state preservation.
+- active account/session visibility.
+- privacy preference update and restoration through API and browser UI.
+- private data export through API and browser download.
+- deletion cooldown creation/cancellation through API and browser UI.
+- untrusted-Origin mutation rejection.
 
-### Learner
+### Learner/gameplay
 
-- public discovery and reviewed path pages;
-- passwordless email start/delivery/verification;
-- unauthenticated learning protection;
-- account/session/privacy/export/deletion-cooldown behavior;
-- authenticated progress/learning surfaces;
-- Premium capability authority;
-- all five launch entry levels;
-- all seven supported challenge types;
-- replay-safe submission/idempotency check;
+- Premium capability authority.
+- free-tier capability authority and no client-side tier escalation.
+- all five launch entry levels.
+- all seven challenge formats.
+- replay-safe challenge submission/idempotency.
+- repeated level start resumes one authoritative active session.
+- unknown level and untrusted-Origin failures.
+- level refresh recovery.
 - desktop Chromium and Pixel-class mobile Chromium.
+- mobile no-horizontal-overflow checks on progress, pricing and playable learning surfaces.
 
-### Premium
+### Premium and commercial
 
-- PKR 599 monthly and PKR 4,999 yearly authority;
-- two-plan contract;
-- checkout-order replay safety;
-- provider checkout handoff structure;
-- capability remains server-authoritative.
+- PKR 599 monthly and PKR 4,999 yearly authority.
+- exactly the two approved launch plan codes/prices.
+- replay-safe checkout order creation.
+- provider checkout handoff structure.
+- capability remains server-authoritative after checkout creation.
+- Admin summary, payments, memberships, recurring customers, reconciliation, plans and export history.
+- audited CSV export creation/download.
+- invalid report range validation.
+- trusted-Origin and plan-input validation.
+- browser navigation/deep-link/refresh across all Premium Admin tabs.
 
-Provider-specific JazzCash success/pending/failure/cancel/refund/reconciliation certification is mandatory once the merchant sandbox contract is configured. Until then #97 must remain `BLOCKED — PAYMENT SANDBOX NOT CONFIGURED`; internal order/callback smokes are not a substitute for provider sandbox evidence.
+Provider-specific JazzCash success, pending, failure, cancel, timeout, retry, duplicate callback, replay, amount mismatch, refund and reconciliation certification remains mandatory once the actual merchant sandbox contract/test instruments are available. Internal callback/order smokes are not a substitute. Until that provider test harness is configured, certification must report `BLOCKED — PAYMENT SANDBOX NOT CONFIGURED`.
 
-### AI
+### Admin role/capability matrix
 
-- Admin creates a safe `summarize_content` request tagged with the QA run identifier;
-- the PostgreSQL job is claimed by the AI worker and executed by the configured staging provider;
-- a validated artifact is observed through the Admin API;
-- the artifact is approved, published to a staging-only target and rolled back;
-- the expected provider is DeepSeek unless staging explicitly declares another approved provider.
+Positive and negative authority is tested independently for:
 
-The API/worker bridge strips queue-envelope metadata before provider policy validation while preserving genuinely invalid user fields so privacy checks still fail closed.
+- broad Admin operational flow;
+- `analyst`;
+- `content_editor`;
+- `content_reviewer`;
+- `publisher`;
+- `payment_operator`;
+- `learner_support`;
+- `security_admin`;
+- revoked Admin identity;
+- ordinary free learner with no Admin assignment.
 
-### Admin
+The suite verifies that publication authority does not imply payments, payment authority does not imply publication, analyst access remains read-only, learner-support data remains minimized, and revoked/non-Admin browser state cannot bypass API authorization.
 
-- Admin session resolved server-side;
-- protected operations and Premium workspace;
-- Premium report authority and Karachi timezone contract;
-- read-only analyst separation;
-- direct unauthorized export mutation rejected.
+### AI / DeepSeek
 
-The suite should be extended with every new Admin/content/payment operation and every staging/UAT regression.
+- bounded safe generation request tagged with the QA run identifier.
+- PostgreSQL job claimed by the AI worker.
+- configured staging provider execution.
+- validated artifact observed through Admin API.
+- human review approval.
+- staging-only publication and rollback.
+- expected DeepSeek provider assertion.
+- invalid request validation.
+- untrusted-Origin rejection.
+- unknown cancellation/publication targets fail safely.
+
+If AI is mandatory and DeepSeek or the worker is not configured, the result is `BLOCKED`, never skipped/pass.
 
 ### Visual regression
 
-Visual tests use `toHaveScreenshot` and never update baselines automatically. The first intentional baseline or any material change requires human approval and a reviewed commit. Until approved baselines exist, certification reports `BLOCKED — VISUAL REVIEW REQUIRED`.
+Human-approved `toHaveScreenshot` baselines cover stable public, authentication, learner progress/challenge/account, Admin shell and Premium Admin surfaces. Baselines are never updated automatically. Missing or changed approved baselines produce `VISUAL REVIEW REQUIRED` until a human reviews and commits the intentional result.
 
 ## Evidence and privacy
 
@@ -222,22 +243,18 @@ Each run writes:
 - Playwright JSON and HTML reports;
 - failure screenshots.
 
-Playwright trace and video are disabled for this certification suite. Authentication storage state is deleted before artifact upload. OTPs, cookies, session tokens, provider credentials and payment secrets must never appear in GitHub logs/artifacts.
+Authentication storage state is deleted before artifact upload. OTPs, cookies, session tokens, provider credentials and payment secrets must never appear in GitHub logs, reports or screenshots.
 
 ## Decision model
 
-The orchestrator prints exactly one final release decision:
+The orchestrator emits exactly one release decision:
 
-- `READY FOR UAT` — every mandatory configured area passed;
-- `FAILED` — a reproducible application/security/business failure exists;
-- `BLOCKED` — the candidate cannot be validly certified because deployment identity, provider setup, fixtures or visual approval is missing.
+- `READY FOR UAT` — every mandatory configured area passed.
+- `FAILED` — a reproducible application/security/business failure exists.
+- `BLOCKED` — exact identity, provider setup, fixtures or visual approval prevents a valid certification.
 
-`FAILED` and `BLOCKED` exit non-zero. A critical test that needs a retry is not green because Playwright retries are permanently set to zero for staging certification.
-
-## Human UAT and production
-
-Human UAT starts only after `READY FOR UAT` and remains an explicit manual approval. Production promotion is a separate action. It must promote the exact staging/UAT-approved artifacts without rebuilding and run non-destructive smoke only.
+`FAILED` and `BLOCKED` exit non-zero. Human UAT remains a separate explicit approval. Production promotion is never automatic and must use the exact staging/UAT-approved artifacts without rebuilding.
 
 ## Permanent regression rule
 
-A feature is not complete without appropriate unit/API/Playwright happy-path, negative, authorization, Premium/payment/Admin and responsive coverage. Every defect found in QA/UAT must be captured as a permanent regression test before the defect is considered closed.
+Every new feature must add the appropriate unit/API/Playwright happy-path, negative, authorization, Admin/Premium/payment and responsive coverage. Every defect found in QA or UAT becomes a permanent regression test before the defect is considered closed.
