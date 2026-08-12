@@ -23,14 +23,14 @@ for (const [slug, title] of skills) {
     expect(response?.ok()).toBeTruthy();
     await expect(page.getByRole("heading", { level: 1, name: title })).toBeVisible();
     await expect(page.getByRole("link", { name: "Start reviewed practice" })).toBeVisible();
-    await expect(page.locator('script[type="application/ld+json"]')).toHaveCountGreaterThan(0);
+    expect(await page.locator('script[type="application/ld+json"]').count()).toBeGreaterThan(0);
   });
 }
 
 test("private learning requires authentication", async ({ page }) => {
   await page.goto("/en/learn/3c315a1a-824a-413e-836d-69a9fc8bad1f");
   await page.waitForURL(/\/en\/sign-in(?:\?|$)/);
-  await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Pick up where you left off." })).toBeVisible();
 });
 
 test("private routes remain non-indexable and non-cacheable", async ({ request }) => {
