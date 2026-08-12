@@ -6,9 +6,9 @@
     "node": "24.18.x"
   },
   "scripts": {
-    "test": "playwright test",
-    "test:functional": "playwright test --grep-invert @visual",
-    "test:visual": "playwright test --grep @visual"
+    "certify": "playwright test",
+    "certify:functional": "playwright test --grep-invert @visual",
+    "certify:visual": "playwright test --grep @visual"
   },
   "devDependencies": {
     "@playwright/test": "1.62.0"
