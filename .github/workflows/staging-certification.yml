@@ -133,13 +133,19 @@ jobs:
         with:
           node-version-file: .node-version
 
-      - name: Install pinned Playwright runner
+      - name: Enable pinned pnpm
         shell: bash
         run: |
           set -euo pipefail
-          cd qa/staging-certification
-          npm install --ignore-scripts --no-audit --no-fund
-          npx playwright install --with-deps chromium
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+
+      - name: Install locked workspace and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
 
       - name: Run mandatory staging certification
         run: node tools/staging-certification.mjs
