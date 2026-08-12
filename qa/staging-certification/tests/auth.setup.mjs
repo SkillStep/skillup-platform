@@ -19,6 +19,8 @@ const identities = [
   ["STAGING_QA_PUBLISHER_EMAIL", "publisher.json"],
   ["STAGING_QA_PAYMENT_OPERATOR_EMAIL", "payment-operator.json"],
   ["STAGING_QA_LEARNER_SUPPORT_EMAIL", "learner-support.json"],
+  ["STAGING_QA_SECURITY_ADMIN_EMAIL", "security-admin.json"],
+  ["STAGING_QA_REVOKED_ADMIN_EMAIL", "revoked-admin.json"],
 ];
 
 test("create all mandatory staging certification browser states", async () => {
