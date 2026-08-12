@@ -19,6 +19,11 @@ RUN pnpm --filter @skillup/api --prod deploy --legacy /out/api
 
 FROM node:24.18.0-bookworm-slim AS runtime
 
+ARG RELEASE_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/SkillStep/skillup-platform" \
+      org.opencontainers.image.revision="${RELEASE_SHA}" \
+      org.opencontainers.image.title="skillup-api"
+
 ENV NODE_ENV=production
 ENV API_HOST=0.0.0.0
 ENV API_PORT=3001
