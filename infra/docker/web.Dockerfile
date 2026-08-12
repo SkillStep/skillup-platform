@@ -18,6 +18,11 @@ RUN pnpm shared:build && pnpm --filter @skillup/web build
 
 FROM node:24.18.0-bookworm-slim AS runtime
 
+ARG RELEASE_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/SkillStep/skillup-platform" \
+      org.opencontainers.image.revision="${RELEASE_SHA}" \
+      org.opencontainers.image.title="skillup-web"
+
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV HOSTNAME=0.0.0.0
