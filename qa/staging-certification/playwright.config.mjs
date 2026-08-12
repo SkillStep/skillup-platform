@@ -45,13 +45,14 @@ export default defineConfig({
     {
       name: "public-desktop",
       testMatch:
-        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs/,
+        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs|session-lifecycle\.spec\.mjs/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|gameplay-negative\.spec\.mjs/,
+      testMatch:
+        /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|gameplay-negative\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
@@ -87,7 +88,8 @@ export default defineConfig({
     {
       name: "admin-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /admin\.spec\.mjs|ai\.spec\.mjs|premium-operations\.spec\.mjs/,
+      testMatch:
+        /admin\.spec\.mjs|ai\.spec\.mjs|premium-operations\.spec\.mjs|premium-ui\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
