@@ -14,6 +14,8 @@ const identities = [
   ["STAGING_QA_ONBOARDING_EMAIL", "onboarding.json"],
   ["STAGING_QA_ADMIN_EMAIL", "admin.json"],
   ["STAGING_QA_ANALYST_EMAIL", "analyst.json"],
+  ["STAGING_QA_CONTENT_EDITOR_EMAIL", "content-editor.json"],
+  ["STAGING_QA_CONTENT_REVIEWER_EMAIL", "content-reviewer.json"],
   ["STAGING_QA_PUBLISHER_EMAIL", "publisher.json"],
   ["STAGING_QA_PAYMENT_OPERATOR_EMAIL", "payment-operator.json"],
   ["STAGING_QA_LEARNER_SUPPORT_EMAIL", "learner-support.json"],
