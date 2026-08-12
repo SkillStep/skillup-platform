@@ -112,8 +112,13 @@ function blockForMissingConfiguration() {
   if (bool("STAGING_REQUIRE_EMAIL", true)) {
     const emailRequired = [
       "STAGING_QA_LEARNER_EMAIL",
+      "STAGING_QA_FREE_LEARNER_EMAIL",
+      "STAGING_QA_ONBOARDING_EMAIL",
       "STAGING_QA_ADMIN_EMAIL",
       "STAGING_QA_ANALYST_EMAIL",
+      "STAGING_QA_PUBLISHER_EMAIL",
+      "STAGING_QA_PAYMENT_OPERATOR_EMAIL",
+      "STAGING_QA_LEARNER_SUPPORT_EMAIL",
       "STAGING_QA_MAILBOX_URL",
       "STAGING_QA_MAILBOX_TOKEN",
     ];
@@ -256,8 +261,7 @@ async function runtimePreflight() {
       "Freelancing Foundations",
       "Digital Marketing Foundations",
     ]) {
-      if (!html.includes(title))
-        throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
+      if (!html.includes(title)) throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
     }
 
     setArea(
