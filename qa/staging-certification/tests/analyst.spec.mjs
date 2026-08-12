@@ -14,11 +14,11 @@ test("analyst can read Premium reports but cannot export or manage plans", async
   requireOk(access, "Analyst Premium access");
   const body = await access.json();
 
-  expect(body.access.canReadReports).toBe(true);
-  expect(body.access.canExportReports).toBe(false);
-  expect(body.access.canAdjustSubscriptions).toBe(false);
-  expect(body.access.canManagePlans).toBe(false);
-  expect(body.access.canReconcilePayments).toBe(false);
+  expect(body.premium.canReadReports).toBe(true);
+  expect(body.premium.canExportReports).toBe(false);
+  expect(body.premium.canAdjustSubscriptions).toBe(false);
+  expect(body.premium.canManagePlans).toBe(false);
+  expect(body.premium.canReconcilePayments).toBe(false);
 });
 
 test("analyst cannot create a Premium export by direct API call", async ({ request }) => {
