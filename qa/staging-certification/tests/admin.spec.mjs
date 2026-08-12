@@ -35,8 +35,8 @@ test("Admin Premium access is calculated by the API", async ({ request }) => {
   requireOk(response, "Premium access");
   const body = await response.json();
 
-  expect(body.access.canReadReports).toBe(true);
-  expect(body.access.canReadPlans).toBe(true);
+  expect(body.premium.canReadReports).toBe(true);
+  expect(body.premium.canReadPlans).toBe(true);
 });
 
 test("Admin summary is backend-authoritative and identifies Karachi reporting", async ({ request }) => {
