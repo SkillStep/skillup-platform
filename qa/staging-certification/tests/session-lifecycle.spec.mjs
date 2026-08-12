@@ -14,7 +14,7 @@ function baseUrl() {
 
 test("revoking the current session invalidates that session server-side", async () => {
   const statePath = path.join(os.tmpdir(), `skillup-session-${Date.now()}.json`);
-  await createAuthenticatedState(qaIdentity("STAGING_QA_ONBOARDING_EMAIL"), statePath);
+  await createAuthenticatedState(qaIdentity("STAGING_QA_SESSION_EMAIL"), statePath);
   const origin = new URL(baseUrl()).origin;
   const context = await requestFactory.newContext({
     baseURL: baseUrl(),
