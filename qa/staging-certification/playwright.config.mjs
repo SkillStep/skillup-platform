@@ -45,14 +45,14 @@ export default defineConfig({
     {
       name: "public-desktop",
       testMatch:
-        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs|session-lifecycle\.spec\.mjs/,
+        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs|session-lifecycle\.spec\.mjs|accessibility-public\.spec\.mjs/,
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "learner-desktop",
       dependencies: ["auth-setup"],
       testMatch:
-        /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|gameplay-negative\.spec\.mjs/,
+        /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|account-ui\.spec\.mjs|gameplay-negative\.spec\.mjs|accessibility-learner\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
@@ -89,7 +89,7 @@ export default defineConfig({
       name: "admin-desktop",
       dependencies: ["auth-setup"],
       testMatch:
-        /admin\.spec\.mjs|ai\.spec\.mjs|premium-operations\.spec\.mjs|premium-ui\.spec\.mjs/,
+        /admin\.spec\.mjs|ai\.spec\.mjs|ai-negative\.spec\.mjs|premium-operations\.spec\.mjs|premium-ui\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
@@ -150,12 +150,39 @@ export default defineConfig({
       },
     },
     {
+      name: "security-admin-desktop",
+      dependencies: ["auth-setup"],
+      testMatch: /security-admin\.spec\.mjs/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(authRoot, "security-admin.json"),
+      },
+    },
+    {
+      name: "revoked-admin-desktop",
+      dependencies: ["auth-setup"],
+      testMatch: /revoked-admin\.spec\.mjs/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(authRoot, "revoked-admin.json"),
+      },
+    },
+    {
       name: "visual-desktop",
       dependencies: ["auth-setup"],
       testMatch: /visual\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
+      },
+    },
+    {
+      name: "visual-learner-desktop",
+      dependencies: ["auth-setup"],
+      testMatch: /visual-learner\.spec\.mjs/,
+      use: {
+        ...devices["Desktop Chrome"],
+        storageState: path.join(authRoot, "learner.json"),
       },
     },
   ],
