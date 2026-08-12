@@ -25,6 +25,64 @@ class ApiJobQueueTests(unittest.TestCase):
             ),
         )
 
+    def test_claim_strips_queue_envelope_metadata_before_provider_validation(self) -> None:
+        self.queue._request = Mock(  # type: ignore[method-assign]
+            return_value={
+                "requestId": "11111111-1111-4111-8111-111111111111",
+                "leaseToken": "22222222-2222-4222-8222-222222222222",
+                "attemptNumber": 1,
+                "job": {
+                    "task": "summarize",
+                    "correlationId": "correlation-qa",
+                    "contentVersion": "summarize.v1",
+                    "payload": {
+                        "source_material": "Reviewed source text.",
+                        "locale": "en",
+                        "target_type": "staging_qa",
+                        "target_id": "qa-1",
+                        "requested_items": 1,
+                    },
+                },
+            }
+        )
+
+        claimed = self.queue.claim("worker-qa")
+
+        self.assertIsNotNone(claimed)
+        assert claimed is not None
+        self.assertEqual(
+            claimed.job.payload,
+            {"source_material": "Reviewed source text.", "locale": "en"},
+        )
+
+    def test_claim_removes_locale_when_the_worker_task_policy_does_not_allow_it(self) -> None:
+        self.queue._request = Mock(  # type: ignore[method-assign]
+            return_value={
+                "requestId": "11111111-1111-4111-8111-111111111111",
+                "leaseToken": "22222222-2222-4222-8222-222222222222",
+                "attemptNumber": 1,
+                "job": {
+                    "task": "translate_content",
+                    "correlationId": "correlation-translate",
+                    "contentVersion": "translate-content.v1",
+                    "payload": {
+                        "source_text": "Hello",
+                        "target_locale": "ur",
+                        "locale": "ur",
+                        "target_type": "staging_qa",
+                        "target_id": None,
+                        "requested_items": 1,
+                    },
+                },
+            }
+        )
+
+        claimed = self.queue.claim("worker-qa")
+
+        self.assertIsNotNone(claimed)
+        assert claimed is not None
+        self.assertEqual(claimed.job.payload, {"source_text": "Hello", "target_locale": "ur"})
+
     def test_cancellation_status_uses_encoded_lease_and_stops_inactive_work(self) -> None:
         request = Mock(return_value={"active": False, "cancelled": True})
         self.queue._request = request  # type: ignore[method-assign]
