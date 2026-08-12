@@ -2,7 +2,9 @@ import { expect, test } from "@playwright/test";
 
 async function requireOk(response, label) {
   if (!response.ok()) {
-    throw new Error(`${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`);
+    throw new Error(
+      `${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`,
+    );
   }
 }
 
@@ -17,9 +19,9 @@ test("account settings and active session are available to the authenticated lea
   const sessions = await request.get("/api/v1/account/sessions");
   await requireOk(sessions, "Account sessions");
   const sessionsBody = await sessions.json();
-  expect(sessionsBody.sessions.some((session) => session.current && session.revokedAt === null)).toBe(
-    true,
-  );
+  expect(
+    sessionsBody.sessions.some((session) => session.current && session.revokedAt === null),
+  ).toBe(true);
 });
 
 test("privacy preferences persist and can be restored", async ({ request }) => {
@@ -43,7 +45,9 @@ test("privacy preferences persist and can be restored", async ({ request }) => {
   expect(restoredBody.marketingConsent).toBe(original.marketingConsent);
 });
 
-test("authenticated privacy export is bounded and returns learner-owned data", async ({ request }) => {
+test("authenticated privacy export is bounded and returns learner-owned data", async ({
+  request,
+}) => {
   const exported = await request.post("/api/v1/account/export");
   await requireOk(exported, "Account privacy export");
   const body = await exported.json();

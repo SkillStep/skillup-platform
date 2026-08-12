@@ -29,7 +29,9 @@ test("commercial plan API returns only the two approved launch plans", async ({ 
   ]);
 });
 
-test("checkout creation is replay-safe and never grants access by client claim", async ({ request }) => {
+test("checkout creation is replay-safe and never grants access by client claim", async ({
+  request,
+}) => {
   const idempotencyKey = randomUUID();
   const payload = { planCode: "premium-monthly", idempotencyKey };
 

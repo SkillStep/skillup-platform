@@ -22,7 +22,9 @@ const expectedChallengeTypes = new Set([
 
 async function requireOk(response, label) {
   if (!response.ok()) {
-    throw new Error(`${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`);
+    throw new Error(
+      `${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`,
+    );
   }
 }
 
@@ -34,7 +36,10 @@ function responseFor(challenge) {
     case "true_false":
       return { type: challenge.type, selectedOptionKey: challenge.options[0].key };
     case "ordering":
-      return { type: challenge.type, orderedOptionKeys: challenge.options.map((option) => option.key) };
+      return {
+        type: challenge.type,
+        orderedOptionKeys: challenge.options.map((option) => option.key),
+      };
     case "matching":
       return {
         type: challenge.type,
@@ -73,7 +78,9 @@ test("QA learner has Premium capability authority", async ({ request }) => {
   expect(capabilities.missionsRemainingToday).toBeNull();
 });
 
-test("all five launch entry levels execute and exercise every challenge type", async ({ request }) => {
+test("all five launch entry levels execute and exercise every challenge type", async ({
+  request,
+}) => {
   const observedTypes = new Set();
   let replayChecked = false;
 

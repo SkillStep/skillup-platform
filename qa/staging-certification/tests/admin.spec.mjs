@@ -39,7 +39,9 @@ test("Admin Premium access is calculated by the API", async ({ request }) => {
   expect(body.premium.canReadPlans).toBe(true);
 });
 
-test("Admin summary is backend-authoritative and identifies Karachi reporting", async ({ request }) => {
+test("Admin summary is backend-authoritative and identifies Karachi reporting", async ({
+  request,
+}) => {
   const response = await request.get("/api/v1/admin/reports/premium/summary?preset=last_7_days");
   requireOk(response, "Premium summary");
   const body = await response.json();

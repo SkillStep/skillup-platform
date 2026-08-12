@@ -4,7 +4,9 @@ import { expect, test } from "@playwright/test";
 
 async function requireOk(response, label) {
   if (!response.ok()) {
-    throw new Error(`${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`);
+    throw new Error(
+      `${label} failed with HTTP ${response.status()}: ${(await response.text()).slice(0, 300)}`,
+    );
   }
 }
 

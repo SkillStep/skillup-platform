@@ -162,7 +162,11 @@ function blockForMissingConfiguration() {
   }
 
   if (bool("STAGING_REQUIRE_VISUALS", true) && !bool("STAGING_VISUAL_BASELINES_APPROVED")) {
-    setArea("visual_regression", "BLOCKED", "VISUAL REVIEW REQUIRED — approved baselines are missing.");
+    setArea(
+      "visual_regression",
+      "BLOCKED",
+      "VISUAL REVIEW REQUIRED — approved baselines are missing.",
+    );
   }
 }
 
@@ -210,12 +214,19 @@ async function gateZero() {
 
     const directApiUrl = value("STAGING_API_URL");
     if (directApiUrl) {
-      const directVersion = await fetchJson(endpoint(directApiUrl, "/v1/version"), "Direct API version");
+      const directVersion = await fetchJson(
+        endpoint(directApiUrl, "/v1/version"),
+        "Direct API version",
+      );
       requireMetadata(directVersion, expectedApi, "Direct API");
       summary.observed.directApi = directVersion;
     }
 
-    setArea("deployment_identity", "PASS", "Running Web/API metadata matches the expected SHA, pipeline, immutable artifact references and digests.");
+    setArea(
+      "deployment_identity",
+      "PASS",
+      "Running Web/API metadata matches the expected SHA, pipeline, immutable artifact references and digests.",
+    );
   } catch (error) {
     setArea(
       "deployment_identity",
@@ -245,10 +256,15 @@ async function runtimePreflight() {
       "Freelancing Foundations",
       "Digital Marketing Foundations",
     ]) {
-      if (!html.includes(title)) throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
+      if (!html.includes(title))
+        throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
     }
 
-    setArea("api_runtime", "PASS", "Web responds, API DB-backed readiness is healthy and all five reviewed launch skills are available.");
+    setArea(
+      "api_runtime",
+      "PASS",
+      "Web responds, API DB-backed readiness is healthy and all five reviewed launch skills are available.",
+    );
   } catch (error) {
     setArea(
       "api_runtime",
@@ -315,7 +331,8 @@ async function browserCertification() {
   }
 
   const failures = await failedPlaywrightTests();
-  const visualOnly = failures.length > 0 && failures.every((failure) => failure.title.includes("@visual"));
+  const visualOnly =
+    failures.length > 0 && failures.every((failure) => failure.title.includes("@visual"));
   if (visualOnly) {
     setArea(
       "visual_regression",
@@ -346,7 +363,11 @@ if (!hasStatus("BLOCKED") && !hasStatus("FAIL")) {
   await browserCertification();
 }
 
-summary.decision = hasStatus("FAIL") ? "FAILED" : hasStatus("BLOCKED") ? "BLOCKED" : "READY FOR UAT";
+summary.decision = hasStatus("FAIL")
+  ? "FAILED"
+  : hasStatus("BLOCKED")
+    ? "BLOCKED"
+    : "READY FOR UAT";
 await writeSummary();
 console.log(summary.decision);
 
