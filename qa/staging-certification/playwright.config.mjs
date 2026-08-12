@@ -68,7 +68,7 @@ export default defineConfig({
     {
       name: "admin-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /admin\.spec\.mjs/,
+      testMatch: /admin\.spec\.mjs|ai\.spec\.mjs/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
