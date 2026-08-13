@@ -24,6 +24,50 @@ test("account settings and active session are available to the authenticated lea
   ).toBe(true);
 });
 
+test("authenticated session resolves the expected QA learner", async ({ request }) => {
+  const session = await request.get("/api/v1/auth/session");
+  await requireOk(session, "Auth session");
+  const body = await session.json();
+  expect(body.learner.email.toLowerCase()).toBe(
+    process.env.STAGING_QA_LEARNER_EMAIL?.trim().toLowerCase(),
+  );
+});
+
+test("profile input validation rejects empty and invalid updates", async ({ request }) => {
+  const empty = await request.patch("/api/v1/profile", { data: {} });
+  expect(empty.status()).toBe(400);
+
+  const invalid = await request.patch("/api/v1/profile", {
+    data: { locale: "xx", displayName: "x" },
+  });
+  expect(invalid.status()).toBe(400);
+});
+
+test("profile update is reversible", async ({ request }) => {
+  const session = await request.get("/api/v1/auth/session");
+  await requireOk(session, "Auth session");
+  const original = (await session.json()).learner.profile;
+
+  const changed = await request.patch("/api/v1/profile", {
+    data: {
+      learningGoal: "Automated staging certification",
+      onboardingStatus: "completed",
+    },
+  });
+  await requireOk(changed, "Profile update");
+  expect((await changed.json()).learner.profile.learningGoal).toBe(
+    "Automated staging certification",
+  );
+
+  const restored = await request.patch("/api/v1/profile", {
+    data: {
+      learningGoal: original.learningGoal,
+      onboardingStatus: original.onboardingStatus,
+    },
+  });
+  await requireOk(restored, "Profile restore");
+});
+
 test("privacy preferences persist and can be restored", async ({ request }) => {
   const initial = await request.get("/api/v1/account/privacy");
   await requireOk(initial, "Initial privacy settings");
@@ -72,10 +116,26 @@ test("account deletion enters cooldown and can be safely cancelled", async ({ re
   expect(await cancelled.json()).toEqual({ cancelled: true });
 });
 
-test("mutating account routes reject an untrusted Origin", async ({ request }) => {
-  const response = await request.patch("/api/v1/account/privacy", {
-    headers: { origin: "https://attacker.invalid" },
-    data: { marketingConsent: false },
+test("invalid deletion confirmation is rejected", async ({ request }) => {
+  const response = await request.post("/api/v1/account/deletion", {
+    data: {
+      confirmation: "NO",
+      reason: "Automated staging negative test",
+    },
   });
-  expect(response.status()).toBe(403);
+  expect(response.status()).toBe(400);
+});
+
+test("mutating account routes reject an untrusted Origin", async ({ request }) => {
+  for (const [method, route, data] of [
+    ["patch", "/api/v1/account/privacy", { marketingConsent: false }],
+    ["patch", "/api/v1/profile", { learningGoal: "Untrusted origin" }],
+    ["post", "/api/v1/account/export", undefined],
+  ]) {
+    const response = await request[method](route, {
+      headers: { origin: "https://attacker.invalid" },
+      ...(data ? { data } : {}),
+    });
+    expect(response.status(), route).toBe(403);
+  }
 });
