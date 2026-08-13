@@ -1,14 +1,174 @@
-name: Agent Reconcile PR101 (disabled)
+name: Agent Finalize PR101 Certification Gating
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - feat/permanent-staging-certification
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  disabled:
+  finalize:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - name: Disabled one-time workflow
-        run: echo "One-time PR101 repair completed; this workflow is intentionally disabled and may be removed."
+      - name: Checkout branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: feat/permanent-staging-certification
+
+      - name: Configure git
+        run: |
+          git config user.name "SkillUp CI"
+          git config user.email "actions@users.noreply.github.com"
+
+      - name: Allow provider-specific soft blocks without suppressing unrelated QA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          orchestrator = Path('tools/staging-certification.mjs')
+          text = orchestrator.read_text()
+          summary_end = '''const summary = {
+            schemaVersion: "skillup-staging-certification-v1",
+            runId,
+            generatedAt: new Date().toISOString(),
+            decision: "BLOCKED",
+            expected: {},
+            observed: {},
+            areas: {},
+          };
+          '''
+          summary_replacement = summary_end + '''
+          const softBlockedAreas = new Set(["payments", "visual_regression"]);
+          '''
+          if 'const softBlockedAreas' not in text:
+              if summary_end not in text:
+                  raise SystemExit('staging certification summary anchor not found')
+              text = text.replace(summary_end, summary_replacement, 1)
+
+          status_fn = '''function hasStatus(status) {
+            return Object.values(summary.areas).some((area) => area.status === status);
+          }
+          '''
+          hard_fn = status_fn + '''
+          function hasHardBlock() {
+            return Object.entries(summary.areas).some(
+              ([name, area]) => area.status === "BLOCKED" && !softBlockedAreas.has(name),
+            );
+          }
+          '''
+          if 'function hasHardBlock()' not in text:
+              if status_fn not in text:
+                  raise SystemExit('status helper anchor not found')
+              text = text.replace(status_fn, hard_fn, 1)
+
+          text = text.replace(
+              'if (bool("STAGING_REQUIRE_VISUALS", true)) {\n      setArea("visual_regression", "PASS", "Approved screenshot baselines matched.");\n    }',
+              'if (\n      bool("STAGING_REQUIRE_VISUALS", true) &&\n      bool("STAGING_VISUAL_BASELINES_APPROVED")\n    ) {\n      setArea("visual_regression", "PASS", "Approved screenshot baselines matched.");\n    }',
+              1,
+          )
+          text = text.replace('if (!hasStatus("BLOCKED")) {\n  await runtimePreflight();\n}', 'if (!hasHardBlock()) {\n  await runtimePreflight();\n}', 1)
+          text = text.replace(
+              'if (!hasStatus("BLOCKED") && !hasStatus("FAIL")) {\n  await browserCertification();\n}',
+              'if (!hasHardBlock() && !hasStatus("FAIL")) {\n  await browserCertification();\n}',
+              1,
+          )
+          orchestrator.write_text(text)
+
+          premium = Path('qa/staging-certification/tests/premium.spec.mjs')
+          text = premium.read_text()
+          import_anchor = 'import { expect, test } from "@playwright/test";\n'
+          readiness = '''\nconst jazzCashSandboxReady =\n  process.env.STAGING_JAZZCASH_SANDBOX_READY?.toLowerCase() === "true";\n'''
+          if 'const jazzCashSandboxReady' not in text:
+              if import_anchor not in text:
+                  raise SystemExit('premium spec import anchor not found')
+              text = text.replace(import_anchor, import_anchor + readiness, 1)
+          checkout_anchor = '''test("checkout creation is replay-safe and never grants access by client claim", async ({
+            request,
+          }) => {
+          '''
+          checkout_replacement = checkout_anchor + '''  test.skip(
+            !jazzCashSandboxReady,
+            "JazzCash sandbox is not configured; provider checkout remains explicitly blocked.",
+          );
+          '''
+          if 'provider checkout remains explicitly blocked' not in text:
+              if checkout_anchor not in text:
+                  raise SystemExit('premium checkout test anchor not found')
+              text = text.replace(checkout_anchor, checkout_replacement, 1)
+          premium.write_text(text)
+
+          playwright = Path('qa/staging-certification/playwright.config.mjs')
+          text = playwright.read_text()
+          base_anchor = 'const trustedOrigin = new URL(baseURL).origin;\n'
+          visual_ready = '''const visualBaselinesApproved =\n            process.env.STAGING_VISUAL_BASELINES_APPROVED?.toLowerCase() === "true";\n'''
+          if 'const visualBaselinesApproved' not in text:
+              if base_anchor not in text:
+                  raise SystemExit('playwright base URL anchor not found')
+              text = text.replace(base_anchor, base_anchor + visual_ready, 1)
+          text = text.replace(
+              'testMatch: /visual\\.spec\\.mjs/,',
+              'testMatch: visualBaselinesApproved ? /visual\\.spec\\.mjs/ : /$a/,',
+              1,
+          )
+          text = text.replace(
+              'testMatch: /visual-learner\\.spec\\.mjs/,',
+              'testMatch: visualBaselinesApproved ? /visual-learner\\.spec\\.mjs/ : /$a/,',
+              1,
+          )
+          playwright.write_text(text)
+          PY
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Enable pinned pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+
+      - name: Format and validate focused certification sources
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm format
+          pnpm format:check
+          node --check tools/staging-certification.mjs
+          node --check qa/staging-certification/playwright.config.mjs
+          node --check qa/staging-certification/tests/premium.spec.mjs
+
+      - name: Disable this one-time workflow before commit
+        shell: bash
+        run: |
+          cat > .github/workflows/agent-reconcile-pr101.yml <<'EOF'
+          name: Agent Reconcile PR101 (disabled)
+
+          on:
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            disabled:
+              runs-on: ubuntu-24.04
+              steps:
+                - name: Disabled one-time workflow
+                  run: echo "One-time PR101 repair completed; this workflow is intentionally disabled and may be removed."
+          EOF
+
+      - name: Commit final certification gating
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add -A
+          git commit -m "fix: keep provider blocks isolated during staging QA"
+          git push origin HEAD:feat/permanent-staging-certification
