@@ -59,8 +59,84 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
+  resolve-images:
     needs: [prep, build-and-push]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      web_artifact_ref: ${{ steps.identity.outputs.web_artifact_ref }}
+      web_image_digest: ${{ steps.identity.outputs.web_image_digest }}
+      api_artifact_ref: ${{ steps.identity.outputs.api_artifact_ref }}
+      api_image_digest: ${{ steps.identity.outputs.api_image_digest }}
+      ai_artifact_ref: ${{ steps.identity.outputs.ai_artifact_ref }}
+      ai_image_digest: ${{ steps.identity.outputs.ai_image_digest }}
+      previous_release_ref: ${{ steps.previous.outputs.previous_release_ref }}
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve immutable image references
+        id: identity
+        shell: bash
+        env:
+          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          resolve_digest() {
+            local ref="$1"
+            local digest
+            digest="$(docker buildx imagetools inspect "$ref" --format '{{.Manifest.Digest}}')"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || {
+              echo "::error::Could not resolve an immutable digest for $ref (received: $digest)" >&2
+              exit 1
+            }
+            printf '%s' "$digest"
+          }
+
+          web_ref="$IMAGE_BASE-web:$IMAGE_TAG"
+          api_ref="$IMAGE_BASE-api:$IMAGE_TAG"
+          ai_ref="$IMAGE_BASE-ai-worker:$IMAGE_TAG"
+
+          echo "web_artifact_ref=$web_ref" >> "$GITHUB_OUTPUT"
+          echo "web_image_digest=$(resolve_digest "$web_ref")" >> "$GITHUB_OUTPUT"
+          echo "api_artifact_ref=$api_ref" >> "$GITHUB_OUTPUT"
+          echo "api_image_digest=$(resolve_digest "$api_ref")" >> "$GITHUB_OUTPUT"
+          echo "ai_artifact_ref=$ai_ref" >> "$GITHUB_OUTPUT"
+          echo "ai_image_digest=$(resolve_digest "$ai_ref")" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve previous staging release reference
+        id: previous
+        shell: bash
+        run: |
+          set -euo pipefail
+          health="$(curl --fail --silent --show-error --max-time 10 https://skillupshop.codistan.org/api/health || true)"
+          previous_ref="$(HEALTH_JSON="$health" node <<'NODE'
+          try {
+            const health = JSON.parse(process.env.HEALTH_JSON || "{}");
+            const artifact = typeof health.artifactRef === "string" ? health.artifactRef.trim() : "";
+            if (artifact && artifact !== "local" && artifact !== "unknown") {
+              process.stdout.write(artifact);
+            } else {
+              const sha = typeof health.releaseSha === "string" ? health.releaseSha.trim() : "";
+              process.stdout.write(sha && sha !== "local" ? `git:${sha}` : "bootstrap:no-previous-certified-release");
+            }
+          } catch {
+            process.stdout.write("bootstrap:no-previous-certified-release");
+          }
+          NODE
+          )"
+          echo "previous_release_ref=$previous_ref" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    needs: [prep, build-and-push, resolve-images]
     runs-on: ubuntu-latest
     environment: staging
     steps:
@@ -82,13 +158,14 @@ jobs:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF
           script: |
             set -euo pipefail
             cd /opt/skillup
             test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
 
             python3 - <<'PY'
+            import os
             from pathlib import Path
 
             path = Path('.env')
@@ -96,7 +173,15 @@ jobs:
                 'APP_ENV': 'staging',
                 'PUBLIC_APP_URL': 'https://skillupshop.codistan.org',
                 'API_BASE_URL': 'http://api:3001',
-                'RELEASE_SHA': '${{ github.sha }}',
+                'RELEASE_SHA': os.environ['IMAGE_TAG'],
+                'RELEASE_PIPELINE_ID': os.environ['PIPELINE_ID'],
+                'ROLLBACK_ARTIFACT_REF': os.environ['PREVIOUS_RELEASE_REF'],
+                'WEB_RELEASE_ARTIFACT_REF': os.environ['WEB_ARTIFACT_REF'],
+                'WEB_RELEASE_IMAGE_DIGEST': os.environ['WEB_IMAGE_DIGEST'],
+                'API_RELEASE_ARTIFACT_REF': os.environ['API_ARTIFACT_REF'],
+                'API_RELEASE_IMAGE_DIGEST': os.environ['API_IMAGE_DIGEST'],
+                'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
+                'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
             }
             lines = path.read_text(encoding='utf-8').splitlines()
             output = []
@@ -166,11 +251,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
           IMAGE_TAG: ${{ github.sha }}
+          PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          WEB_ARTIFACT_REF: ${{ needs.resolve-images.outputs.web_artifact_ref }}
+          WEB_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
+          API_ARTIFACT_REF: ${{ needs.resolve-images.outputs.api_artifact_ref }}
+          API_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
+          AI_ARTIFACT_REF: ${{ needs.resolve-images.outputs.ai_artifact_ref }}
+          AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
+          PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
 
       - name: Verify public staging edge from external runner
         shell: bash
         env:
           EXPECTED_RELEASE_SHA: ${{ github.sha }}
+          EXPECTED_PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          EXPECTED_WEB_ARTIFACT_REF: ${{ needs.resolve-images.outputs.web_artifact_ref }}
+          EXPECTED_WEB_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
+          EXPECTED_API_ARTIFACT_REF: ${{ needs.resolve-images.outputs.api_artifact_ref }}
+          EXPECTED_API_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
+          EXPECTED_ROLLBACK_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
         run: |
           set -euo pipefail
           base="https://skillupshop.codistan.org"
@@ -202,11 +301,18 @@ jobs:
           const web = JSON.parse(process.env.WEB_HEALTH);
           const api = JSON.parse(process.env.API_HEALTH);
           const ready = JSON.parse(process.env.API_READY);
-          const expected = process.env.EXPECTED_RELEASE_SHA;
+          const expectedSha = process.env.EXPECTED_RELEASE_SHA;
+          const expectedPipeline = process.env.EXPECTED_PIPELINE_ID;
+          const expectedRollback = process.env.EXPECTED_ROLLBACK_REF;
           if (web.status !== "ok" || web.service !== "skillup-web") throw new Error("Public Web health contract failed.");
           if (api.status !== "ok" || api.service !== "skillup-api") throw new Error("Public API health contract failed.");
           if (ready.status !== "ok" || ready.service !== "skillup-api") throw new Error("Public database readiness contract failed.");
-          if (web.releaseSha !== expected || api.releaseSha !== expected || ready.releaseSha !== expected) throw new Error(`Public release identity mismatch. Expected ${expected}.`);
+          if (web.releaseSha !== expectedSha || api.releaseSha !== expectedSha || ready.releaseSha !== expectedSha) throw new Error(`Public release identity mismatch. Expected ${expectedSha}.`);
+          if (web.pipelineId !== expectedPipeline || api.pipelineId !== expectedPipeline || ready.pipelineId !== expectedPipeline) throw new Error(`Public deployment pipeline identity mismatch. Expected ${expectedPipeline}.`);
+          if (web.artifactRef !== process.env.EXPECTED_WEB_ARTIFACT_REF || web.imageDigest !== process.env.EXPECTED_WEB_IMAGE_DIGEST) throw new Error("Public Web immutable artifact identity mismatch.");
+          if (api.artifactRef !== process.env.EXPECTED_API_ARTIFACT_REF || api.imageDigest !== process.env.EXPECTED_API_IMAGE_DIGEST) throw new Error("Public API immutable artifact identity mismatch.");
+          if (ready.artifactRef !== process.env.EXPECTED_API_ARTIFACT_REF || ready.imageDigest !== process.env.EXPECTED_API_IMAGE_DIGEST) throw new Error("Public API readiness artifact identity mismatch.");
+          if (web.rollbackRef !== expectedRollback || api.rollbackRef !== expectedRollback || ready.rollbackRef !== expectedRollback) throw new Error("Public rollback reference mismatch.");
           NODE
 
           legit_status="$(curl --silent --show-error --output /tmp/public-origin-legit.json --write-out '%{http_code}' --header "Origin: $base" --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$base/api/v1/auth/email/start")"
@@ -225,3 +331,41 @@ jobs:
 
           rm -f /tmp/public-origin-legit.json /tmp/public-origin-hostile.json
           echo "PHASE 1 STAGING STABILIZATION: PASS"
+
+      - name: Write sanitized staging deployment identity
+        shell: bash
+        env:
+          RELEASE_SHA: ${{ github.sha }}
+          PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          WEB_ARTIFACT_REF: ${{ needs.resolve-images.outputs.web_artifact_ref }}
+          WEB_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
+          API_ARTIFACT_REF: ${{ needs.resolve-images.outputs.api_artifact_ref }}
+          API_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
+          AI_ARTIFACT_REF: ${{ needs.resolve-images.outputs.ai_artifact_ref }}
+          AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
+          PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts
+          node <<'NODE' > artifacts/staging-deployment-identity.json
+          process.stdout.write(`${JSON.stringify({
+            releaseSha: process.env.RELEASE_SHA,
+            pipelineId: process.env.PIPELINE_ID,
+            webArtifactRef: process.env.WEB_ARTIFACT_REF,
+            webImageDigest: process.env.WEB_IMAGE_DIGEST,
+            apiArtifactRef: process.env.API_ARTIFACT_REF,
+            apiImageDigest: process.env.API_IMAGE_DIGEST,
+            aiReleaseSha: process.env.RELEASE_SHA,
+            aiArtifactRef: process.env.AI_ARTIFACT_REF,
+            aiImageDigest: process.env.AI_IMAGE_DIGEST,
+            previousReleaseRef: process.env.PREVIOUS_RELEASE_REF,
+          }, null, 2)}\n`);
+          NODE
+
+      - name: Upload sanitized staging deployment identity
+        uses: actions/upload-artifact@v4
+        with:
+          name: staging-deployment-identity-${{ github.run_id }}-${{ github.run_attempt }}
+          path: artifacts/staging-deployment-identity.json
+          if-no-files-found: error
+          retention-days: 14
