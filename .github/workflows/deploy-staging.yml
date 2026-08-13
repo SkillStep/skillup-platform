@@ -80,7 +80,7 @@ jobs:
           target: "/opt/skillup"
           strip_components: 2
 
-      - name: Deploy on EC2
+      - name: Deploy and certify Phase 1 on EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.STAGING_HOST }}
@@ -91,11 +91,102 @@ jobs:
             set -euo pipefail
             cd /opt/skillup
             test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
+
+            # Canonical non-secret staging runtime settings. Preserve every secret already
+            # present in /opt/skillup/.env and replace only these explicitly managed keys.
+            python3 - <<'PY'
+            from pathlib import Path
+
+            path = Path('.env')
+            updates = {
+                'APP_ENV': 'staging',
+                'PUBLIC_APP_URL': 'https://skillupshop.codistan.org',
+                'API_BASE_URL': 'http://api:3001',
+                'RELEASE_SHA': '${{ github.sha }}',
+            }
+            lines = path.read_text(encoding='utf-8').splitlines()
+            output = []
+            written = set()
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    output.append(line)
+                    continue
+                key = line.split('=', 1)[0].strip()
+                if key in updates:
+                    if key not in written:
+                        output.append(f'{key}={updates[key]}')
+                        written.add(key)
+                    continue
+                output.append(line)
+            for key, value in updates.items():
+                if key not in written:
+                    output.append(f'{key}={value}')
+            path.write_text('\n'.join(output) + '\n', encoding='utf-8')
+            PY
+            chmod 600 .env
+
+            docker compose -f docker-compose.staging.yml config --quiet
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
             docker compose -f docker-compose.staging.yml pull
-            docker compose -f docker-compose.staging.yml up -d
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
             docker compose -f docker-compose.staging.yml ps
+
+            wait_for_url() {
+              label="$1"
+              url="$2"
+              attempts="${3:-60}"
+              for attempt in $(seq 1 "$attempts"); do
+                if curl --fail --silent --show-error --max-time 5 "$url" >/dev/null; then
+                  echo "$label is healthy"
+                  return 0
+                fi
+                sleep 2
+              done
+              echo "::error::$label did not become healthy: $url" >&2
+              return 1
+            }
+
+            # Container-local service gates.
+            wait_for_url "API health" "http://127.0.0.1:4020/v1/health"
+            wait_for_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
+            wait_for_url "Web health" "http://127.0.0.1:3020/api/health"
+
+            # Regression gate for the exact browser failure observed on staging. A legitimate
+            # SkillUp Origin must pass the Origin check and then fail only schema validation
+            # because the deliberately supplied email is invalid. No email is sent.
+            legit_status="$(curl --silent --show-error --output /tmp/skillup-origin-legit.json --write-out '%{http_code}' \
+              --header 'Origin: https://skillupshop.codistan.org' \
+              --header 'Content-Type: application/json' \
+              --data '{"email":"not-an-email"}' \
+              http://127.0.0.1:3020/api/v1/auth/email/start)"
+            if [ "$legit_status" != "400" ]; then
+              echo "::error::Legitimate staging Origin was not accepted; expected HTTP 400 after input validation, received $legit_status" >&2
+              cat /tmp/skillup-origin-legit.json >&2 || true
+              exit 1
+            fi
+
+            hostile_status="$(curl --silent --show-error --output /tmp/skillup-origin-hostile.json --write-out '%{http_code}' \
+              --header 'Origin: https://attacker.invalid' \
+              --header 'Content-Type: application/json' \
+              --data '{"email":"qa-security@example.invalid"}' \
+              http://127.0.0.1:3020/api/v1/auth/email/start)"
+            if [ "$hostile_status" != "403" ]; then
+              echo "::error::Hostile Origin protection regressed; expected HTTP 403, received $hostile_status" >&2
+              cat /tmp/skillup-origin-hostile.json >&2 || true
+              exit 1
+            fi
+
+            # Public reverse-proxy/TLS gates. These prove the same routes are healthy through
+            # the exact browser-facing staging hostname, not only through localhost ports.
+            wait_for_url "Public sign-in page" "https://skillupshop.codistan.org/en/sign-in"
+            wait_for_url "Public web health" "https://skillupshop.codistan.org/api/health"
+            wait_for_url "Public API health" "https://skillupshop.codistan.org/api/v1/health"
+            wait_for_url "Public API readiness" "https://skillupshop.codistan.org/api/v1/ready"
+
+            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
             docker image prune -f
+            echo "PHASE 1 STAGING STABILIZATION: PASS"
         env:
           GH_ACTOR: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
