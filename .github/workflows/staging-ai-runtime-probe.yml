@@ -1,0 +1,91 @@
+name: Staging AI Runtime Probe
+
+on:
+  push:
+    branches: [chore/validate-staging-ai-runtime]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Resolve currently deployed staging release
+        id: deployed
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="https://skillupshop.codistan.org/api/health"
+          for attempt in $(seq 1 30); do
+            body="$(curl --silent --show-error --max-time 10 "$url" || true)"
+            release_sha="$(HEALTH="$body" node -e 'try{const v=JSON.parse(process.env.HEALTH||"{}"); if(v.status==="ok" && typeof v.releaseSha==="string" && v.releaseSha.length>6) process.stdout.write(v.releaseSha)}catch{}')"
+            if [ -n "$release_sha" ]; then
+              echo "release_sha=$release_sha" >> "$GITHUB_OUTPUT"
+              echo "Current staging release resolved."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Could not resolve the current staging release." >&2
+          exit 1
+
+      - name: Validate AI worker configuration and live DeepSeek access
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          EXPECTED_SHA: ${{ steps.deployed.outputs.release_sha }}
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          envs: EXPECTED_SHA
+          command_timeout: 10m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            compose="docker compose -f docker-compose.staging.yml"
+
+            state="$(docker inspect --format '{{.State.Status}}' skillup-ai-worker-staging-container 2>/dev/null || true)"
+            health="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{end}}' skillup-ai-worker-staging-container 2>/dev/null || true)"
+            test "$state" = "running" || { echo "AI worker is not running" >&2; exit 1; }
+            test "$health" = "healthy" || { echo "AI worker is not healthy" >&2; exit 1; }
+
+            ai_health="$($compose exec -T ai-worker python -m skillup_ai_worker.health)"
+            AI_HEALTH="$ai_health" EXPECTED_SHA="$EXPECTED_SHA" python3 - <<'PY'
+            import json
+            import os
+
+            value = json.loads(os.environ['AI_HEALTH'])
+            assert value.get('status') == 'ready', value
+            assert value.get('service') == 'skillup-ai-worker', value
+            assert value.get('feature_enabled') is True, value
+            assert value.get('provider') == 'deepseek', value
+            assert value.get('fallback_provider') in (None, 'disabled'), value
+            assert value.get('release_sha') == os.environ['EXPECTED_SHA'], value
+            print('AI CONFIGURATION: PASS')
+            PY
+
+            $compose exec -T ai-worker python - <<'PY'
+            import os
+
+            assert os.getenv('AI_JOB_API_URL', '').strip() == 'http://api:3001'
+            assert len(os.getenv('AI_WORKER_SHARED_SECRET', '')) >= 32
+            assert os.getenv('DEEPSEEK_API_BASE_URL', '').strip() == 'https://api.deepseek.com'
+            assert os.getenv('DEEPSEEK_MODEL', '').strip() == 'deepseek-v4-flash'
+            assert bool(os.getenv('DEEPSEEK_API_KEY', '').strip())
+            print('AI REQUIRED VALUES: PASS (secret values not printed)')
+            PY
+
+            live_report="$($compose exec -T -e AI_EVALUATION_LIVE=true ai-worker python -m skillup_ai_worker.evaluate)"
+            LIVE_REPORT="$live_report" python3 - <<'PY'
+            import json
+            import os
+
+            report = json.loads(os.environ['LIVE_REPORT'])
+            assert report.get('mode') == 'live', report
+            assert report.get('status') == 'passed', report
+            assert report.get('cases') == 7, report
+            assert report.get('passed') == 7, report
+            assert report.get('failed') == 0, report
+            providers = {item.get('provider') for item in report.get('results', [])}
+            assert providers == {'deepseek'}, providers
+            print('LIVE DEEPSEEK EVALUATION: PASS — 7/7')
+            PY
