@@ -1,0 +1,49 @@
+name: Staging Integration State Probe
+
+on:
+  push:
+    branches: [chore/validate-staging-ai-runtime]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Verify non-secret integration state on EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 2m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            docker compose -f docker-compose.staging.yml exec -T api node - <<'NODE'
+            const emailProvider = (process.env.EMAIL_PROVIDER || 'disabled').trim();
+            const jazzcashEnabled = (process.env.FEATURE_JAZZCASH_ENABLED || 'false').trim();
+            const jazzcashMode = (process.env.JAZZCASH_MODE || 'disabled').trim();
+            if (emailProvider !== 'disabled') throw new Error(`EMAIL_PROVIDER is ${emailProvider}; expected disabled until SMTP is provisioned.`);
+            if (jazzcashEnabled !== 'false') throw new Error(`FEATURE_JAZZCASH_ENABLED is ${jazzcashEnabled}; expected false until sandbox is provisioned.`);
+            if (jazzcashMode !== 'disabled') throw new Error(`JAZZCASH_MODE is ${jazzcashMode}; expected disabled until sandbox is provisioned.`);
+            console.log('SMTP STATE: BLOCKED BY DESIGN — provider disabled');
+            console.log('JAZZCASH STATE: BLOCKED BY DESIGN — sandbox not configured');
+            NODE
+
+      - name: Confirm public auth fails only because email delivery is unavailable
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://skillupshop.codistan.org"
+          status="$(curl --silent --show-error --output /tmp/auth-disabled.json --write-out '%{http_code}' \
+            --header "Origin: $base" \
+            --header 'Content-Type: application/json' \
+            --data '{"email":"staging-probe@example.invalid"}' \
+            "$base/api/v1/auth/email/start")"
+          test "$status" = "500" || { echo "::error::Expected current disabled-email contract to return HTTP 500, received $status" >&2; cat /tmp/auth-disabled.json >&2 || true; exit 1; }
+          BODY="$(cat /tmp/auth-disabled.json)" node - <<'NODE'
+          const body = JSON.parse(process.env.BODY || '{}');
+          if (body.message !== 'An unexpected server error occurred.') throw new Error('Unexpected disabled-email error contract.');
+          NODE
+          rm -f /tmp/auth-disabled.json
+          echo "AUTH BLOCKER CONFIRMED: SMTP/email provider is not configured."
