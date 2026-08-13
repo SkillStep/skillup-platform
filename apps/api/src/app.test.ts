@@ -155,6 +155,23 @@ describe("passwordless account routes", () => {
     });
   });
 
+  it("returns a bounded 400 contract for an invalid request payload", async () => {
+    const authService = createAuthService();
+    const response = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/auth/email/start",
+      headers: { origin: "https://skillup.example" },
+      payload: { email: "not-an-email" },
+    });
+
+    expect(response.statusCode).toBe(400);
+    expect(response.json()).toMatchObject({
+      code: "request_error",
+      message: "The request payload is invalid.",
+    });
+    expect(authService.startEmailSignIn).not.toHaveBeenCalled();
+  });
+
   it("rejects state-changing requests from an untrusted origin", async () => {
     const response = await createTestApi(undefined, createAuthService()).inject({
       method: "POST",
