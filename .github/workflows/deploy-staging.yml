@@ -88,10 +88,13 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG
           script: |
+            set -euo pipefail
             cd /opt/skillup
+            test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
             docker compose -f docker-compose.staging.yml pull
             docker compose -f docker-compose.staging.yml up -d
+            docker compose -f docker-compose.staging.yml ps
             docker image prune -f
         env:
           GH_ACTOR: ${{ github.actor }}
