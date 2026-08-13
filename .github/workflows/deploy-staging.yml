@@ -9,9 +9,6 @@ concurrency:
   group: staging-deploy
   cancel-in-progress: true
 
-env:
-  IMAGE_BASE: ghcr.io/${{ github.repository }}
-
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -25,8 +22,21 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
-  build-and-push:
+  # GHCR repository names must be lowercase; github.repository preserves
+  # the org/repo casing as-is (e.g. SkillStep/skillup-platform), which
+  # breaks the docker tag. Compute the lowercase form once here and pass
+  # it to both jobs that need it.
+  prep:
     needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      image_base: ${{ steps.vars.outputs.image_base }}
+    steps:
+      - id: vars
+        run: echo "image_base=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    needs: prep
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -48,13 +58,13 @@ jobs:
           file: infra/docker/${{ matrix.service }}.Dockerfile
           push: true
           tags: |
-            ${{ env.IMAGE_BASE }}-${{ matrix.service }}:staging
-            ${{ env.IMAGE_BASE }}-${{ matrix.service }}:${{ github.sha }}
+            ${{ needs.prep.outputs.image_base }}-${{ matrix.service }}:staging
+            ${{ needs.prep.outputs.image_base }}-${{ matrix.service }}:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: build-and-push
+    needs: [prep, build-and-push]
     runs-on: ubuntu-latest
     environment: staging
     steps:
@@ -86,5 +96,5 @@ jobs:
         env:
           GH_ACTOR: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_BASE: ghcr.io/${{ github.repository }}
+          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
           IMAGE_TAG: ${{ github.sha }}
