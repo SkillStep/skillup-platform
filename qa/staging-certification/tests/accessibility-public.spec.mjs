@@ -7,18 +7,21 @@ for (const route of ["/en", "/en/skills", "/en/pricing", "/en/sign-in"]) {
     await expect(page.locator("main")).toHaveCount(1);
     await expect(page.locator("h1")).toHaveCount(1);
 
-    const unnamedButtons = await page.locator("button:visible").evaluateAll((buttons) =>
-      buttons.filter((button) => {
-        const label = button.getAttribute("aria-label")?.trim();
-        const text = button.textContent?.trim();
-        return !label && !text;
-      }).length,
+    const unnamedButtons = await page.locator("button:visible").evaluateAll(
+      (buttons) =>
+        buttons.filter((button) => {
+          const label = button.getAttribute("aria-label")?.trim();
+          const text = button.textContent?.trim();
+          return !label && !text;
+        }).length,
     );
     expect(unnamedButtons).toBe(0);
   });
 }
 
-test("passwordless sign-in is operable with keyboard focus and labelled controls", async ({ page }) => {
+test("passwordless sign-in is operable with keyboard focus and labelled controls", async ({
+  page,
+}) => {
   await page.goto("/en/sign-in");
   const email = page.getByLabel("Email address");
   await expect(email).toBeVisible();

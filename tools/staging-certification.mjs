@@ -267,7 +267,8 @@ async function runtimePreflight() {
       "Freelancing Foundations",
       "Digital Marketing Foundations",
     ]) {
-      if (!html.includes(title)) throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
+      if (!html.includes(title))
+        throw new Error(`Reviewed launch skill missing from staging: ${title}.`);
     }
 
     setArea(

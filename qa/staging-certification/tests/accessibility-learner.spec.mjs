@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("critical learner page preserves one main landmark and visible focusable action", async ({ page }) => {
+test("critical learner page preserves one main landmark and visible focusable action", async ({
+  page,
+}) => {
   await page.goto("/en/learn/3c315a1a-824a-413e-836d-69a9fc8bad1f");
   await expect(page.locator("main")).toHaveCount(1);
   const action = page.getByRole("button", { name: "Check answer" });

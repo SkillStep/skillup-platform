@@ -1,6 +1,9 @@
 import { expect, test } from "@playwright/test";
 
-test("revoked Admin identity is denied server-side even with a valid learner session", async ({ request, page }) => {
+test("revoked Admin identity is denied server-side even with a valid learner session", async ({
+  request,
+  page,
+}) => {
   const session = await request.get("/api/v1/auth/session");
   expect(session.ok()).toBe(true);
 
@@ -8,11 +11,15 @@ test("revoked Admin identity is denied server-side even with a valid learner ses
   expect(admin.status()).toBe(403);
 
   await page.goto("/en/admin");
-  await expect(page.getByRole("alert")).toContainText("Your account does not have administrative access.");
+  await expect(page.getByRole("alert")).toContainText(
+    "Your account does not have administrative access.",
+  );
   await expect(page.getByText(/^Roles:/)).toHaveCount(0);
 });
 
-test("revoked Admin identity cannot use direct Premium or privileged mutation APIs", async ({ request }) => {
+test("revoked Admin identity cannot use direct Premium or privileged mutation APIs", async ({
+  request,
+}) => {
   const premium = await request.get("/api/v1/admin/reports/premium/summary?preset=last_7_days");
   expect(premium.status()).toBe(403);
 

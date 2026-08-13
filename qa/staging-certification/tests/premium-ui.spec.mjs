@@ -10,9 +10,13 @@ const tabs = [
   ["Exports", "exports"],
 ];
 
-test("Premium Admin workspace exposes every operational tab and keeps state in the URL", async ({ page }) => {
+test("Premium Admin workspace exposes every operational tab and keeps state in the URL", async ({
+  page,
+}) => {
   await page.goto("/en/admin/premium");
-  await expect(page.getByRole("heading", { name: "Measure and operate paid membership from one authority." })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Measure and operate paid membership from one authority." }),
+  ).toBeVisible();
 
   for (const [label, id] of tabs) {
     await page.getByRole("button", { name: label, exact: true }).click();

@@ -18,10 +18,15 @@ test("publisher resolves only publication authority", async ({ request }) => {
   expect(body.admin.capabilities).not.toContain("ai.request");
 });
 
-test("publisher cannot cross into payment, entitlement or generation authority", async ({ request }) => {
-  const reconciliation = await request.post(`/api/v1/admin/reconciliation/${randomUUID()}/resolve`, {
-    data: { disposition: "ignored", resolution: "Authorization boundary certification" },
-  });
+test("publisher cannot cross into payment, entitlement or generation authority", async ({
+  request,
+}) => {
+  const reconciliation = await request.post(
+    `/api/v1/admin/reconciliation/${randomUUID()}/resolve`,
+    {
+      data: { disposition: "ignored", resolution: "Authorization boundary certification" },
+    },
+  );
   expect(reconciliation.status()).toBe(403);
 
   const entitlement = await request.post(`/api/v1/admin/entitlements/${randomUUID()}/correct`, {

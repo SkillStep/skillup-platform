@@ -31,7 +31,9 @@ test("broad Admin can create and download an audited CSV export", async ({ reque
   const body = await created.json();
   expect(body.export.id).toBeTruthy();
 
-  const downloaded = await request.get(`/api/v1/admin/reports/premium/exports/${body.export.id}/download`);
+  const downloaded = await request.get(
+    `/api/v1/admin/reports/premium/exports/${body.export.id}/download`,
+  );
   requireOk(downloaded, "Premium CSV download");
   expect(downloaded.headers()["content-type"] ?? "").toContain("text/csv");
   expect(downloaded.headers()["content-disposition"] ?? "").toContain("attachment");
@@ -45,7 +47,9 @@ test("invalid custom report ranges fail closed", async ({ request }) => {
   expect(response.status()).toBe(400);
 });
 
-test("Premium plan and grant mutations require trusted origin and valid input", async ({ request }) => {
+test("Premium plan and grant mutations require trusted origin and valid input", async ({
+  request,
+}) => {
   const untrustedPlan = await request.post("/api/v1/admin/reports/premium/plans/versions", {
     headers: { origin: "https://attacker.invalid" },
     data: {

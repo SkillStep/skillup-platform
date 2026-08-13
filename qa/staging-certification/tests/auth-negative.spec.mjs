@@ -20,7 +20,10 @@ test("invalid email is rejected before a sign-in request is sent", async ({ page
 test("wrong OTP is rejected and a consumed challenge cannot be replayed", async () => {
   const email = qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL");
   const origin = new URL(baseUrl()).origin;
-  const context = await requestFactory.newContext({ baseURL: baseUrl(), extraHTTPHeaders: { origin } });
+  const context = await requestFactory.newContext({
+    baseURL: baseUrl(),
+    extraHTTPHeaders: { origin },
+  });
 
   try {
     const startedAfter = new Date(Date.now() - 2_000).toISOString();

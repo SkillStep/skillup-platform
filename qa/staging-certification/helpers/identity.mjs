@@ -14,7 +14,10 @@ function required(name) {
 }
 
 function certificationUserAgent(email) {
-  const reference = createHash("sha256").update(email.trim().toLowerCase()).digest("hex").slice(0, 12);
+  const reference = createHash("sha256")
+    .update(email.trim().toLowerCase())
+    .digest("hex")
+    .slice(0, 12);
   return `SkillUp-Staging-Certification/${reference}`;
 }
 

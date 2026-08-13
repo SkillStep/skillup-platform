@@ -70,6 +70,13 @@ function normalizeError(error: unknown): NormalizedError {
     };
   }
 
+  if (candidateStatusCode === 503) {
+    return {
+      statusCode: 503,
+      message: "The requested service is temporarily unavailable.",
+    };
+  }
+
   const statusCode =
     candidateStatusCode !== undefined && candidateStatusCode >= 400 && candidateStatusCode < 500
       ? candidateStatusCode
@@ -289,7 +296,12 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
 
     return reply.status(normalized.statusCode).send(
       ApiErrorSchema.parse({
-        code: normalized.statusCode < 500 ? "request_error" : "internal_error",
+        code:
+          normalized.statusCode === 503
+            ? "service_unavailable"
+            : normalized.statusCode < 500
+              ? "request_error"
+              : "internal_error",
         message: normalized.message,
         requestId: request.id,
       }),

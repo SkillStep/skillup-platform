@@ -6,7 +6,9 @@ function requireOk(response, label) {
   if (!response.ok()) throw new Error(`${label} failed with HTTP ${response.status()}.`);
 }
 
-test("security admin resolves security and Premium-governance authority without payment reconciliation", async ({ request }) => {
+test("security admin resolves security and Premium-governance authority without payment reconciliation", async ({
+  request,
+}) => {
   const session = await request.get("/api/v1/admin/session");
   requireOk(session, "Security Admin session");
   const body = await session.json();
@@ -25,10 +27,15 @@ test("security admin resolves security and Premium-governance authority without 
   expect(premium.canReconcilePayments).toBe(false);
 });
 
-test("security admin cannot cross into payment reconciliation or AI publication", async ({ request }) => {
-  const reconciliation = await request.post(`/api/v1/admin/reconciliation/${randomUUID()}/resolve`, {
-    data: { disposition: "ignored", resolution: "Security role isolation certification" },
-  });
+test("security admin cannot cross into payment reconciliation or AI publication", async ({
+  request,
+}) => {
+  const reconciliation = await request.post(
+    `/api/v1/admin/reconciliation/${randomUUID()}/resolve`,
+    {
+      data: { disposition: "ignored", resolution: "Security role isolation certification" },
+    },
+  );
   expect(reconciliation.status()).toBe(403);
 
   const publication = await request.post(`/api/v1/admin/ai/artifacts/${randomUUID()}/publish`, {

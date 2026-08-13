@@ -19,7 +19,9 @@ test("content editor resolves generation/edit authority only", async ({ request 
   expect(body.admin.capabilities).not.toContain("payment.reconcile");
 });
 
-test("content editor passes authorization before generation validation but cannot review or publish", async ({ request }) => {
+test("content editor passes authorization before generation validation but cannot review or publish", async ({
+  request,
+}) => {
   const invalidGeneration = await request.post("/api/v1/admin/ai/requests", {
     data: {
       task: "summarize_content",

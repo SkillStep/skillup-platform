@@ -17,7 +17,9 @@ test("AI request mutation rejects an untrusted origin", async ({ request }) => {
   expect(response.status()).toBe(403);
 });
 
-test("AI request validation rejects oversized or invalid request contracts before queueing", async ({ request }) => {
+test("AI request validation rejects oversized or invalid request contracts before queueing", async ({
+  request,
+}) => {
   const invalid = await request.post("/api/v1/admin/ai/requests", {
     data: {
       task: "summarize_content",
@@ -31,7 +33,9 @@ test("AI request validation rejects oversized or invalid request contracts befor
   expect(invalid.status()).toBe(400);
 });
 
-test("unknown AI cancellation and publication targets fail without side effects", async ({ request }) => {
+test("unknown AI cancellation and publication targets fail without side effects", async ({
+  request,
+}) => {
   const cancellation = await request.post(`/api/v1/admin/ai/requests/${randomUUID()}/cancel`, {
     data: { reason: "Unknown request certification" },
   });

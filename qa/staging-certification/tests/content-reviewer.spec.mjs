@@ -6,7 +6,9 @@ function requireOk(response, label) {
   if (!response.ok()) throw new Error(`${label} failed with HTTP ${response.status()}.`);
 }
 
-test("content reviewer resolves review authority without publication or payment authority", async ({ request }) => {
+test("content reviewer resolves review authority without publication or payment authority", async ({
+  request,
+}) => {
   const session = await request.get("/api/v1/admin/session");
   requireOk(session, "Content reviewer session");
   const body = await session.json();
@@ -18,7 +20,9 @@ test("content reviewer resolves review authority without publication or payment 
   expect(body.admin.capabilities).not.toContain("payment.reconcile");
 });
 
-test("content reviewer can read review queue but cannot request or publish content", async ({ request }) => {
+test("content reviewer can read review queue but cannot request or publish content", async ({
+  request,
+}) => {
   const artifacts = await request.get("/api/v1/admin/ai/artifacts?limit=1");
   requireOk(artifacts, "AI artifact queue");
 

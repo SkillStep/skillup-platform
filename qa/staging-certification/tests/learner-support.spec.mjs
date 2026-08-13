@@ -4,7 +4,9 @@ function requireOk(response, label) {
   if (!response.ok()) throw new Error(`${label} failed with HTTP ${response.status()}.`);
 }
 
-test("learner support can read minimized learner support data for an authorized target", async ({ request }) => {
+test("learner support can read minimized learner support data for an authorized target", async ({
+  request,
+}) => {
   const session = await request.get("/api/v1/admin/session");
   requireOk(session, "Learner support session");
   const adminBody = await session.json();
@@ -23,7 +25,9 @@ test("learner support can read minimized learner support data for an authorized 
   expect(JSON.stringify(body)).not.toContain("secretDigest");
 });
 
-test("learner support cannot access payment, Premium reporting or AI authority", async ({ request }) => {
+test("learner support cannot access payment, Premium reporting or AI authority", async ({
+  request,
+}) => {
   const reconciliation = await request.get("/api/v1/admin/reconciliation?status=open&limit=1");
   expect(reconciliation.status()).toBe(403);
 
