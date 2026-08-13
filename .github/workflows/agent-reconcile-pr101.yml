@@ -137,6 +137,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          pnpm shared:build
           pnpm --filter @skillup/api test
           pnpm --filter @skillup/api typecheck
 
