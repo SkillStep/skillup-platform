@@ -11,6 +11,8 @@ test("staging Admin identity resolves server-side capabilities", async ({ reques
 
   expect(body.admin.roles).toContain("security_admin");
   expect(body.admin.capabilities).toContain("audit.read");
+  expect(body.admin.capabilities).toContain("payment.reconcile");
+  expect(body.admin.capabilities).toContain("entitlement.correct");
 });
 
 test("Admin operations shell and Premium workspace render", async ({ page }) => {
@@ -37,6 +39,9 @@ test("Admin Premium access is calculated by the API", async ({ request }) => {
 
   expect(body.premium.canReadReports).toBe(true);
   expect(body.premium.canReadPlans).toBe(true);
+  expect(body.premium.canExportReports).toBe(true);
+  expect(body.premium.canAdjustSubscriptions).toBe(true);
+  expect(body.premium.canReconcilePayments).toBe(true);
 });
 
 test("Admin summary is backend-authoritative and identifies Karachi reporting", async ({
@@ -49,4 +54,41 @@ test("Admin summary is backend-authoritative and identifies Karachi reporting", 
   expect(body.reportSchemaVersion).toBe("premium-report-v1");
   expect(body.timezone).toBe("Asia/Karachi");
   expect(body.metricDefinitions).toBeTruthy();
+});
+
+test("Premium ledgers and plan history are readable by the staging Admin", async ({ request }) => {
+  for (const route of [
+    "/api/v1/admin/reports/premium/payments?preset=last_7_days&limit=10&offset=0",
+    "/api/v1/admin/reports/premium/memberships?preset=last_7_days&limit=10&offset=0",
+    "/api/v1/admin/reports/premium/recurring-customers?preset=last_30_days&limit=10&offset=0",
+    "/api/v1/admin/reports/premium/reconciliation?preset=last_30_days&limit=10&offset=0",
+    "/api/v1/admin/reports/premium/plans",
+    "/api/v1/admin/reports/premium/exports",
+  ]) {
+    const response = await request.get(route);
+    requireOk(response, route);
+    expect(await response.json()).toBeTruthy();
+  }
+});
+
+test("Admin legacy metrics and reconciliation views remain available", async ({ request }) => {
+  const metrics = await request.get("/api/v1/admin/metrics");
+  requireOk(metrics, "Admin metrics");
+  expect((await metrics.json()).metrics).toBeTruthy();
+
+  const reconciliation = await request.get("/api/v1/admin/reconciliation?status=open&limit=10");
+  requireOk(reconciliation, "Reconciliation list");
+  expect(Array.isArray((await reconciliation.json()).cases)).toBe(true);
+});
+
+test("Admin mutations reject untrusted origins", async ({ request }) => {
+  const response = await request.post("/api/v1/admin/reports/premium/exports", {
+    headers: { origin: "https://attacker.invalid" },
+    data: {
+      reportType: "summary",
+      filters: { preset: "last_7_days", aggregation: "daily" },
+      reason: "Automated staging CSRF boundary test",
+    },
+  });
+  expect(response.status()).toBe(403);
 });
