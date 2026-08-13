@@ -22,10 +22,6 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm check
 
-  # GHCR repository names must be lowercase; github.repository preserves
-  # the org/repo casing as-is (e.g. SkillStep/skillup-platform), which
-  # breaks the docker tag. Compute the lowercase form once here and pass
-  # it to both jobs that need it.
   prep:
     needs: check
     runs-on: ubuntu-latest
@@ -80,7 +76,7 @@ jobs:
           target: "/opt/skillup"
           strip_components: 2
 
-      - name: Deploy and certify Phase 1 on EC2
+      - name: Deploy and certify internal Phase 1 gates on EC2
         uses: appleboy/ssh-action@v1.2.0
         with:
           host: ${{ secrets.STAGING_HOST }}
@@ -92,8 +88,6 @@ jobs:
             cd /opt/skillup
             test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
 
-            # Canonical non-secret staging runtime settings. Preserve every secret already
-            # present in /opt/skillup/.env and replace only these explicitly managed keys.
             python3 - <<'PY'
             from pathlib import Path
 
@@ -132,12 +126,11 @@ jobs:
             docker compose -f docker-compose.staging.yml up -d --remove-orphans
             docker compose -f docker-compose.staging.yml ps
 
-            wait_for_url() {
+            wait_for_local_url() {
               label="$1"
               url="$2"
-              attempts="${3:-60}"
-              for attempt in $(seq 1 "$attempts"); do
-                if curl --fail --silent --show-error --max-time 5 "$url" >/dev/null; then
+              for attempt in $(seq 1 45); do
+                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then
                   echo "$label is healthy"
                   return 0
                 fi
@@ -147,48 +140,88 @@ jobs:
               return 1
             }
 
-            # Container-local service gates.
-            wait_for_url "API health" "http://127.0.0.1:4020/v1/health"
-            wait_for_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
-            wait_for_url "Web health" "http://127.0.0.1:3020/api/health"
+            wait_for_local_url "API health" "http://127.0.0.1:4020/v1/health"
+            wait_for_local_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
+            wait_for_local_url "Web health" "http://127.0.0.1:3020/api/health"
 
-            # Regression gate for the exact browser failure observed on staging. A legitimate
-            # SkillUp Origin must pass the Origin check and then fail only schema validation
-            # because the deliberately supplied email is invalid. No email is sent.
-            legit_status="$(curl --silent --show-error --output /tmp/skillup-origin-legit.json --write-out '%{http_code}' \
-              --header 'Origin: https://skillupshop.codistan.org' \
-              --header 'Content-Type: application/json' \
-              --data '{"email":"not-an-email"}' \
-              http://127.0.0.1:3020/api/v1/auth/email/start)"
-            if [ "$legit_status" != "400" ]; then
-              echo "::error::Legitimate staging Origin was not accepted; expected HTTP 400 after input validation, received $legit_status" >&2
+            legit_status="$(curl --silent --show-error --output /tmp/skillup-origin-legit.json --write-out '%{http_code}' --header 'Origin: https://skillupshop.codistan.org' --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$legit_status" = "400" || {
+              echo "::error::Legitimate staging Origin expected HTTP 400 after schema validation, received $legit_status" >&2
               cat /tmp/skillup-origin-legit.json >&2 || true
               exit 1
-            fi
+            }
 
-            hostile_status="$(curl --silent --show-error --output /tmp/skillup-origin-hostile.json --write-out '%{http_code}' \
-              --header 'Origin: https://attacker.invalid' \
-              --header 'Content-Type: application/json' \
-              --data '{"email":"qa-security@example.invalid"}' \
-              http://127.0.0.1:3020/api/v1/auth/email/start)"
-            if [ "$hostile_status" != "403" ]; then
-              echo "::error::Hostile Origin protection regressed; expected HTTP 403, received $hostile_status" >&2
+            hostile_status="$(curl --silent --show-error --output /tmp/skillup-origin-hostile.json --write-out '%{http_code}' --header 'Origin: https://attacker.invalid' --header 'Content-Type: application/json' --data '{"email":"qa-security@example.invalid"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$hostile_status" = "403" || {
+              echo "::error::Hostile Origin protection expected HTTP 403, received $hostile_status" >&2
               cat /tmp/skillup-origin-hostile.json >&2 || true
               exit 1
-            fi
-
-            # Public reverse-proxy/TLS gates. These prove the same routes are healthy through
-            # the exact browser-facing staging hostname, not only through localhost ports.
-            wait_for_url "Public sign-in page" "https://skillupshop.codistan.org/en/sign-in"
-            wait_for_url "Public web health" "https://skillupshop.codistan.org/api/health"
-            wait_for_url "Public API health" "https://skillupshop.codistan.org/api/v1/health"
-            wait_for_url "Public API readiness" "https://skillupshop.codistan.org/api/v1/ready"
+            }
 
             rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
             docker image prune -f
-            echo "PHASE 1 STAGING STABILIZATION: PASS"
+            echo "INTERNAL PHASE 1 GATES: PASS"
         env:
           GH_ACTOR: ${{ github.actor }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
           IMAGE_TAG: ${{ github.sha }}
+
+      - name: Verify public staging edge from external runner
+        shell: bash
+        env:
+          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base="https://skillupshop.codistan.org"
+
+          wait_for_public_url() {
+            label="$1"
+            url="$2"
+            for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error --location --max-time 10 "$url" >/dev/null; then
+                echo "$label is reachable with valid TLS"
+                return 0
+              fi
+              sleep 5
+            done
+            echo "::error::$label is not externally reachable: $url" >&2
+            return 1
+          }
+
+          wait_for_public_url "Public sign-in page" "$base/en/sign-in"
+          wait_for_public_url "Public web health" "$base/api/health"
+          wait_for_public_url "Public API health" "$base/api/v1/health"
+          wait_for_public_url "Public API database readiness" "$base/api/v1/ready"
+
+          web_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/health")"
+          api_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/v1/health")"
+          api_ready="$(curl --fail --silent --show-error --max-time 10 "$base/api/v1/ready")"
+
+          WEB_HEALTH="$web_health" API_HEALTH="$api_health" API_READY="$api_ready" node <<'NODE'
+          const web = JSON.parse(process.env.WEB_HEALTH);
+          const api = JSON.parse(process.env.API_HEALTH);
+          const ready = JSON.parse(process.env.API_READY);
+          const expected = process.env.EXPECTED_RELEASE_SHA;
+          if (web.status !== "ok" || web.service !== "skillup-web") throw new Error("Public Web health contract failed.");
+          if (api.status !== "ok" || api.service !== "skillup-api") throw new Error("Public API health contract failed.");
+          if (ready.status !== "ok" || ready.service !== "skillup-api") throw new Error("Public database readiness contract failed.");
+          if (web.releaseSha !== expected || api.releaseSha !== expected || ready.releaseSha !== expected) throw new Error(`Public release identity mismatch. Expected ${expected}.`);
+          NODE
+
+          legit_status="$(curl --silent --show-error --output /tmp/public-origin-legit.json --write-out '%{http_code}' --header "Origin: $base" --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$base/api/v1/auth/email/start")"
+          test "$legit_status" = "400" || {
+            echo "::error::Public legitimate Origin gate expected HTTP 400, received $legit_status" >&2
+            cat /tmp/public-origin-legit.json >&2 || true
+            exit 1
+          }
+
+          hostile_status="$(curl --silent --show-error --output /tmp/public-origin-hostile.json --write-out '%{http_code}' --header 'Origin: https://attacker.invalid' --header 'Content-Type: application/json' --data '{"email":"qa-security@example.invalid"}' "$base/api/v1/auth/email/start")"
+          test "$hostile_status" = "403" || {
+            echo "::error::Public hostile Origin gate expected HTTP 403, received $hostile_status" >&2
+            cat /tmp/public-origin-hostile.json >&2 || true
+            exit 1
+          }
+
+          rm -f /tmp/public-origin-legit.json /tmp/public-origin-hostile.json
+          echo "PHASE 1 STAGING STABILIZATION: PASS"
