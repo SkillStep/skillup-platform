@@ -29,6 +29,15 @@ test("commercial plan API returns only the two approved launch plans", async ({ 
   ]);
 });
 
+test("commercial account is backend-authoritative", async ({ request }) => {
+  const response = await request.get("/api/v1/commercial/account");
+  requireOk(response, "Commercial account");
+  const body = await response.json();
+  expect(body).toBeTruthy();
+  expect(JSON.stringify(body)).not.toContain("JAZZCASH_PASSWORD");
+  expect(JSON.stringify(body)).not.toContain("JAZZCASH_INTEGRITY_SALT");
+});
+
 test("checkout creation is replay-safe and never grants access by client claim", async ({
   request,
 }) => {
@@ -49,8 +58,53 @@ test("checkout creation is replay-safe and never grants access by client claim",
   expect(typeof firstBody.action).toBe("string");
   expect(firstBody.action.startsWith("https://")).toBe(true);
 
+  const orderLookup = await request.get(`/api/v1/commercial/orders/${firstBody.order.id}`);
+  requireOk(orderLookup, "Created order lookup");
+  const persisted = (await orderLookup.json()).order;
+  expect(persisted.id).toBe(firstBody.order.id);
+  expect(persisted.amountMinor).toBe(59_900);
+  expect(persisted.currency).toBe("PKR");
+
   const capabilities = await request.get("/api/v1/account/capabilities");
   requireOk(capabilities, "Capability lookup");
   const capabilityBody = await capabilities.json();
   expect(capabilityBody.tier).toBe("premium");
+});
+
+test("invalid plan and malformed idempotency keys are rejected", async ({ request }) => {
+  const invalidPlan = await request.post("/api/v1/commercial/orders", {
+    data: { planCode: "premium-lifetime", idempotencyKey: randomUUID() },
+  });
+  expect([400, 404]).toContain(invalidPlan.status());
+
+  const invalidKey = await request.post("/api/v1/commercial/orders", {
+    data: { planCode: "premium-monthly", idempotencyKey: "not-valid" },
+  });
+  expect(invalidKey.status()).toBe(400);
+});
+
+test("checkout mutation rejects an untrusted Origin", async ({ request }) => {
+  const response = await request.post("/api/v1/commercial/orders", {
+    headers: { origin: "https://attacker.invalid" },
+    data: { planCode: "premium-monthly", idempotencyKey: randomUUID() },
+  });
+  expect(response.status()).toBe(403);
+});
+
+test("JazzCash callback rejects malformed or unsigned provider payloads", async ({ request }) => {
+  const malformed = await request.post("/api/v1/commercial/jazzcash/callback", {
+    data: "not-an-object",
+  });
+  expect([400, 503]).toContain(malformed.status());
+
+  const unsigned = await request.post("/api/v1/commercial/jazzcash/callback", {
+    data: {
+      pp_TxnRefNo: `AUTO-QA-${Date.now()}`,
+      pp_ResponseCode: "000",
+      pp_Amount: "59900",
+      pp_TxnCurrency: "PKR",
+      pp_SecureHash: "invalid-signature",
+    },
+  });
+  expect([400, 503]).toContain(unsigned.status());
 });
