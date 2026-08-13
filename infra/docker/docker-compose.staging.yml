@@ -1,0 +1,67 @@
+# infra/docker/docker-compose.staging.yml
+# Lives on the EC2 staging box at /opt/skillup. Postgres runs here too;
+# api/web/ai-worker images are pulled prebuilt from GHCR - nothing is built
+# on the host.
+#
+# Ports: postgres bound to 127.0.0.1 only (not internet-reachable).
+# api/web published on 4020/3020 - chosen to avoid the ports already used by
+# other staging containers on this box.
+
+name: skillup-staging
+
+services:
+  postgres:
+    image: postgres:18.4-bookworm
+    container_name: skillup-postgres-staging-container
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - skillup_staging_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+
+  api:
+    image: ${IMAGE_BASE}-api:${IMAGE_TAG:-staging}
+    container_name: skillup-api-staging-container
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "4020:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  web:
+    image: ${IMAGE_BASE}-web:${IMAGE_TAG:-staging}
+    container_name: skillup-web-staging-container
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3020:3000"
+    depends_on:
+      - api
+
+  ai-worker:
+    image: ${IMAGE_BASE}-ai-worker:${IMAGE_TAG:-staging}
+    container_name: skillup-ai-worker-staging-container
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - skillup_ai_worker_data:/var/lib/skillup-ai
+    depends_on:
+      - api
+
+volumes:
+  skillup_staging_postgres_data:
+  skillup_ai_worker_data:
