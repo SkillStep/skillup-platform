@@ -27,6 +27,44 @@ for (const [slug, title] of skills) {
   });
 }
 
+test("web and API health responses expose safe release identity metadata", async ({ request }) => {
+  const web = await request.get("/api/health");
+  expect(web.ok()).toBe(true);
+  const webBody = await web.json();
+  expect(webBody.status).toBe("ok");
+  expect(webBody.service).toBe("skillup-web");
+  expect(webBody.releaseSha).toBeTruthy();
+  expect(webBody.pipelineId).toBeTruthy();
+  expect(webBody.artifactRef).toBeTruthy();
+  expect(webBody.imageDigest).toBeTruthy();
+
+  const api = await request.get("/api/v1/ready");
+  expect(api.ok()).toBe(true);
+  const apiBody = await api.json();
+  expect(apiBody.status).toBe("ok");
+  expect(apiBody.service).toBe("skillup-api");
+  expect(apiBody.releaseSha).toBe(webBody.releaseSha);
+});
+
+test("public runtime emits defensive cache and content headers", async ({ request }) => {
+  const webHealth = await request.get("/api/health");
+  expect(webHealth.headers()["cache-control"]?.toLowerCase()).toContain("no-store");
+  expect(webHealth.headers()["x-content-type-options"]?.toLowerCase()).toBe("nosniff");
+
+  const apiHealth = await request.get("/api/v1/health");
+  expect(apiHealth.headers()["cache-control"]?.toLowerCase()).toContain("no-store");
+  expect(apiHealth.headers()["x-frame-options"]?.toUpperCase()).toBe("DENY");
+  expect(apiHealth.headers()["x-content-type-options"]?.toLowerCase()).toBe("nosniff");
+});
+
+test("unknown API resources fail safely", async ({ request }) => {
+  const response = await request.get("/api/v1/this-route-must-not-exist");
+  expect(response.status()).toBe(404);
+  const body = await response.json();
+  expect(body.code).toBe("not_found");
+  expect(body.requestId).toBeTruthy();
+});
+
 test("private learning requires authentication", async ({ page }) => {
   await page.goto("/en/learn/3c315a1a-824a-413e-836d-69a9fc8bad1f");
   await page.waitForURL(/\/en\/sign-in(?:\?|$)/);
