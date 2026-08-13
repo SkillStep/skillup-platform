@@ -36,6 +36,9 @@ services:
     container_name: skillup-api-staging-container
     restart: unless-stopped
     env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${API_RELEASE_ARTIFACT_REF:-local}
+      RELEASE_IMAGE_DIGEST: ${API_RELEASE_IMAGE_DIGEST:-local}
     ports:
       - "4020:3001"
     depends_on:
@@ -47,6 +50,9 @@ services:
     container_name: skillup-web-staging-container
     restart: unless-stopped
     env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${WEB_RELEASE_ARTIFACT_REF:-local}
+      RELEASE_IMAGE_DIGEST: ${WEB_RELEASE_IMAGE_DIGEST:-local}
     ports:
       - "3020:3000"
     depends_on:
@@ -57,6 +63,9 @@ services:
     container_name: skillup-ai-worker-staging-container
     restart: unless-stopped
     env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${AI_RELEASE_ARTIFACT_REF:-local}
+      RELEASE_IMAGE_DIGEST: ${AI_RELEASE_IMAGE_DIGEST:-local}
     volumes:
       - skillup_ai_worker_data:/var/lib/skillup-ai
     depends_on:
