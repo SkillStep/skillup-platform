@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 
 import { ApiErrorSchema, ServiceHealthSchema } from "@skillup/contracts";
 import Fastify, { type FastifyInstance } from "fastify";
+import { ZodError } from "zod";
 
 import {
   type AccountLifecycleService,
@@ -43,6 +44,13 @@ type NormalizedError = Readonly<{
 }>;
 
 function normalizeError(error: unknown): NormalizedError {
+  if (error instanceof ZodError) {
+    return {
+      statusCode: 400,
+      message: "The request payload is invalid.",
+    };
+  }
+
   let candidateStatusCode: number | undefined;
   let candidateMessage = "The request could not be completed.";
 

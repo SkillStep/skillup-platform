@@ -1,0 +1,227 @@
+name: Staging Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+concurrency:
+  group: staging-deploy
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check
+
+  prep:
+    needs: check
+    runs-on: ubuntu-latest
+    outputs:
+      image_base: ${{ steps.vars.outputs.image_base }}
+    steps:
+      - id: vars
+        run: echo "image_base=ghcr.io/$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_OUTPUT"
+
+  build-and-push:
+    needs: prep
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      matrix:
+        service: [api, web, ai-worker]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: infra/docker/${{ matrix.service }}.Dockerfile
+          push: true
+          tags: |
+            ${{ needs.prep.outputs.image_base }}-${{ matrix.service }}:staging
+            ${{ needs.prep.outputs.image_base }}-${{ matrix.service }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [prep, build-and-push]
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy compose file to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "infra/docker/docker-compose.staging.yml"
+          target: "/opt/skillup"
+          strip_components: 2
+
+      - name: Deploy and certify internal Phase 1 gates on EC2
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
+
+            python3 - <<'PY'
+            from pathlib import Path
+
+            path = Path('.env')
+            updates = {
+                'APP_ENV': 'staging',
+                'PUBLIC_APP_URL': 'https://skillupshop.codistan.org',
+                'API_BASE_URL': 'http://api:3001',
+                'RELEASE_SHA': '${{ github.sha }}',
+            }
+            lines = path.read_text(encoding='utf-8').splitlines()
+            output = []
+            written = set()
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    output.append(line)
+                    continue
+                key = line.split('=', 1)[0].strip()
+                if key in updates:
+                    if key not in written:
+                        output.append(f'{key}={updates[key]}')
+                        written.add(key)
+                    continue
+                output.append(line)
+            for key, value in updates.items():
+                if key not in written:
+                    output.append(f'{key}={value}')
+            path.write_text('\n'.join(output) + '\n', encoding='utf-8')
+            PY
+            chmod 600 .env
+
+            docker compose -f docker-compose.staging.yml config --quiet
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+            docker compose -f docker-compose.staging.yml ps
+
+            wait_for_local_url() {
+              label="$1"
+              url="$2"
+              for attempt in $(seq 1 45); do
+                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then
+                  echo "$label is healthy"
+                  return 0
+                fi
+                sleep 2
+              done
+              echo "::error::$label did not become healthy: $url" >&2
+              return 1
+            }
+
+            wait_for_local_url "API health" "http://127.0.0.1:4020/v1/health"
+            wait_for_local_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
+            wait_for_local_url "Web health" "http://127.0.0.1:3020/api/health"
+
+            legit_status="$(curl --silent --show-error --output /tmp/skillup-origin-legit.json --write-out '%{http_code}' --header 'Origin: https://skillupshop.codistan.org' --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$legit_status" = "400" || {
+              echo "::error::Legitimate staging Origin expected HTTP 400 after schema validation, received $legit_status" >&2
+              cat /tmp/skillup-origin-legit.json >&2 || true
+              exit 1
+            }
+
+            hostile_status="$(curl --silent --show-error --output /tmp/skillup-origin-hostile.json --write-out '%{http_code}' --header 'Origin: https://attacker.invalid' --header 'Content-Type: application/json' --data '{"email":"qa-security@example.invalid"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$hostile_status" = "403" || {
+              echo "::error::Hostile Origin protection expected HTTP 403, received $hostile_status" >&2
+              cat /tmp/skillup-origin-hostile.json >&2 || true
+              exit 1
+            }
+
+            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
+            docker image prune -f
+            echo "INTERNAL PHASE 1 GATES: PASS"
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
+          IMAGE_TAG: ${{ github.sha }}
+
+      - name: Verify public staging edge from external runner
+        shell: bash
+        env:
+          EXPECTED_RELEASE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base="https://skillupshop.codistan.org"
+
+          wait_for_public_url() {
+            label="$1"
+            url="$2"
+            for attempt in $(seq 1 12); do
+              if curl --fail --silent --show-error --location --max-time 10 "$url" >/dev/null; then
+                echo "$label is reachable with valid TLS"
+                return 0
+              fi
+              sleep 5
+            done
+            echo "::error::$label is not externally reachable: $url" >&2
+            return 1
+          }
+
+          wait_for_public_url "Public sign-in page" "$base/en/sign-in"
+          wait_for_public_url "Public web health" "$base/api/health"
+          wait_for_public_url "Public API health" "$base/api/v1/health"
+          wait_for_public_url "Public API database readiness" "$base/api/v1/ready"
+
+          web_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/health")"
+          api_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/v1/health")"
+          api_ready="$(curl --fail --silent --show-error --max-time 10 "$base/api/v1/ready")"
+
+          WEB_HEALTH="$web_health" API_HEALTH="$api_health" API_READY="$api_ready" node <<'NODE'
+          const web = JSON.parse(process.env.WEB_HEALTH);
+          const api = JSON.parse(process.env.API_HEALTH);
+          const ready = JSON.parse(process.env.API_READY);
+          const expected = process.env.EXPECTED_RELEASE_SHA;
+          if (web.status !== "ok" || web.service !== "skillup-web") throw new Error("Public Web health contract failed.");
+          if (api.status !== "ok" || api.service !== "skillup-api") throw new Error("Public API health contract failed.");
+          if (ready.status !== "ok" || ready.service !== "skillup-api") throw new Error("Public database readiness contract failed.");
+          if (web.releaseSha !== expected || api.releaseSha !== expected || ready.releaseSha !== expected) throw new Error(`Public release identity mismatch. Expected ${expected}.`);
+          NODE
+
+          legit_status="$(curl --silent --show-error --output /tmp/public-origin-legit.json --write-out '%{http_code}' --header "Origin: $base" --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$base/api/v1/auth/email/start")"
+          test "$legit_status" = "400" || {
+            echo "::error::Public legitimate Origin gate expected HTTP 400, received $legit_status" >&2
+            cat /tmp/public-origin-legit.json >&2 || true
+            exit 1
+          }
+
+          hostile_status="$(curl --silent --show-error --output /tmp/public-origin-hostile.json --write-out '%{http_code}' --header 'Origin: https://attacker.invalid' --header 'Content-Type: application/json' --data '{"email":"qa-security@example.invalid"}' "$base/api/v1/auth/email/start")"
+          test "$hostile_status" = "403" || {
+            echo "::error::Public hostile Origin gate expected HTTP 403, received $hostile_status" >&2
+            cat /tmp/public-origin-hostile.json >&2 || true
+            exit 1
+          }
+
+          rm -f /tmp/public-origin-legit.json /tmp/public-origin-hostile.json
+          echo "PHASE 1 STAGING STABILIZATION: PASS"
