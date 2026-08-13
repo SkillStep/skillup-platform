@@ -47,55 +47,40 @@ jobs:
 
           app_path = Path("apps/api/src/app.ts")
           app = app_path.read_text()
-          expected = '''  const statusCode =
-            candidateStatusCode !== undefined && candidateStatusCode >= 400 && candidateStatusCode < 500
-              ? candidateStatusCode
-              : 500;
-
-          return {
-            statusCode,
-            message: statusCode < 500 ? candidateMessage : "An unexpected server error occurred.",
-          };
-          '''
-          replacement = '''  if (candidateStatusCode == 503) {
+          if 'message: "The requested service is temporarily unavailable."' not in app:
+              anchor = '  const statusCode =\n'
+              search_from = app.index('daily_free_mission_limit_reached')
+              index = app.find(anchor, search_from)
+              if index < 0:
+                  raise SystemExit("normalizeError status anchor not found")
+              service_unavailable = '''  if (candidateStatusCode === 503) {
             return {
               statusCode: 503,
               message: "The requested service is temporarily unavailable.",
             };
           }
 
-          const statusCode =
-            candidateStatusCode !== undefined && candidateStatusCode >= 400 && candidateStatusCode < 500
-              ? candidateStatusCode
-              : 500;
-
-          return {
-            statusCode,
-            message: statusCode < 500 ? candidateMessage : "An unexpected server error occurred.",
-          };
           '''
-          if expected not in app:
-              raise SystemExit("normalizeError status block did not match expected merged source")
-          app = app.replace(expected, replacement, 1)
+              app = app[:index] + service_unavailable + app[index:]
 
-          expected_code = '''        code: normalized.statusCode < 500 ? "request_error" : "internal_error",
-          '''
-          replacement_code = '''        code:
+          old_code = '        code: normalized.statusCode < 500 ? "request_error" : "internal_error",\n'
+          new_code = '''        code:
                   normalized.statusCode === 503
                     ? "service_unavailable"
                     : normalized.statusCode < 500
                       ? "request_error"
                       : "internal_error",
           '''
-          if expected_code not in app:
-              raise SystemExit("API error code mapping did not match expected merged source")
-          app = app.replace(expected_code, replacement_code, 1)
+          if '"service_unavailable"' not in app:
+              if old_code not in app:
+                  raise SystemExit("API error code mapping anchor not found")
+              app = app.replace(old_code, new_code, 1)
           app_path.write_text(app)
 
           test_path = Path("apps/api/src/app.test.ts")
           tests = test_path.read_text()
-          marker = '''  it("rejects state-changing requests from an untrusted origin", async () => {
-          '''
+          marker = '  it("rejects state-changing requests from an untrusted origin", async () => {\n'
+          regression_title = 'returns 503 when sign-in email delivery is unavailable'
           regression = '''  it("returns 503 when sign-in email delivery is unavailable", async () => {
             const baseAuthService = createAuthService();
             const authService: AuthService = {
@@ -121,7 +106,7 @@ jobs:
           });
 
           '''
-          if regression not in tests:
+          if regression_title not in tests:
               if marker not in tests:
                   raise SystemExit("auth-route regression insertion point not found")
               tests = tests.replace(marker, regression + marker, 1)
