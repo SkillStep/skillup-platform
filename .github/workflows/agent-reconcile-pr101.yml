@@ -1,4 +1,4 @@
-name: Agent Finalize PR101 Certification Gating
+name: Agent Finalize PR101 Certification And OTP
 
 on:
   push:
@@ -12,7 +12,7 @@ jobs:
   finalize:
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout branch
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
@@ -24,12 +24,21 @@ jobs:
           git config user.name "SkillUp CI"
           git config user.email "actions@users.noreply.github.com"
 
-      - name: Allow provider-specific soft blocks without suppressing unrelated QA
+      - name: Apply final certification gating and four-digit OTP
         shell: bash
         run: |
           set -euo pipefail
           python3 - <<'PY'
           from pathlib import Path
+
+          def replace_once(path, old, new, label):
+              p = Path(path)
+              text = p.read_text()
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f'{label}: expected anchor not found in {path}')
+              p.write_text(text.replace(old, new, 1))
 
           orchestrator = Path('tools/staging-certification.mjs')
           text = orchestrator.read_text()
@@ -43,36 +52,39 @@ jobs:
             areas: {},
           };
           '''
-          summary_replacement = summary_end + '''
-          const softBlockedAreas = new Set(["payments", "visual_regression"]);
-          '''
           if 'const softBlockedAreas' not in text:
               if summary_end not in text:
                   raise SystemExit('staging certification summary anchor not found')
-              text = text.replace(summary_end, summary_replacement, 1)
+              text = text.replace(summary_end, summary_end + '\nconst softBlockedAreas = new Set(["payments", "visual_regression"]);\n', 1)
 
           status_fn = '''function hasStatus(status) {
             return Object.values(summary.areas).some((area) => area.status === status);
           }
           '''
-          hard_fn = status_fn + '''
-          function hasHardBlock() {
+          if 'function hasHardBlock()' not in text:
+              if status_fn not in text:
+                  raise SystemExit('status helper anchor not found')
+              text = text.replace(
+                  status_fn,
+                  status_fn + '''\nfunction hasHardBlock() {
             return Object.entries(summary.areas).some(
               ([name, area]) => area.status === "BLOCKED" && !softBlockedAreas.has(name),
             );
           }
-          '''
-          if 'function hasHardBlock()' not in text:
-              if status_fn not in text:
-                  raise SystemExit('status helper anchor not found')
-              text = text.replace(status_fn, hard_fn, 1)
+          ''',
+                  1,
+              )
 
           text = text.replace(
               'if (bool("STAGING_REQUIRE_VISUALS", true)) {\n      setArea("visual_regression", "PASS", "Approved screenshot baselines matched.");\n    }',
               'if (\n      bool("STAGING_REQUIRE_VISUALS", true) &&\n      bool("STAGING_VISUAL_BASELINES_APPROVED")\n    ) {\n      setArea("visual_regression", "PASS", "Approved screenshot baselines matched.");\n    }',
               1,
           )
-          text = text.replace('if (!hasStatus("BLOCKED")) {\n  await runtimePreflight();\n}', 'if (!hasHardBlock()) {\n  await runtimePreflight();\n}', 1)
+          text = text.replace(
+              'if (!hasStatus("BLOCKED")) {\n  await runtimePreflight();\n}',
+              'if (!hasHardBlock()) {\n  await runtimePreflight();\n}',
+              1,
+          )
           text = text.replace(
               'if (!hasStatus("BLOCKED") && !hasStatus("FAIL")) {\n  await browserCertification();\n}',
               'if (!hasHardBlock() && !hasStatus("FAIL")) {\n  await browserCertification();\n}',
@@ -92,25 +104,31 @@ jobs:
             request,
           }) => {
           '''
-          checkout_replacement = checkout_anchor + '''  test.skip(
-            !jazzCashSandboxReady,
-            "JazzCash sandbox is not configured; provider checkout remains explicitly blocked.",
-          );
-          '''
           if 'provider checkout remains explicitly blocked' not in text:
               if checkout_anchor not in text:
                   raise SystemExit('premium checkout test anchor not found')
-              text = text.replace(checkout_anchor, checkout_replacement, 1)
+              text = text.replace(
+                  checkout_anchor,
+                  checkout_anchor + '''  test.skip(
+            !jazzCashSandboxReady,
+            "JazzCash sandbox is not configured; provider checkout remains explicitly blocked.",
+          );
+          ''',
+                  1,
+              )
           premium.write_text(text)
 
           playwright = Path('qa/staging-certification/playwright.config.mjs')
           text = playwright.read_text()
           base_anchor = 'const trustedOrigin = new URL(baseURL).origin;\n'
-          visual_ready = '''const visualBaselinesApproved =\n            process.env.STAGING_VISUAL_BASELINES_APPROVED?.toLowerCase() === "true";\n'''
           if 'const visualBaselinesApproved' not in text:
               if base_anchor not in text:
                   raise SystemExit('playwright base URL anchor not found')
-              text = text.replace(base_anchor, base_anchor + visual_ready, 1)
+              text = text.replace(
+                  base_anchor,
+                  base_anchor + '''const visualBaselinesApproved =\n  process.env.STAGING_VISUAL_BASELINES_APPROVED?.toLowerCase() === "true";\n''',
+                  1,
+              )
           text = text.replace(
               'testMatch: /visual\\.spec\\.mjs/,',
               'testMatch: visualBaselinesApproved ? /visual\\.spec\\.mjs/ : /$a/,',
@@ -122,6 +140,52 @@ jobs:
               1,
           )
           playwright.write_text(text)
+
+          replace_once(
+              'apps/api/src/auth.ts',
+              'code: z.string().regex(/^\\d{6}$/),',
+              'code: z.string().regex(/^\\d{4}$/),',
+              'auth verify schema',
+          )
+          replace_once(
+              'apps/api/src/auth.ts',
+              'return randomInt(0, 1_000_000).toString().padStart(6, "0");',
+              'return randomInt(0, 10_000).toString().padStart(4, "0");',
+              'auth code generation',
+          )
+
+          signin = Path('apps/web/app/[locale]/sign-in/sign-in-form.tsx')
+          text = signin.read_text()
+          replacements = {
+              'Enter the six-digit code sent to your email address.': 'Enter the four-digit code sent to your email address.',
+              'Six-digit code': 'Four-digit code',
+              'pattern="[0-9]{6}"': 'pattern="[0-9]{4}"',
+              'maxLength={6}': 'maxLength={4}',
+              '.slice(0, 6)': '.slice(0, 4)',
+              'code.length !== 6': 'code.length !== 4',
+          }
+          for old, new in replacements.items():
+              if old in text:
+                  text = text.replace(old, new)
+              elif new not in text:
+                  raise SystemExit(f'sign-in form anchor not found: {old}')
+          signin.write_text(text)
+
+          identity = Path('qa/staging-certification/helpers/identity.mjs')
+          text = identity.read_text()
+          if '/^\\d{6}$/' in text:
+              text = text.replace('/^\\d{6}$/', '/^\\d{4}$/')
+          elif '/^\\d{4}$/' not in text:
+              raise SystemExit('QA OTP parser anchor not found')
+          identity.write_text(text)
+
+          negative = Path('qa/staging-certification/tests/auth-negative.spec.mjs')
+          text = negative.read_text()
+          if '"000000" ? "111111" : "000000"' in text:
+              text = text.replace('"000000" ? "111111" : "000000"', '"0000" ? "1111" : "0000"')
+          elif '"0000" ? "1111" : "0000"' not in text:
+              raise SystemExit('negative OTP fixture anchor not found')
+          negative.write_text(text)
           PY
 
       - name: Set up Node.js
@@ -134,41 +198,57 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
 
-      - name: Format and validate focused certification sources
+      - name: Format and validate focused sources
         shell: bash
         run: |
           set -euo pipefail
           pnpm install --frozen-lockfile
-          pnpm format
+          pnpm exec biome format --write \
+            tools/staging-certification.mjs \
+            qa/staging-certification/playwright.config.mjs \
+            qa/staging-certification/tests/premium.spec.mjs \
+            qa/staging-certification/helpers/identity.mjs \
+            qa/staging-certification/tests/auth-negative.spec.mjs \
+            apps/api/src/auth.ts \
+            'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
           pnpm format:check
           node --check tools/staging-certification.mjs
           node --check qa/staging-certification/playwright.config.mjs
           node --check qa/staging-certification/tests/premium.spec.mjs
+          node --check qa/staging-certification/helpers/identity.mjs
+          node --check qa/staging-certification/tests/auth-negative.spec.mjs
+          pnpm --filter @skillup/api test
+          pnpm --filter @skillup/api typecheck
+          pnpm --filter @skillup/web typecheck
 
-      - name: Disable this one-time workflow before commit
-        shell: bash
-        run: |
-          cat > .github/workflows/agent-reconcile-pr101.yml <<'EOF'
-          name: Agent Reconcile PR101 (disabled)
-
-          on:
-            workflow_dispatch:
-
-          permissions:
-            contents: read
-
-          jobs:
-            disabled:
-              runs-on: ubuntu-24.04
-              steps:
-                - name: Disabled one-time workflow
-                  run: echo "One-time PR101 repair completed; this workflow is intentionally disabled and may be removed."
-          EOF
-
-      - name: Commit final certification gating
+      - name: Assert no six-digit OTP behavior remains in auth and QA paths
         shell: bash
         run: |
           set -euo pipefail
-          git add -A
-          git commit -m "fix: keep provider blocks isolated during staging QA"
+          if rg -n 'six-digit|Six-digit|\\d\{6\}|000000|111111|1_000_000|padStart\(6|maxLength=\{6\}|code.length !== 6|slice\(0, 6\)' \
+            apps/api/src/auth.ts \
+            'apps/web/app/[locale]/sign-in' \
+            qa/staging-certification; then
+            echo 'Unexpected six-digit OTP behavior remains.' >&2
+            exit 1
+          fi
+
+      - name: Commit source-only finalization
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add \
+            tools/staging-certification.mjs \
+            qa/staging-certification/playwright.config.mjs \
+            qa/staging-certification/tests/premium.spec.mjs \
+            qa/staging-certification/helpers/identity.mjs \
+            qa/staging-certification/tests/auth-negative.spec.mjs \
+            apps/api/src/auth.ts \
+            'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
+          git diff --cached --check
+          if git diff --cached --quiet; then
+            echo 'No source changes required.'
+            exit 0
+          fi
+          git commit -m "fix: finalize staging gates and four-digit email OTP"
           git push origin HEAD:feat/permanent-staging-certification
