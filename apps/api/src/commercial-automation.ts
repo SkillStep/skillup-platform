@@ -70,7 +70,7 @@ export function createCommercialAutomationService(
        select 'reconcile_order', po.id, 'queued', $1
          from payment_orders po
         where po.status = 'pending'
-          and po.updated_at <= $1 - interval '30 minutes'
+          and po.updated_at <= $1::timestamptz - interval '30 minutes'
        on conflict (job_type, order_id) where order_id is not null and status in ('queued', 'running')
        do nothing`,
       [at],
