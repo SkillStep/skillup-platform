@@ -39,7 +39,7 @@ async function retrieveOtp(email, startedAfter) {
 
     if (response.ok) {
       const body = await response.json();
-      if (typeof body?.code === "string" && /^\d{6}$/.test(body.code)) return body.code;
+      if (typeof body?.code === "string" && /^\d{4}$/.test(body.code)) return body.code;
     } else if (response.status !== 404) {
       throw new Error(`QA mailbox returned HTTP ${response.status}.`);
     }

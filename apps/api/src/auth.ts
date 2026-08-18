@@ -12,7 +12,7 @@ const StartEmailSignInSchema = z.object({
 
 const VerifyEmailSignInSchema = z.object({
   challengeId: z.string().uuid(),
-  code: z.string().regex(/^\d{6}$/),
+  code: z.string().regex(/^\d{4}$/),
 });
 
 const UpdateProfileSchema = z
@@ -121,7 +121,7 @@ function digestsMatch(leftHex: string, rightHex: string): boolean {
 }
 
 function generateCode(): string {
-  return randomInt(0, 1_000_000).toString().padStart(6, "0");
+  return randomInt(0, 10_000).toString().padStart(4, "0");
 }
 
 function generateSessionToken(): string {

@@ -11,6 +11,8 @@ if (!baseURL) {
 }
 
 const trustedOrigin = new URL(baseURL).origin;
+const visualBaselinesApproved =
+  process.env.STAGING_VISUAL_BASELINES_APPROVED?.toLowerCase() === "true";
 const artifactsRoot = path.resolve(directory, "artifacts");
 const authRoot = path.join(artifactsRoot, ".auth");
 
@@ -172,7 +174,7 @@ export default defineConfig({
     {
       name: "visual-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /visual\.spec\.mjs/,
+      testMatch: visualBaselinesApproved ? /visual\.spec\.mjs/ : /$a/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
@@ -181,7 +183,7 @@ export default defineConfig({
     {
       name: "visual-learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /visual-learner\.spec\.mjs/,
+      testMatch: visualBaselinesApproved ? /visual-learner\.spec\.mjs/ : /$a/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),

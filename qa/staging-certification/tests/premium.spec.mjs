@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto";
 
 import { expect, test } from "@playwright/test";
 
+const jazzCashSandboxReady = process.env.STAGING_JAZZCASH_SANDBOX_READY?.toLowerCase() === "true";
+
 function requireOk(response, label) {
   if (!response.ok()) {
     throw new Error(`${label} failed with HTTP ${response.status()}.`);
@@ -41,6 +43,10 @@ test("commercial account is backend-authoritative", async ({ request }) => {
 test("checkout creation is replay-safe and never grants access by client claim", async ({
   request,
 }) => {
+  test.skip(
+    !jazzCashSandboxReady,
+    "JazzCash sandbox is not configured; provider checkout remains explicitly blocked.",
+  );
   const idempotencyKey = randomUUID();
   const payload = { planCode: "premium-monthly", idempotencyKey };
 

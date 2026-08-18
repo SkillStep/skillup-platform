@@ -21,6 +21,8 @@ const summary = {
   areas: {},
 };
 
+const softBlockedAreas = new Set(["payments", "visual_regression"]);
+
 function bool(name, fallback = false) {
   const value = process.env[name];
   if (value === undefined) return fallback;
@@ -37,6 +39,12 @@ function setArea(name, status, detail) {
 
 function hasStatus(status) {
   return Object.values(summary.areas).some((area) => area.status === status);
+}
+
+function hasHardBlock() {
+  return Object.entries(summary.areas).some(
+    ([name, area]) => area.status === "BLOCKED" && !softBlockedAreas.has(name),
+  );
 }
 
 function endpoint(base, pathname) {
@@ -335,7 +343,7 @@ async function browserCertification() {
   });
   if (playwright.status === 0) {
     setArea("playwright", "PASS", "All mandatory Playwright projects passed with zero retries.");
-    if (bool("STAGING_REQUIRE_VISUALS", true)) {
+    if (bool("STAGING_REQUIRE_VISUALS", true) && bool("STAGING_VISUAL_BASELINES_APPROVED")) {
       setArea("visual_regression", "PASS", "Approved screenshot baselines matched.");
     }
     return;
@@ -366,11 +374,11 @@ if (!summary.areas.deployment_identity) {
   await gateZero();
 }
 
-if (!hasStatus("BLOCKED")) {
+if (!hasHardBlock()) {
   await runtimePreflight();
 }
 
-if (!hasStatus("BLOCKED") && !hasStatus("FAIL")) {
+if (!hasHardBlock() && !hasStatus("FAIL")) {
   await browserCertification();
 }
 

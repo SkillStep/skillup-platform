@@ -31,7 +31,7 @@ test("wrong OTP is rejected and a consumed challenge cannot be replayed", async 
     expect(start.ok()).toBe(true);
     const challenge = await start.json();
     const actualCode = await retrieveOtpForUi(email, startedAfter);
-    const wrongCode = actualCode === "000000" ? "111111" : "000000";
+    const wrongCode = actualCode === "0000" ? "1111" : "0000";
 
     const wrong = await context.post("/api/v1/auth/email/verify", {
       data: { challengeId: challenge.challengeId, code: wrongCode },
