@@ -10,6 +10,10 @@ export function GET(): NextResponse {
       service: "skillup-web",
       version: "0.0.0",
       releaseSha: process.env["RELEASE_SHA"] ?? "local",
+      pipelineId: process.env["RELEASE_PIPELINE_ID"] ?? "local",
+      artifactRef: process.env["RELEASE_ARTIFACT_REF"] ?? "local",
+      imageDigest: process.env["RELEASE_IMAGE_DIGEST"] ?? "local",
+      rollbackRef: process.env["ROLLBACK_ARTIFACT_REF"] ?? "unknown",
       timestamp: new Date().toISOString(),
     },
     {

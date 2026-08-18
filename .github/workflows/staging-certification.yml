@@ -1,0 +1,180 @@
+name: Staging Certification
+
+on:
+  workflow_dispatch:
+    inputs:
+      expected_release_sha:
+        description: Exact Git SHA deployed to staging
+        required: true
+        type: string
+      pipeline_id:
+        description: Deployment pipeline/run identifier
+        required: true
+        type: string
+      web_artifact_ref:
+        description: Immutable Web deployment/image reference
+        required: true
+        type: string
+      web_image_digest:
+        description: Immutable Web image/build digest
+        required: true
+        type: string
+      api_artifact_ref:
+        description: Immutable API image/deployment reference
+        required: true
+        type: string
+      api_image_digest:
+        description: Immutable API image digest
+        required: true
+        type: string
+      ai_release_sha:
+        description: AI worker running release SHA when AI is required
+        required: false
+        type: string
+      ai_artifact_ref:
+        description: Immutable AI worker image/deployment reference
+        required: false
+        type: string
+      ai_image_digest:
+        description: Immutable AI worker image digest
+        required: false
+        type: string
+      previous_release_ref:
+        description: Known-good rollback artifact/reference
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      expected_release_sha:
+        required: true
+        type: string
+      pipeline_id:
+        required: true
+        type: string
+      web_artifact_ref:
+        required: true
+        type: string
+      web_image_digest:
+        required: true
+        type: string
+      api_artifact_ref:
+        required: true
+        type: string
+      api_image_digest:
+        required: true
+        type: string
+      ai_release_sha:
+        required: false
+        type: string
+      ai_artifact_ref:
+        required: false
+        type: string
+      ai_image_digest:
+        required: false
+        type: string
+      previous_release_ref:
+        required: true
+        type: string
+  repository_dispatch:
+    types:
+      - skillup-staging-deployed
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-certification
+  cancel-in-progress: true
+
+jobs:
+  certify:
+    name: Prove deployed release and certify staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    environment: staging
+    env:
+      STAGING_WEB_URL: ${{ vars.STAGING_WEB_URL }}
+      STAGING_API_URL: ${{ vars.STAGING_API_URL }}
+      STAGING_EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha || github.event.client_payload.expected_release_sha }}
+      STAGING_DEPLOYMENT_PIPELINE_ID: ${{ inputs.pipeline_id || github.event.client_payload.pipeline_id }}
+      STAGING_WEB_ARTIFACT_REF: ${{ inputs.web_artifact_ref || github.event.client_payload.web_artifact_ref }}
+      STAGING_WEB_IMAGE_DIGEST: ${{ inputs.web_image_digest || github.event.client_payload.web_image_digest }}
+      STAGING_API_ARTIFACT_REF: ${{ inputs.api_artifact_ref || github.event.client_payload.api_artifact_ref }}
+      STAGING_API_IMAGE_DIGEST: ${{ inputs.api_image_digest || github.event.client_payload.api_image_digest }}
+      STAGING_AI_RELEASE_SHA: ${{ inputs.ai_release_sha || github.event.client_payload.ai_release_sha }}
+      STAGING_AI_ARTIFACT_REF: ${{ inputs.ai_artifact_ref || github.event.client_payload.ai_artifact_ref }}
+      STAGING_AI_IMAGE_DIGEST: ${{ inputs.ai_image_digest || github.event.client_payload.ai_image_digest }}
+      STAGING_PREVIOUS_RELEASE_REF: ${{ inputs.previous_release_ref || github.event.client_payload.previous_release_ref }}
+      STAGING_QA_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+      STAGING_REQUIRE_EMAIL: ${{ vars.STAGING_REQUIRE_EMAIL || 'true' }}
+      STAGING_REQUIRE_AI: ${{ vars.STAGING_REQUIRE_AI || 'true' }}
+      STAGING_REQUIRE_JAZZCASH: ${{ vars.STAGING_REQUIRE_JAZZCASH || 'true' }}
+      STAGING_REQUIRE_VISUALS: ${{ vars.STAGING_REQUIRE_VISUALS || 'true' }}
+      STAGING_EMAIL_PROVIDER_READY: ${{ vars.STAGING_EMAIL_PROVIDER_READY }}
+      STAGING_DEEPSEEK_READY: ${{ vars.STAGING_DEEPSEEK_READY }}
+      STAGING_JAZZCASH_SANDBOX_READY: ${{ vars.STAGING_JAZZCASH_SANDBOX_READY }}
+      STAGING_VISUAL_BASELINES_APPROVED: ${{ vars.STAGING_VISUAL_BASELINES_APPROVED }}
+      STAGING_QA_LEARNER_PREMIUM_READY: ${{ vars.STAGING_QA_LEARNER_PREMIUM_READY }}
+      STAGING_QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL }}
+      STAGING_QA_FREE_LEARNER_EMAIL: ${{ vars.STAGING_QA_FREE_LEARNER_EMAIL }}
+      STAGING_QA_ONBOARDING_EMAIL: ${{ vars.STAGING_QA_ONBOARDING_EMAIL }}
+      STAGING_QA_AUTH_NEGATIVE_EMAIL: ${{ vars.STAGING_QA_AUTH_NEGATIVE_EMAIL }}
+      STAGING_QA_SESSION_EMAIL: ${{ vars.STAGING_QA_SESSION_EMAIL }}
+      STAGING_QA_ADMIN_EMAIL: ${{ vars.STAGING_QA_ADMIN_EMAIL }}
+      STAGING_QA_ANALYST_EMAIL: ${{ vars.STAGING_QA_ANALYST_EMAIL }}
+      STAGING_QA_CONTENT_EDITOR_EMAIL: ${{ vars.STAGING_QA_CONTENT_EDITOR_EMAIL }}
+      STAGING_QA_CONTENT_REVIEWER_EMAIL: ${{ vars.STAGING_QA_CONTENT_REVIEWER_EMAIL }}
+      STAGING_QA_PUBLISHER_EMAIL: ${{ vars.STAGING_QA_PUBLISHER_EMAIL }}
+      STAGING_QA_PAYMENT_OPERATOR_EMAIL: ${{ vars.STAGING_QA_PAYMENT_OPERATOR_EMAIL }}
+      STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ vars.STAGING_QA_LEARNER_SUPPORT_EMAIL }}
+      STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ vars.STAGING_QA_SECURITY_ADMIN_EMAIL }}
+      STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL }}
+      STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
+      STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: ${{ env.STAGING_EXPECTED_RELEASE_SHA }}
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Enable pinned pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+
+      - name: Install locked workspace and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Run mandatory staging certification
+        run: node tools/staging-certification.mjs
+
+      - name: Remove browser authentication state
+        if: always()
+        shell: bash
+        run: rm -rf qa/staging-certification/artifacts/.auth
+
+      - name: Upload sanitized certification evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: staging-certification-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/staging-certification
+            qa/staging-certification/artifacts/html
+            qa/staging-certification/artifacts/test-results
+            qa/staging-certification/artifacts/playwright-results.json
+          if-no-files-found: warn
+          retention-days: 14

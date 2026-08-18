@@ -13,7 +13,7 @@ function optionalEnvironment(name) {
 const releaseSha =
   optionalEnvironment("RELEASE_SHA") ?? optionalEnvironment("GITHUB_SHA") ?? "local";
 const evidence = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   generatedAt: new Date().toISOString(),
   environment: "ci-production-like",
   deploymentPerformed: false,
@@ -29,8 +29,11 @@ const evidence = {
     runnerOs: optionalEnvironment("RUNNER_OS"),
     nodeVersion: process.version,
     apiImageId: optionalEnvironment("SKILLUP_API_IMAGE_ID"),
+    apiOciRevision: optionalEnvironment("SKILLUP_API_OCI_REVISION"),
     webImageId: optionalEnvironment("SKILLUP_WEB_IMAGE_ID"),
+    webOciRevision: optionalEnvironment("SKILLUP_WEB_OCI_REVISION"),
     aiWorkerImageId: optionalEnvironment("SKILLUP_AI_WORKER_IMAGE_ID"),
+    aiWorkerOciRevision: optionalEnvironment("SKILLUP_AI_WORKER_OCI_REVISION"),
   },
   featureBoundary: {
     aiGeneration: "disabled-pending-provider-and-model-approval",
@@ -49,6 +52,7 @@ const evidence = {
     "deterministic AI gateway evaluation fixtures",
     "AI privacy, schema, cost, retry, fallback, circuit and queue tests",
     "non-root production API, web and AI worker images",
+    "OCI source-revision labels on reviewed production images",
     "production-container web and API end-to-end smoke",
     "disabled AI worker health smoke without provider credentials",
     "public/private cache and indexing boundaries",

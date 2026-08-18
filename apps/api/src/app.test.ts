@@ -172,6 +172,30 @@ describe("passwordless account routes", () => {
     expect(authService.startEmailSignIn).not.toHaveBeenCalled();
   });
 
+  it("returns 503 when sign-in email delivery is unavailable", async () => {
+    const baseAuthService = createAuthService();
+    const authService: AuthService = {
+      ...baseAuthService,
+      startEmailSignIn: vi.fn(async () => {
+        const error = new Error("Sign-in email delivery is temporarily unavailable.");
+        Object.assign(error, { statusCode: 503 });
+        throw error;
+      }),
+    };
+    const response = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/auth/email/start",
+      headers: { origin: "https://skillup.example" },
+      payload: { email: "learner@example.com" },
+    });
+
+    expect(response.statusCode).toBe(503);
+    expect(response.json()).toMatchObject({
+      code: "service_unavailable",
+      message: "The requested service is temporarily unavailable.",
+    });
+  });
+
   it("rejects state-changing requests from an untrusted origin", async () => {
     const response = await createTestApi(undefined, createAuthService()).inject({
       method: "POST",
@@ -191,7 +215,7 @@ describe("passwordless account routes", () => {
       headers: { origin: "https://skillup.example" },
       payload: {
         challengeId: "22222222-2222-4222-8222-222222222222",
-        code: "123456",
+        code: "1234",
       },
     });
 

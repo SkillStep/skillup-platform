@@ -10,6 +10,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from .contracts import AiJob, AiResult, TaskName
+from .policies import policy_for
 
 
 @dataclass(frozen=True)
@@ -18,6 +19,17 @@ class ApiQueuedJob:
     lease_token: str
     attempt_number: int
     job: AiJob
+
+
+_API_ENVELOPE_FIELDS = frozenset({"target_type", "target_id", "requested_items"})
+
+
+def _provider_payload(task: TaskName, payload: dict[str, Any]) -> dict[str, Any]:
+    """Remove queue-envelope metadata without hiding genuinely invalid provider input fields."""
+    cleaned = {key: value for key, value in payload.items() if key not in _API_ENVELOPE_FIELDS}
+    if "locale" not in policy_for(task).allowed_input_fields:
+        cleaned.pop("locale", None)
+    return cleaned
 
 
 class ApiJobQueue:
@@ -92,13 +104,14 @@ class ApiJobQueue:
         payload = job_data.get("payload")
         if not isinstance(payload, dict):
             raise RuntimeError("AI job API response has no payload object.")
+        task = TaskName(str(job_data["task"]))
         return ApiQueuedJob(
             request_id=str(response["requestId"]),
             lease_token=str(response["leaseToken"]),
             attempt_number=int(response["attemptNumber"]),
             job=AiJob(
-                task=TaskName(str(job_data["task"])),
-                payload=payload,
+                task=task,
+                payload=_provider_payload(task, payload),
                 correlation_id=str(job_data["correlationId"]),
                 content_version=str(job_data["contentVersion"]),
             ),

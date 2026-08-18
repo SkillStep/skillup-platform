@@ -70,6 +70,13 @@ function normalizeError(error: unknown): NormalizedError {
     };
   }
 
+  if (candidateStatusCode === 503) {
+    return {
+      statusCode: 503,
+      message: "The requested service is temporarily unavailable.",
+    };
+  }
+
   const statusCode =
     candidateStatusCode !== undefined && candidateStatusCode >= 400 && candidateStatusCode < 500
       ? candidateStatusCode
@@ -83,6 +90,16 @@ function normalizeError(error: unknown): NormalizedError {
 
 function isPublicRuntime(config: ApiConfig): boolean {
   return config.APP_ENV === "staging" || config.APP_ENV === "production";
+}
+
+function releaseMetadata(config: ApiConfig) {
+  return {
+    releaseSha: config.RELEASE_SHA,
+    pipelineId: config.RELEASE_PIPELINE_ID,
+    artifactRef: config.RELEASE_ARTIFACT_REF,
+    imageDigest: config.RELEASE_IMAGE_DIGEST,
+    rollbackRef: config.ROLLBACK_ARTIFACT_REF,
+  } as const;
 }
 
 function formUrlEncodedParser(
@@ -179,7 +196,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       status: "ok",
       service: "skillup-api",
       version: "0.0.0",
-      releaseSha: config.RELEASE_SHA,
+      ...releaseMetadata(config),
       timestamp: now().toISOString(),
     }),
   );
@@ -199,7 +216,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       status: databaseReady ? "ok" : "degraded",
       service: "skillup-api",
       version: "0.0.0",
-      releaseSha: config.RELEASE_SHA,
+      ...releaseMetadata(config),
       timestamp: now().toISOString(),
     });
   });
@@ -207,7 +224,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
   app.get("/v1/version", async () => ({
     service: "skillup-api",
     version: "0.0.0",
-    releaseSha: config.RELEASE_SHA,
+    ...releaseMetadata(config),
   }));
 
   if (options.authService) {
@@ -279,7 +296,12 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
 
     return reply.status(normalized.statusCode).send(
       ApiErrorSchema.parse({
-        code: normalized.statusCode < 500 ? "request_error" : "internal_error",
+        code:
+          normalized.statusCode === 503
+            ? "service_unavailable"
+            : normalized.statusCode < 500
+              ? "request_error"
+              : "internal_error",
         message: normalized.message,
         requestId: request.id,
       }),

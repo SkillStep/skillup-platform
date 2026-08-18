@@ -54,6 +54,10 @@ const ApiConfigSchema = z
     JAZZCASH_PRODUCT_ID: z.string().trim().min(1).max(40).default("RETL"),
     JAZZCASH_CHECKOUT_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
     RELEASE_SHA: z.string().min(1).default("local"),
+    RELEASE_PIPELINE_ID: z.string().min(1).default("local"),
+    RELEASE_ARTIFACT_REF: z.string().min(1).default("local"),
+    RELEASE_IMAGE_DIGEST: z.string().min(1).default("local"),
+    ROLLBACK_ARTIFACT_REF: z.string().min(1).default("unknown"),
     LOG_LEVEL: z
       .enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"])
       .default("info"),
@@ -172,9 +176,21 @@ const ApiConfigSchema = z
   });
 
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
+type OptionalInjectedConfig =
+  | "MAINTENANCE_INTERVAL_SECONDS"
+  | "RELEASE_PIPELINE_ID"
+  | "RELEASE_ARTIFACT_REF"
+  | "RELEASE_IMAGE_DIGEST"
+  | "ROLLBACK_ARTIFACT_REF";
 
-export type ApiConfig = Omit<ParsedApiConfig, "MAINTENANCE_INTERVAL_SECONDS"> &
-  Readonly<{ MAINTENANCE_INTERVAL_SECONDS?: number }>;
+export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
+  Readonly<{
+    MAINTENANCE_INTERVAL_SECONDS?: number;
+    RELEASE_PIPELINE_ID?: string;
+    RELEASE_ARTIFACT_REF?: string;
+    RELEASE_IMAGE_DIGEST?: string;
+    ROLLBACK_ARTIFACT_REF?: string;
+  }>;
 
 export function readApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
   return ApiConfigSchema.parse({

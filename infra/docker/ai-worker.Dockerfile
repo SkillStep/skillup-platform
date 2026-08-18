@@ -2,6 +2,11 @@
 
 FROM python:3.13.14-slim-bookworm AS runtime
 
+ARG RELEASE_SHA=unknown
+LABEL org.opencontainers.image.source="https://github.com/SkillStep/skillup-platform" \
+      org.opencontainers.image.revision="${RELEASE_SHA}" \
+      org.opencontainers.image.title="skillup-ai-worker"
+
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONPATH=/app/src

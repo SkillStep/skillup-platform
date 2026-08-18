@@ -110,12 +110,15 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          docker build --file infra/docker/api.Dockerfile --tag skillup-api:${{ github.sha }} .
-          docker build --file infra/docker/web.Dockerfile --tag skillup-web:${{ github.sha }} .
-          docker build --file infra/docker/ai-worker.Dockerfile --tag skillup-ai-worker:${{ github.sha }} .
+          docker build --build-arg RELEASE_SHA="$RELEASE_SHA" --file infra/docker/api.Dockerfile --tag skillup-api:${{ github.sha }} .
+          docker build --build-arg RELEASE_SHA="$RELEASE_SHA" --file infra/docker/web.Dockerfile --tag skillup-web:${{ github.sha }} .
+          docker build --build-arg RELEASE_SHA="$RELEASE_SHA" --file infra/docker/ai-worker.Dockerfile --tag skillup-ai-worker:${{ github.sha }} .
           test "$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Config.User}}')" = "node"
           test "$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Config.User}}')" = "node"
           test "$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{.Config.User}}')" = "skillup-ai"
+          test "$(docker image inspect skillup-api:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$RELEASE_SHA"
+          test "$(docker image inspect skillup-web:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$RELEASE_SHA"
+          test "$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')" = "$RELEASE_SHA"
 
       - name: Smoke disabled AI worker image
         shell: bash
@@ -226,6 +229,9 @@ jobs:
           export SKILLUP_API_IMAGE_ID="$(docker image inspect skillup-api:${{ github.sha }} --format '{{.Id}}')"
           export SKILLUP_WEB_IMAGE_ID="$(docker image inspect skillup-web:${{ github.sha }} --format '{{.Id}}')"
           export SKILLUP_AI_WORKER_IMAGE_ID="$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{.Id}}')"
+          export SKILLUP_API_OCI_REVISION="$(docker image inspect skillup-api:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          export SKILLUP_WEB_OCI_REVISION="$(docker image inspect skillup-web:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+          export SKILLUP_AI_WORKER_OCI_REVISION="$(docker image inspect skillup-ai-worker:${{ github.sha }} --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
           pnpm release:evidence
           cat artifacts/release-evidence.json
 

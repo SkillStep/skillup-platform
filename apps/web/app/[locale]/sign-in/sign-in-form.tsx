@@ -68,7 +68,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
       const body = (await response.json()) as ChallengeResponse;
       setChallenge(body);
       setIsError(false);
-      setMessage("Enter the six-digit code sent to your email address.");
+      setMessage("Enter the four-digit code sent to your email address.");
     } catch {
       setIsError(true);
       setMessage("We could not reach SkillUp. Check your connection and try again.");
@@ -130,7 +130,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
           <div className={styles["codeGrid"]}>
             <div className={styles["field"]}>
               <label className={styles["label"]} htmlFor={codeId}>
-                Six-digit code
+                Four-digit code
               </label>
               <input
                 className={styles["input"]}
@@ -138,17 +138,17 @@ export function SignInForm({ returnTo }: SignInFormProps) {
                 name="code"
                 inputMode="numeric"
                 autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
+                pattern="[0-9]{4}"
+                maxLength={4}
                 value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 4))}
                 required
               />
               <p className={styles["help"]}>
                 The code expires shortly and stops working after five unsuccessful attempts.
               </p>
             </div>
-            <button className={styles["action"]} type="submit" disabled={busy || code.length !== 6}>
+            <button className={styles["action"]} type="submit" disabled={busy || code.length !== 4}>
               {busy ? "Verifying…" : "Verify and continue"}
             </button>
             <button

@@ -1,0 +1,16 @@
+{
+  "name": "@skillup/staging-certification",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "24.18.x"
+  },
+  "scripts": {
+    "certify": "playwright test",
+    "certify:functional": "playwright test --grep-invert @visual",
+    "certify:visual": "playwright test --grep @visual"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.62.0"
+  }
+}
