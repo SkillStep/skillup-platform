@@ -1,0 +1,176 @@
+name: Final Exact-Release Staging Certification
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    environment: staging
+    env:
+      BASE: https://skillupshop.codistan.org
+      EXPECTED_SHA: 59604af3a9f1e6e76b35251113130969ce52e9c5
+      QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
+      QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+      QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL }}
+      EMAIL_PROVIDER_READY_FLAG: ${{ vars.STAGING_EMAIL_PROVIDER_READY }}
+    steps:
+      - name: Wait for exact final main release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 80); do
+            body="$(curl --silent --show-error --max-time 10 "$BASE/api/health" || true)"
+            live_sha="$(BODY="$body" node -e 'try{const b=JSON.parse(process.env.BODY||"{}"); process.stdout.write(typeof b.releaseSha==="string"?b.releaseSha:"")}catch{}')"
+            echo "Attempt $attempt: live release=${live_sha:-unavailable}"
+            if [ "$live_sha" = "$EXPECTED_SHA" ]; then
+              echo 'Exact final release is live.'
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Staging never reached final release $EXPECTED_SHA" >&2
+          exit 1
+
+      - name: Verify public identity and critical API contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          web="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/health")"
+          api="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/health")"
+          ready="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/ready")"
+          WEB="$web" API="$api" READY="$ready" node <<'NODE'
+          for (const [name, raw, service] of [
+            ['web', process.env.WEB, 'skillup-web'],
+            ['api', process.env.API, 'skillup-api'],
+            ['ready', process.env.READY, 'skillup-api'],
+          ]) {
+            const body = JSON.parse(raw);
+            if (body.status !== 'ok' || body.service !== service) throw new Error(`${name} health contract failed`);
+            if (body.releaseSha !== process.env.EXPECTED_SHA) throw new Error(`${name} release mismatch`);
+            if (!body.pipelineId || !body.artifactRef || !/^sha256:[0-9a-f]{64}$/.test(body.imageDigest || '') || !body.rollbackRef) {
+              throw new Error(`${name} immutable release identity incomplete`);
+            }
+          }
+          console.log('Public immutable release identity PASS');
+          NODE
+
+          invalid="$(curl --silent --show-error --output /tmp/invalid.json --write-out '%{http_code}' --max-time 10 -H "Origin: $BASE" -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start")"
+          test "$invalid" = 400 || { echo "::error::invalid email expected 400, got $invalid"; cat /tmp/invalid.json; exit 1; }
+
+          hostile="$(curl --silent --show-error --output /tmp/hostile.json --write-out '%{http_code}' --max-time 10 -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa@example.invalid"}' "$BASE/api/v1/auth/email/start")"
+          test "$hostile" = 403 || { echo "::error::hostile Origin expected 403, got $hostile"; cat /tmp/hostile.json; exit 1; }
+
+          challenge='22222222-2222-4222-8222-222222222222'
+          four="$(curl --silent --show-error --output /tmp/four.json --write-out '%{http_code}' --max-time 10 -H "Origin: $BASE" -H 'Content-Type: application/json' --data "{\"challengeId\":\"$challenge\",\"code\":\"1234\"}" "$BASE/api/v1/auth/email/verify")"
+          six="$(curl --silent --show-error --output /tmp/six.json --write-out '%{http_code}' --max-time 10 -H "Origin: $BASE" -H 'Content-Type: application/json' --data "{\"challengeId\":\"$challenge\",\"code\":\"123456\"}" "$BASE/api/v1/auth/email/verify")"
+          test "$four" = 400 && test "$six" = 400
+          FOUR="$(cat /tmp/four.json)" SIX="$(cat /tmp/six.json)" node <<'NODE'
+          const four = JSON.parse(process.env.FOUR);
+          const six = JSON.parse(process.env.SIX);
+          if (!String(four.message || '').toLowerCase().includes('invalid or expired')) throw new Error('4-digit code did not reach challenge validation');
+          if (!String(six.message || '').toLowerCase().includes('payload is invalid')) throw new Error('6-digit code was not rejected by schema');
+          console.log('Live four-digit OTP contract PASS');
+          NODE
+
+      - name: Inspect server SMTP readiness without exposing credentials
+        id: smtp
+        continue-on-error: true
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            python3 - <<'PY'
+            from pathlib import Path
+            values = {}
+            for line in Path('.env').read_text().splitlines():
+                if not line or line.lstrip().startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                values[key.strip()] = value.strip()
+            required = ['EMAIL_FROM','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD']
+            provider_ok = values.get('EMAIL_PROVIDER') == 'smtp'
+            required_ok = all(values.get(k) for k in required)
+            print('SERVER_EMAIL_PROVIDER=' + ('SMTP' if provider_ok else 'NOT_SMTP'))
+            print('SERVER_SMTP_CONFIGURATION=' + ('PRESENT' if provider_ok and required_ok else 'INCOMPLETE'))
+            if not (provider_ok and required_ok):
+                raise SystemExit(20)
+            PY
+            docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+            import nodemailer from 'nodemailer';
+            const env = process.env;
+            const transport = nodemailer.createTransport({
+              host: env.SMTP_HOST,
+              port: Number(env.SMTP_PORT || '587'),
+              secure: String(env.SMTP_SECURE).toLowerCase() === 'true',
+              requireTLS: String(env.SMTP_REQUIRE_TLS).toLowerCase() !== 'false',
+              auth: { user: env.SMTP_USERNAME, pass: env.SMTP_PASSWORD },
+              connectionTimeout: 10000,
+              greetingTimeout: 10000,
+              socketTimeout: 15000,
+            });
+            await transport.verify();
+            console.log('SMTP_AUTHENTICATION_VERIFY=PASS');
+            transport.close();
+            NODE
+
+      - name: Report automated OTP fixture readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -n "${QA_MAILBOX_URL:-}" ] || missing=$((missing+1))
+          [ -n "${QA_MAILBOX_TOKEN:-}" ] || missing=$((missing+1))
+          [ -n "${QA_LEARNER_EMAIL:-}" ] || missing=$((missing+1))
+          if [ "$missing" -eq 0 ]; then
+            echo 'AUTOMATED_REAL_OTP_FIXTURE=READY'
+          else
+            echo "AUTOMATED_REAL_OTP_FIXTURE=BLOCKED missing_fields=$missing"
+          fi
+          echo "GITHUB_EMAIL_PROVIDER_READY_FLAG=${EMAIL_PROVIDER_READY_FLAG:-unset}"
+          echo "SERVER_SMTP_STEP_OUTCOME=${{ steps.smtp.outcome }}"
+
+      - name: Checkout final main release
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: 59604af3a9f1e6e76b35251113130969ce52e9c5
+          persist-credentials: false
+
+      - name: Set up Node and Chromium
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Install Playwright harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Run corrected public runtime and accessibility suite
+        env:
+          STAGING_WEB_URL: https://skillupshop.codistan.org
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @skillup/staging-certification exec playwright test tests/runtime-ui.spec.mjs --project=public-desktop --grep-invert 'release metadata' --reporter=line
+          pnpm --filter @skillup/staging-certification exec playwright test tests/public.spec.mjs --project=public-desktop --reporter=line
+          pnpm --filter @skillup/staging-certification exec playwright test tests/accessibility-public.spec.mjs --project=public-desktop --reporter=line
+
+      - name: Final result
+        run: |
+          echo 'FINAL PUBLIC STAGING CERTIFICATION: PASS'
+          echo "Release: $EXPECTED_SHA"
