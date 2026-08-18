@@ -1,0 +1,63 @@
+name: Diagnose Commercial Maintenance PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - name: Run schedule statements transactionally on staging DB
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 3m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+            import pg from 'pg';
+            const { Client } = pg;
+            const client = new Client({ connectionString: process.env.DATABASE_URL });
+            await client.connect();
+            const at = new Date();
+            const cases = [
+              ['expire_order', `insert into commercial_jobs (job_type, order_id, status, run_after)
+                select 'expire_order', po.id, 'queued', $1 from payment_orders po
+                where po.status in ('created', 'pending') and po.checkout_expires_at <= $1
+                on conflict (job_type, order_id) where order_id is not null and status in ('queued', 'running') do nothing`],
+              ['reconcile_order', `insert into commercial_jobs (job_type, order_id, status, run_after)
+                select 'reconcile_order', po.id, 'queued', $1 from payment_orders po
+                where po.status = 'pending' and po.updated_at <= $1 - interval '30 minutes'
+                on conflict (job_type, order_id) where order_id is not null and status in ('queued', 'running') do nothing`],
+              ['expire_entitlement', `insert into commercial_jobs (job_type, entitlement_id, status, run_after)
+                select 'expire_entitlement', e.id, 'queued', $1 from entitlements e
+                where e.status in ('active', 'grace') and coalesce(e.grace_ends_at, e.ends_at) <= $1
+                on conflict (job_type, entitlement_id) where entitlement_id is not null and status in ('queued', 'running') do nothing`],
+              ['renewal_reminder', `insert into commercial_jobs (job_type, entitlement_id, status, run_after)
+                select 'renewal_reminder', e.id, 'queued', $1 from entitlements e
+                where e.status = 'active' and e.ends_at > $1 and e.ends_at <= $1 + interval '7 days'
+                on conflict (job_type, entitlement_id) where entitlement_id is not null and status in ('queued', 'running') do nothing`],
+            ];
+            for (const [label, sql] of cases) {
+              await client.query('begin');
+              try {
+                const result = await client.query(sql, [at]);
+                console.log(`${label}=PASS rowCount=${result.rowCount ?? 0}`);
+              } catch (e) {
+                console.log(`${label}=FAIL code=${e.code ?? ''} position=${e.position ?? ''} message=${e.message ?? ''}`);
+              } finally {
+                await client.query('rollback');
+              }
+            }
+            const types = await client.query(`select table_name,column_name,data_type,udt_name from information_schema.columns where table_name in ('payment_orders','entitlements','commercial_jobs') and column_name in ('status','checkout_expires_at','updated_at','ends_at','grace_ends_at','run_after') order by table_name,column_name`);
+            for (const row of types.rows) console.log(`TYPE ${row.table_name}.${row.column_name}=${row.data_type}/${row.udt_name}`);
+            await client.end();
+            NODE
