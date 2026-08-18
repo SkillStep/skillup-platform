@@ -1,0 +1,143 @@
+name: Post-Merge Staging Verifier
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    env:
+      BASE: https://skillupshop.codistan.org
+      EXPECTED_SHA: d6ced25d49679169ac0155ad66c336ba65e17cc0
+    steps:
+      - name: Wait for exact merged release at public edge
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 80); do
+            body="$(curl --silent --show-error --max-time 10 "$BASE/api/health" || true)"
+            live_sha="$(BODY="$body" node -e 'try{const b=JSON.parse(process.env.BODY||"{}"); process.stdout.write(typeof b.releaseSha==="string"?b.releaseSha:"")}catch{}')"
+            echo "Attempt $attempt: live release=${live_sha:-unavailable}"
+            if [ "$live_sha" = "$EXPECTED_SHA" ]; then
+              echo "Exact merged release is live."
+              exit 0
+            fi
+            sleep 15
+          done
+          echo "::error::Staging never reached expected release $EXPECTED_SHA" >&2
+          exit 1
+
+      - name: Verify immutable deployment identity and health
+        shell: bash
+        run: |
+          set -euo pipefail
+          web="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/health")"
+          api="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/health")"
+          ready="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/ready")"
+          version="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/version")"
+          WEB="$web" API="$api" READY="$ready" VERSION="$version" node <<'NODE'
+          const web = JSON.parse(process.env.WEB);
+          const api = JSON.parse(process.env.API);
+          const ready = JSON.parse(process.env.READY);
+          const version = JSON.parse(process.env.VERSION);
+          const expected = process.env.EXPECTED_SHA;
+          function assert(ok, message) { if (!ok) throw new Error(message); }
+          for (const [name, body, service] of [
+            ["web", web, "skillup-web"],
+            ["api", api, "skillup-api"],
+            ["ready", ready, "skillup-api"],
+          ]) {
+            assert(body.status === "ok", `${name} status is not ok`);
+            assert(body.service === service, `${name} service mismatch`);
+            assert(body.releaseSha === expected, `${name} release SHA mismatch`);
+            assert(typeof body.pipelineId === "string" && body.pipelineId.length > 0, `${name} pipelineId missing`);
+            assert(typeof body.artifactRef === "string" && body.artifactRef.length > 0, `${name} artifactRef missing`);
+            assert(/^sha256:[0-9a-f]{64}$/.test(body.imageDigest || ""), `${name} imageDigest missing/invalid`);
+            assert(typeof body.rollbackRef === "string" && body.rollbackRef.length > 0, `${name} rollbackRef missing`);
+          }
+          assert(version.releaseSha === expected, "API version release SHA mismatch");
+          assert(web.pipelineId === api.pipelineId && api.pipelineId === ready.pipelineId, "pipeline identities disagree");
+          assert(api.artifactRef === ready.artifactRef, "API artifact identity disagrees with readiness");
+          assert(api.imageDigest === ready.imageDigest, "API image digest disagrees with readiness");
+          console.log(`Identity PASS: release=${expected}, pipeline=${web.pipelineId}`);
+          NODE
+
+      - name: Verify API error contracts and Origin protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          trusted_status="$(curl --silent --show-error --output /tmp/trusted.json --write-out '%{http_code}' --max-time 10 \
+            --header "Origin: $BASE" --header 'Content-Type: application/json' \
+            --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start")"
+          test "$trusted_status" = "400" || { echo "::error::Invalid email expected 400, got $trusted_status"; cat /tmp/trusted.json; exit 1; }
+          node -e 'const b=require("/tmp/trusted.json"); if(b.code!=="request_error"||!String(b.message||"").toLowerCase().includes("invalid")) process.exit(1)'
+
+          hostile_status="$(curl --silent --show-error --output /tmp/hostile.json --write-out '%{http_code}' --max-time 10 \
+            --header 'Origin: https://attacker.invalid' --header 'Content-Type: application/json' \
+            --data '{"email":"qa-security@example.invalid"}' "$BASE/api/v1/auth/email/start")"
+          test "$hostile_status" = "403" || { echo "::error::Hostile Origin expected 403, got $hostile_status"; cat /tmp/hostile.json; exit 1; }
+
+      - name: Prove live API expects four-digit OTP
+        shell: bash
+        run: |
+          set -euo pipefail
+          challenge='22222222-2222-4222-8222-222222222222'
+          four_status="$(curl --silent --show-error --output /tmp/four.json --write-out '%{http_code}' --max-time 10 \
+            --header "Origin: $BASE" --header 'Content-Type: application/json' \
+            --data "{\"challengeId\":\"$challenge\",\"code\":\"1234\"}" "$BASE/api/v1/auth/email/verify")"
+          six_status="$(curl --silent --show-error --output /tmp/six.json --write-out '%{http_code}' --max-time 10 \
+            --header "Origin: $BASE" --header 'Content-Type: application/json' \
+            --data "{\"challengeId\":\"$challenge\",\"code\":\"123456\"}" "$BASE/api/v1/auth/email/verify")"
+          test "$four_status" = "400" || { echo "::error::Four-digit unknown challenge expected bounded 400, got $four_status"; cat /tmp/four.json; exit 1; }
+          test "$six_status" = "400" || { echo "::error::Six-digit payload expected schema 400, got $six_status"; cat /tmp/six.json; exit 1; }
+          FOUR="$(cat /tmp/four.json)" SIX="$(cat /tmp/six.json)" node <<'NODE'
+          const four = JSON.parse(process.env.FOUR);
+          const six = JSON.parse(process.env.SIX);
+          if (!String(four.message || "").toLowerCase().includes("invalid or expired")) {
+            throw new Error(`Four-digit code did not reach challenge validation: ${JSON.stringify(four)}`);
+          }
+          if (!String(six.message || "").toLowerCase().includes("payload is invalid")) {
+            throw new Error(`Six-digit code was not rejected by schema: ${JSON.stringify(six)}`);
+          }
+          console.log("Four-digit OTP schema PASS");
+          NODE
+
+      - name: Checkout merged certification harness
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: d6ced25d49679169ac0155ad66c336ba65e17cc0
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
+        with:
+          node-version-file: .node-version
+
+      - name: Install public Playwright harness
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Public discovery, security and accessibility Playwright
+        env:
+          STAGING_WEB_URL: https://skillupshop.codistan.org
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @skillup/staging-certification exec playwright test tests/public.spec.mjs --project=public-desktop --reporter=line
+          pnpm --filter @skillup/staging-certification exec playwright test tests/accessibility-public.spec.mjs --project=public-desktop --reporter=line
+          pnpm --filter @skillup/staging-certification exec playwright test tests/auth-negative.spec.mjs --project=public-desktop --grep 'invalid email is rejected|anonymous callers cannot access' --reporter=line
+
+      - name: Summary
+        run: |
+          echo 'POST-MERGE STAGING VERIFICATION: PASS'
+          echo "Release: $EXPECTED_SHA"
