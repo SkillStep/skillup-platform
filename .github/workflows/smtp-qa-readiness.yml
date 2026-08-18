@@ -1,0 +1,65 @@
+name: SMTP And OTP QA Readiness
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  readiness:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    env:
+      QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
+      QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+      QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL }}
+      EMAIL_READY_FLAG: ${{ vars.STAGING_EMAIL_PROVIDER_READY }}
+    steps:
+      - name: Verify server SMTP transport without printing credentials
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 2m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            python3 - <<'PY'
+            from pathlib import Path
+            values = {}
+            for line in Path('.env').read_text().splitlines():
+                if line and not line.lstrip().startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    values[key.strip()] = value.strip()
+            required = ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD']
+            ready = values.get('EMAIL_PROVIDER') == 'smtp' and all(values.get(key) for key in required)
+            print('SERVER_SMTP_CONFIGURATION=' + ('PRESENT' if ready else 'INCOMPLETE'))
+            if not ready:
+                raise SystemExit(20)
+            PY
+            docker compose -f docker-compose.staging.yml exec -T api node --input-type=module -e "import nodemailer from 'nodemailer'; const e=process.env; const t=nodemailer.createTransport({host:e.SMTP_HOST,port:Number(e.SMTP_PORT||587),secure:String(e.SMTP_SECURE).toLowerCase()==='true',requireTLS:String(e.SMTP_REQUIRE_TLS).toLowerCase()!=='false',auth:{user:e.SMTP_USERNAME,pass:e.SMTP_PASSWORD},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000}); await t.verify(); console.log('SMTP_AUTHENTICATION_VERIFY=PASS'); t.close();"
+
+      - name: Report protected real-OTP automation fixture readiness
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=0
+          [ -n "${QA_MAILBOX_URL:-}" ] || missing=$((missing+1))
+          [ -n "${QA_MAILBOX_TOKEN:-}" ] || missing=$((missing+1))
+          [ -n "${QA_LEARNER_EMAIL:-}" ] || missing=$((missing+1))
+          if [ "$missing" -eq 0 ]; then
+            echo 'AUTOMATED_REAL_OTP_FIXTURE=READY'
+          else
+            echo "AUTOMATED_REAL_OTP_FIXTURE=BLOCKED"
+            echo "AUTOMATED_REAL_OTP_MISSING_FIELD_COUNT=$missing"
+          fi
+          if [ "${EMAIL_READY_FLAG,,}" = true ]; then
+            echo 'GITHUB_STAGING_EMAIL_READY_FLAG=TRUE'
+          else
+            echo 'GITHUB_STAGING_EMAIL_READY_FLAG=FALSE_OR_UNSET'
+          fi
