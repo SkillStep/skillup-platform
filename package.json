@@ -43,8 +43,8 @@
     "infra:reset": "docker compose -f infra/compose.yaml down -v"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.6",
-    "tsx": "4.23.1",
+    "@biomejs/biome": "2.5.8",
+    "tsx": "4.23.12",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   }
