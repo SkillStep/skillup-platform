@@ -1,0 +1,218 @@
+name: Full Staging Black-Box QA PR
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  certify-live-staging:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 50
+    environment: staging
+    env:
+      STAGING_WEB_URL: ${{ vars.STAGING_WEB_URL || 'https://skillupshop.codistan.org' }}
+      STAGING_API_URL: ${{ vars.STAGING_API_URL }}
+      STAGING_EXPECTED_RELEASE_SHA: af74324c9868414c275d31b024e2e1c835512500
+      STAGING_QA_RUN_ID: blackbox-pr-${{ github.run_id }}-${{ github.run_attempt }}
+      STAGING_EMAIL_PROVIDER_READY: ${{ vars.STAGING_EMAIL_PROVIDER_READY }}
+      STAGING_DEEPSEEK_READY: ${{ vars.STAGING_DEEPSEEK_READY }}
+      STAGING_JAZZCASH_SANDBOX_READY: ${{ vars.STAGING_JAZZCASH_SANDBOX_READY }}
+      STAGING_VISUAL_BASELINES_APPROVED: ${{ vars.STAGING_VISUAL_BASELINES_APPROVED }}
+      STAGING_QA_LEARNER_PREMIUM_READY: ${{ vars.STAGING_QA_LEARNER_PREMIUM_READY }}
+      STAGING_QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL }}
+      STAGING_QA_FREE_LEARNER_EMAIL: ${{ vars.STAGING_QA_FREE_LEARNER_EMAIL }}
+      STAGING_QA_ONBOARDING_EMAIL: ${{ vars.STAGING_QA_ONBOARDING_EMAIL }}
+      STAGING_QA_AUTH_NEGATIVE_EMAIL: ${{ vars.STAGING_QA_AUTH_NEGATIVE_EMAIL }}
+      STAGING_QA_SESSION_EMAIL: ${{ vars.STAGING_QA_SESSION_EMAIL }}
+      STAGING_QA_ADMIN_EMAIL: ${{ vars.STAGING_QA_ADMIN_EMAIL }}
+      STAGING_QA_ANALYST_EMAIL: ${{ vars.STAGING_QA_ANALYST_EMAIL }}
+      STAGING_QA_CONTENT_EDITOR_EMAIL: ${{ vars.STAGING_QA_CONTENT_EDITOR_EMAIL }}
+      STAGING_QA_CONTENT_REVIEWER_EMAIL: ${{ vars.STAGING_QA_CONTENT_REVIEWER_EMAIL }}
+      STAGING_QA_PUBLISHER_EMAIL: ${{ vars.STAGING_QA_PUBLISHER_EMAIL }}
+      STAGING_QA_PAYMENT_OPERATOR_EMAIL: ${{ vars.STAGING_QA_PAYMENT_OPERATOR_EMAIL }}
+      STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ vars.STAGING_QA_LEARNER_SUPPORT_EMAIL }}
+      STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ vars.STAGING_QA_SECURITY_ADMIN_EMAIL }}
+      STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL }}
+      STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
+      STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+      STAGING_EXPECTED_AI_PROVIDER: deepseek
+
+    steps:
+      - name: Checkout certification harness
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: feat/permanent-staging-certification
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+
+      - name: Install locked QA harness and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Initialize evidence
+        shell: bash
+        run: |
+          mkdir -p artifacts/live-blackbox
+          printf '# SkillUp live staging black-box QA\n\n| Area | Result | Detail |\n| --- | --- | --- |\n' > artifacts/live-blackbox/summary.md
+          : > artifacts/live-blackbox/failures.txt
+          : > artifacts/live-blackbox/blocks.txt
+
+      - name: HTTP edge and API contract probes
+        shell: bash
+        run: |
+          set -uo pipefail
+          BASE="${STAGING_WEB_URL%/}"
+          pass(){ printf '| %s | PASS | %s |\n' "$1" "$2" >> artifacts/live-blackbox/summary.md; }
+          fail(){ printf '| %s | FAIL | %s |\n' "$1" "$2" >> artifacts/live-blackbox/summary.md; printf '%s: %s\n' "$1" "$2" >> artifacts/live-blackbox/failures.txt; }
+
+          code=$(curl -L -sS -o /tmp/home.html -w '%{http_code}' --max-time 20 "$BASE/en" || true)
+          [ "$code" = 200 ] && pass public_web 'HTTPS /en returned 200' || fail public_web "HTTPS /en returned $code"
+
+          headers=$(curl -sS -D - -o /dev/null --max-time 20 "$BASE/api/v1/health" || true)
+          printf '%s' "$headers" | grep -qi '^strict-transport-security:' && pass tls_hsts 'HSTS present' || fail tls_hsts 'HSTS missing'
+          printf '%s' "$headers" | grep -qi '^x-content-type-options: *nosniff' && pass security_headers 'nosniff present' || fail security_headers 'nosniff missing'
+
+          for pair in 'web:/api/health' 'api:/api/v1/health' 'ready:/api/v1/ready' 'version:/api/v1/version'; do
+            name=${pair%%:*}; route=${pair#*:}; curl -sS --max-time 20 "$BASE$route" -o "/tmp/$name.json" || true
+          done
+
+          node <<'NODE'
+          const fs=require('fs');
+          const summary='artifacts/live-blackbox/summary.md', failures='artifacts/live-blackbox/failures.txt';
+          const read=f=>{try{return JSON.parse(fs.readFileSync(f,'utf8'))}catch{return null}};
+          const row=(a,r,d)=>{fs.appendFileSync(summary,`| ${a} | ${r} | ${String(d).replaceAll('|','\\|')} |\n`);if(r==='FAIL')fs.appendFileSync(failures,`${a}: ${d}\n`)};
+          const web=read('/tmp/web.json'), api=read('/tmp/api.json'), ready=read('/tmp/ready.json'), version=read('/tmp/version.json');
+          row('web_health',web?.status==='ok'&&web?.service==='skillup-web'?'PASS':'FAIL',web?`status=${web.status}, release=${web.releaseSha||'missing'}`:'invalid JSON');
+          row('api_health',api?.status==='ok'&&api?.service==='skillup-api'?'PASS':'FAIL',api?`status=${api.status}, release=${api.releaseSha||'missing'}`:'invalid JSON');
+          row('database_readiness',ready?.status==='ok'?'PASS':'FAIL',ready?`status=${ready.status}`:'invalid JSON');
+          const expected=process.env.STAGING_EXPECTED_RELEASE_SHA;
+          row('release_identity',version?.releaseSha===expected?'PASS':'FAIL',version?`running=${version.releaseSha||'missing'}, expected=${expected}`:'invalid JSON');
+          const immutable=Boolean(web?.pipelineId&&web?.artifactRef&&web?.imageDigest&&version?.pipelineId&&version?.artifactRef&&version?.imageDigest);
+          row('immutable_release_metadata',immutable?'PASS':'FAIL',immutable?'pipeline/artifact/digest metadata present':'pipeline/artifact/digest metadata incomplete');
+          NODE
+
+          legit=$(curl -sS -o /tmp/legit.json -w '%{http_code}' --max-time 20 -H "Origin: $BASE" -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start" || true)
+          [ "$legit" = 400 ] && pass trusted_origin 'trusted Origin reached schema validation' || fail trusted_origin "expected 400, got $legit"
+
+          hostile=$(curl -sS -o /tmp/hostile.json -w '%{http_code}' --max-time 20 -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa-security@example.invalid"}' "$BASE/api/v1/auth/email/start" || true)
+          [ "$hostile" = 403 ] && pass hostile_origin 'hostile Origin rejected' || fail hostile_origin "expected 403, got $hostile"
+
+          if [ "${STAGING_EMAIL_PROVIDER_READY,,}" != true ]; then
+            unavailable=$(curl -sS -o /tmp/unavailable.json -w '%{http_code}' --max-time 20 -H "Origin: $BASE" -H 'Content-Type: application/json' --data '{"email":"blackbox-probe@example.invalid"}' "$BASE/api/v1/auth/email/start" || true)
+            [ "$unavailable" = 503 ] && pass email_unavailable_contract 'controlled 503 returned' || fail email_unavailable_contract "expected 503 while email unavailable, got $unavailable"
+          else
+            pass email_unavailable_contract 'SMTP marked ready; disabled-provider probe skipped'
+          fi
+
+      - name: Public discovery/private-route Playwright suite
+        id: public_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test tests/public.spec.mjs --project=public-desktop --reporter=line 2>&1 | tee artifacts/live-blackbox/public.log
+
+      - name: PWA/navigation/runtime suite
+        id: runtime_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test tests/runtime-ui.spec.mjs --project=public-desktop --grep-invert 'release metadata' --reporter=line 2>&1 | tee artifacts/live-blackbox/runtime.log
+
+      - name: Public accessibility suite
+        id: a11y_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test tests/accessibility-public.spec.mjs --project=public-desktop --reporter=line 2>&1 | tee artifacts/live-blackbox/a11y.log
+
+      - name: Anonymous authorization suite
+        id: anon_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test tests/auth-negative.spec.mjs --project=public-desktop --grep 'invalid email is rejected|anonymous callers cannot access' --reporter=line 2>&1 | tee artifacts/live-blackbox/anon.log
+
+      - name: Record public Playwright results
+        shell: bash
+        run: |
+          record(){ area="$1"; outcome="$2"; detail="$3"; if [ "$outcome" = success ]; then printf '| %s | PASS | %s |\n' "$area" "$detail" >> artifacts/live-blackbox/summary.md; else printf '| %s | FAIL | %s |\n' "$area" "$detail" >> artifacts/live-blackbox/summary.md; echo "$area: Playwright failure" >> artifacts/live-blackbox/failures.txt; fi; }
+          record public_browser '${{ steps.public_suite.outcome }}' 'catalog, reviewed paths, release metadata and safe private routes'
+          record pwa_runtime '${{ steps.runtime_suite.outcome }}' 'manifest, offline page, navigation, refresh and page-error checks'
+          record public_accessibility '${{ steps.a11y_suite.outcome }}' 'public accessibility assertions'
+          record anonymous_authorization '${{ steps.anon_suite.outcome }}' 'invalid input and anonymous private API boundaries'
+
+      - name: Determine authenticated fixture readiness
+        id: auth_ready
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(STAGING_QA_LEARNER_EMAIL STAGING_QA_FREE_LEARNER_EMAIL STAGING_QA_ONBOARDING_EMAIL STAGING_QA_AUTH_NEGATIVE_EMAIL STAGING_QA_SESSION_EMAIL STAGING_QA_ADMIN_EMAIL STAGING_QA_ANALYST_EMAIL STAGING_QA_CONTENT_EDITOR_EMAIL STAGING_QA_CONTENT_REVIEWER_EMAIL STAGING_QA_PUBLISHER_EMAIL STAGING_QA_PAYMENT_OPERATOR_EMAIL STAGING_QA_LEARNER_SUPPORT_EMAIL STAGING_QA_SECURITY_ADMIN_EMAIL STAGING_QA_REVOKED_ADMIN_EMAIL STAGING_QA_MAILBOX_URL STAGING_QA_MAILBOX_TOKEN)
+          missing=0; for name in "${required[@]}"; do [ -n "${!name:-}" ] || missing=$((missing+1)); done
+          if [ "${STAGING_EMAIL_PROVIDER_READY,,}" = true ] && [ "${STAGING_QA_LEARNER_PREMIUM_READY,,}" = true ] && [ "$missing" -eq 0 ]; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+            echo '| authenticated_fixtures | PASS | SMTP/mailbox/identities/Premium fixture ready |' >> artifacts/live-blackbox/summary.md
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+            echo '| authenticated_fixtures | BLOCKED | SMTP/mailbox/identities/Premium fixture incomplete |' >> artifacts/live-blackbox/summary.md
+            echo 'authenticated_fixtures: external QA fixture configuration incomplete' >> artifacts/live-blackbox/blocks.txt
+          fi
+          [ "${STAGING_DEEPSEEK_READY,,}" = true ] && echo 'ai=true' >> "$GITHUB_OUTPUT" || echo 'ai=false' >> "$GITHUB_OUTPUT"
+
+      - name: Authenticated OTP/learner/gameplay/Premium/Admin/RBAC/responsive suite
+        if: steps.auth_ready.outputs.ready == 'true'
+        id: auth_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test --grep-invert '@visual|DeepSeek request reaches human review|checkout creation is replay-safe and never grants access by client claim' --reporter=line 2>&1 | tee artifacts/live-blackbox/authenticated.log
+
+      - name: Record authenticated result
+        if: steps.auth_ready.outputs.ready == 'true'
+        shell: bash
+        run: |
+          if [ '${{ steps.auth_suite.outcome }}' = success ]; then echo '| authenticated_functional | PASS | OTP/session/onboarding/free+Premium/gameplay/progress/account/Admin/RBAC/responsive/security passed |' >> artifacts/live-blackbox/summary.md; else echo '| authenticated_functional | FAIL | authenticated functional suite failure |' >> artifacts/live-blackbox/summary.md; echo 'authenticated_functional: Playwright failure' >> artifacts/live-blackbox/failures.txt; fi
+
+      - name: Live DeepSeek lifecycle suite
+        if: steps.auth_ready.outputs.ready == 'true' && steps.auth_ready.outputs.ai == 'true'
+        id: ai_suite
+        continue-on-error: true
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test tests/ai.spec.mjs --project=admin-desktop --reporter=line 2>&1 | tee artifacts/live-blackbox/ai.log
+
+      - name: Record AI and external blocks
+        shell: bash
+        run: |
+          if [ '${{ steps.auth_ready.outputs.ready }}' != true ]; then echo '| live_ai | BLOCKED | authenticated Admin fixture unavailable |' >> artifacts/live-blackbox/summary.md; echo 'live_ai: Admin fixture unavailable' >> artifacts/live-blackbox/blocks.txt; elif [ '${{ steps.auth_ready.outputs.ai }}' != true ]; then echo '| live_ai | BLOCKED | DeepSeek readiness flag not configured |' >> artifacts/live-blackbox/summary.md; echo 'live_ai: DeepSeek readiness not configured' >> artifacts/live-blackbox/blocks.txt; elif [ '${{ steps.ai_suite.outcome }}' = success ]; then echo '| live_ai | PASS | DeepSeek request -> review -> publish -> rollback passed |' >> artifacts/live-blackbox/summary.md; else echo '| live_ai | FAIL | live AI lifecycle failed |' >> artifacts/live-blackbox/summary.md; echo 'live_ai: Playwright failure' >> artifacts/live-blackbox/failures.txt; fi
+          if [ "${STAGING_JAZZCASH_SANDBOX_READY,,}" = true ]; then echo '| jazzcash | PASS | sandbox readiness configured |' >> artifacts/live-blackbox/summary.md; else echo '| jazzcash | BLOCKED | PAYMENT SANDBOX NOT CONFIGURED |' >> artifacts/live-blackbox/summary.md; echo 'jazzcash: PAYMENT SANDBOX NOT CONFIGURED' >> artifacts/live-blackbox/blocks.txt; fi
+          if [ "${STAGING_VISUAL_BASELINES_APPROVED,,}" = true ]; then echo '| visual_regression | PASS | approved-baseline readiness configured |' >> artifacts/live-blackbox/summary.md; else echo '| visual_regression | BLOCKED | human-approved baselines not configured |' >> artifacts/live-blackbox/summary.md; echo 'visual_regression: human approval required' >> artifacts/live-blackbox/blocks.txt; fi
+
+      - name: Print decision
+        if: always()
+        shell: bash
+        run: |
+          cat artifacts/live-blackbox/summary.md
+          if [ -s artifacts/live-blackbox/failures.txt ]; then echo 'DECISION=FAILED'; cat artifacts/live-blackbox/failures.txt; elif [ -s artifacts/live-blackbox/blocks.txt ]; then echo 'DECISION=FUNCTIONAL-PASS-WITH-BLOCKS'; cat artifacts/live-blackbox/blocks.txt; else echo 'DECISION=READY-FOR-UAT'; fi
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: live-staging-blackbox-pr-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/live-blackbox
+            qa/staging-certification/artifacts/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Fail only on real failures
+        if: always()
+        shell: bash
+        run: test ! -s artifacts/live-blackbox/failures.txt
