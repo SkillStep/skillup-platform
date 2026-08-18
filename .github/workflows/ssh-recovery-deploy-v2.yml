@@ -1,0 +1,167 @@
+name: SSH-Only Final Staging Recovery V2
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: staging
+    env:
+      TARGET_SHA: 59604af3a9f1e6e76b35251113130969ce52e9c5
+      PUBLIC_BASE: https://skillupshop.codistan.org
+    steps:
+      - name: Deploy exact already-built main images over SSH
+        id: deploy
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_BASE: ghcr.io/skillstep/skillup-platform
+          IMAGE_TAG: 59604af3a9f1e6e76b35251113130969ce52e9c5
+          PIPELINE_ID: recovery-${{ github.run_id }}-${{ github.run_attempt }}
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 20m
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            test -f docker-compose.staging.yml
+
+            python3 - <<'PY'
+            import os
+            from pathlib import Path
+            path = Path('.env')
+            updates = {
+                'RELEASE_SHA': os.environ['IMAGE_TAG'],
+                'RELEASE_PIPELINE_ID': os.environ['PIPELINE_ID'],
+            }
+            lines = path.read_text(encoding='utf-8').splitlines()
+            out, written = [], set()
+            for line in lines:
+                if '=' not in line or line.lstrip().startswith('#'):
+                    out.append(line)
+                    continue
+                key = line.split('=', 1)[0].strip()
+                if key in updates:
+                    if key not in written:
+                        out.append(f'{key}={updates[key]}')
+                        written.add(key)
+                    continue
+                out.append(line)
+            for key, value in updates.items():
+                if key not in written:
+                    out.append(f'{key}={value}')
+            path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+            PY
+            chmod 600 .env
+
+            export IMAGE_BASE IMAGE_TAG
+            docker compose -f docker-compose.staging.yml config --quiet
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+
+            wait_for() {
+              label="$1"; url="$2"
+              for n in $(seq 1 50); do
+                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then
+                  echo "$label=PASS"
+                  return 0
+                fi
+                sleep 2
+              done
+              echo "::error::$label failed" >&2
+              return 1
+            }
+            wait_for API_HEALTH http://127.0.0.1:4020/v1/health
+            wait_for API_DATABASE_READINESS http://127.0.0.1:4020/v1/ready
+            wait_for WEB_HEALTH http://127.0.0.1:3020/api/health
+
+            web_health="$(curl --fail --silent --show-error http://127.0.0.1:3020/api/health)"
+            api_health="$(curl --fail --silent --show-error http://127.0.0.1:4020/v1/health)"
+            WEB="$web_health" API="$api_health" node <<'NODE'
+            const web = JSON.parse(process.env.WEB);
+            const api = JSON.parse(process.env.API);
+            const expected = process.env.IMAGE_TAG;
+            if (web.releaseSha !== expected || api.releaseSha !== expected) throw new Error('Internal release SHA mismatch');
+            if (!web.pipelineId || !api.pipelineId) throw new Error('Deployment pipeline identity missing');
+            if (!web.artifactRef || !api.artifactRef) throw new Error('Artifact reference missing');
+            if (!/^sha256:[0-9a-f]{64}$/.test(web.imageDigest || '') || !/^sha256:[0-9a-f]{64}$/.test(api.imageDigest || '')) throw new Error('Image digest invalid');
+            console.log('INTERNAL_RELEASE_IDENTITY=PASS');
+            NODE
+
+            invalid="$(curl --silent --show-error -o /tmp/invalid.json -w '%{http_code}' -H 'Origin: https://skillupshop.codistan.org' -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$invalid" = 400 || { echo "::error::Invalid email expected 400, got $invalid"; cat /tmp/invalid.json; exit 1; }
+            hostile="$(curl --silent --show-error -o /tmp/hostile.json -w '%{http_code}' -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa@example.invalid"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$hostile" = 403 || { echo "::error::Hostile Origin expected 403, got $hostile"; cat /tmp/hostile.json; exit 1; }
+            echo 'AUTH_ERROR_CONTRACTS=PASS'
+
+            python3 - <<'PY'
+            from pathlib import Path
+            values = {}
+            for line in Path('.env').read_text().splitlines():
+                if line and not line.lstrip().startswith('#') and '=' in line:
+                    key, value = line.split('=', 1)
+                    values[key.strip()] = value.strip()
+            required = ['EMAIL_FROM', 'SMTP_HOST', 'SMTP_PORT', 'SMTP_USERNAME', 'SMTP_PASSWORD']
+            ready = values.get('EMAIL_PROVIDER') == 'smtp' and all(values.get(key) for key in required)
+            print('SERVER_SMTP_CONFIGURATION=' + ('PRESENT' if ready else 'INCOMPLETE'))
+            Path('/tmp/skillup-smtp-ready').write_text('true' if ready else 'false')
+            PY
+
+            if [ "$(cat /tmp/skillup-smtp-ready)" = true ]; then
+              docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+              import nodemailer from 'nodemailer';
+              const e = process.env;
+              const transport = nodemailer.createTransport({
+                host: e.SMTP_HOST,
+                port: Number(e.SMTP_PORT || 587),
+                secure: String(e.SMTP_SECURE).toLowerCase() === 'true',
+                requireTLS: String(e.SMTP_REQUIRE_TLS).toLowerCase() !== 'false',
+                auth: { user: e.SMTP_USERNAME, pass: e.SMTP_PASSWORD },
+                connectionTimeout: 10000,
+                greetingTimeout: 10000,
+                socketTimeout: 15000,
+              });
+              await transport.verify();
+              console.log('SMTP_AUTHENTICATION_VERIFY=PASS');
+              transport.close();
+              NODE
+            fi
+
+            docker compose -f docker-compose.staging.yml ps
+            echo 'SSH_RECOVERY_DEPLOY=PASS'
+
+      - name: Verify exact final release from public edge
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in $(seq 1 20); do
+            web="$(curl --fail --silent --show-error --max-time 10 "$PUBLIC_BASE/api/health" || true)"
+            live="$(WEB="$web" node -e 'try{process.stdout.write(JSON.parse(process.env.WEB||"{}").releaseSha||"")}catch{}')"
+            if [ "$live" = "$TARGET_SHA" ]; then
+              WEB="$web" node <<'NODE'
+              const body = JSON.parse(process.env.WEB);
+              if (!body.pipelineId || !body.artifactRef || !/^sha256:[0-9a-f]{64}$/.test(body.imageDigest || '') || !body.rollbackRef) throw new Error('Public immutable release identity incomplete');
+              console.log(`PUBLIC_RELEASE=${body.releaseSha}`);
+              console.log(`PUBLIC_PIPELINE=${body.pipelineId}`);
+              console.log('PUBLIC_RELEASE_IDENTITY=PASS');
+              NODE
+              exit 0
+            fi
+            sleep 5
+          done
+          echo '::error::Exact final release did not appear at public edge' >&2
+          exit 1
