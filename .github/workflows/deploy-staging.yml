@@ -139,28 +139,49 @@ jobs:
     needs: [prep, build-and-push, resolve-images]
     runs-on: ubuntu-latest
     environment: staging
+    permissions:
+      contents: read
+      packages: read
     steps:
       - uses: actions/checkout@v4
 
-      - name: Copy compose file to EC2
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.STAGING_HOST }}
-          username: ${{ secrets.STAGING_SSH_USER }}
-          key: ${{ secrets.STAGING_SSH_KEY }}
-          source: "infra/docker/docker-compose.staging.yml"
-          target: "/opt/skillup"
-          strip_components: 2
+      - name: Encode compose file for single SSH transfer
+        id: compose
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf 'compose_b64=' >> "$GITHUB_OUTPUT"
+          base64 -w0 infra/docker/docker-compose.staging.yml >> "$GITHUB_OUTPUT"
+          printf '\n' >> "$GITHUB_OUTPUT"
 
       - name: Deploy and certify internal Phase 1 gates on EC2
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
+          IMAGE_TAG: ${{ github.sha }}
+          PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+          WEB_ARTIFACT_REF: ${{ needs.resolve-images.outputs.web_artifact_ref }}
+          WEB_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
+          API_ARTIFACT_REF: ${{ needs.resolve-images.outputs.api_artifact_ref }}
+          API_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
+          AI_ARTIFACT_REF: ${{ needs.resolve-images.outputs.ai_artifact_ref }}
+          AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
+          PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
+          COMPOSE_B64: ${{ steps.compose.outputs.compose_b64 }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF
+          timeout: 60s
+          command_timeout: 20m
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64
           script: |
             set -euo pipefail
+            mkdir -p /opt/skillup
+            printf '%s' "$COMPOSE_B64" | base64 -d > /opt/skillup/docker-compose.staging.yml.tmp
+            mv /opt/skillup/docker-compose.staging.yml.tmp /opt/skillup/docker-compose.staging.yml
             cd /opt/skillup
             test -f .env || { echo "::error::/opt/skillup/.env is missing on the server" >&2; exit 1; }
 
@@ -206,7 +227,7 @@ jobs:
             chmod 600 .env
 
             docker compose -f docker-compose.staging.yml config --quiet
-            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
             docker compose -f docker-compose.staging.yml pull
             docker compose -f docker-compose.staging.yml up -d --remove-orphans
             docker compose -f docker-compose.staging.yml ps
@@ -246,19 +267,6 @@ jobs:
             rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
             docker image prune -f
             echo "INTERNAL PHASE 1 GATES: PASS"
-        env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
-          IMAGE_TAG: ${{ github.sha }}
-          PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
-          WEB_ARTIFACT_REF: ${{ needs.resolve-images.outputs.web_artifact_ref }}
-          WEB_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
-          API_ARTIFACT_REF: ${{ needs.resolve-images.outputs.api_artifact_ref }}
-          API_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
-          AI_ARTIFACT_REF: ${{ needs.resolve-images.outputs.ai_artifact_ref }}
-          AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
-          PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
 
       - name: Verify public staging edge from external runner
         shell: bash
