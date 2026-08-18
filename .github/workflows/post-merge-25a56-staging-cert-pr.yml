@@ -1,0 +1,146 @@
+name: Post-Merge 25a56 Staging Certification PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  certify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    environment: staging
+    env:
+      BASE: https://skillupshop.codistan.org
+      EXPECTED_SHA: 25a56cdbaf28272416a975b9eae5c9101f6b8fb8
+      STAGING_WEB_URL: https://skillupshop.codistan.org
+    steps:
+      - name: Wait for exact merged release
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in $(seq 1 80); do
+            body="$(curl --silent --show-error --max-time 10 "$BASE/api/health" || true)"
+            live_sha="$(BODY="$body" node -e 'try{const b=JSON.parse(process.env.BODY||"{}");process.stdout.write(typeof b.releaseSha==="string"?b.releaseSha:"")}catch{}')"
+            echo "attempt=$attempt release=${live_sha:-unavailable}"
+            if [ "$live_sha" = "$EXPECTED_SHA" ]; then exit 0; fi
+            sleep 15
+          done
+          echo "::error::Exact merged release did not become live"
+          exit 1
+
+      - name: Verify exact public release and auth contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          for endpoint in /api/health /api/v1/health /api/v1/ready; do
+            body="$(curl --fail --silent --show-error --max-time 15 "$BASE$endpoint")"
+            BODY="$body" node <<'NODE'
+          const b=JSON.parse(process.env.BODY);
+          if(b.status!=='ok') throw new Error('health not ok');
+          if(b.releaseSha!==process.env.EXPECTED_SHA) throw new Error('release mismatch');
+          if(!b.pipelineId||!b.artifactRef||!/^sha256:[0-9a-f]{64}$/.test(b.imageDigest||'')||!b.rollbackRef) throw new Error('immutable identity incomplete');
+          NODE
+          done
+          invalid=$(curl -sS -o /tmp/invalid -w '%{http_code}' --max-time 15 -H "Origin: $BASE" -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start")
+          test "$invalid" = 400
+          hostile=$(curl -sS -o /tmp/hostile -w '%{http_code}' --max-time 15 -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa@example.invalid"}' "$BASE/api/v1/auth/email/start")
+          test "$hostile" = 403
+          challenge='22222222-2222-4222-8222-222222222222'
+          four=$(curl -sS -o /tmp/four -w '%{http_code}' --max-time 15 -H "Origin: $BASE" -H 'Content-Type: application/json' --data "{\"challengeId\":\"$challenge\",\"code\":\"1234\"}" "$BASE/api/v1/auth/email/verify")
+          six=$(curl -sS -o /tmp/six -w '%{http_code}' --max-time 15 -H "Origin: $BASE" -H 'Content-Type: application/json' --data "{\"challengeId\":\"$challenge\",\"code\":\"123456\"}" "$BASE/api/v1/auth/email/verify")
+          test "$four" = 400 && test "$six" = 400
+          FOUR="$(cat /tmp/four)" SIX="$(cat /tmp/six)" node <<'NODE'
+          const four=JSON.parse(process.env.FOUR), six=JSON.parse(process.env.SIX);
+          if(!String(four.message||'').toLowerCase().includes('invalid or expired')) throw new Error('4-digit contract failed');
+          if(!String(six.message||'').toLowerCase().includes('payload is invalid')) throw new Error('6-digit schema rejection failed');
+          console.log('AUTH_CONTRACTS=PASS');
+          NODE
+
+      - name: Verify SMTP and commercial maintenance on deployed release
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 4m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+            import nodemailer from 'nodemailer';
+            const e=process.env;
+            const t=nodemailer.createTransport({host:e.SMTP_HOST,port:Number(e.SMTP_PORT||587),secure:String(e.SMTP_SECURE).toLowerCase()==='true',requireTLS:String(e.SMTP_REQUIRE_TLS).toLowerCase()!=='false',auth:{user:e.SMTP_USERNAME,pass:e.SMTP_PASSWORD},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000});
+            await t.verify(); console.log('SMTP_VERIFY=PASS'); t.close();
+            NODE
+            echo 'Waiting for a fresh maintenance interval...'
+            sleep 75
+            recent="$(docker logs --since 90s skillup-api-staging-container 2>&1 || true)"
+            if printf '%s' "$recent" | grep -q '"task":"commercial-automation".*"code":"42883"'; then
+              echo 'COMMERCIAL_MAINTENANCE=FAIL_42883'
+              exit 31
+            fi
+            if printf '%s' "$recent" | grep -q '"task":"commercial-automation".*"msg":"SkillUp maintenance task completed"'; then
+              echo 'COMMERCIAL_MAINTENANCE=PASS'
+            else
+              echo 'No completed commercial-maintenance line found in 90s; checking fixed SQL transactionally.'
+              docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+            import pg from 'pg'; const {Client}=pg; const c=new Client({connectionString:process.env.DATABASE_URL}); await c.connect(); await c.query('begin');
+            try { await c.query(`insert into commercial_jobs (job_type, order_id, status, run_after) select 'reconcile_order', po.id, 'queued', $1 from payment_orders po where po.status='pending' and po.updated_at <= $1::timestamptz - interval '30 minutes' on conflict (job_type, order_id) where order_id is not null and status in ('queued','running') do nothing`, [new Date()]); console.log('COMMERCIAL_RECONCILIATION_SQL=PASS'); } finally { await c.query('rollback'); await c.end(); }
+            NODE
+            fi
+
+      - name: Checkout exact merged source
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: ${{ env.EXPECTED_SHA }}
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+
+      - name: Install locked QA harness and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Run public Playwright suites
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @skillup/staging-certification exec playwright test tests/public.spec.mjs --project=public-desktop --reporter=line
+          pnpm --filter @skillup/staging-certification exec playwright test tests/accessibility-public.spec.mjs --project=public-desktop --reporter=line
+
+      - name: Robust browser navigation and runtime proof
+        shell: bash
+        working-directory: qa/staging-certification
+        run: |
+          set -euo pipefail
+          node --input-type=module <<'NODE'
+          import { chromium } from '@playwright/test';
+          const browser=await chromium.launch({headless:true});
+          const page=await browser.newPage();
+          const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+          const routes=['/en','/en/skills','/en/pricing','/en/sign-in','/en/paths/digital-marketing-foundations'];
+          for(const route of routes){
+            let response=null;
+            for(let attempt=1;attempt<=3&&!response;attempt++){
+              response=await page.goto(process.env.STAGING_WEB_URL+route,{waitUntil:'domcontentloaded',timeout:20000}).catch(()=>null);
+              if(!response) await page.waitForTimeout(1000);
+            }
+            if(!response) throw new Error(`${route}: navigation returned no response after retries`);
+            if(!response.ok()) throw new Error(`${route}: HTTP ${response.status()}`);
+            console.log(`${route}=PASS ${response.status()}`);
+          }
+          if(errors.length) throw new Error(`uncaught page errors: ${errors.join(' | ')}`);
+          await browser.close();
+          console.log('ROBUST_BROWSER_RUNTIME=PASS');
+          NODE
