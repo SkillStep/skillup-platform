@@ -106,6 +106,7 @@ jobs:
 
           replace_once('apps/api/src/auth.ts', 'code: z.string().regex(/^\\d{6}$/),', 'code: z.string().regex(/^\\d{4}$/),', 'auth verify schema')
           replace_once('apps/api/src/auth.ts', 'return randomInt(0, 1_000_000).toString().padStart(6, "0");', 'return randomInt(0, 10_000).toString().padStart(4, "0");', 'auth code generation')
+          replace_once('apps/api/src/app.test.ts', 'code: "123456",', 'code: "1234",', 'API verification test fixture')
 
           signin = Path('apps/web/app/[locale]/sign-in/sign-in-form.tsx')
           text = signin.read_text()
@@ -153,14 +154,14 @@ jobs:
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
           pnpm shared:build
-          pnpm exec biome format --write tools/staging-certification.mjs qa/staging-certification/playwright.config.mjs qa/staging-certification/tests/premium.spec.mjs qa/staging-certification/helpers/identity.mjs qa/staging-certification/tests/auth-negative.spec.mjs apps/api/src/auth.ts 'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
+          pnpm exec biome format --write tools/staging-certification.mjs qa/staging-certification/playwright.config.mjs qa/staging-certification/tests/premium.spec.mjs qa/staging-certification/helpers/identity.mjs qa/staging-certification/tests/auth-negative.spec.mjs apps/api/src/auth.ts apps/api/src/app.test.ts 'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
           node --check tools/staging-certification.mjs
           node --check qa/staging-certification/playwright.config.mjs
           node --check qa/staging-certification/tests/premium.spec.mjs
           pnpm --filter @skillup/api test
           pnpm --filter @skillup/api typecheck
           pnpm --filter @skillup/web typecheck
-          git add tools/staging-certification.mjs qa/staging-certification/playwright.config.mjs qa/staging-certification/tests/premium.spec.mjs qa/staging-certification/helpers/identity.mjs qa/staging-certification/tests/auth-negative.spec.mjs apps/api/src/auth.ts 'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
+          git add tools/staging-certification.mjs qa/staging-certification/playwright.config.mjs qa/staging-certification/tests/premium.spec.mjs qa/staging-certification/helpers/identity.mjs qa/staging-certification/tests/auth-negative.spec.mjs apps/api/src/auth.ts apps/api/src/app.test.ts 'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
           git diff --cached --check
           if git diff --cached --quiet; then exit 0; fi
           git commit -m "fix: finalize staging gates and four-digit email OTP"
