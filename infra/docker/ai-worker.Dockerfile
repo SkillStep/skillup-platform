@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM python:3.13.14-slim-bookworm AS runtime
+FROM python:3.14.7-slim-bookworm AS runtime
 
 ARG RELEASE_SHA=unknown
 LABEL org.opencontainers.image.source="https://github.com/SkillStep/skillup-platform" \
