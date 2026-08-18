@@ -1,0 +1,62 @@
+name: Targeted Staging Diagnostic
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Diagnose live staging responses
+        shell: bash
+        env:
+          BASE: https://skillupshop.codistan.org
+        run: |
+          set -euo pipefail
+          echo '=== WEB HEALTH ==='
+          curl -sS --max-time 20 "$BASE/api/health"; echo
+          echo '=== API VERSION ==='
+          curl -sS --max-time 20 "$BASE/api/v1/version"; echo
+          echo '=== TRUSTED ORIGIN / INVALID EMAIL ==='
+          curl -sS -D /tmp/trusted.h -o /tmp/trusted.b --max-time 20 \
+            -H "Origin: $BASE" -H 'Content-Type: application/json' \
+            --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start" || true
+          head -1 /tmp/trusted.h
+          head -c 800 /tmp/trusted.b; echo
+          echo '=== HOSTILE ORIGIN ==='
+          curl -sS -D /tmp/hostile.h -o /tmp/hostile.b --max-time 20 \
+            -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' \
+            --data '{"email":"qa-security@example.invalid"}' "$BASE/api/v1/auth/email/start" || true
+          head -1 /tmp/hostile.h
+          head -c 800 /tmp/hostile.b; echo
+          echo '=== EMAIL PROVIDER PROBE ==='
+          curl -sS -D /tmp/email.h -o /tmp/email.b --max-time 20 \
+            -H "Origin: $BASE" -H 'Content-Type: application/json' \
+            --data '{"email":"blackbox-probe@example.invalid"}' "$BASE/api/v1/auth/email/start" || true
+          head -1 /tmp/email.h
+          head -c 800 /tmp/email.b; echo
+          echo '=== PRICING PAGE SIGNALS ==='
+          curl -L -sS --max-time 20 "$BASE/en/pricing" -o /tmp/pricing.html
+          node <<'NODE'
+          const fs=require('fs');
+          let html=fs.readFileSync('/tmp/pricing.html','utf8');
+          const decoded=html
+            .replace(/<script[\s\S]*?<\/script>/gi,' ')
+            .replace(/<style[\s\S]*?<\/style>/gi,' ')
+            .replace(/<[^>]+>/g,' ')
+            .replace(/&nbsp;/g,' ')
+            .replace(/&amp;/g,'&')
+            .replace(/&#x27;/g,"'")
+            .replace(/&quot;/g,'"')
+            .replace(/\s+/g,' ')
+            .trim();
+          const signals=['PKR 599','PKR 4,999','599','4,999','Planned','Premium','Coming soon'];
+          for(const s of signals) console.log(`${s}: ${decoded.toLowerCase().includes(s.toLowerCase())}`);
+          console.log('TEXT:', decoded.slice(0,2500));
+          NODE
