@@ -1,0 +1,120 @@
+name: Verify Hardened Main Staging Deploy
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      TARGET_SHA: 9ea1922117c6dad6dd0252b6e2535e22e76bb6d8
+      BASE: https://skillupshop.codistan.org
+    steps:
+      - name: Wait for exact Staging Deploy run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          deploy_id=''
+          for attempt in $(seq 1 40); do
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/$REPO/actions/runs?head_sha=$TARGET_SHA&per_page=100" > /tmp/runs.json
+            deploy_id="$(RUNS="$(cat /tmp/runs.json)" node -e 'const b=JSON.parse(process.env.RUNS); const r=(b.workflow_runs||[]).find(x=>x.name==="Staging Deploy"); if(r) process.stdout.write(String(r.id));')"
+            if [ -n "$deploy_id" ]; then break; fi
+            echo "Attempt $attempt: Staging Deploy run not visible yet"
+            sleep 10
+          done
+          test -n "$deploy_id" || { echo '::error::No Staging Deploy run found for target SHA' >&2; exit 1; }
+          echo "DEPLOY_RUN_ID=$deploy_id" >> "$GITHUB_ENV"
+
+          for attempt in $(seq 1 100); do
+            curl --fail --silent --show-error \
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H 'Accept: application/vnd.github+json' \
+              -H 'X-GitHub-Api-Version: 2022-11-28' \
+              "https://api.github.com/repos/$REPO/actions/runs/$deploy_id" > /tmp/deploy.json
+            read -r status conclusion < <(DEPLOY="$(cat /tmp/deploy.json)" node -e 'const r=JSON.parse(process.env.DEPLOY); console.log(r.status, r.conclusion||"null")')
+            echo "Attempt $attempt: deploy status=$status conclusion=$conclusion"
+            if [ "$status" = completed ]; then
+              test "$conclusion" = success || { echo "::error::Staging Deploy concluded $conclusion" >&2; exit 1; }
+              exit 0
+            fi
+            sleep 10
+          done
+          echo '::error::Timed out waiting for Staging Deploy' >&2
+          exit 1
+
+      - name: Prove deploy job used single SSH path and passed external gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H 'Accept: application/vnd.github+json' \
+            -H 'X-GitHub-Api-Version: 2022-11-28' \
+            "https://api.github.com/repos/$REPO/actions/runs/$DEPLOY_RUN_ID/jobs?per_page=100" > /tmp/jobs.json
+          JOBS="$(cat /tmp/jobs.json)" node <<'NODE'
+          const body = JSON.parse(process.env.JOBS);
+          const deploy = (body.jobs || []).find((j) => j.name === 'deploy');
+          if (!deploy) throw new Error('deploy job not found');
+          if (deploy.conclusion !== 'success') throw new Error(`deploy job conclusion=${deploy.conclusion}`);
+          const steps = new Map((deploy.steps || []).map((s) => [s.name, s]));
+          if (steps.has('Copy compose file to EC2')) throw new Error('legacy separate SCP step is still present');
+          for (const name of [
+            'Encode compose file for single SSH transfer',
+            'Deploy and certify internal Phase 1 gates on EC2',
+            'Verify public staging edge from external runner',
+            'Write sanitized staging deployment identity',
+            'Upload sanitized staging deployment identity',
+          ]) {
+            const step = steps.get(name);
+            if (!step || step.conclusion !== 'success') throw new Error(`${name} did not pass`);
+          }
+          console.log('SINGLE_SSH_DEPLOYMENT_PATH=PASS');
+          NODE
+
+      - name: Verify exact SHA and immutable identity from public edge
+        shell: bash
+        run: |
+          set -euo pipefail
+          web="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/health")"
+          api="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/health")"
+          ready="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/ready")"
+          WEB="$web" API="$api" READY="$ready" node <<'NODE'
+          for (const [name, raw, service] of [
+            ['web', process.env.WEB, 'skillup-web'],
+            ['api', process.env.API, 'skillup-api'],
+            ['ready', process.env.READY, 'skillup-api'],
+          ]) {
+            const b = JSON.parse(raw);
+            if (b.status !== 'ok' || b.service !== service) throw new Error(`${name} health failed`);
+            if (b.releaseSha !== process.env.TARGET_SHA) throw new Error(`${name} SHA mismatch: ${b.releaseSha}`);
+            if (!b.pipelineId || !b.artifactRef || !/^sha256:[0-9a-f]{64}$/.test(b.imageDigest || '') || !b.rollbackRef) throw new Error(`${name} immutable identity incomplete`);
+          }
+          console.log('PUBLIC_EXACT_RELEASE_IDENTITY=PASS');
+          NODE
+
+          invalid="$(curl --silent --show-error -o /tmp/invalid.json -w '%{http_code}' --max-time 10 -H "Origin: $BASE" -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' "$BASE/api/v1/auth/email/start")"
+          test "$invalid" = 400 || { echo "::error::Expected invalid email 400, got $invalid"; cat /tmp/invalid.json; exit 1; }
+          hostile="$(curl --silent --show-error -o /tmp/hostile.json -w '%{http_code}' --max-time 10 -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa@example.invalid"}' "$BASE/api/v1/auth/email/start")"
+          test "$hostile" = 403 || { echo "::error::Expected hostile Origin 403, got $hostile"; cat /tmp/hostile.json; exit 1; }
+          echo 'PUBLIC_AUTH_BOUNDARIES=PASS'
+
+      - name: Result
+        run: |
+          echo 'HARDENED_STAGING_DEPLOYMENT=PASS'
+          echo "Release=$TARGET_SHA"
