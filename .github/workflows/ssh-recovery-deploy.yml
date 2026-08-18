@@ -1,0 +1,196 @@
+name: SSH-Only Final Staging Recovery
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  recover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    environment: staging
+    env:
+      TARGET_SHA: 59604af3a9f1e6e76b35251113130969ce52e9c5
+      IMAGE_BASE: ghcr.io/skillstep/skillup-platform
+      PUBLIC_BASE: https://skillupshop.codistan.org
+    steps:
+      - name: Checkout exact main release
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: 59604af3a9f1e6e76b35251113130969ce52e9c5
+          persist-credentials: false
+
+      - name: Prepare compose payload
+        id: compose
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "b64=$(base64 -w0 infra/docker/docker-compose.staging.yml)" >> "$GITHUB_OUTPUT"
+
+      - name: Resolve immutable release identity
+        id: identity
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "$GH_TOKEN" | docker login ghcr.io -u '${{ github.actor }}' --password-stdin >/dev/null
+          resolve_digest() {
+            local ref="$1"
+            local digest
+            digest="$(docker buildx imagetools inspect "$ref" --format '{{.Manifest.Digest}}')"
+            [[ "$digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "Invalid digest for $ref: $digest" >&2; exit 1; }
+            printf '%s' "$digest"
+          }
+          web_ref="$IMAGE_BASE-web:$TARGET_SHA"
+          api_ref="$IMAGE_BASE-api:$TARGET_SHA"
+          ai_ref="$IMAGE_BASE-ai-worker:$TARGET_SHA"
+          echo "web_ref=$web_ref" >> "$GITHUB_OUTPUT"
+          echo "web_digest=$(resolve_digest "$web_ref")" >> "$GITHUB_OUTPUT"
+          echo "api_ref=$api_ref" >> "$GITHUB_OUTPUT"
+          echo "api_digest=$(resolve_digest "$api_ref")" >> "$GITHUB_OUTPUT"
+          echo "ai_ref=$ai_ref" >> "$GITHUB_OUTPUT"
+          echo "ai_digest=$(resolve_digest "$ai_ref")" >> "$GITHUB_OUTPUT"
+          health="$(curl --fail --silent --show-error --max-time 10 "$PUBLIC_BASE/api/health" || true)"
+          previous="$(HEALTH="$health" node <<'NODE'
+          try {
+            const h = JSON.parse(process.env.HEALTH || '{}');
+            const artifact = typeof h.artifactRef === 'string' ? h.artifactRef.trim() : '';
+            if (artifact && artifact !== 'local' && artifact !== 'unknown') process.stdout.write(artifact);
+            else {
+              const sha = typeof h.releaseSha === 'string' ? h.releaseSha.trim() : '';
+              process.stdout.write(sha && sha !== 'local' ? `git:${sha}` : 'bootstrap:no-previous-certified-release');
+            }
+          } catch { process.stdout.write('bootstrap:no-previous-certified-release'); }
+          NODE
+          )"
+          echo "previous=$previous" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy exact release over a single SSH session
+        id: sshdeploy
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17 # v1.2.0
+        env:
+          GH_ACTOR: ${{ github.actor }}
+          GH_TOKEN: ${{ github.token }}
+          IMAGE_TAG: 59604af3a9f1e6e76b35251113130969ce52e9c5
+          PIPELINE_ID: recovery-${{ github.run_id }}-${{ github.run_attempt }}
+          WEB_ARTIFACT_REF: ${{ steps.identity.outputs.web_ref }}
+          WEB_IMAGE_DIGEST: ${{ steps.identity.outputs.web_digest }}
+          API_ARTIFACT_REF: ${{ steps.identity.outputs.api_ref }}
+          API_IMAGE_DIGEST: ${{ steps.identity.outputs.api_digest }}
+          AI_ARTIFACT_REF: ${{ steps.identity.outputs.ai_ref }}
+          AI_IMAGE_DIGEST: ${{ steps.identity.outputs.ai_digest }}
+          PREVIOUS_RELEASE_REF: ${{ steps.identity.outputs.previous }}
+          COMPOSE_B64: ${{ steps.compose.outputs.b64 }}
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 20m
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64
+          script: |
+            set -euo pipefail
+            mkdir -p /opt/skillup
+            printf '%s' "$COMPOSE_B64" | base64 -d > /opt/skillup/docker-compose.staging.yml.tmp
+            mv /opt/skillup/docker-compose.staging.yml.tmp /opt/skillup/docker-compose.staging.yml
+            cd /opt/skillup
+            test -f .env || { echo '::error::/opt/skillup/.env is missing' >&2; exit 1; }
+
+            python3 - <<'PY'
+            import os
+            from pathlib import Path
+            path = Path('.env')
+            updates = {
+                'APP_ENV': 'staging',
+                'PUBLIC_APP_URL': 'https://skillupshop.codistan.org',
+                'API_BASE_URL': 'http://api:3001',
+                'RELEASE_SHA': os.environ['IMAGE_TAG'],
+                'RELEASE_PIPELINE_ID': os.environ['PIPELINE_ID'],
+                'ROLLBACK_ARTIFACT_REF': os.environ['PREVIOUS_RELEASE_REF'],
+                'WEB_RELEASE_ARTIFACT_REF': os.environ['WEB_ARTIFACT_REF'],
+                'WEB_RELEASE_IMAGE_DIGEST': os.environ['WEB_IMAGE_DIGEST'],
+                'API_RELEASE_ARTIFACT_REF': os.environ['API_ARTIFACT_REF'],
+                'API_RELEASE_IMAGE_DIGEST': os.environ['API_IMAGE_DIGEST'],
+                'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
+                'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
+            }
+            lines = path.read_text(encoding='utf-8').splitlines()
+            out, written = [], set()
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    out.append(line); continue
+                key = line.split('=',1)[0].strip()
+                if key in updates:
+                    if key not in written:
+                        out.append(f'{key}={updates[key]}'); written.add(key)
+                    continue
+                out.append(line)
+            for key, value in updates.items():
+                if key not in written: out.append(f'{key}={value}')
+            path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+            PY
+            chmod 600 .env
+
+            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
+            docker compose -f docker-compose.staging.yml config --quiet
+            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+
+            wait_for() {
+              label="$1"; url="$2"
+              for n in $(seq 1 50); do
+                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then echo "$label PASS"; return 0; fi
+                sleep 2
+              done
+              echo "::error::$label failed: $url" >&2; return 1
+            }
+            wait_for 'API health' 'http://127.0.0.1:4020/v1/health'
+            wait_for 'API DB readiness' 'http://127.0.0.1:4020/v1/ready'
+            wait_for 'Web health' 'http://127.0.0.1:3020/api/health'
+
+            invalid="$(curl --silent --show-error -o /tmp/invalid.json -w '%{http_code}' -H 'Origin: https://skillupshop.codistan.org' -H 'Content-Type: application/json' --data '{"email":"not-an-email"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$invalid" = 400 || { cat /tmp/invalid.json >&2; exit 1; }
+            hostile="$(curl --silent --show-error -o /tmp/hostile.json -w '%{http_code}' -H 'Origin: https://attacker.invalid' -H 'Content-Type: application/json' --data '{"email":"qa@example.invalid"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
+            test "$hostile" = 403 || { cat /tmp/hostile.json >&2; exit 1; }
+
+            python3 - <<'PY'
+            from pathlib import Path
+            vals={}
+            for line in Path('.env').read_text().splitlines():
+                if line and not line.lstrip().startswith('#') and '=' in line:
+                    k,v=line.split('=',1); vals[k.strip()]=v.strip()
+            required=['EMAIL_FROM','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD']
+            ready=vals.get('EMAIL_PROVIDER')=='smtp' and all(vals.get(k) for k in required)
+            print('SERVER_SMTP_CONFIGURATION=' + ('PRESENT' if ready else 'INCOMPLETE'))
+            Path('/tmp/skillup-smtp-ready').write_text('true' if ready else 'false')
+            PY
+
+            if [ "$(cat /tmp/skillup-smtp-ready)" = true ]; then
+              docker compose -f docker-compose.staging.yml exec -T api node --input-type=module <<'NODE'
+              import nodemailer from 'nodemailer';
+              const e=process.env;
+              const t=nodemailer.createTransport({host:e.SMTP_HOST,port:Number(e.SMTP_PORT||587),secure:String(e.SMTP_SECURE).toLowerCase()==='true',requireTLS:String(e.SMTP_REQUIRE_TLS).toLowerCase()!=='false',auth:{user:e.SMTP_USERNAME,pass:e.SMTP_PASSWORD},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000});
+              await t.verify(); console.log('SMTP_AUTHENTICATION_VERIFY=PASS'); t.close();
+              NODE
+            fi
+            docker compose -f docker-compose.staging.yml ps
+            echo 'SSH_ONLY_RECOVERY_DEPLOY=PASS'
+
+      - name: Verify exact release from public edge
+        shell: bash
+        run: |
+          set -euo pipefail
+          for n in $(seq 1 20); do
+            body="$(curl --fail --silent --show-error --max-time 10 "$PUBLIC_BASE/api/health" || true)"
+            live="$(BODY="$body" node -e 'try{process.stdout.write(JSON.parse(process.env.BODY||"{}").releaseSha||"")}catch{}')"
+            if [ "$live" = "$TARGET_SHA" ]; then echo "PUBLIC_RELEASE=$live PASS"; exit 0; fi
+            sleep 5
+          done
+          echo '::error::Exact recovery release did not appear at public edge' >&2
+          exit 1
