@@ -1,0 +1,54 @@
+name: Diagnose Digital Marketing Path PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - name: Probe public route stability
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://skillupshop.codistan.org'
+          for route in \
+            '/en/paths/digital-marketing-foundations' \
+            '/en/skills/digital-marketing-foundations' \
+            '/en/paths/freelancing-foundations'; do
+            echo "=== $route ==="
+            for n in 1 2 3 4 5; do
+              code=$(curl -L -sS -o /tmp/body -D /tmp/headers -w '%{http_code}' --max-time 20 "$base$route" || true)
+              echo "attempt=$n status=$code bytes=$(wc -c < /tmp/body)"
+              if [ "$code" != 200 ]; then
+                grep -iE '^(content-type|cache-control|x-request-id|server):' /tmp/headers || true
+                echo 'BODY_START'
+                head -c 1800 /tmp/body | tr '\n' ' ' || true
+                echo
+                echo 'BODY_END'
+              fi
+              sleep 1
+            done
+          done
+
+      - name: Inspect route locally and recent container logs
+        uses: appleboy/ssh-action@7eaf76671a0d7eec5d98ee897acda4f968735a17
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 3m
+          script: |
+            set -euo pipefail
+            echo '=== LOCAL DIGITAL MARKETING PATH ==='
+            curl -L -sS -D /tmp/dmh -o /tmp/dmb -w 'status=%{http_code} bytes=%{size_download}\n' --max-time 20 http://127.0.0.1:3020/en/paths/digital-marketing-foundations || true
+            grep -iE '^(content-type|cache-control|x-request-id):' /tmp/dmh || true
+            echo '=== WEB LOG TAIL ==='
+            docker logs --tail 160 skillup-web-staging-container 2>&1 || true
+            echo '=== API LOG TAIL ==='
+            docker logs --tail 160 skillup-api-staging-container 2>&1 || true
