@@ -152,6 +152,7 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
+          pnpm shared:build
           pnpm exec biome format --write tools/staging-certification.mjs qa/staging-certification/playwright.config.mjs qa/staging-certification/tests/premium.spec.mjs qa/staging-certification/helpers/identity.mjs qa/staging-certification/tests/auth-negative.spec.mjs apps/api/src/auth.ts 'apps/web/app/[locale]/sign-in/sign-in-form.tsx'
           node --check tools/staging-certification.mjs
           node --check qa/staging-certification/playwright.config.mjs
