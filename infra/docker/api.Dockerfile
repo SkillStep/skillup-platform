@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-FROM node:24.18.0-bookworm-slim AS build
+FROM node:26.7.0-bookworm-slim AS build
 
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
@@ -17,7 +17,7 @@ RUN --mount=type=cache,id=skillup-pnpm,target=/pnpm/store \
 RUN pnpm shared:build && pnpm --filter @skillup/api build
 RUN pnpm --filter @skillup/api --prod deploy --legacy /out/api
 
-FROM node:24.18.0-bookworm-slim AS runtime
+FROM node:26.7.0-bookworm-slim AS runtime
 
 ARG RELEASE_SHA=unknown
 LABEL org.opencontainers.image.source="https://github.com/SkillStep/skillup-platform" \
