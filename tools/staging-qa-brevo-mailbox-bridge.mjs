@@ -199,7 +199,7 @@ const server = http.createServer(async (request, response) => {
 
     sendJson(response, 200, { code });
   } catch (error) {
-    const statusCode = error?.statusCode === 429 ? 503 : error?.statusCode >= 500 ? 503 : 400;
+    const statusCode = error?.statusCode ? 503 : 400;
     sendJson(response, statusCode, {
       error: statusCode === 503 ? "mailbox_provider_unavailable" : "invalid_request",
     });
