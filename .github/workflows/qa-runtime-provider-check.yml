@@ -1,0 +1,59 @@
+name: QA Runtime Provider Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
+          chmod 600 /tmp/staging-key
+      - name: Verify runtime and SMTP without printing credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+          for c in skillup-postgres-staging-container skillup-api-staging-container skillup-web-staging-container skillup-ai-worker-staging-container; do
+            state="$(docker inspect "$c" --format '{{.State.Status}}')"
+            health="$(docker inspect "$c" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')"
+            echo "$c state=$state health=$health"
+            test "$state" = running
+            if [ "$health" != none ]; then test "$health" = healthy; fi
+          done
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:4020/v1/health >/dev/null
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:4020/v1/ready >/dev/null
+          curl --fail --silent --show-error --max-time 10 http://127.0.0.1:3020/api/health >/dev/null
+          echo 'LOCAL_WEB_API_DATABASE=PASS'
+          python3 - <<'PY'
+          from pathlib import Path
+          vals={}
+          for line in Path('.env').read_text().splitlines():
+              s=line.strip()
+              if s and not s.startswith('#') and '=' in s:
+                  k,v=s.split('=',1); vals[k.strip()]=v.strip()
+          required=['EMAIL_FROM','SMTP_HOST','SMTP_PORT','SMTP_USERNAME','SMTP_PASSWORD']
+          ready=vals.get('EMAIL_PROVIDER')=='smtp' and all(vals.get(k) for k in required)
+          print('SMTP_CONFIGURATION='+('PRESENT' if ready else 'INCOMPLETE'))
+          if not ready: raise SystemExit(20)
+          PY
+          docker compose -f docker-compose.staging.yml exec -T api node --input-type=module -e "import nodemailer from 'nodemailer'; const e=process.env; const t=nodemailer.createTransport({host:e.SMTP_HOST,port:Number(e.SMTP_PORT||587),secure:String(e.SMTP_SECURE).toLowerCase()==='true',requireTLS:String(e.SMTP_REQUIRE_TLS).toLowerCase()!=='false',auth:{user:e.SMTP_USERNAME,pass:e.SMTP_PASSWORD},connectionTimeout:10000,greetingTimeout:10000,socketTimeout:15000}); await t.verify(); console.log('SMTP_AUTHENTICATION_VERIFY=PASS'); t.close();"
+          echo 'STAGING_RUNTIME_PROVIDER_CHECKS=PASS'
+          REMOTE
+          rm -f /tmp/staging-key
