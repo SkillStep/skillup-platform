@@ -43,7 +43,8 @@ function parseAfter(value, now = Date.now()) {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) throw new Error("after must be a valid ISO timestamp.");
   if (timestamp > now + CLOCK_SKEW_MS) throw new Error("after cannot be in the future.");
-  if (timestamp < now - MAX_LOOKBACK_MS) throw new Error("after is outside the allowed QA lookup window.");
+  if (timestamp < now - MAX_LOOKBACK_MS)
+    throw new Error("after is outside the allowed QA lookup window.");
   return new Date(timestamp).toISOString();
 }
 
@@ -157,7 +158,10 @@ function runSelfTest() {
   if (parseAfter("2026-08-19T16:59:58.000Z", now) !== "2026-08-19T16:59:58.000Z") {
     throw new Error("after parsing failed");
   }
-  if (!constantTimeEqual("same-token", "same-token") || constantTimeEqual("same-token", "other-token")) {
+  if (
+    !constantTimeEqual("same-token", "same-token") ||
+    constantTimeEqual("same-token", "other-token")
+  ) {
     throw new Error("bearer token comparison failed");
   }
   if (shellQuote("safe'value") !== `'safe'"'"'value'`) throw new Error("shell quoting failed");
@@ -174,9 +178,12 @@ const host = process.env.STAGING_QA_MAILBOX_HOST?.trim() || DEFAULT_HOST;
 const port = Number.parseInt(process.env.STAGING_QA_MAILBOX_PORT ?? String(DEFAULT_PORT), 10);
 const allowedEmails = qaEmailAllowlist();
 
-if (host !== DEFAULT_HOST) throw new Error("The staging QA SSH OTP bridge must bind to 127.0.0.1 only.");
-if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("Invalid staging QA SSH OTP bridge port.");
-if (allowedEmails.size === 0) throw new Error("No staging QA email aliases are configured for the SSH OTP bridge.");
+if (host !== DEFAULT_HOST)
+  throw new Error("The staging QA SSH OTP bridge must bind to 127.0.0.1 only.");
+if (!Number.isInteger(port) || port < 1024 || port > 65535)
+  throw new Error("Invalid staging QA SSH OTP bridge port.");
+if (allowedEmails.size === 0)
+  throw new Error("No staging QA email aliases are configured for the SSH OTP bridge.");
 
 const server = http.createServer(async (request, response) => {
   try {
