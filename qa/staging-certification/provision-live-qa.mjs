@@ -175,7 +175,7 @@ try {
     await db.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, evidence_reference, previous_status, next_status)
-       values ($1, 'qa_fixture_grant', 'system', 'Staging UAT certification premium fixture', $2, null, 'active')`,
+       values ($1, 'activate', 'system', 'Staging UAT certification premium fixture', $2, null, 'active')`,
       [entitlement.rows[0].id, `release:${releaseSha}`],
     );
   }
@@ -184,15 +184,15 @@ try {
     `update entitlements
         set status = 'revoked', revoked_at = coalesce(revoked_at, now()), updated_at = now()
       where user_id = $1 and status in ('active', 'grace')
-      returning id`,
+      returning id, status`,
     [freeId],
   );
   for (const row of freeEntitlements.rows) {
     await db.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, evidence_reference, previous_status, next_status)
-       values ($1, 'qa_fixture_revoke', 'system', 'Maintain deterministic free learner fixture', $2, 'active', 'revoked')`,
-      [row.id, `release:${releaseSha}`],
+       values ($1, 'revoke', 'system', 'Maintain deterministic free learner fixture', $2, $3, 'revoked')`,
+      [row.id, `release:${releaseSha}`, row.status === "grace" ? "grace" : "active"],
     );
   }
 
