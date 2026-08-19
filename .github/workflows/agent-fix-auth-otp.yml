@@ -11,12 +11,15 @@ jobs:
   repair:
     if: github.head_ref == 'fix/auth-otp-postgres-typing-20260819'
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           ref: fix/auth-otp-postgres-typing-20260819
           fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
       - name: Patch the ambiguous PostgreSQL session insert and add a real-DB regression
         shell: bash
         run: |
@@ -103,7 +106,7 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
-          pnpm exec prettier --write apps/api/src/auth.ts apps/api/src/auth-postgres.test.ts
+          pnpm format
           pnpm --filter @skillup/api typecheck
           git diff --check
       - name: Commit source repair only
