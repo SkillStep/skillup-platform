@@ -134,6 +134,7 @@ jobs:
       STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL || 'skillup+qa-revoked-admin@codistan.org' }}
       STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
       STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+      STAGING_BREVO_API_KEY: ${{ secrets.STAGING_BREVO_API_KEY }}
 
     steps:
       - name: Checkout exact candidate
@@ -175,8 +176,12 @@ jobs:
           done
 
           if [ "${STAGING_REQUIRE_EMAIL,,}" = "true" ]; then
-            [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || missing+=("STAGING_QA_MAILBOX_URL")
-            [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ] || missing+=("STAGING_QA_MAILBOX_TOKEN")
+            if [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
+              [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || missing+=("STAGING_QA_MAILBOX_URL")
+              [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ] || missing+=("STAGING_QA_MAILBOX_TOKEN")
+            elif [ -z "${STAGING_BREVO_API_KEY:-}" ]; then
+              missing+=("STAGING_BREVO_API_KEY")
+            fi
           fi
 
           if [ "${STAGING_REQUIRE_AI,,}" = "true" ]; then
@@ -191,6 +196,47 @@ jobs:
           fi
 
           echo "STAGING CERTIFICATION WIRING: PASS"
+
+      - name: Start protected QA mailbox bridge
+        if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ -n "${STAGING_QA_MAILBOX_URL:-}" ] && [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
+            echo "Using explicitly configured staging QA mailbox bridge."
+            exit 0
+          fi
+
+          node tools/staging-qa-brevo-mailbox-bridge.mjs --self-test
+
+          bridge_token="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))")"
+          echo "::add-mask::$bridge_token"
+          echo "STAGING_QA_MAILBOX_URL=http://127.0.0.1:4343/otp" >> "$GITHUB_ENV"
+          echo "STAGING_QA_MAILBOX_TOKEN=$bridge_token" >> "$GITHUB_ENV"
+
+          bridge_log="$RUNNER_TEMP/skillup-staging-qa-mailbox-bridge.log"
+          bridge_pid="$RUNNER_TEMP/skillup-staging-qa-mailbox-bridge.pid"
+          STAGING_QA_MAILBOX_TOKEN="$bridge_token" \
+            nohup node tools/staging-qa-brevo-mailbox-bridge.mjs >"$bridge_log" 2>&1 &
+          echo "$!" > "$bridge_pid"
+
+          ready=false
+          for attempt in $(seq 1 20); do
+            if curl --fail --silent --show-error --max-time 2 http://127.0.0.1:4343/health >/dev/null; then
+              ready=true
+              break
+            fi
+            sleep 1
+          done
+
+          if [ "$ready" != true ]; then
+            echo "::error::The runner-local staging QA mailbox bridge did not become healthy." >&2
+            cat "$bridge_log" >&2 || true
+            exit 1
+          fi
+
+          echo "STAGING QA MAILBOX BRIDGE: READY (Brevo-backed, loopback-only)"
 
       - name: Install locked workspace and Chromium
         shell: bash
@@ -253,10 +299,16 @@ jobs:
           STAGING_DEEPSEEK_READY: "true"
         run: node tools/staging-certification.mjs
 
-      - name: Remove browser authentication state
+      - name: Remove browser authentication state and stop QA mailbox bridge
         if: always()
         shell: bash
-        run: rm -rf qa/staging-certification/artifacts/.auth
+        run: |
+          rm -rf qa/staging-certification/artifacts/.auth
+          bridge_pid="$RUNNER_TEMP/skillup-staging-qa-mailbox-bridge.pid"
+          if [ -f "$bridge_pid" ]; then
+            kill "$(cat "$bridge_pid")" >/dev/null 2>&1 || true
+            rm -f "$bridge_pid"
+          fi
 
       - name: Upload sanitized certification evidence
         if: always()
