@@ -1,4 +1,4 @@
-name: QA Diagnose Staging Functional Failures
+name: QA Diagnose Functional Failures Locally
 
 on:
   pull_request:
@@ -11,41 +11,68 @@ jobs:
   diagnose:
     if: github.head_ref == 'qa/final-staging-8f5a3db'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    environment: staging
+    timeout-minutes: 20
     env:
-      STAGING_HOST: ${{ secrets.STAGING_HOST }}
-      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+      APP_ENV: test
+      DATABASE_URL: postgresql://skillup_local:skillup_local_only@127.0.0.1:5432/skillup
+      POSTGRES_DB: skillup
+      POSTGRES_USER: skillup_local
+      POSTGRES_PASSWORD: skillup_local_only
+      PUBLIC_APP_URL: https://skillup.example
+      SESSION_SECRET: ci-only-session-secret-at-least-32-random-bytes
+      EMAIL_PROVIDER: disabled
+      FEATURE_AI_GENERATION_ENABLED: "false"
+      AI_PROVIDER: disabled
+      AI_FALLBACK_PROVIDER: disabled
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
-      - name: Locate relevant source contracts
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Build exact launch database
         shell: bash
         run: |
           set -euo pipefail
-          echo '=== GAMEPLAY SOURCE MATCHES ==='
-          grep -RIn --exclude='*.map' -E 'published level version|published.*level|level_versions|gameplay/levels' apps packages tools | head -120 || true
-          echo '=== PREMIUM REPORT SOURCE MATCHES ==='
-          grep -RIn --exclude='*.map' -E 'reports/premium|premium/summary|payment\.reconcile|security_admin|learner.support' apps packages | head -180 || true
-      - name: Read-only staging database and sanitized API diagnostics
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          docker compose -f infra/compose.yaml up -d postgres
+          pnpm db:wait
+          pnpm db:migrate
+          pnpm db:seed
+          pnpm shared:build
+      - name: Prove canonical launch gameplay data
         shell: bash
         run: |
           set -euo pipefail
-          printf '%s\n' "$STAGING_SSH_KEY" >/tmp/key; chmod 600 /tmp/key
-          ssh -i /tmp/key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 "$STAGING_SSH_USER@$STAGING_HOST" bash -s <<'REMOTE'
+          docker exec skillup-local-postgres-1 psql -U skillup_local -d skillup -Atc "select l.id, lv.id, lv.state, count(cv.id) from levels l join level_versions lv on lv.level_id=l.id left join challenge_versions cv on cv.level_version_id=lv.id and cv.state='published' where l.id='3c315a1a-824a-413e-836d-69a9fc8bad1f' group by l.id,lv.id,lv.state" | tee /tmp/level.txt
+          grep -q '^3c315a1a-824a-413e-836d-69a9fc8bad1f|.*|published|3$' /tmp/level.txt
+          echo 'LOCAL_CANONICAL_GAMEPLAY_DATA=PASS'
+      - name: Reproduce Premium reporting against real PostgreSQL
+        shell: bash
+        run: |
+          set +e
+          pnpm --filter @skillup/api smoke:premium-reporting > /tmp/premium.log 2>&1
+          status=$?
+          set -e
+          echo "PREMIUM_SMOKE_EXIT=$status"
+          if [ "$status" -ne 0 ]; then
+            grep -E -B 8 -A 25 'error:|ERROR|operator does not exist|column .* does not exist|relation .* does not exist|code:|hint:|premium' /tmp/premium.log | tail -180 || tail -120 /tmp/premium.log
+            exit "$status"
+          fi
+          tail -5 /tmp/premium.log
+          echo 'LOCAL_PREMIUM_REPORTING=PASS'
+      - name: Prove Admin query schema mismatches
+        shell: bash
+        run: |
           set -euo pipefail
-          echo '=== RELEVANT DATABASE TABLES ==='
-          docker exec skillup-postgres-staging-container psql -U skillup -d skillup -Atc "select table_name from information_schema.tables where table_schema='public' and (table_name ilike '%level%' or table_name ilike '%premium%' or table_name ilike '%payment%' or table_name ilike '%admin%' or table_name ilike '%support%') order by table_name" 2>/dev/null || docker exec skillup-postgres-staging-container psql -U "$(docker exec skillup-postgres-staging-container printenv POSTGRES_USER)" -d "$(docker exec skillup-postgres-staging-container printenv POSTGRES_DB)" -Atc "select table_name from information_schema.tables where table_schema='public' and (table_name ilike '%level%' or table_name ilike '%premium%' or table_name ilike '%payment%' or table_name ilike '%admin%' or table_name ilike '%support%') order by table_name"
-          echo '=== LEVEL-LIKE COLUMN INVENTORY ==='
-          docker exec skillup-postgres-staging-container sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select table_name||\x27.\x27||column_name||\x27:\x27||data_type from information_schema.columns where table_schema=\x27public\x27 and table_name in (select table_name from information_schema.tables where table_schema=\x27public\x27 and table_name ilike \x27%level%\x27) order by table_name,ordinal_position"' | head -160
-          echo '=== CANONICAL LEVEL UUID REFERENCES ==='
-          for table in $(docker exec skillup-postgres-staging-container sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select distinct table_name from information_schema.columns where table_schema=\x27public\x27 and data_type in (\x27uuid\x27,\x27text\x27,\x27character varying\x27) and table_name ilike \x27%level%\x27 order by table_name"'); do
-            docker exec skillup-postgres-staging-container sh -lc "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Atc \"select '$table' where exists (select 1 from $table row_to_check where row_to_json(row_to_check)::text like '%3c315a1a-824a-413e-836d-69a9fc8bad1f%')\"" 2>/dev/null || true
-          done
-          echo '=== RECENT SANITIZED DATABASE/API ERRORS ==='
-          docker logs --since 20m skillup-api-staging-container 2>&1 | grep -E '42883|22P02|operator does not exist|internal_error|unexpected server error|published level version|Premium summary|learner support|requestId' | tail -120 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/[EMAIL]/g' || true
-          REMOTE
-          rm -f /tmp/key
+          points_column="$(docker exec skillup-local-postgres-1 psql -U skillup_local -d skillup -Atc "select count(*) from information_schema.columns where table_schema='public' and table_name='points_ledger' and column_name='points'")"
+          points_delta="$(docker exec skillup-local-postgres-1 psql -U skillup_local -d skillup -Atc "select count(*) from information_schema.columns where table_schema='public' and table_name='points_ledger' and column_name='points_delta'")"
+          session_status="$(docker exec skillup-local-postgres-1 psql -U skillup_local -d skillup -Atc "select count(*) from information_schema.columns where table_schema='public' and table_name='level_play_sessions' and column_name='status'")"
+          session_state="$(docker exec skillup-local-postgres-1 psql -U skillup_local -d skillup -Atc "select count(*) from information_schema.columns where table_schema='public' and table_name='level_play_sessions' and column_name='state'")"
+          echo "points=$points_column points_delta=$points_delta session_status=$session_status session_state=$session_state"
+          test "$points_column" = 0 && test "$points_delta" = 1 && test "$session_status" = 0 && test "$session_state" = 1
+          echo 'ADMIN_QUERY_SCHEMA_MISMATCH_CONFIRMED=PASS'
