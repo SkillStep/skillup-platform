@@ -1,0 +1,121 @@
+name: Diagnose staging OTP verify 500 PR
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
+          chmod 600 /tmp/staging-key
+
+      - name: Reproduce one OTP verification and emit sanitized diagnostics
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=25 \
+            "$STAGING_SSH_USER@$STAGING_HOST" bash -s -- "$RUN_ID" <<'REMOTE'
+          set -euo pipefail
+          run_id="$1"
+          cd /opt/skillup
+
+          echo '=== CURRENT STAGING RUNTIME ==='
+          for c in skillup-api-staging-container skillup-web-staging-container skillup-postgres-staging-container skillup-mailpit-staging-container; do
+            state="$(docker inspect "$c" --format '{{.State.Status}}' 2>/dev/null || true)"
+            health="$(docker inspect "$c" --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' 2>/dev/null || true)"
+            echo "$c state=$state health=$health"
+          done
+          curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4020/v1/ready >/dev/null
+          echo 'API_DB_READY=PASS'
+          smtp_host="$(docker inspect skillup-api-staging-container --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^SMTP_HOST=//p' | head -1)"
+          smtp_port="$(docker inspect skillup-api-staging-container --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^SMTP_PORT=//p' | head -1)"
+          echo "API_SMTP_TARGET=${smtp_host}:${smtp_port}"
+
+          email="qa-diag-${run_id}@skillup.test"
+          start_status="$(curl --silent --show-error --max-time 10 --output /tmp/otp-start.json --write-out '%{http_code}' \
+            --header 'Origin: https://skillupshop.codistan.org' \
+            --header 'Content-Type: application/json' \
+            --data "{\"email\":\"$email\"}" \
+            http://127.0.0.1:3020/api/v1/auth/email/start)"
+          echo "OTP_START_HTTP=$start_status"
+          test "$start_status" = 202
+
+          EMAIL="$email" python3 - <<'PY' >/tmp/otp-material.json
+          import json, os, re, time, urllib.parse, urllib.request
+          email=os.environ['EMAIL']
+          deadline=time.time()+25
+          message_text=None
+          while time.time()<deadline:
+              q=urllib.parse.urlencode({'limit':'30','query':f'to:"{email}"'})
+              try:
+                  with urllib.request.urlopen('http://127.0.0.1:18025/api/v1/messages?'+q,timeout=4) as r: data=json.load(r)
+              except Exception:
+                  time.sleep(1); continue
+              for msg in data.get('messages',[]):
+                  mid=msg.get('ID')
+                  if not mid: continue
+                  try:
+                      with urllib.request.urlopen('http://127.0.0.1:18025/view/'+urllib.parse.quote(str(mid))+'.txt',timeout=4) as r: text=r.read().decode('utf-8','replace')
+                  except Exception: continue
+                  if email.lower() not in text.lower() and email.lower() not in json.dumps(msg).lower(): continue
+                  message_text=text; break
+              if message_text: break
+              time.sleep(1)
+          if not message_text: raise SystemExit('No captured message found')
+          candidates=re.findall(r'(?<!\d)(\d{4})(?!\d)',message_text)
+          contextual=re.findall(r'(?is)(?:sign[- ]?in|verification|code)[^0-9]{0,140}(\d{4})(?!\d)',message_text)
+          chosen=contextual[0] if contextual else (candidates[0] if candidates else None)
+          if not chosen: raise SystemExit('No 4-digit OTP candidate found')
+          print(json.dumps({'code':chosen,'candidateCount':len(candidates),'contextualCount':len(contextual)}))
+          PY
+
+          challenge_id="$(python3 -c 'import json; print(json.load(open("/tmp/otp-start.json"))["challengeId"])')"
+          code="$(python3 -c 'import json; print(json.load(open("/tmp/otp-material.json"))["code"])')"
+          echo "CAPTURED_4DIGIT_CANDIDATE_COUNT=$(python3 -c 'import json; print(json.load(open("/tmp/otp-material.json"))["candidateCount"])')"
+          echo "CONTEXTUAL_OTP_MATCH_COUNT=$(python3 -c 'import json; print(json.load(open("/tmp/otp-material.json"))["contextualCount"])')"
+
+          verify_status="$(curl --silent --show-error --max-time 10 --output /tmp/otp-verify.json --write-out '%{http_code}' \
+            --header 'Origin: https://skillupshop.codistan.org' \
+            --header 'Content-Type: application/json' \
+            --data "{\"challengeId\":\"$challenge_id\",\"code\":\"$code\"}" \
+            http://127.0.0.1:3020/api/v1/auth/email/verify)"
+          echo "OTP_VERIFY_HTTP=$verify_status"
+
+          echo '=== SANITIZED VERIFY RESPONSE ==='
+          python3 - <<'PY'
+          import re
+          text=open('/tmp/otp-verify.json',errors='ignore').read()
+          text=re.sub(r'[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+','[EMAIL]',text)
+          text=re.sub(r'\b[0-9a-fA-F]{8}-[0-9a-fA-F-]{27,}\b','[UUID]',text)
+          text=re.sub(r'(?<!\d)\d{4}(?!\d)','[CODE]',text)
+          print(text[:1200])
+          PY
+
+          echo '=== SANITIZED API LOGS SINCE REPRO ==='
+          docker logs --since 3m skillup-api-staging-container 2>&1 | tail -250 | \
+            sed -E -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/[EMAIL]/g' \
+              -e 's/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/[UUID]/g' \
+              -e 's/(code|otp|token|password|secret|authorization)["=: ]+[^ ,}" ]+/\1=[REDACTED]/Ig' \
+              -e 's/(^|[^0-9])[0-9]{4}([^0-9]|$)/\1[CODE]\2/g' | tail -160
+
+          rm -f /tmp/otp-start.json /tmp/otp-material.json /tmp/otp-verify.json
+          if [ "$verify_status" = 200 ]; then echo 'OTP_VERIFY_REPRO=PASS'; else echo 'OTP_VERIFY_REPRO=FAILED'; exit 30; fi
+          REMOTE
+          rm -f /tmp/staging-key
