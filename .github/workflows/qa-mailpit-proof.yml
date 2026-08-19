@@ -1,0 +1,138 @@
+name: QA Mailpit Capture Relay Proof
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
+          chmod 600 /tmp/staging-key
+
+      - name: Install and prove loopback-only QA SMTP capture relay
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+
+          cat > docker-compose.qa-mailpit.yml <<'YAML'
+          services:
+            mailpit:
+              image: ghcr.io/axllent/mailpit:v1.30.6@sha256:7f33095f80e901f6ad08028f06ca284aa58fe84942be5496008d041d3b9f4d4d
+              container_name: skillup-mailpit-staging-container
+              restart: unless-stopped
+              environment:
+                MP_DATABASE: /data/mailpit.db
+                MP_MAX_MESSAGES: '1000'
+                MP_SMTP_AUTH_ACCEPT_ANY: 'true'
+                MP_SMTP_AUTH_ALLOW_INSECURE: 'true'
+                MP_SMTP_RELAY_HOST: ${SMTP_HOST}
+                MP_SMTP_RELAY_PORT: ${SMTP_PORT}
+                MP_SMTP_RELAY_STARTTLS: ${SMTP_REQUIRE_TLS:-true}
+                MP_SMTP_RELAY_TLS: ${SMTP_SECURE:-false}
+                MP_SMTP_RELAY_AUTH: login
+                MP_SMTP_RELAY_USERNAME: ${SMTP_USERNAME}
+                MP_SMTP_RELAY_PASSWORD: ${SMTP_PASSWORD}
+                MP_SMTP_RELAY_BLOCKED_RECIPIENTS: '@skillup\.test$'
+                MP_SMTP_RELAY_ALL: 'true'
+              ports:
+                - '127.0.0.1:18025:8025'
+              volumes:
+                - skillup_staging_mailpit_data:/data
+              security_opt:
+                - no-new-privileges:true
+            api:
+              environment:
+                SMTP_HOST: mailpit
+                SMTP_PORT: '1025'
+                SMTP_SECURE: 'false'
+                SMTP_REQUIRE_TLS: 'false'
+          volumes:
+            skillup_staging_mailpit_data:
+          YAML
+
+          docker compose -f docker-compose.staging.yml -f docker-compose.qa-mailpit.yml config --quiet
+          docker compose -f docker-compose.staging.yml -f docker-compose.qa-mailpit.yml pull mailpit
+          docker compose -f docker-compose.staging.yml -f docker-compose.qa-mailpit.yml up -d mailpit
+
+          for n in $(seq 1 30); do
+            status="$(docker inspect skillup-mailpit-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')"
+            [ "$status" = healthy ] && break
+            sleep 1
+          done
+          test "$(docker inspect skillup-mailpit-staging-container --format '{{.State.Health.Status}}')" = healthy
+
+          docker compose -f docker-compose.staging.yml -f docker-compose.qa-mailpit.yml up -d api
+          for n in $(seq 1 45); do
+            if curl --fail --silent --show-error --max-time 3 http://127.0.0.1:4020/v1/health >/dev/null; then break; fi
+            sleep 2
+          done
+          curl --fail --silent --show-error --max-time 5 http://127.0.0.1:4020/v1/health >/dev/null
+
+          api_smtp_host="$(docker inspect skillup-api-staging-container --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^SMTP_HOST=//p' | head -1)"
+          api_smtp_port="$(docker inspect skillup-api-staging-container --format '{{range .Config.Env}}{{println .}}{{end}}' | sed -n 's/^SMTP_PORT=//p' | head -1)"
+          test "$api_smtp_host" = mailpit
+          test "$api_smtp_port" = 1025
+
+          published="$(docker port skillup-mailpit-staging-container 8025/tcp)"
+          echo "MAILPIT_HTTP_BIND=$published"
+          case "$published" in 127.0.0.1:18025) ;; *) echo 'Mailpit API is not loopback-only' >&2; exit 31;; esac
+
+          before="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          probe='skillup-qa-probe@skillup.test'
+          status="$(curl --silent --show-error --output /tmp/otp-start.json --write-out '%{http_code}' \
+            --header 'Origin: https://skillupshop.codistan.org' \
+            --header 'Content-Type: application/json' \
+            --data "{\"email\":\"$probe\"}" \
+            http://127.0.0.1:3020/api/v1/auth/email/start)"
+          test "$status" = 202 || { cat /tmp/otp-start.json >&2; exit 32; }
+
+          PROBE="$probe" AFTER="$before" python3 - <<'PY'
+          import json, os, re, time, urllib.parse, urllib.request
+          probe=os.environ['PROBE']
+          after=os.environ['AFTER']
+          deadline=time.time()+30
+          while time.time() < deadline:
+              q=urllib.parse.urlencode({'limit':'20','query':f'to:"{probe}"'})
+              with urllib.request.urlopen('http://127.0.0.1:18025/api/v1/messages?'+q, timeout=5) as r:
+                  data=json.load(r)
+              for msg in data.get('messages',[]):
+                  created=str(msg.get('Created',''))
+                  if created and created < after: continue
+                  mid=msg.get('ID')
+                  if not mid: continue
+                  try:
+                      with urllib.request.urlopen(f'http://127.0.0.1:18025/view/{mid}.txt', timeout=5) as r:
+                          body=r.read().decode('utf-8','replace')
+                  except Exception:
+                      body=''
+                  match=re.search(r'(?<!\d)(\d{4})(?!\d)', body)
+                  if match:
+                      print('REAL_OTP_CAPTURE=PASS')
+                      print('OTP_DIGITS=4')
+                      raise SystemExit(0)
+              time.sleep(1)
+          raise SystemExit('No real four-digit OTP reached the staging capture relay in time')
+          PY
+
+          rm -f /tmp/otp-start.json
+          echo 'STAGING_MAILPIT_CAPTURE_RELAY=PASS'
+          REMOTE
+          rm -f /tmp/staging-key
