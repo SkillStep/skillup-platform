@@ -30,8 +30,10 @@ export function isAllowedStagingQaEmail(value: string): boolean {
 
 export function parseStagingQaAfter(value: string, now = Date.now()): Date {
   const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) throw new Error("STAGING_QA_OTP_AFTER must be a valid ISO timestamp.");
-  if (timestamp > now + CLOCK_SKEW_MS) throw new Error("STAGING_QA_OTP_AFTER cannot be in the future.");
+  if (!Number.isFinite(timestamp))
+    throw new Error("STAGING_QA_OTP_AFTER must be a valid ISO timestamp.");
+  if (timestamp > now + CLOCK_SKEW_MS)
+    throw new Error("STAGING_QA_OTP_AFTER cannot be in the future.");
   if (timestamp < now - MAX_LOOKBACK_MS) {
     throw new Error("STAGING_QA_OTP_AFTER is outside the allowed QA lookup window.");
   }
@@ -50,9 +52,7 @@ export function recoverStagingQaOtp(
   const expected = Buffer.from(expectedDigest, "hex");
   for (let candidate = 0; candidate < 10_000; candidate += 1) {
     const code = candidate.toString().padStart(4, "0");
-    const digest = createHmac("sha256", secret)
-      .update(`challenge:${challengeId}:${code}`)
-      .digest();
+    const digest = createHmac("sha256", secret).update(`challenge:${challengeId}:${code}`).digest();
     if (timingSafeEqual(digest, expected)) return code;
   }
 
