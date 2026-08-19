@@ -42,7 +42,8 @@ function parseAfter(value, now = Date.now()) {
   const timestamp = Date.parse(value);
   if (!Number.isFinite(timestamp)) throw new Error("after must be a valid ISO timestamp.");
   if (timestamp > now + CLOCK_SKEW_MS) throw new Error("after cannot be in the future.");
-  if (timestamp < now - MAX_LOOKBACK_MS) throw new Error("after is outside the allowed QA lookup window.");
+  if (timestamp < now - MAX_LOOKBACK_MS)
+    throw new Error("after is outside the allowed QA lookup window.");
   return timestamp;
 }
 
@@ -134,16 +135,22 @@ function runSelfTest() {
   const now = Date.parse("2026-08-19T15:00:00.000Z");
   const after = parseAfter("2026-08-19T14:59:58.000Z", now);
   if (after !== Date.parse("2026-08-19T14:59:58.000Z")) throw new Error("after parsing failed");
-  if (extractOtp("4821 is your SkillUp sign-in code") !== "4821") throw new Error("subject OTP extraction failed");
-  if (extractOtp("other", "Your one-time code is: 7390") !== "7390") throw new Error("body OTP extraction failed");
-  if (extractOtp("123456 is your SkillUp sign-in code") !== null) throw new Error("non-4-digit OTP accepted");
+  if (extractOtp("4821 is your SkillUp sign-in code") !== "4821")
+    throw new Error("subject OTP extraction failed");
+  if (extractOtp("other", "Your one-time code is: 7390") !== "7390")
+    throw new Error("body OTP extraction failed");
+  if (extractOtp("123456 is your SkillUp sign-in code") !== null)
+    throw new Error("non-4-digit OTP accepted");
   if (!hasDeliveredEvent([{ name: "delivered", time: "2026-08-19T14:59:59.000Z" }], after)) {
     throw new Error("delivered event was not accepted");
   }
   if (hasDeliveredEvent([{ name: "sent", time: "2026-08-19T14:59:59.000Z" }], after)) {
     throw new Error("non-delivery event was accepted");
   }
-  if (!constantTimeEqual("same-token", "same-token") || constantTimeEqual("same-token", "other-token")) {
+  if (
+    !constantTimeEqual("same-token", "same-token") ||
+    constantTimeEqual("same-token", "other-token")
+  ) {
     throw new Error("bearer token comparison failed");
   }
   console.log("STAGING BREVO QA MAILBOX BRIDGE SELF-TEST: PASS");
@@ -160,9 +167,12 @@ const host = process.env.STAGING_QA_MAILBOX_HOST?.trim() || DEFAULT_HOST;
 const port = Number.parseInt(process.env.STAGING_QA_MAILBOX_PORT ?? String(DEFAULT_PORT), 10);
 const allowedEmails = qaEmailAllowlist();
 
-if (host !== DEFAULT_HOST) throw new Error("The staging QA mailbox bridge must bind to 127.0.0.1 only.");
-if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error("Invalid staging QA mailbox bridge port.");
-if (allowedEmails.size === 0) throw new Error("No staging QA email aliases are configured for the mailbox bridge.");
+if (host !== DEFAULT_HOST)
+  throw new Error("The staging QA mailbox bridge must bind to 127.0.0.1 only.");
+if (!Number.isInteger(port) || port < 1024 || port > 65535)
+  throw new Error("Invalid staging QA mailbox bridge port.");
+if (allowedEmails.size === 0)
+  throw new Error("No staging QA email aliases are configured for the mailbox bridge.");
 
 const server = http.createServer(async (request, response) => {
   try {
