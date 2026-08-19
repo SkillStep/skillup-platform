@@ -13,16 +13,13 @@ jobs:
     runs-on: ubuntu-24.04
     environment: staging
     steps:
-      - name: Inspect metrics schema and failed AI request
+      - name: Inspect AI worker and API claim failure
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          AI_CORRELATION_ID: e2284445-e3a8-41b4-bcb1-bb89a3297080
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           command_timeout: 5m
-          envs: AI_CORRELATION_ID
           script: |
             set -euo pipefail
             cd /opt/skillup
@@ -31,43 +28,34 @@ jobs:
             echo '=== AI WORKER STATE ==='
             docker inspect -f 'status={{.State.Status}} running={{.State.Running}} exit={{.State.ExitCode}} restart={{.RestartCount}} started={{.State.StartedAt}} finished={{.State.FinishedAt}}' skillup-ai-worker-staging-container || true
             echo '=== SANITIZED AI WORKER LOG TAIL ==='
-            docker logs --tail 200 skillup-ai-worker-staging-container 2>&1 \
+            docker logs --tail 120 skillup-ai-worker-staging-container 2>&1 \
               | sed -E 's/(api[_ -]?key|authorization|token|secret|password)([=: ]+)[^ ,}]+/\1\2[REDACTED]/Ig' \
-              | tail -200 || true
-            echo '=== REQUEST + ATTEMPTS + ARTIFACT COUNT ==='
-            docker exec -e AI_CORRELATION_ID="$AI_CORRELATION_ID" -i skillup-api-staging-container node --input-type=module <<'NODE'
+              | tail -120 || true
+            echo '=== SANITIZED API LOG TAIL ==='
+            docker logs --tail 500 skillup-api-staging-container 2>&1 \
+              | sed -E 's/(api[_ -]?key|authorization|cookie|token|secret|password)([=: ]+)[^ ,}]+/\1\2[REDACTED]/Ig' \
+              | grep -E -i 'ai|claim|internal_error|error|500' \
+              | tail -180 || true
+            echo '=== RECENT AI REQUEST STATE ==='
+            docker exec -i skillup-api-staging-container node --input-type=module <<'NODE'
             import pg from 'pg';
             const { Pool } = pg;
             const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
-            const correlation = process.env.AI_CORRELATION_ID;
             try {
-              const request = await pool.query(
+              const requests = await pool.query(
                 `select id, task, status, provider, model, attempt_count, created_at, started_at,
                         completed_at, next_attempt_at, lease_expires_at, cancelled_at,
                         left(coalesce(last_error,''),500) as last_error, correlation_id
-                   from ai_generation_requests where correlation_id = $1`, [correlation]);
+                   from ai_generation_requests
+                  order by created_at desc limit 12`);
               const attempts = await pool.query(
-                `select a.attempt_number, a.status, a.provider, a.model, a.started_at, a.completed_at,
-                        a.error_code, left(coalesce(a.error_message,''),500) as error_message,
-                        a.input_tokens, a.output_tokens, a.estimated_cost_microusd
+                `select a.request_id, a.attempt_number, a.status, a.provider, a.model,
+                        a.started_at, a.completed_at, a.error_code,
+                        left(coalesce(a.error_message,''),500) as error_message,
+                        a.estimated_cost_microusd
                    from ai_job_attempts a
-                   join ai_generation_requests r on r.id = a.request_id
-                  where r.correlation_id = $1 order by a.attempt_number`, [correlation]);
-              const artifacts = await pool.query(
-                `select count(*)::integer as count
-                   from ai_generated_artifacts a
-                   join ai_generation_requests r on r.id = a.request_id
-                  where r.correlation_id = $1`, [correlation]);
-              const columns = await pool.query(
-                `select column_name from information_schema.columns
-                  where table_name = 'ai_job_attempts' and column_name like 'estimated_cost%'
-                  order by column_name`);
-              console.log(JSON.stringify({
-                request: request.rows,
-                attempts: attempts.rows,
-                artifactCount: artifacts.rows[0]?.count ?? 0,
-                costColumns: columns.rows.map((row) => row.column_name),
-              }, null, 2));
+                  order by a.started_at desc limit 20`);
+              console.log(JSON.stringify({ requests: requests.rows, attempts: attempts.rows }, null, 2));
             } finally {
               await pool.end();
             }
