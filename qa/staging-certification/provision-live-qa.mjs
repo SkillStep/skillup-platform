@@ -46,14 +46,13 @@ const roleMap = {
   "payment-operator": ["payment_operator"],
   "learner-support": ["learner_support"],
   "security-admin": ["security_admin"],
-  "revoked-admin": ["security_admin"],
 };
 
 function tokenDigest(token) {
   return createHmac("sha256", sessionSecret).update(`session:${token}`).digest("hex");
 }
 
-async function ensureUser(email, profileStatus = "completed") {
+async function ensureUser(email, onboardingStatus) {
   const normalized = email.trim().toLowerCase();
   const found = await db.query(
     "select user_id from user_email_identities where email_normalized = $1",
@@ -93,7 +92,7 @@ async function ensureUser(email, profileStatus = "completed") {
            learning_goal = excluded.learning_goal,
            onboarding_status = excluded.onboarding_status,
            updated_at = now()`,
-    [userId, profileStatus],
+    [userId, onboardingStatus],
   );
   return userId;
 }
@@ -123,7 +122,8 @@ try {
     await db.query(
       `insert into admin_principals (user_id, status, created_at)
        values ($1, 'active', now())
-       on conflict (user_id) do update set status = 'active', suspended_at = null`,
+       on conflict (user_id) do update
+         set status = 'active', suspended_at = null, updated_at = now()`,
       [userId],
     );
     for (const role of roles) {
@@ -139,6 +139,16 @@ try {
     }
     await auditFixture(userId, "admin.qa_fixture", { roles });
   }
+
+  const revokedId = userIds["revoked-admin"];
+  await db.query(
+    `insert into admin_principals (user_id, status, created_at, updated_at, suspended_at)
+     values ($1, 'revoked', now(), now(), now())
+     on conflict (user_id) do update
+       set status = 'revoked', suspended_at = coalesce(admin_principals.suspended_at, now()), updated_at = now()`,
+    [revokedId],
+  );
+  await auditFixture(revokedId, "admin.qa_revoke", { revoked: true, roles: [] });
 
   const learnerId = userIds.learner;
   const freeId = userIds["free-learner"];
@@ -203,17 +213,6 @@ try {
   }
 
   await db.query("delete from learner_daily_mission_usage where user_id in ($1, $2)", [learnerId, freeId]);
-
-  const revokedId = userIds["revoked-admin"];
-  await db.query(
-    "update admin_role_assignments set revoked_at = coalesce(revoked_at, now()) where user_id = $1 and revoked_at is null",
-    [revokedId],
-  );
-  await db.query(
-    "update admin_principals set status = 'revoked', suspended_at = coalesce(suspended_at, now()) where user_id = $1",
-    [revokedId],
-  );
-  await auditFixture(revokedId, "admin.qa_revoke", { revoked: true });
 
   for (const [name, userId] of Object.entries(userIds)) {
     const token = randomBytes(32).toString("base64url");
