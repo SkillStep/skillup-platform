@@ -229,6 +229,26 @@ jobs:
             docker compose -f docker-compose.staging.yml config --quiet
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
             docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d postgres
+            for attempt in $(seq 1 45); do
+              if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then
+                break
+              fi
+              sleep 2
+            done
+            test "$(docker inspect skillup-postgres-staging-container --format '{{.State.Health.Status}}')" = healthy
+
+            echo "Applying database migrations and deterministic launch seeds before application startup"
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/migrate.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/seed.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/complete-launch-seed-v2.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/complete-launch-smoke.js
+            echo "STAGING DATABASE MIGRATION + LAUNCH SEED: PASS"
+
             docker compose -f docker-compose.staging.yml up -d --remove-orphans
             docker compose -f docker-compose.staging.yml ps
 

@@ -138,6 +138,9 @@ jobs:
       - name: Smoke commercial API against migrated PostgreSQL
         run: pnpm --filter @skillup/api smoke:commercial
 
+      - name: Smoke Premium reporting against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:premium-reporting
+
       - name: Smoke gameplay resume against migrated PostgreSQL
         run: node tools/smoke-gameplay-resume.mjs
 

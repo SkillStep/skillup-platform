@@ -92,7 +92,13 @@ const membershipFilters = `
   and ($3::text is null or p.code = $3)
   and ($4::uuid is null or mp.plan_version_id = $4)
   and ($5::text is null or mp.purpose = $5)
-  and ($7::text is null or mp.status = $7)`;
+  and ($6::text is null or mp.status = $6)`;
+
+const reconciliationOrderFilters = `
+  and ($2::text is null or p.code = $2)
+  and ($3::uuid is null or o.plan_version_id = $3)
+  and ($4::text is null or o.payment_purpose = $4)
+  and ($5::text is null or o.status = $5)`;
 
 export function createPremiumQueryService(pool: DatabaseClient["pool"]): PremiumQueryService {
   return {
@@ -100,6 +106,8 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
       const range = resolvePremiumReportRange(query);
       const values = filterValues(query);
       const orderValues = values.slice(0, 6);
+      const membershipValues = [values[0], values[1], values[2], values[3], values[4], values[6]];
+      const reconciliationValues = [values[1], values[2], values[3], values[4], values[5]];
       const [financial, attempts, memberships, buckets, planBreakdown, reconciliation] =
         await Promise.all([
           pool.query<Record<string, unknown>>(
@@ -199,11 +207,11 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
              join commercial_plans p on p.id = v.plan_id
             where true
               ${membershipFilters}`,
-            [...values],
+            membershipValues,
           ),
           pool.query<Record<string, unknown>>(
             `select
-               case when $8::text = 'monthly'
+               case when $7::text = 'monthly'
                  then to_char(date_trunc('month', f.occurred_at at time zone 'Asia/Karachi'), 'YYYY-MM')
                  else to_char(date_trunc('day', f.occurred_at at time zone 'Asia/Karachi'), 'YYYY-MM-DD')
                end as bucket,
@@ -221,7 +229,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
               ${orderFilters}
             group by bucket
             order by bucket`,
-            [...values, range.aggregation],
+            [...orderValues, range.aggregation],
           ),
           pool.query<Record<string, unknown>>(
             `select p.code as "planCode", p.name as "planName", v.version,
@@ -249,9 +257,9 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
                join payment_orders o on o.id = c.order_id
                join commercial_plan_versions v on v.id = o.plan_version_id
                join commercial_plans p on p.id = v.plan_id
-              where c.created_at < $2
-                ${orderFilters}`,
-            orderValues,
+              where c.created_at < $1
+                ${reconciliationOrderFilters}`,
+            reconciliationValues,
           ),
         ]);
 
@@ -334,7 +342,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
     },
 
     payments: async (query) => {
-      const values = filterValues(query);
+      const values = filterValues(query).slice(0, 6);
       const result = await pool.query<Record<string, unknown>>(
         `select count(*) over()::integer as "totalCount",
                 o.id,
@@ -378,11 +386,11 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
            ) reconciliation on true
           where o.created_at >= $1 and o.created_at < $2
             ${orderFilters}
-            and ($8::text is null or o.id::text = $8 or o.user_id::text = $8
-                 or o.merchant_reference ilike '%' || $8 || '%'
-                 or coalesce(o.provider_reference, '') ilike '%' || $8 || '%')
+            and ($7::text is null or o.id::text = $7 or o.user_id::text = $7
+                 or o.merchant_reference ilike '%' || $7 || '%'
+                 or coalesce(o.provider_reference, '') ilike '%' || $7 || '%')
           order by o.created_at desc, o.id desc
-          limit $9 offset $10`,
+          limit $8 offset $9`,
         [...values, query.search ?? null, query.limit, query.offset],
       );
 
@@ -423,6 +431,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
 
     memberships: async (query) => {
       const values = filterValues(query);
+      const membershipValues = [values[0], values[1], values[2], values[3], values[4], values[6]];
       const result = await pool.query<Record<string, unknown>>(
         `select count(*) over()::integer as "totalCount",
                 mp.id, mp.entitlement_id as "entitlementId",
@@ -479,11 +488,11 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
            ) lifetime on true
           where mp.period_start < $2 and coalesce(mp.grace_end, mp.period_end) >= $1
             ${membershipFilters}
-            and ($8::text is null or mp.id::text = $8
-                 or mp.entitlement_id::text = $8 or mp.user_id::text = $8)
+            and ($7::text is null or mp.id::text = $7
+                 or mp.entitlement_id::text = $7 or mp.user_id::text = $7)
           order by mp.period_start desc, mp.id desc
-          limit $9 offset $10`,
-        [...values, query.search ?? null, query.limit, query.offset],
+          limit $8 offset $9`,
+        [...membershipValues, query.search ?? null, query.limit, query.offset],
       );
 
       return {
@@ -520,6 +529,15 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
 
     recurringCustomers: async (query) => {
       const values = filterValues(query);
+      const recurringValues = [
+        values[1],
+        values[2],
+        values[3],
+        values[6],
+        query.search ?? null,
+        query.limit,
+        query.offset,
+      ];
       const result = await pool.query<Record<string, unknown>>(
         `with recurring as (
            select mp.user_id,
@@ -533,7 +551,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
                     where mp.status in ('active','grace')
                   ) as next_renewal_at
              from membership_periods mp
-            where mp.period_start < $2
+            where mp.period_start < $1
             group by mp.user_id
            having count(*) filter (
              where mp.purpose = 'renewal' and mp.origin = 'paid'
@@ -562,7 +580,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
                from payment_orders o
               where o.user_id = r.user_id
                 and o.payment_purpose = 'renewal' and o.status = 'failed'
-                and o.created_at < $2
+                and o.created_at < $1
            ) failed on true
            left join lateral (
              select coalesce(sum(
@@ -570,15 +588,15 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
              ), 0)::bigint as collected_minor
                from payment_financial_effects f
                join payment_orders o on o.id = f.order_id
-              where o.user_id = r.user_id and f.status = 'completed' and f.occurred_at < $2
+              where o.user_id = r.user_id and f.status = 'completed' and f.occurred_at < $1
            ) lifetime on true
-          where ($3::text is null or p.code = $3)
-            and ($4::uuid is null or current_period.plan_version_id = $4)
-            and ($7::text is null or current_period.status = $7)
-            and ($8::text is null or r.user_id::text = $8 or current_period.id::text = $8)
+          where ($2::text is null or p.code = $2)
+            and ($3::uuid is null or current_period.plan_version_id = $3)
+            and ($4::text is null or current_period.status = $4)
+            and ($5::text is null or r.user_id::text = $5 or current_period.id::text = $5)
           order by r.last_renewal_at desc, r.user_id
-          limit $9 offset $10`,
-        [...values, query.search ?? null, query.limit, query.offset],
+          limit $6 offset $7`,
+        recurringValues,
       );
 
       return {
@@ -606,6 +624,18 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
 
     reconciliation: async (query) => {
       const values = filterValues(query);
+      const reconciliationValues = [
+        values[1],
+        values[2],
+        values[3],
+        values[4],
+        values[5],
+        query.reconciliationStatus ?? null,
+        query.mismatchKind ?? null,
+        query.minimumAgeMinutes ?? null,
+        query.limit,
+        query.offset,
+      ];
       const result = await pool.query<Record<string, unknown>>(
         `select count(*) over()::integer as "totalCount",
                 c.id, c.status, c.mismatch_kind as "mismatchKind",
@@ -626,21 +656,14 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
            join commercial_plans p on p.id = v.plan_id
            left join entitlements e on e.source_order_id = o.id
            left join membership_periods mp on mp.entitlement_id = e.id
-          where c.created_at < $2
-            ${orderFilters}
-            and ($8::text is null or c.status = $8)
-            and ($9::text is null or c.mismatch_kind = $9)
-            and ($10::integer is null or c.created_at <= now() - make_interval(mins => $10))
+          where c.created_at < $1
+            ${reconciliationOrderFilters}
+            and ($6::text is null or c.status = $6)
+            and ($7::text is null or c.mismatch_kind = $7)
+            and ($8::integer is null or c.created_at <= now() - make_interval(mins => $8))
           order by case when c.status = 'open' then 0 else 1 end, c.created_at, c.id
-          limit $11 offset $12`,
-        [
-          ...values,
-          query.reconciliationStatus ?? null,
-          query.mismatchKind ?? null,
-          query.minimumAgeMinutes ?? null,
-          query.limit,
-          query.offset,
-        ],
+          limit $9 offset $10`,
+        reconciliationValues,
       );
 
       return {
