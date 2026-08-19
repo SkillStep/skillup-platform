@@ -103,9 +103,14 @@ async function provisionRoles(email: string, roles: readonly AdminRole[]): Promi
     );
   }
 
-  await audit(userId, "staging_qa.roles_provisioned", "Prepare deterministic staging certification role fixture", {
-    roles,
-  });
+  await audit(
+    userId,
+    "staging_qa.roles_provisioned",
+    "Prepare deterministic staging certification role fixture",
+    {
+      roles,
+    },
+  );
 }
 
 async function provisionRevokedAdmin(email: string): Promise<void> {
@@ -123,7 +128,11 @@ async function provisionRevokedAdmin(email: string): Promise<void> {
       where user_id = $1 and revoked_at is null`,
     [userId],
   );
-  await audit(userId, "staging_qa.admin_revoked", "Prepare revoked administrator certification fixture");
+  await audit(
+    userId,
+    "staging_qa.admin_revoked",
+    "Prepare revoked administrator certification fixture",
+  );
 }
 
 async function provisionPremiumLearner(email: string): Promise<void> {
@@ -139,7 +148,8 @@ async function provisionPremiumLearner(email: string): Promise<void> {
       limit 1`,
   );
   const planVersionId = plan.rows[0]?.id;
-  if (!planVersionId) throw new Error("Active premium-monthly plan version is required for staging QA.");
+  if (!planVersionId)
+    throw new Error("Active premium-monthly plan version is required for staging QA.");
 
   const current = await connection.query<{ id: string; status: string }>(
     `select id, status
@@ -171,7 +181,11 @@ async function provisionPremiumLearner(email: string): Promise<void> {
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, previous_status, next_status, created_at)
        values ($1, 'staging_qa_refresh', 'system', $2, $3, 'active', now())`,
-      [existing.id, "Refresh deterministic Premium staging certification entitlement", existing.status],
+      [
+        existing.id,
+        "Refresh deterministic Premium staging certification entitlement",
+        existing.status,
+      ],
     );
   } else {
     const inserted = await connection.query<{ id: string }>(
@@ -213,7 +227,11 @@ async function provisionFreeLearner(email: string): Promise<void> {
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, previous_status, next_status, created_at)
        values ($1, 'staging_qa_revoke', 'system', $2, $3, 'revoked', now())`,
-      [entitlement.id, "Ensure deterministic free-tier staging certification fixture", entitlement.status],
+      [
+        entitlement.id,
+        "Ensure deterministic free-tier staging certification fixture",
+        entitlement.status,
+      ],
     );
   }
   await audit(userId, "staging_qa.free_ready", "Prepare free learner certification fixture");
