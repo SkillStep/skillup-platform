@@ -55,7 +55,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version-file: .node-version
-          cache: pnpm
 
       - name: Enable pinned pnpm
         shell: bash
@@ -111,6 +110,15 @@ jobs:
           };
           for (const [key, value] of Object.entries(lines)) process.stdout.write(`${key}=${value}\n`);
           NODE
+
+      - name: Run public live smoke before authentication fixtures
+        shell: bash
+        run: |
+          set -euo pipefail
+          SKILLUP_WEB_URL="$STAGING_WEB_URL" \
+          SKILLUP_API_URL="$STAGING_API_URL" \
+          SKILLUP_EXPECTED_RELEASE_SHA="$STAGING_EXPECTED_RELEASE_SHA" \
+          node tools/smoke-live.mjs
 
       - name: Create and verify all QA identities through real OTP
         shell: bash
