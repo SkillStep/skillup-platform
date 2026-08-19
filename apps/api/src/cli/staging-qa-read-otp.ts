@@ -68,7 +68,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((error: unknown) => {
-  const message = error instanceof Error ? error.message : "Unknown staging QA OTP recovery failure.";
+  const message =
+    error instanceof Error ? error.message : "Unknown staging QA OTP recovery failure.";
   process.stderr.write(`${message}\n`);
   process.exitCode = 1;
 });
