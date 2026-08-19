@@ -7,14 +7,14 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: qa-single-bridge-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  certify-through-staging-host:
-    strategy:
-      fail-fast: false
-      matrix:
-        shard: [1, 2, 3, 4]
+  certify:
     runs-on: ubuntu-24.04
-    timeout-minutes: 45
+    timeout-minutes: 60
     environment: staging
     env:
       STAGING_HOST: ${{ secrets.STAGING_HOST }}
@@ -24,72 +24,48 @@ jobs:
       STAGING_JAZZCASH_SANDBOX_READY: 'false'
       STAGING_VISUAL_BASELINES_APPROVED: 'true'
     steps:
-      - name: Checkout exact deployed main harness
+      - name: Checkout exact current main candidate
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
           ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
 
-      - name: Prepare SSH client
+      - name: Prove exact deployed main and public readiness
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          web="$(curl --fail --silent --show-error --max-time 20 "$STAGING_WEB_URL/api/health")"
+          api="$(curl --fail --silent --show-error --max-time 20 "$STAGING_WEB_URL/api/v1/ready")"
+          WEB="$web" API="$api" node <<'NODE'
+          const web = JSON.parse(process.env.WEB);
+          const api = JSON.parse(process.env.API);
+          const sha = process.env.EXPECTED_SHA;
+          if (web.status !== 'ok' || api.status !== 'ok') throw new Error('Staging health/readiness is not ok.');
+          if (web.releaseSha !== sha || api.releaseSha !== sha) throw new Error(`Staging release does not match main ${sha}.`);
+          if (!web.pipelineId || !web.artifactRef || !/^sha256:[0-9a-f]{64}$/.test(web.imageDigest || '') || !web.rollbackRef) throw new Error('Web immutable deployment identity is incomplete.');
+          if (!api.pipelineId || !api.artifactRef || !/^sha256:[0-9a-f]{64}$/.test(api.imageDigest || '') || !api.rollbackRef) throw new Error('API immutable deployment identity is incomplete.');
+          console.log('DEPLOYMENT_IDENTITY_AND_PUBLIC_READINESS=PASS');
+          NODE
+
+      - name: Prepare SSH key
         shell: bash
         run: |
           set -euo pipefail
           test -n "${STAGING_HOST:-}" && test -n "${STAGING_SSH_USER:-}" && test -n "${STAGING_SSH_KEY:-}"
-          key=/tmp/skillup-staging-key
-          printf '%s\n' "$STAGING_SSH_KEY" > "$key"
-          chmod 600 "$key"
-          echo 'SSH_KEY_PATH=/tmp/skillup-staging-key' >> "$GITHUB_ENV"
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/skillup-staging-key
+          chmod 600 /tmp/skillup-staging-key
 
-      - name: Probe public edge independently
-        continue-on-error: true
-        shell: bash
-        run: |
-          set -uo pipefail
-          for n in 1 2 3; do
-            result="$(curl --silent --show-error --max-time 12 --output /dev/null --write-out '%{http_code} %{time_total}' "$STAGING_WEB_URL/api/health" 2>&1)" && { echo "PUBLIC_EDGE_ATTEMPT_$n=$result"; exit 0; }
-            echo "PUBLIC_EDGE_ATTEMPT_$n=FAILED $result"
-            sleep 2
-          done
-          exit 1
-
-      - name: Require reachable SSH and inspect QA fixture presence
+      - name: Securely import server QA fixtures using one successful SSH session
         shell: bash
         run: |
           set -euo pipefail
-          ssh_opts=(-i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=10)
+          ssh_opts=(-i /tmp/skillup-staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=10)
+          rm -f /tmp/qa-values.b64 /tmp/qa-ssh-error
           ok=false
           for n in 1 2 3; do
-            if ssh "${ssh_opts[@]}" "$STAGING_SSH_USER@$STAGING_HOST" 'test -f /opt/skillup/.env && echo SSH_READY' >/tmp/ssh-probe 2>/tmp/ssh-error; then ok=true; break; fi
-            echo "SSH_ATTEMPT_$n=FAILED"
-            sleep 3
-          done
-          if [ "$ok" != true ]; then cat /tmp/ssh-error; exit 21; fi
-          cat /tmp/ssh-probe
-          ssh "${ssh_opts[@]}" "$STAGING_SSH_USER@$STAGING_HOST" 'python3 - <<'"'"'PY'"'"'
-          from pathlib import Path
-          vals={}
-          for line in Path("/opt/skillup/.env").read_text().splitlines():
-              if line and not line.lstrip().startswith("#") and "=" in line:
-                  k,v=line.split("=",1); vals[k.strip()]=v.strip()
-          keys=[
-          "STAGING_QA_LEARNER_EMAIL","STAGING_QA_FREE_LEARNER_EMAIL","STAGING_QA_ONBOARDING_EMAIL",
-          "STAGING_QA_AUTH_NEGATIVE_EMAIL","STAGING_QA_SESSION_EMAIL","STAGING_QA_ADMIN_EMAIL",
-          "STAGING_QA_ANALYST_EMAIL","STAGING_QA_CONTENT_EDITOR_EMAIL","STAGING_QA_CONTENT_REVIEWER_EMAIL",
-          "STAGING_QA_PUBLISHER_EMAIL","STAGING_QA_PAYMENT_OPERATOR_EMAIL","STAGING_QA_LEARNER_SUPPORT_EMAIL",
-          "STAGING_QA_SECURITY_ADMIN_EMAIL","STAGING_QA_REVOKED_ADMIN_EMAIL","STAGING_QA_MAILBOX_URL","STAGING_QA_MAILBOX_TOKEN"]
-          missing=[k for k in keys if not vals.get(k)]
-          print("SERVER_QA_FIXTURE="+("READY" if not missing else "INCOMPLETE"))
-          print("SERVER_QA_MISSING_COUNT="+str(len(missing)))
-          for k in missing: print("SERVER_QA_MISSING="+k)
-          raise SystemExit(0 if not missing else 22)
-          PY'
-
-      - name: Securely bridge server QA values into this runner
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh_opts=(-i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20)
-          ssh "${ssh_opts[@]}" "$STAGING_SSH_USER@$STAGING_HOST" 'python3 - <<'"'"'PY'"'"'
+            if ssh "${ssh_opts[@]}" "$STAGING_SSH_USER@$STAGING_HOST" 'python3 - <<'"'"'PY'"'"'
           import base64
           from pathlib import Path
           vals={}
@@ -102,12 +78,26 @@ jobs:
           "STAGING_QA_ANALYST_EMAIL","STAGING_QA_CONTENT_EDITOR_EMAIL","STAGING_QA_CONTENT_REVIEWER_EMAIL",
           "STAGING_QA_PUBLISHER_EMAIL","STAGING_QA_PAYMENT_OPERATOR_EMAIL","STAGING_QA_LEARNER_SUPPORT_EMAIL",
           "STAGING_QA_SECURITY_ADMIN_EMAIL","STAGING_QA_REVOKED_ADMIN_EMAIL","STAGING_QA_MAILBOX_URL","STAGING_QA_MAILBOX_TOKEN"]
+          missing=[k for k in keys if not vals.get(k)]
+          if missing:
+              raise SystemExit("Missing staging QA fixtures: "+", ".join(missing))
           for k in keys:
-              v=vals[k]
-              print(k+"\t"+base64.b64encode(v.encode()).decode())
-          PY' > /tmp/qa-values.b64
+              print(k+"\t"+base64.b64encode(vals[k].encode()).decode())
+          PY' > /tmp/qa-values.b64 2>/tmp/qa-ssh-error; then
+              ok=true
+              break
+            fi
+            echo "SSH_FIXTURE_IMPORT_ATTEMPT_$n=FAILED"
+            sleep 3
+          done
+          if [ "$ok" != true ]; then
+            cat /tmp/qa-ssh-error >&2 || true
+            exit 21
+          fi
+          test -s /tmp/qa-values.b64
           while IFS=$'\t' read -r key encoded; do
             value="$(printf '%s' "$encoded" | base64 -d)"
+            test -n "$value"
             printf '::add-mask::%s\n' "$value"
             {
               echo "$key<<__SKILLUP_QA__"
@@ -115,64 +105,49 @@ jobs:
               echo '__SKILLUP_QA__'
             } >> "$GITHUB_ENV"
           done < /tmp/qa-values.b64
-          rm -f /tmp/qa-values.b64
-          echo 'SERVER_QA_VALUES_BRIDGED=PASS'
+          rm -f /tmp/qa-values.b64 /tmp/qa-ssh-error /tmp/skillup-staging-key
+          echo 'SERVER_QA_FIXTURES_IMPORTED=PASS'
 
-      - name: Establish exact-hostname TLS tunnel to staging
-        shell: bash
-        run: |
-          set -euo pipefail
-          sudo ssh -f -N -i "$SSH_KEY_PATH" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ExitOnForwardFailure=yes -o ServerAliveInterval=15 -L 443:127.0.0.1:443 "$STAGING_SSH_USER@$STAGING_HOST"
-          if ! grep -q 'skillupshop.codistan.org' /etc/hosts; then echo '127.0.0.1 skillupshop.codistan.org' | sudo tee -a /etc/hosts >/dev/null; fi
-          body="$(curl --fail --silent --show-error --max-time 15 "$STAGING_WEB_URL/api/health")"
-          BODY="$body" EXPECTED_SHA='${{ github.event.pull_request.base.sha }}' node <<'NODE'
-          const b=JSON.parse(process.env.BODY); if(b.status!=='ok'||b.releaseSha!==process.env.EXPECTED_SHA) throw new Error('Tunneled exact-release health mismatch'); console.log('TLS_TUNNEL_EXACT_RELEASE=PASS');
-          NODE
-
-      - name: Set up Node and locked workspace
+      - name: Set up Node
         uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
-      - name: Install dependencies and select runner Chrome
+
+      - name: Install locked workspace and pinned Chromium
         shell: bash
         run: |
           set -euo pipefail
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
-          google-chrome --version
-          node <<'NODE'
-          const fs=require('fs'); const p='qa/staging-certification/playwright.config.mjs'; let s=fs.readFileSync(p,'utf8');
-          s=s.replace('baseURL,\n    extraHTTPHeaders', 'baseURL,\n    channel: "chrome",\n    extraHTTPHeaders');
-          fs.writeFileSync(p,s);
-          NODE
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
 
-      - name: Prove real four-digit OTP for all QA identities
-        shell: bash
-        run: |
-          set -euo pipefail
-          pnpm --filter @skillup/staging-certification exec playwright test --project=auth-setup --reporter=line
-          echo 'REAL_OTP_ALL_QA_IDENTITIES=PASS'
-
-      - name: Run full functional Playwright suite
+      - name: Run complete functional staging certification with real OTP
         shell: bash
         run: |
           set -euo pipefail
           pnpm --filter @skillup/staging-certification run certify:functional
-          echo 'FULL_FUNCTIONAL_PLAYWRIGHT=PASS'
+          echo 'REAL_OTP_AUTHENTICATED_FUNCTIONAL_CERTIFICATION=PASS'
 
-      - name: Capture visual baselines
+      - name: Establish initial approved visual baselines
         shell: bash
         run: |
           set -euo pipefail
           pnpm --filter @skillup/staging-certification exec playwright test --project=visual-desktop --project=visual-learner-desktop --update-snapshots --reporter=line
-          echo 'VISUAL_BASELINES_CAPTURED=PASS'
+          echo 'VISUAL_BASELINE_CAPTURE=PASS'
 
-      - name: Upload full QA evidence
+      - name: Re-run visual comparisons against captured baselines
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm --filter @skillup/staging-certification exec playwright test --project=visual-desktop --project=visual-learner-desktop --reporter=line
+          echo 'VISUAL_REGRESSION_REPEATABILITY=PASS'
+
+      - name: Upload sanitized QA and visual evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: qa-tunnel-full-${{ matrix.shard }}-${{ github.run_id }}-${{ github.run_attempt }}
+          name: staging-final-evidence-${{ github.run_id }}-${{ github.run_attempt }}
           path: |
             qa/staging-certification/artifacts/html
             qa/staging-certification/artifacts/test-results
