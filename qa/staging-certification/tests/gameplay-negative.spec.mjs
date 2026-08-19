@@ -36,8 +36,8 @@ test("repeated level start resumes the same active server-side session", async (
 });
 
 test("private level navigation recovers after a refresh", async ({ page }) => {
-  await page.goto(`/en/learn/${levelId}`);
+  await page.goto(`/en/learn/${levelId}`, { waitUntil: "domcontentloaded" });
   await expect(page.getByText(/Challenge \d+/)).toBeVisible();
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByText(/Challenge \d+/)).toBeVisible();
 });
