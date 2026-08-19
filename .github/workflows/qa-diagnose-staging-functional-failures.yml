@@ -1,0 +1,51 @@
+name: QA Diagnose Staging Functional Failures
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'qa/final-staging-8f5a3db'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Locate relevant source contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo '=== GAMEPLAY SOURCE MATCHES ==='
+          grep -RIn --exclude='*.map' -E 'published level version|published.*level|level_versions|gameplay/levels' apps packages tools | head -120 || true
+          echo '=== PREMIUM REPORT SOURCE MATCHES ==='
+          grep -RIn --exclude='*.map' -E 'reports/premium|premium/summary|payment\.reconcile|security_admin|learner.support' apps packages | head -180 || true
+      - name: Read-only staging database and sanitized API diagnostics
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" >/tmp/key; chmod 600 /tmp/key
+          ssh -i /tmp/key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=30 "$STAGING_SSH_USER@$STAGING_HOST" bash -s <<'REMOTE'
+          set -euo pipefail
+          echo '=== RELEVANT DATABASE TABLES ==='
+          docker exec skillup-postgres-staging-container psql -U skillup -d skillup -Atc "select table_name from information_schema.tables where table_schema='public' and (table_name ilike '%level%' or table_name ilike '%premium%' or table_name ilike '%payment%' or table_name ilike '%admin%' or table_name ilike '%support%') order by table_name" 2>/dev/null || docker exec skillup-postgres-staging-container psql -U "$(docker exec skillup-postgres-staging-container printenv POSTGRES_USER)" -d "$(docker exec skillup-postgres-staging-container printenv POSTGRES_DB)" -Atc "select table_name from information_schema.tables where table_schema='public' and (table_name ilike '%level%' or table_name ilike '%premium%' or table_name ilike '%payment%' or table_name ilike '%admin%' or table_name ilike '%support%') order by table_name"
+          echo '=== LEVEL-LIKE COLUMN INVENTORY ==='
+          docker exec skillup-postgres-staging-container sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select table_name||\x27.\x27||column_name||\x27:\x27||data_type from information_schema.columns where table_schema=\x27public\x27 and table_name in (select table_name from information_schema.tables where table_schema=\x27public\x27 and table_name ilike \x27%level%\x27) order by table_name,ordinal_position"' | head -160
+          echo '=== CANONICAL LEVEL UUID REFERENCES ==='
+          for table in $(docker exec skillup-postgres-staging-container sh -lc 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select distinct table_name from information_schema.columns where table_schema=\x27public\x27 and data_type in (\x27uuid\x27,\x27text\x27,\x27character varying\x27) and table_name ilike \x27%level%\x27 order by table_name"'); do
+            docker exec skillup-postgres-staging-container sh -lc "psql -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Atc \"select '$table' where exists (select 1 from $table row_to_check where row_to_json(row_to_check)::text like '%3c315a1a-824a-413e-836d-69a9fc8bad1f%')\"" 2>/dev/null || true
+          done
+          echo '=== RECENT SANITIZED DATABASE/API ERRORS ==='
+          docker logs --since 20m skillup-api-staging-container 2>&1 | grep -E '42883|22P02|operator does not exist|internal_error|unexpected server error|published level version|Premium summary|learner support|requestId' | tail -120 | sed -E 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+/[EMAIL]/g' || true
+          REMOTE
+          rm -f /tmp/key
