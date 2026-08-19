@@ -59,7 +59,7 @@ jobs:
         run: |
           set -euo pipefail
           pnpm install --frozen-lockfile
-          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+          pnpm --filter @skillup/staging-certification exec playwright install chromium
 
       - name: Prove exact live candidate and export immutable identity
         shell: bash
