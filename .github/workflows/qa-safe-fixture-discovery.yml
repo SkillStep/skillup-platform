@@ -23,34 +23,47 @@ jobs:
           set -euo pipefail
           printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
           chmod 600 /tmp/staging-key
-      - name: Discover non-secret mailbox and QA plumbing
+      - name: Discover host-level QA and mailbox plumbing without values
         shell: bash
         run: |
           set -euo pipefail
           ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
-          echo '=== COMPOSE SERVICES ==='
-          cd /opt/skillup
-          docker compose -f docker-compose.staging.yml config --services || true
-          echo '=== RUNNING CONTAINERS ==='
-          docker ps --format '{{.Names}} | {{.Image}} | {{.Ports}}'
-          echo '=== RELEVANT ENVIRONMENT KEY NAMES ONLY ==='
+          echo '=== RELEVANT KEY NAMES IN KNOWN ENV FILES ==='
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('/opt/skillup/.env')
-          if p.exists():
-              keys=[]
-              for line in p.read_text().splitlines():
-                  if line and not line.lstrip().startswith('#') and '=' in line:
-                      key=line.split('=',1)[0].strip()
-                      if any(token in key.upper() for token in ('QA','MAIL','EMAIL','SMTP','OTP','BREVO','TEST')):
+          candidates=[Path('/opt/skillup/.env'),Path('/etc/environment')]
+          candidates += list(Path('/etc').glob('**/*.env'))[:200]
+          candidates += list(Path.home().glob('**/*.env'))[:200]
+          seen=set()
+          for p in candidates:
+              try:
+                  if not p.is_file() or p in seen: continue
+                  seen.add(p)
+                  keys=[]
+                  for line in p.read_text(errors='ignore').splitlines():
+                      s=line.strip()
+                      if not s or s.startswith('#') or '=' not in s: continue
+                      key=s.split('=',1)[0].replace('export ','').strip()
+                      if any(t in key.upper() for t in ('QA','MAIL','EMAIL','SMTP','OTP','BREVO','TEST')):
                           keys.append(key)
-              for key in sorted(set(keys)):
-                  print(key)
+                  if keys:
+                      print(str(p)+': '+', '.join(sorted(set(keys))))
+              except Exception:
+                  pass
           PY
-          echo '=== LISTENING TCP PORTS ==='
-          ss -lnt | awk 'NR==1 || /LISTEN/' | head -80
-          echo '=== MAIL/QA-NAMED FILES UNDER OPT SKILLUP ==='
-          find /opt/skillup -maxdepth 3 -type f \( -iname '*mail*' -o -iname '*qa*' -o -iname '*otp*' \) -printf '%p\n' 2>/dev/null | head -80
+          echo '=== SKILLUP CONTAINER RELEVANT ENV KEY NAMES ==='
+          for c in skillup-api-staging-container skillup-web-staging-container skillup-ai-worker-staging-container; do
+            echo "[$c]"
+            docker inspect "$c" --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | cut -d= -f1 | grep -Ei 'QA|MAIL|EMAIL|SMTP|OTP|BREVO|TEST' | sort -u || true
+          done
+          echo '=== SYSTEMD SERVICE NAMES ==='
+          systemctl list-unit-files --type=service --no-pager 2>/dev/null | grep -Ei 'mail|smtp|otp|qa|skillup|brevo|webhook|inbox' | head -100 || true
+          echo '=== RUNNING PROCESS COMMAND NAMES ==='
+          ps -eo comm,args --no-headers | grep -Ei 'mailpit|mailhog|smtp4dev|brevo|mailbox|inbox|webhook|otp' | grep -v grep | sed -E 's/(token|password|secret|key)=[^ ]+/\1=REDACTED/Ig' | head -100 || true
+          echo '=== QA/MAIL FILE PATHS (NAMES ONLY) ==='
+          find /opt /srv /var/www "$HOME" -maxdepth 5 -type f \( -iname '*mailbox*' -o -iname '*mailpit*' -o -iname '*mailhog*' -o -iname '*inbox*' -o -iname '*otp*' -o -iname '*qa*' \) -printf '%p\n' 2>/dev/null | head -150 || true
+          echo '=== CRON COMMAND NAMES ==='
+          (crontab -l 2>/dev/null || true) | sed -E 's/(token|password|secret|key)=[^ ]+/\1=REDACTED/Ig' | grep -Ei 'mail|otp|qa|brevo|inbox|webhook' | head -80 || true
           REMOTE
           rm -f /tmp/staging-key
