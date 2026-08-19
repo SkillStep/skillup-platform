@@ -1,0 +1,272 @@
+name: UAT Certification Probe
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: uat-certification-probe
+  cancel-in-progress: true
+
+jobs:
+  certify:
+    name: Certify live staging excluding external JazzCash
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    environment: staging
+    env:
+      STAGING_WEB_URL: https://skillupshop.codistan.org
+      STAGING_API_URL: ${{ vars.STAGING_API_URL }}
+      STAGING_QA_RUN_ID: uat-${{ github.run_id }}-${{ github.run_attempt }}
+      STAGING_REQUIRE_EMAIL: "true"
+      STAGING_REQUIRE_AI: "false"
+      STAGING_REQUIRE_JAZZCASH: "false"
+      STAGING_REQUIRE_VISUALS: "false"
+      STAGING_EMAIL_PROVIDER_READY: "true"
+      STAGING_DEEPSEEK_READY: "true"
+      STAGING_JAZZCASH_SANDBOX_READY: "false"
+      STAGING_VISUAL_BASELINES_APPROVED: "false"
+      STAGING_QA_LEARNER_PREMIUM_READY: "true"
+      STAGING_QA_LEARNER_EMAIL: skillup+qa-learner@codistan.org
+      STAGING_QA_FREE_LEARNER_EMAIL: skillup+qa-free-learner@codistan.org
+      STAGING_QA_ONBOARDING_EMAIL: skillup+qa-onboarding@codistan.org
+      STAGING_QA_AUTH_NEGATIVE_EMAIL: skillup+qa-auth-negative@codistan.org
+      STAGING_QA_SESSION_EMAIL: skillup+qa-session@codistan.org
+      STAGING_QA_ADMIN_EMAIL: skillup+qa-admin@codistan.org
+      STAGING_QA_ANALYST_EMAIL: skillup+qa-analyst@codistan.org
+      STAGING_QA_CONTENT_EDITOR_EMAIL: skillup+qa-content-editor@codistan.org
+      STAGING_QA_CONTENT_REVIEWER_EMAIL: skillup+qa-content-reviewer@codistan.org
+      STAGING_QA_PUBLISHER_EMAIL: skillup+qa-publisher@codistan.org
+      STAGING_QA_PAYMENT_OPERATOR_EMAIL: skillup+qa-payment-operator@codistan.org
+      STAGING_QA_LEARNER_SUPPORT_EMAIL: skillup+qa-learner-support@codistan.org
+      STAGING_QA_SECURITY_ADMIN_EMAIL: skillup+qa-security-admin@codistan.org
+      STAGING_QA_REVOKED_ADMIN_EMAIL: skillup+qa-revoked-admin@codistan.org
+      STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
+      STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
+
+    steps:
+      - name: Checkout QA probe
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+
+      - name: Enable pinned pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+
+      - name: Install locked workspace and Chromium
+        shell: bash
+        run: |
+          set -euo pipefail
+          pnpm install --frozen-lockfile
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+
+      - name: Prove exact live candidate and export immutable identity
+        shell: bash
+        env:
+          EXPECTED_RELEASE_SHA: 8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e
+        run: |
+          set -euo pipefail
+          base="$STAGING_WEB_URL"
+          web_health="$(curl --fail --silent --show-error --max-time 15 "$base/api/health")"
+          api_version="$(curl --fail --silent --show-error --max-time 15 "$base/api/v1/version")"
+          api_ready="$(curl --fail --silent --show-error --max-time 15 "$base/api/v1/ready")"
+
+          WEB_HEALTH="$web_health" API_VERSION="$api_version" API_READY="$api_ready" EXPECTED_RELEASE_SHA="$EXPECTED_RELEASE_SHA" node <<'NODE' >> "$GITHUB_ENV"
+          const web = JSON.parse(process.env.WEB_HEALTH);
+          const api = JSON.parse(process.env.API_VERSION);
+          const ready = JSON.parse(process.env.API_READY);
+          const expected = process.env.EXPECTED_RELEASE_SHA;
+          if (web.status !== 'ok' || api.releaseSha !== expected || web.releaseSha !== expected || ready.releaseSha !== expected) {
+            throw new Error(`Staging is not running the locked candidate ${expected}.`);
+          }
+          if (ready.status !== 'ok') throw new Error('API database readiness is not healthy.');
+          if (!web.pipelineId || !web.artifactRef || !web.imageDigest || !web.rollbackRef) {
+            throw new Error('Web release identity is incomplete.');
+          }
+          if (!api.pipelineId || !api.artifactRef || !api.imageDigest || !api.rollbackRef) {
+            throw new Error('API release identity is incomplete.');
+          }
+          if (web.pipelineId !== api.pipelineId || web.rollbackRef !== api.rollbackRef) {
+            throw new Error('Web/API deployment identity is inconsistent.');
+          }
+          const lines = {
+            STAGING_EXPECTED_RELEASE_SHA: expected,
+            STAGING_DEPLOYMENT_PIPELINE_ID: web.pipelineId,
+            STAGING_WEB_ARTIFACT_REF: web.artifactRef,
+            STAGING_WEB_IMAGE_DIGEST: web.imageDigest,
+            STAGING_API_ARTIFACT_REF: api.artifactRef,
+            STAGING_API_IMAGE_DIGEST: api.imageDigest,
+            STAGING_PREVIOUS_RELEASE_REF: web.rollbackRef,
+          };
+          for (const [key, value] of Object.entries(lines)) process.stdout.write(`${key}=${value}\n`);
+          NODE
+
+      - name: Create and verify all QA identities through real OTP
+        shell: bash
+        run: pnpm --filter @skillup/staging-certification exec playwright test --project=auth-setup
+
+      - name: Provision audited staging-only roles and deterministic learner fixtures
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          EXPECTED_RELEASE_SHA: 8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e
+          QA_LEARNER_EMAIL: skillup+qa-learner@codistan.org
+          QA_FREE_LEARNER_EMAIL: skillup+qa-free-learner@codistan.org
+          QA_ADMIN_EMAIL: skillup+qa-admin@codistan.org
+          QA_ANALYST_EMAIL: skillup+qa-analyst@codistan.org
+          QA_CONTENT_EDITOR_EMAIL: skillup+qa-content-editor@codistan.org
+          QA_CONTENT_REVIEWER_EMAIL: skillup+qa-content-reviewer@codistan.org
+          QA_PUBLISHER_EMAIL: skillup+qa-publisher@codistan.org
+          QA_PAYMENT_OPERATOR_EMAIL: skillup+qa-payment-operator@codistan.org
+          QA_LEARNER_SUPPORT_EMAIL: skillup+qa-learner-support@codistan.org
+          QA_SECURITY_ADMIN_EMAIL: skillup+qa-security-admin@codistan.org
+          QA_REVOKED_ADMIN_EMAIL: skillup+qa-revoked-admin@codistan.org
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 15m
+          envs: EXPECTED_RELEASE_SHA,QA_LEARNER_EMAIL,QA_FREE_LEARNER_EMAIL,QA_ADMIN_EMAIL,QA_ANALYST_EMAIL,QA_CONTENT_EDITOR_EMAIL,QA_CONTENT_REVIEWER_EMAIL,QA_PUBLISHER_EMAIL,QA_PAYMENT_OPERATOR_EMAIL,QA_LEARNER_SUPPORT_EMAIL,QA_SECURITY_ADMIN_EMAIL,QA_REVOKED_ADMIN_EMAIL
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            running_sha="$(grep '^RELEASE_SHA=' .env | tail -1 | cut -d= -f2-)"
+            test "$running_sha" = "$EXPECTED_RELEASE_SHA"
+            compose="docker compose -f docker-compose.staging.yml"
+
+            bootstrap() {
+              email="$1"
+              roles="$2"
+              $compose run --rm --no-deps \
+                -e ADMIN_BOOTSTRAP_CONFIRM=I_UNDERSTAND_THIS_GRANTS_PRIVILEGED_ACCESS \
+                -e ADMIN_BOOTSTRAP_EMAIL="$email" \
+                -e ADMIN_BOOTSTRAP_REASON="Staging UAT certification QA role fixture" \
+                -e ADMIN_BOOTSTRAP_ROLES="$roles" \
+                -e RELEASE_SHA="$EXPECTED_RELEASE_SHA" \
+                api node node_modules/@skillup/database/dist/cli/admin-bootstrap.js
+            }
+
+            bootstrap "$QA_ADMIN_EMAIL" "content_editor,content_reviewer,publisher,learner_support,payment_operator,analyst,security_admin"
+            bootstrap "$QA_ANALYST_EMAIL" "analyst"
+            bootstrap "$QA_CONTENT_EDITOR_EMAIL" "content_editor"
+            bootstrap "$QA_CONTENT_REVIEWER_EMAIL" "content_reviewer"
+            bootstrap "$QA_PUBLISHER_EMAIL" "publisher"
+            bootstrap "$QA_PAYMENT_OPERATOR_EMAIL" "payment_operator"
+            bootstrap "$QA_LEARNER_SUPPORT_EMAIL" "learner_support"
+            bootstrap "$QA_SECURITY_ADMIN_EMAIL" "security_admin"
+            bootstrap "$QA_REVOKED_ADMIN_EMAIL" "security_admin"
+
+            $compose run --rm --no-deps \
+              -e QA_LEARNER_EMAIL="$QA_LEARNER_EMAIL" \
+              -e QA_FREE_LEARNER_EMAIL="$QA_FREE_LEARNER_EMAIL" \
+              -e QA_REVOKED_ADMIN_EMAIL="$QA_REVOKED_ADMIN_EMAIL" \
+              -e RELEASE_SHA="$EXPECTED_RELEASE_SHA" \
+              api node --input-type=module <<'NODE'
+            import { randomUUID } from 'node:crypto';
+            import pg from 'pg';
+            const { Pool } = pg;
+            const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
+            const client = await pool.connect();
+            const email = (name) => process.env[name].trim().toLowerCase();
+            async function userId(address) {
+              const result = await client.query(
+                `select e.user_id from user_email_identities e join users u on u.id=e.user_id
+                  where e.email_normalized=$1 and u.status='active'`, [address]);
+              if (!result.rows[0]?.user_id) throw new Error(`Verified QA identity missing: ${address}`);
+              return result.rows[0].user_id;
+            }
+            try {
+              await client.query('begin');
+              const learnerId = await userId(email('QA_LEARNER_EMAIL'));
+              const freeId = await userId(email('QA_FREE_LEARNER_EMAIL'));
+              const revokedId = await userId(email('QA_REVOKED_ADMIN_EMAIL'));
+              const plan = await client.query(
+                `select v.id from commercial_plan_versions v join commercial_plans p on p.id=v.plan_id
+                  where p.code='premium-monthly' and p.status='active' and v.status='active'
+                  order by v.version desc limit 1`);
+              const planVersionId = plan.rows[0]?.id;
+              if (!planVersionId) throw new Error('Active premium-monthly plan version is missing.');
+
+              const existing = await client.query(
+                `select id from entitlements where user_id=$1 and status in ('active','grace')
+                  and coalesce(grace_ends_at, ends_at) > now() order by ends_at desc limit 1`, [learnerId]);
+              if (!existing.rows[0]?.id) {
+                const inserted = await client.query(
+                  `insert into entitlements (user_id, plan_version_id, source_order_id, status, starts_at, ends_at, created_at, updated_at)
+                   values ($1,$2,null,'active',now()-interval '1 minute',now()+interval '30 days',now(),now()) returning id`,
+                  [learnerId, planVersionId]);
+                await client.query(
+                  `insert into entitlement_events (entitlement_id, action, actor_type, reason, evidence_reference, previous_status, next_status)
+                   values ($1,'qa_fixture_grant','system','Staging UAT certification premium fixture',$2,null,'active')`,
+                  [inserted.rows[0].id, `release:${process.env.RELEASE_SHA}`]);
+              }
+
+              const freeEntitlements = await client.query(
+                `update entitlements set status='revoked', revoked_at=coalesce(revoked_at,now()), updated_at=now()
+                  where user_id=$1 and status in ('active','grace') returning id`, [freeId]);
+              for (const row of freeEntitlements.rows) {
+                await client.query(
+                  `insert into entitlement_events (entitlement_id, action, actor_type, reason, evidence_reference, previous_status, next_status)
+                   values ($1,'qa_fixture_revoke','system','Keep staging free-learner fixture server-authoritatively free',$2,'active','revoked')`,
+                  [row.id, `release:${process.env.RELEASE_SHA}`]);
+              }
+
+              await client.query(`delete from learner_daily_mission_usage where user_id in ($1,$2)`, [learnerId, freeId]);
+
+              await client.query(
+                `update admin_role_assignments set revoked_at=coalesce(revoked_at,now())
+                  where user_id=$1 and revoked_at is null`, [revokedId]);
+              await client.query(
+                `update admin_principals set status='revoked', suspended_at=coalesce(suspended_at,now()) where user_id=$1`,
+                [revokedId]);
+              await client.query(
+                `insert into privileged_audit_events
+                  (actor_user_id,actor_role,action,target_type,target_id,result,reason,correlation_id,release_sha,metadata)
+                 values (null,'bootstrap','admin.qa_revoke','user',$1,'succeeded',
+                         'Staging UAT certification revoked-admin fixture',$2,$3,$4::jsonb)`,
+                [revokedId, randomUUID(), process.env.RELEASE_SHA, JSON.stringify({ email: email('QA_REVOKED_ADMIN_EMAIL') })]);
+
+              await client.query('commit');
+              console.log('STAGING QA ROLE/PREMIUM/REVOKED FIXTURES: PASS');
+            } catch (error) {
+              await client.query('rollback');
+              throw error;
+            } finally {
+              client.release();
+              await pool.end();
+            }
+            NODE
+
+      - name: Run complete mandatory staging certification
+        shell: bash
+        run: node tools/staging-certification.mjs
+
+      - name: Remove browser authentication state
+        if: always()
+        shell: bash
+        run: rm -rf qa/staging-certification/artifacts/.auth
+
+      - name: Upload sanitized UAT certification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uat-certification-probe-${{ github.run_id }}-${{ github.run_attempt }}
+          path: |
+            artifacts/staging-certification
+            qa/staging-certification/artifacts/html
+            qa/staging-certification/artifacts/test-results
+            qa/staging-certification/artifacts/playwright-results.json
+          if-no-files-found: warn
+          retention-days: 14
