@@ -369,8 +369,8 @@ export function createAuthService(
       const extendedIdle = addMinutes(seenAt, options.sessionIdleMinutes);
       await options.pool.query(
         `update auth_sessions
-            set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
-          where id = $1 and last_seen_at < $2 - interval '5 minutes'`,
+            set last_seen_at = $2::timestamptz, idle_expires_at = least(expires_at, $3::timestamptz)
+          where id = $1 and last_seen_at < $2::timestamptz - interval '5 minutes'`,
         [row.session_id, seenAt, extendedIdle],
       );
 
