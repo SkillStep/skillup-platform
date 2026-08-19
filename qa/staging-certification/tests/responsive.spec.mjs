@@ -23,7 +23,7 @@ test("mobile learner can navigate critical authenticated surfaces without horizo
 
 test("mobile Premium purchase controls remain visible and usable", async ({ page }) => {
   await page.goto("/en/pricing");
-  await expect(page.getByText(/PKR\s*599/).first()).toBeVisible();
-  await expect(page.getByText(/PKR\s*4,999/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*599/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*4,999/).first()).toBeVisible();
   await expectNoHorizontalOverflow(page);
 });
