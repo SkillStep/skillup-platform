@@ -106,21 +106,8 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
       const range = resolvePremiumReportRange(query);
       const values = filterValues(query);
       const orderValues = values.slice(0, 6);
-      const membershipValues = [
-        values[0],
-        values[1],
-        values[2],
-        values[3],
-        values[4],
-        values[6],
-      ];
-      const reconciliationValues = [
-        values[1],
-        values[2],
-        values[3],
-        values[4],
-        values[5],
-      ];
+      const membershipValues = [values[0], values[1], values[2], values[3], values[4], values[6]];
+      const reconciliationValues = [values[1], values[2], values[3], values[4], values[5]];
       const [financial, attempts, memberships, buckets, planBreakdown, reconciliation] =
         await Promise.all([
           pool.query<Record<string, unknown>>(
@@ -444,14 +431,7 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
 
     memberships: async (query) => {
       const values = filterValues(query);
-      const membershipValues = [
-        values[0],
-        values[1],
-        values[2],
-        values[3],
-        values[4],
-        values[6],
-      ];
+      const membershipValues = [values[0], values[1], values[2], values[3], values[4], values[6]];
       const result = await pool.query<Record<string, unknown>>(
         `select count(*) over()::integer as "totalCount",
                 mp.id, mp.entitlement_id as "entitlementId",
