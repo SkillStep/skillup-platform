@@ -93,7 +93,10 @@ jobs:
     timeout-minutes: 45
     environment: staging
     env:
-      STAGING_WEB_URL: ${{ vars.STAGING_WEB_URL }}
+      # The canonical staging edge is deployment-owned configuration, not a secret.
+      # Keep an environment override for future moves, but do not block certification
+      # merely because the optional GitHub variable was never created.
+      STAGING_WEB_URL: ${{ vars.STAGING_WEB_URL || 'https://skillupshop.codistan.org' }}
       STAGING_API_URL: ${{ vars.STAGING_API_URL }}
       STAGING_EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha || github.event.client_payload.expected_release_sha }}
       STAGING_DEPLOYMENT_PIPELINE_ID: ${{ inputs.pipeline_id || github.event.client_payload.pipeline_id }}
@@ -151,6 +154,44 @@ jobs:
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
 
+      - name: Validate staging certification wiring
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          missing=()
+          for name in \
+            STAGING_WEB_URL \
+            STAGING_EXPECTED_RELEASE_SHA \
+            STAGING_DEPLOYMENT_PIPELINE_ID \
+            STAGING_WEB_ARTIFACT_REF \
+            STAGING_WEB_IMAGE_DIGEST \
+            STAGING_API_ARTIFACT_REF \
+            STAGING_API_IMAGE_DIGEST \
+            STAGING_PREVIOUS_RELEASE_REF; do
+            if [ -z "${!name:-}" ]; then
+              missing+=("$name")
+            fi
+          done
+
+          if [ "${STAGING_REQUIRE_EMAIL,,}" = "true" ]; then
+            [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || missing+=("STAGING_QA_MAILBOX_URL")
+            [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ] || missing+=("STAGING_QA_MAILBOX_TOKEN")
+          fi
+
+          if [ "${STAGING_REQUIRE_AI,,}" = "true" ]; then
+            [ -n "${STAGING_AI_RELEASE_SHA:-}" ] || missing+=("STAGING_AI_RELEASE_SHA")
+            [ -n "${STAGING_AI_ARTIFACT_REF:-}" ] || missing+=("STAGING_AI_ARTIFACT_REF")
+            [ -n "${STAGING_AI_IMAGE_DIGEST:-}" ] || missing+=("STAGING_AI_IMAGE_DIGEST")
+          fi
+
+          if [ "${#missing[@]}" -ne 0 ]; then
+            printf '::error::Staging certification wiring is incomplete. Missing: %s\n' "$(IFS=', '; echo "${missing[*]}")" >&2
+            exit 1
+          fi
+
+          echo "STAGING CERTIFICATION WIRING: PASS"
+
       - name: Install locked workspace and Chromium
         shell: bash
         run: |
@@ -203,8 +244,13 @@ jobs:
 
       - name: Run mandatory staging certification
         env:
+          # These are not trust-me flags in this path. They become true only after
+          # the preceding real OTP bootstrap and staging fixture provisioner pass.
+          # DeepSeek is proven by ai.spec.mjs, which exercises the live worker and
+          # asserts the returned artifact provider is deepseek.
           STAGING_EMAIL_PROVIDER_READY: "true"
           STAGING_QA_LEARNER_PREMIUM_READY: "true"
+          STAGING_DEEPSEEK_READY: "true"
         run: node tools/staging-certification.mjs
 
       - name: Remove browser authentication state
