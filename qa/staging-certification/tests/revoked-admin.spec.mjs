@@ -11,9 +11,11 @@ test("revoked Admin identity is denied server-side even with a valid learner ses
   expect(admin.status()).toBe(403);
 
   await page.goto("/en/admin");
-  await expect(page.getByRole("alert")).toContainText(
-    "Your account does not have administrative access.",
-  );
+  await expect(
+    page
+      .getByRole("alert")
+      .filter({ hasText: "Your account does not have administrative access." }),
+  ).toContainText("Your account does not have administrative access.");
   await expect(page.getByText(/^Roles:/)).toHaveCount(0);
 });
 
