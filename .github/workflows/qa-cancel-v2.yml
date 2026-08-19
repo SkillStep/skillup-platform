@@ -1,0 +1,15 @@
+name: QA Supersede V2
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: qa-final-staging-closure-v2
+  cancel-in-progress: true
+jobs:
+  supersede:
+    if: github.head_ref == 'qa/final-staging-8f5a3db'
+    runs-on: ubuntu-24.04
+    steps:
+      - run: echo 'V2 closure superseded by V4.'
