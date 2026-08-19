@@ -1,0 +1,39 @@
+name: QA Speed Playwright Install
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.head_ref == 'qa/final-staging-8f5a3db'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: qa/final-staging-8f5a3db
+          fetch-depth: 0
+      - name: Remove redundant OS dependency install
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('.github/workflows/qa-staging-closure-v3.yml')
+          text=p.read_text()
+          old='pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium'
+          new='pnpm --filter @skillup/staging-certification exec playwright install chromium'
+          if old in text:
+              p.write_text(text.replace(old,new,1))
+          elif new not in text:
+              raise SystemExit('Expected Playwright install command not found')
+          PY
+          if git diff --quiet; then exit 0; fi
+          git config user.name 'skillup-ci-bot'
+          git config user.email 'skillup-ci-bot@users.noreply.github.com'
+          git add .github/workflows/qa-staging-closure-v3.yml
+          git commit -m 'qa: avoid redundant Playwright OS install'
+          git push origin HEAD:qa/final-staging-8f5a3db
