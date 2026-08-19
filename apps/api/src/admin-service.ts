@@ -673,7 +673,7 @@ export function createAdminService(
            p.onboarding_status as "onboardingStatus",
            p.created_at as "createdAt",
            coalesce((
-             select sum(pl.points)
+             select sum(pl.points_delta)
                from points_ledger pl
               where pl.user_id = u.id
            ), 0)::integer as "pointsEarned",
@@ -712,7 +712,7 @@ export function createAdminService(
       const result = await options.pool.query<Record<string, unknown>>(
         `select
            (select count(*)::integer from users where status = 'active') as "activeLearners",
-           (select count(*)::integer from level_play_sessions where status = 'completed') as "completedSessions",
+           (select count(*)::integer from level_play_sessions where state = 'completed') as "completedSessions",
            (select count(*)::integer from payment_orders where status = 'succeeded') as "successfulPayments",
            (select coalesce(sum(amount_minor), 0)::bigint from payment_orders where status = 'succeeded') as "grossRevenueMinor",
            (select count(*)::integer from entitlements where status in ('active', 'grace')) as "activeEntitlements",
