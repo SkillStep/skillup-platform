@@ -11,7 +11,7 @@ jobs:
   diagnose:
     if: github.head_ref == 'fix/auth-otp-postgres-typing-20260819'
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
     env:
       APP_ENV: test
       DATABASE_URL: postgresql://skillup_local:skillup_local_only@127.0.0.1:5432/skillup
@@ -42,70 +42,16 @@ jobs:
           pnpm db:wait
           pnpm db:migrate
           pnpm db:seed
-          pnpm shared:build
-      - name: Run isolated auth diagnostic with safe DB error fields
+      - name: Reproduce full workspace test result and print only auth failure context
         shell: bash
         run: |
-          set -euo pipefail
-          cat > apps/api/src/auth-postgres-diag.test.ts <<'TS'
-          import { randomUUID } from "node:crypto";
-          import { Pool } from "pg";
-          import { afterAll, describe, expect, it } from "vitest";
-          import { createAuthService } from "./auth.js";
-
-          const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 2, allowExitOnIdle: true });
-          afterAll(async () => { await pool.end(); });
-
-          function safeError(error: unknown) {
-            if (!(error instanceof Error)) return { value: String(error) };
-            const row = error as Error & Record<string, unknown>;
-            const cause = row.cause instanceof Error ? (row.cause as Error & Record<string, unknown>) : null;
-            const pick = (source: Record<string, unknown> | null) => source ? {
-              name: source.name,
-              message: source.message,
-              code: source.code,
-              detail: source.detail,
-              hint: source.hint,
-              where: source.where,
-              constraint: source.constraint,
-              table: source.table,
-              column: source.column,
-              dataType: source.dataType,
-              routine: source.routine,
-            } : null;
-            return { top: pick(row), cause: pick(cause) };
-          }
-
-          describe("auth PostgreSQL diagnostic", () => {
-            it("reports only safe error metadata", async () => {
-              const email = `auth-diag-${randomUUID()}@example.test`;
-              const now = new Date();
-              const code = "1234";
-              const auth = createAuthService({
-                pool,
-                secret: "ci-auth-regression-secret-at-least-32-bytes",
-                challengeMinutes: 10,
-                sessionIdleMinutes: 60,
-                sessionAbsoluteHours: 168,
-                now: () => now,
-                createCode: () => code,
-                delivery: { sendSignInCode: async () => undefined },
-              });
-              try {
-                const challenge = await auth.startEmailSignIn({ email, requestFingerprint: `diag-${randomUUID()}` });
-                try {
-                  const verified = await auth.verifyEmailSignIn({ challengeId: challenge.challengeId, code });
-                  expect(verified.learner.email).toBe(email);
-                  console.log("AUTH_DIAGNOSTIC=PASS");
-                } catch (error) {
-                  console.error("AUTH_DIAGNOSTIC_ERROR=" + JSON.stringify(safeError(error)));
-                  throw error;
-                }
-              } finally {
-                await pool.query("delete from users where id in (select user_id from user_email_identities where email_normalized = $1)", [email]);
-                await pool.query("delete from auth_challenges where email_normalized = $1", [email]);
-              }
-            });
-          });
-          TS
-          pnpm --filter @skillup/api exec vitest run src/auth-postgres-diag.test.ts --reporter=verbose
+          set +e
+          pnpm test > /tmp/workspace-tests.log 2>&1
+          status=$?
+          set -e
+          echo "WORKSPACE_TEST_EXIT=$status"
+          if [ "$status" -ne 0 ]; then
+            grep -n -E -B 20 -A 60 'auth-postgres|EmailIdentity|passwordless auth|FAIL|failed|Error:' /tmp/workspace-tests.log | tail -260 || true
+            exit "$status"
+          fi
+          echo 'FULL_WORKSPACE_TESTS=PASS'
