@@ -25,23 +25,25 @@ test("PWA manifest and offline fallback are deployable", async ({ request, page 
 });
 
 test("critical public navigation survives refresh, back and forward", async ({ page }) => {
-  await page.goto("/en/skills");
-  await page.goto("/en/pricing");
-  await page.goBack();
+  await page.goto("/en/skills", { waitUntil: "domcontentloaded" });
+  await page.goto("/en/pricing", { waitUntil: "domcontentloaded" });
+  await page.goBack({ waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/en\/skills$/);
-  await page.goForward();
+  await page.goForward({ waitUntil: "domcontentloaded" });
   await expect(page).toHaveURL(/\/en\/pricing$/);
-  await page.reload();
+  await page.reload({ waitUntil: "domcontentloaded" });
   await expect(page.getByText(/(?:PKR|Rs)\s*599\s*\/\s*month/i).first()).toBeVisible();
 });
 
-test("critical public pages do not emit uncaught page errors", async ({ page }) => {
+test("critical public pages do not emit uncaught page errors", async ({ page, request }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
   for (const route of ["/en", "/en/skills", "/en/pricing", "/en/sign-in"]) {
-    const response = await page.goto(route);
-    expect(response?.ok()).toBeTruthy();
+    const http = await request.get(route);
+    expect(http.ok()).toBe(true);
+    await page.goto(route, { waitUntil: "domcontentloaded" });
+    await expect(page.locator("main")).toBeVisible();
   }
 
   expect(errors).toEqual([]);
