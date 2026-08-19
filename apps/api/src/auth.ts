@@ -316,7 +316,7 @@ export function createAuthService(
         await client.query(
           `insert into auth_sessions
             (user_id, token_digest, expires_at, idle_expires_at, last_seen_at, created_at)
-           values ($1, $2, $3, least($4, $3), $5, $5)`,
+           values ($1, $2, $3::timestamptz, least($4::timestamptz, $3::timestamptz), $5::timestamptz, $5::timestamptz)`,
           [userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
         );
 
