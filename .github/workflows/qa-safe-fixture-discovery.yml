@@ -1,0 +1,56 @@
+name: QA Safe Fixture Discovery
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  discover:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
+          chmod 600 /tmp/staging-key
+      - name: Discover non-secret mailbox and QA plumbing
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          echo '=== COMPOSE SERVICES ==='
+          cd /opt/skillup
+          docker compose -f docker-compose.staging.yml config --services || true
+          echo '=== RUNNING CONTAINERS ==='
+          docker ps --format '{{.Names}} | {{.Image}} | {{.Ports}}'
+          echo '=== RELEVANT ENVIRONMENT KEY NAMES ONLY ==='
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('/opt/skillup/.env')
+          if p.exists():
+              keys=[]
+              for line in p.read_text().splitlines():
+                  if line and not line.lstrip().startswith('#') and '=' in line:
+                      key=line.split('=',1)[0].strip()
+                      if any(token in key.upper() for token in ('QA','MAIL','EMAIL','SMTP','OTP','BREVO','TEST')):
+                          keys.append(key)
+              for key in sorted(set(keys)):
+                  print(key)
+          PY
+          echo '=== LISTENING TCP PORTS ==='
+          ss -lnt | awk 'NR==1 || /LISTEN/' | head -80
+          echo '=== MAIL/QA-NAMED FILES UNDER OPT SKILLUP ==='
+          find /opt/skillup -maxdepth 3 -type f \( -iname '*mail*' -o -iname '*qa*' -o -iname '*otp*' \) -printf '%p\n' 2>/dev/null | head -80
+          REMOTE
+          rm -f /tmp/staging-key
