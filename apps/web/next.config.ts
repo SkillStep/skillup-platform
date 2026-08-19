@@ -12,6 +12,12 @@ const publicRouteHeaders = [
   { key: "X-SkillUp-Cacheable", value: "public" },
 ];
 
+const healthRouteHeaders = [
+  { key: "Cache-Control", value: "no-store" },
+  { key: "Content-Security-Policy", value: "default-src 'none'; frame-ancestors 'none'" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+];
+
 function paymentFormOrigin(): string | null {
   const value = process.env["JAZZCASH_PAYMENT_URL"];
   if (!value) return null;
@@ -71,6 +77,10 @@ const nextConfig: NextConfig = {
           { key: "X-DNS-Prefetch-Control", value: "off" },
           { key: "X-Frame-Options", value: "DENY" },
         ],
+      },
+      {
+        source: "/api/health",
+        headers: healthRouteHeaders,
       },
       {
         source: "/en",
