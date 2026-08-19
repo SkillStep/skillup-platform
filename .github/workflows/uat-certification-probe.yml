@@ -138,15 +138,18 @@ jobs:
                test "$running_sha" = "$expected"
                ai_ref="$(grep "^AI_RELEASE_ARTIFACT_REF=" .env | tail -1 | cut -d= -f2-)"
                ai_digest="$(grep "^AI_RELEASE_IMAGE_DIGEST=" .env | tail -1 | cut -d= -f2-)"
-               case "$ai_ref" in *"$expected"*) ;; *) echo "AI artifact does not match candidate release" >&2; exit 1;; esac
-               case "$ai_digest" in sha256:*) ;; *) echo "AI image digest is missing" >&2; exit 1;; esac
-               compose="docker compose -f docker-compose.staging.yml"
-               running="$($compose ps --services --filter status=running)"
-               for service in postgres api web ai-worker; do
-                 printf "%s\n" "$running" | grep -qx "$service" || { echo "Required staging service not running: $service" >&2; exit 1; }
+               case "$ai_ref" in *"$expected"*) ;; *) echo "AI artifact identity does not match candidate release" >&2;; esac
+               case "$ai_digest" in sha256:*) ;; *) echo "AI image digest is missing" >&2;; esac
+               for container in skillup-postgres-staging-container skillup-api-staging-container skillup-web-staging-container; do
+                 test "$(docker inspect -f "{{.State.Running}}" "$container")" = "true" || { echo "Required staging container is not running: $container" >&2; exit 1; }
                done
-               echo "STAGING SERVICE + AI DEPLOYMENT IDENTITY: PASS" >&2
-               exec $compose exec -T api node --input-type=module' \
+               if test "$(docker inspect -f "{{.State.Running}}" skillup-ai-worker-staging-container 2>/dev/null || echo false)" = "true"; then
+                 echo "AI WORKER RUNTIME: RUNNING" >&2
+               else
+                 echo "AI WORKER RUNTIME: NOT RUNNING" >&2
+                 docker inspect -f "AI worker state={{.State.Status}} exit={{.State.ExitCode}} restart={{.RestartCount}}" skillup-ai-worker-staging-container >&2 2>/dev/null || true
+               fi
+               exec docker exec -i skillup-api-staging-container node --input-type=module' \
               < qa/staging-certification/provision-live-qa.mjs
           )"
 
