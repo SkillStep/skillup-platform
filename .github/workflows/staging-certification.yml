@@ -115,20 +115,20 @@ jobs:
       STAGING_JAZZCASH_SANDBOX_READY: ${{ vars.STAGING_JAZZCASH_SANDBOX_READY }}
       STAGING_VISUAL_BASELINES_APPROVED: ${{ vars.STAGING_VISUAL_BASELINES_APPROVED }}
       STAGING_QA_LEARNER_PREMIUM_READY: ${{ vars.STAGING_QA_LEARNER_PREMIUM_READY }}
-      STAGING_QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL }}
-      STAGING_QA_FREE_LEARNER_EMAIL: ${{ vars.STAGING_QA_FREE_LEARNER_EMAIL }}
-      STAGING_QA_ONBOARDING_EMAIL: ${{ vars.STAGING_QA_ONBOARDING_EMAIL }}
-      STAGING_QA_AUTH_NEGATIVE_EMAIL: ${{ vars.STAGING_QA_AUTH_NEGATIVE_EMAIL }}
-      STAGING_QA_SESSION_EMAIL: ${{ vars.STAGING_QA_SESSION_EMAIL }}
-      STAGING_QA_ADMIN_EMAIL: ${{ vars.STAGING_QA_ADMIN_EMAIL }}
-      STAGING_QA_ANALYST_EMAIL: ${{ vars.STAGING_QA_ANALYST_EMAIL }}
-      STAGING_QA_CONTENT_EDITOR_EMAIL: ${{ vars.STAGING_QA_CONTENT_EDITOR_EMAIL }}
-      STAGING_QA_CONTENT_REVIEWER_EMAIL: ${{ vars.STAGING_QA_CONTENT_REVIEWER_EMAIL }}
-      STAGING_QA_PUBLISHER_EMAIL: ${{ vars.STAGING_QA_PUBLISHER_EMAIL }}
-      STAGING_QA_PAYMENT_OPERATOR_EMAIL: ${{ vars.STAGING_QA_PAYMENT_OPERATOR_EMAIL }}
-      STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ vars.STAGING_QA_LEARNER_SUPPORT_EMAIL }}
-      STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ vars.STAGING_QA_SECURITY_ADMIN_EMAIL }}
-      STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL }}
+      STAGING_QA_LEARNER_EMAIL: ${{ vars.STAGING_QA_LEARNER_EMAIL || 'skillup+qa-learner@codistan.org' }}
+      STAGING_QA_FREE_LEARNER_EMAIL: ${{ vars.STAGING_QA_FREE_LEARNER_EMAIL || 'skillup+qa-free-learner@codistan.org' }}
+      STAGING_QA_ONBOARDING_EMAIL: ${{ vars.STAGING_QA_ONBOARDING_EMAIL || 'skillup+qa-onboarding@codistan.org' }}
+      STAGING_QA_AUTH_NEGATIVE_EMAIL: ${{ vars.STAGING_QA_AUTH_NEGATIVE_EMAIL || 'skillup+qa-auth-negative@codistan.org' }}
+      STAGING_QA_SESSION_EMAIL: ${{ vars.STAGING_QA_SESSION_EMAIL || 'skillup+qa-session@codistan.org' }}
+      STAGING_QA_ADMIN_EMAIL: ${{ vars.STAGING_QA_ADMIN_EMAIL || 'skillup+qa-admin@codistan.org' }}
+      STAGING_QA_ANALYST_EMAIL: ${{ vars.STAGING_QA_ANALYST_EMAIL || 'skillup+qa-analyst@codistan.org' }}
+      STAGING_QA_CONTENT_EDITOR_EMAIL: ${{ vars.STAGING_QA_CONTENT_EDITOR_EMAIL || 'skillup+qa-content-editor@codistan.org' }}
+      STAGING_QA_CONTENT_REVIEWER_EMAIL: ${{ vars.STAGING_QA_CONTENT_REVIEWER_EMAIL || 'skillup+qa-content-reviewer@codistan.org' }}
+      STAGING_QA_PUBLISHER_EMAIL: ${{ vars.STAGING_QA_PUBLISHER_EMAIL || 'skillup+qa-publisher@codistan.org' }}
+      STAGING_QA_PAYMENT_OPERATOR_EMAIL: ${{ vars.STAGING_QA_PAYMENT_OPERATOR_EMAIL || 'skillup+qa-payment-operator@codistan.org' }}
+      STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ vars.STAGING_QA_LEARNER_SUPPORT_EMAIL || 'skillup+qa-learner-support@codistan.org' }}
+      STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ vars.STAGING_QA_SECURITY_ADMIN_EMAIL || 'skillup+qa-security-admin@codistan.org' }}
+      STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL || 'skillup+qa-revoked-admin@codistan.org' }}
       STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
       STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
 
@@ -158,7 +158,53 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
 
+      - name: Verify mandatory QA accounts through real staging OTP
+        shell: bash
+        run: node tools/staging-qa-bootstrap-identities.mjs
+
+      - name: Provision deterministic staging-only roles and entitlements
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          STAGING_QA_LEARNER_EMAIL: ${{ env.STAGING_QA_LEARNER_EMAIL }}
+          STAGING_QA_FREE_LEARNER_EMAIL: ${{ env.STAGING_QA_FREE_LEARNER_EMAIL }}
+          STAGING_QA_ADMIN_EMAIL: ${{ env.STAGING_QA_ADMIN_EMAIL }}
+          STAGING_QA_ANALYST_EMAIL: ${{ env.STAGING_QA_ANALYST_EMAIL }}
+          STAGING_QA_CONTENT_EDITOR_EMAIL: ${{ env.STAGING_QA_CONTENT_EDITOR_EMAIL }}
+          STAGING_QA_CONTENT_REVIEWER_EMAIL: ${{ env.STAGING_QA_CONTENT_REVIEWER_EMAIL }}
+          STAGING_QA_PUBLISHER_EMAIL: ${{ env.STAGING_QA_PUBLISHER_EMAIL }}
+          STAGING_QA_PAYMENT_OPERATOR_EMAIL: ${{ env.STAGING_QA_PAYMENT_OPERATOR_EMAIL }}
+          STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ env.STAGING_QA_LEARNER_SUPPORT_EMAIL }}
+          STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ env.STAGING_QA_SECURITY_ADMIN_EMAIL }}
+          STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ env.STAGING_QA_REVOKED_ADMIN_EMAIL }}
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 5m
+          envs: STAGING_QA_LEARNER_EMAIL,STAGING_QA_FREE_LEARNER_EMAIL,STAGING_QA_ADMIN_EMAIL,STAGING_QA_ANALYST_EMAIL,STAGING_QA_CONTENT_EDITOR_EMAIL,STAGING_QA_CONTENT_REVIEWER_EMAIL,STAGING_QA_PUBLISHER_EMAIL,STAGING_QA_PAYMENT_OPERATOR_EMAIL,STAGING_QA_LEARNER_SUPPORT_EMAIL,STAGING_QA_SECURITY_ADMIN_EMAIL,STAGING_QA_REVOKED_ADMIN_EMAIL
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            docker compose -f docker-compose.staging.yml run --rm --no-deps \
+              -e STAGING_QA_PROVISION_CONFIRM=I_UNDERSTAND_THIS_MUTATES_STAGING_QA_FIXTURES \
+              -e STAGING_QA_LEARNER_EMAIL="$STAGING_QA_LEARNER_EMAIL" \
+              -e STAGING_QA_FREE_LEARNER_EMAIL="$STAGING_QA_FREE_LEARNER_EMAIL" \
+              -e STAGING_QA_ADMIN_EMAIL="$STAGING_QA_ADMIN_EMAIL" \
+              -e STAGING_QA_ANALYST_EMAIL="$STAGING_QA_ANALYST_EMAIL" \
+              -e STAGING_QA_CONTENT_EDITOR_EMAIL="$STAGING_QA_CONTENT_EDITOR_EMAIL" \
+              -e STAGING_QA_CONTENT_REVIEWER_EMAIL="$STAGING_QA_CONTENT_REVIEWER_EMAIL" \
+              -e STAGING_QA_PUBLISHER_EMAIL="$STAGING_QA_PUBLISHER_EMAIL" \
+              -e STAGING_QA_PAYMENT_OPERATOR_EMAIL="$STAGING_QA_PAYMENT_OPERATOR_EMAIL" \
+              -e STAGING_QA_LEARNER_SUPPORT_EMAIL="$STAGING_QA_LEARNER_SUPPORT_EMAIL" \
+              -e STAGING_QA_SECURITY_ADMIN_EMAIL="$STAGING_QA_SECURITY_ADMIN_EMAIL" \
+              -e STAGING_QA_REVOKED_ADMIN_EMAIL="$STAGING_QA_REVOKED_ADMIN_EMAIL" \
+              api node node_modules/@skillup/database/dist/cli/staging-qa-provision.js
+
       - name: Run mandatory staging certification
+        env:
+          STAGING_EMAIL_PROVIDER_READY: "true"
+          STAGING_QA_LEARNER_PREMIUM_READY: "true"
         run: node tools/staging-certification.mjs
 
       - name: Remove browser authentication state

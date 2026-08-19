@@ -382,11 +382,7 @@ if (!hasHardBlock() && !hasStatus("FAIL")) {
   await browserCertification();
 }
 
-summary.decision = hasStatus("FAIL")
-  ? "FAILED"
-  : hasStatus("BLOCKED")
-    ? "BLOCKED"
-    : "READY FOR UAT";
+summary.decision = hasStatus("FAIL") ? "FAILED" : hasHardBlock() ? "BLOCKED" : "READY FOR UAT";
 await writeSummary();
 console.log(summary.decision);
 

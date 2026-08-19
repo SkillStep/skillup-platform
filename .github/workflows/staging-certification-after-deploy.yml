@@ -1,0 +1,113 @@
+name: Staging Certification After Deploy
+
+on:
+  workflow_run:
+    workflows: ["Staging Deploy"]
+    types: [completed]
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  resolve-deployment:
+    name: Resolve deployed staging identity
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-24.04
+    outputs:
+      expected_release_sha: ${{ steps.identity.outputs.expected_release_sha }}
+      pipeline_id: ${{ steps.identity.outputs.pipeline_id }}
+      web_artifact_ref: ${{ steps.identity.outputs.web_artifact_ref }}
+      web_image_digest: ${{ steps.identity.outputs.web_image_digest }}
+      api_artifact_ref: ${{ steps.identity.outputs.api_artifact_ref }}
+      api_image_digest: ${{ steps.identity.outputs.api_image_digest }}
+      ai_release_sha: ${{ steps.identity.outputs.ai_release_sha }}
+      ai_artifact_ref: ${{ steps.identity.outputs.ai_artifact_ref }}
+      ai_image_digest: ${{ steps.identity.outputs.ai_image_digest }}
+      previous_release_ref: ${{ steps.identity.outputs.previous_release_ref }}
+    steps:
+      - name: Download exact deployment identity artifact
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ github.event.workflow_run.id }}
+          pattern: staging-deployment-identity-*
+          merge-multiple: true
+          path: deployment-evidence
+
+      - name: Validate and expose deployment identity
+        id: identity
+        shell: bash
+        env:
+          EXPECTED_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          set -euo pipefail
+          identity_file="$(find deployment-evidence -type f -name 'staging-deployment-identity.json' -print -quit)"
+          test -n "$identity_file" || {
+            echo "::error::Staging deployment identity artifact is missing." >&2
+            exit 1
+          }
+
+          node - "$identity_file" "$GITHUB_OUTPUT" "$EXPECTED_HEAD_SHA" <<'NODE'
+          const fs = require("node:fs");
+          const [identityPath, outputPath, expectedHeadSha] = process.argv.slice(2);
+          const identity = JSON.parse(fs.readFileSync(identityPath, "utf8"));
+          const required = [
+            "releaseSha",
+            "pipelineId",
+            "webArtifactRef",
+            "webImageDigest",
+            "apiArtifactRef",
+            "apiImageDigest",
+            "aiReleaseSha",
+            "aiArtifactRef",
+            "aiImageDigest",
+            "previousReleaseRef",
+          ];
+          for (const key of required) {
+            if (typeof identity[key] !== "string" || !identity[key].trim()) {
+              throw new Error(`Deployment identity is missing ${key}.`);
+            }
+          }
+          if (identity.releaseSha !== expectedHeadSha || identity.aiReleaseSha !== expectedHeadSha) {
+            throw new Error(
+              `Deployment artifact SHA mismatch: workflow=${expectedHeadSha}, web/api=${identity.releaseSha}, ai=${identity.aiReleaseSha}.`,
+            );
+          }
+          const outputs = {
+            expected_release_sha: identity.releaseSha,
+            pipeline_id: identity.pipelineId,
+            web_artifact_ref: identity.webArtifactRef,
+            web_image_digest: identity.webImageDigest,
+            api_artifact_ref: identity.apiArtifactRef,
+            api_image_digest: identity.apiImageDigest,
+            ai_release_sha: identity.aiReleaseSha,
+            ai_artifact_ref: identity.aiArtifactRef,
+            ai_image_digest: identity.aiImageDigest,
+            previous_release_ref: identity.previousReleaseRef,
+          };
+          fs.appendFileSync(
+            outputPath,
+            Object.entries(outputs)
+              .map(([key, value]) => `${key}=${value}`)
+              .join("\n") + "\n",
+          );
+          NODE
+
+  certify:
+    name: Run full staging certification
+    needs: resolve-deployment
+    uses: ./.github/workflows/staging-certification.yml
+    with:
+      expected_release_sha: ${{ needs.resolve-deployment.outputs.expected_release_sha }}
+      pipeline_id: ${{ needs.resolve-deployment.outputs.pipeline_id }}
+      web_artifact_ref: ${{ needs.resolve-deployment.outputs.web_artifact_ref }}
+      web_image_digest: ${{ needs.resolve-deployment.outputs.web_image_digest }}
+      api_artifact_ref: ${{ needs.resolve-deployment.outputs.api_artifact_ref }}
+      api_image_digest: ${{ needs.resolve-deployment.outputs.api_image_digest }}
+      ai_release_sha: ${{ needs.resolve-deployment.outputs.ai_release_sha }}
+      ai_artifact_ref: ${{ needs.resolve-deployment.outputs.ai_artifact_ref }}
+      ai_image_digest: ${{ needs.resolve-deployment.outputs.ai_image_digest }}
+      previous_release_ref: ${{ needs.resolve-deployment.outputs.previous_release_ref }}
+    secrets: inherit
