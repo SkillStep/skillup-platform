@@ -1,0 +1,63 @@
+name: UAT Live Diagnostics
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: Inspect live UAT blockers
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - name: Inspect metrics schema and failed AI request
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          AI_CORRELATION_ID: e2284445-e3a8-41b4-bcb1-bb89a3297080
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 5m
+          envs: AI_CORRELATION_ID
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            compose='docker compose -f docker-compose.staging.yml'
+            echo '=== LIVE RELEASE ==='
+            grep -E '^(RELEASE_SHA|RELEASE_PIPELINE_ID|AI_RELEASE_ARTIFACT_REF|AI_RELEASE_IMAGE_DIGEST)=' .env | sed -E 's/(TOKEN|SECRET|PASSWORD|KEY)=.*/\1=[REDACTED]/' || true
+            echo '=== AI WORKER STATE ==='
+            docker inspect -f 'status={{.State.Status}} running={{.State.Running}} exit={{.State.ExitCode}} restart={{.RestartCount}} started={{.State.StartedAt}}' skillup-ai-worker-staging-container || true
+            echo '=== REQUEST + ATTEMPTS + ARTIFACT COUNT ==='
+            $compose exec -T postgres psql -U skillup -d skillup -v ON_ERROR_STOP=1 -v correlation="$AI_CORRELATION_ID" -P pager=off <<'SQL'
+            select id, task, status, provider, model, attempt_count, created_at, started_at, completed_at,
+                   next_attempt_at, lease_expires_at, cancelled_at, last_error, correlation_id
+              from ai_generation_requests
+             where correlation_id = :'correlation';
+
+            select a.attempt_number, a.status, a.provider, a.model, a.started_at, a.completed_at,
+                   a.error_code, left(coalesce(a.error_message,''),500) as error_message,
+                   a.input_tokens, a.output_tokens, a.estimated_cost_microusd
+              from ai_job_attempts a
+              join ai_generation_requests r on r.id = a.request_id
+             where r.correlation_id = :'correlation'
+             order by a.attempt_number;
+
+            select count(*) as artifact_count
+              from ai_generated_artifacts a
+              join ai_generation_requests r on r.id = a.request_id
+             where r.correlation_id = :'correlation';
+
+            select column_name
+              from information_schema.columns
+             where table_name = 'ai_job_attempts'
+               and column_name like 'estimated_cost%'
+             order by column_name;
+            SQL
+            echo '=== SANITIZED AI WORKER LOG TAIL ==='
+            docker logs --tail 160 skillup-ai-worker-staging-container 2>&1 \
+              | sed -E 's/(api[_ -]?key|authorization|token|secret|password)([=: ]+)[^ ,}]+/\1\2[REDACTED]/Ig' \
+              | tail -160
