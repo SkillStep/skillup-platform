@@ -84,6 +84,21 @@ async function brevoJson(pathname, apiKey) {
   return response.json();
 }
 
+async function preflightBrevo(apiKey, allowedEmails) {
+  await brevoJson("/account", apiKey);
+
+  const probeEmail = allowedEmails.values().next().value;
+  if (!probeEmail) throw new Error("No QA email is available for the Brevo log-read preflight.");
+
+  const query = new URLSearchParams({
+    email: probeEmail,
+    sort: "desc",
+    limit: "1",
+  });
+  await brevoJson(`/smtp/emails?${query.toString()}`, apiKey);
+  console.log("STAGING BREVO API ACCOUNT + TRANSACTIONAL LOG READ PREFLIGHT: PASS");
+}
+
 async function findDeliveredOtp(email, startedAfter, apiKey) {
   const query = new URLSearchParams({
     email,
@@ -174,6 +189,8 @@ if (!Number.isInteger(port) || port < 1024 || port > 65535)
 if (allowedEmails.size === 0)
   throw new Error("No staging QA email aliases are configured for the mailbox bridge.");
 
+await preflightBrevo(apiKey, allowedEmails);
+
 const server = http.createServer(async (request, response) => {
   try {
     const requestUrl = new URL(request.url ?? "/", `http://${host}:${port}`);
@@ -209,6 +226,9 @@ const server = http.createServer(async (request, response) => {
 
     sendJson(response, 200, { code });
   } catch (error) {
+    if (error?.statusCode) {
+      console.error(`Brevo QA mailbox provider request failed with HTTP ${error.statusCode}.`);
+    }
     const statusCode = error?.statusCode ? 503 : 400;
     sendJson(response, statusCode, {
       error: statusCode === 503 ? "mailbox_provider_unavailable" : "invalid_request",
