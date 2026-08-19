@@ -95,6 +95,147 @@ try {
 
     const pilot = pilotLearningSeed;
 
+    // Published content is immutable by design. On a repeat seed, verify the
+    // reviewed pilot graph instead of attempting child INSERTs that the
+    // database correctly rejects before ON CONFLICT can suppress them.
+    const [existingPilotLevelVersion] = await transaction
+      .select({
+        id: levelVersions.id,
+        state: levelVersions.state,
+      })
+      .from(levelVersions)
+      .where(eq(levelVersions.id, pilot.level.versionId))
+      .limit(1);
+
+    if (existingPilotLevelVersion?.state === "published") {
+      const [existingObjective] = await transaction
+        .select({
+          id: learningObjectives.id,
+          levelVersionId: learningObjectives.levelVersionId,
+        })
+        .from(learningObjectives)
+        .where(eq(learningObjectives.id, pilot.objective.id))
+        .limit(1);
+
+      if (existingObjective?.levelVersionId !== pilot.level.versionId) {
+        throw new Error(
+          `Published pilot level ${pilot.level.versionId} is missing its reviewed learning objective ${pilot.objective.id}.`,
+        );
+      }
+
+      for (const challenge of pilot.challenges) {
+        const [existingChallenge] = await transaction
+          .select({
+            id: challenges.id,
+            levelId: challenges.levelId,
+          })
+          .from(challenges)
+          .where(eq(challenges.id, challenge.id))
+          .limit(1);
+
+        if (existingChallenge?.levelId !== pilot.level.id) {
+          throw new Error(
+            `Published pilot level ${pilot.level.versionId} is missing challenge ${challenge.id}.`,
+          );
+        }
+
+        const [existingChallengeVersion] = await transaction
+          .select({
+            id: challengeVersions.id,
+            levelVersionId: challengeVersions.levelVersionId,
+            state: challengeVersions.state,
+          })
+          .from(challengeVersions)
+          .where(eq(challengeVersions.id, challenge.versionId))
+          .limit(1);
+
+        if (
+          existingChallengeVersion?.levelVersionId !== pilot.level.versionId ||
+          existingChallengeVersion.state !== "published"
+        ) {
+          throw new Error(
+            `Published pilot level ${pilot.level.versionId} has an invalid challenge version ${challenge.versionId}.`,
+          );
+        }
+
+        for (const option of challenge.options) {
+          const [existingOption] = await transaction
+            .select({
+              id: challengeAnswerOptions.id,
+              challengeVersionId: challengeAnswerOptions.challengeVersionId,
+            })
+            .from(challengeAnswerOptions)
+            .where(eq(challengeAnswerOptions.id, option.id))
+            .limit(1);
+
+          if (existingOption?.challengeVersionId !== challenge.versionId) {
+            throw new Error(
+              `Published challenge ${challenge.versionId} is missing answer option ${option.id}.`,
+            );
+          }
+        }
+
+        const [existingEvaluation] = await transaction
+          .select({
+            challengeVersionId: challengeEvaluations.challengeVersionId,
+          })
+          .from(challengeEvaluations)
+          .where(eq(challengeEvaluations.challengeVersionId, challenge.versionId))
+          .limit(1);
+
+        if (existingEvaluation?.challengeVersionId !== challenge.versionId) {
+          throw new Error(
+            `Published challenge ${challenge.versionId} is missing its protected evaluation.`,
+          );
+        }
+      }
+
+      const [existingSource] = await transaction
+        .select({
+          id: contentSourceReferences.id,
+          levelVersionId: contentSourceReferences.levelVersionId,
+        })
+        .from(contentSourceReferences)
+        .where(eq(contentSourceReferences.id, pilot.source.id))
+        .limit(1);
+
+      if (existingSource?.levelVersionId !== pilot.level.versionId) {
+        throw new Error(
+          `Published pilot level ${pilot.level.versionId} is missing source reference ${pilot.source.id}.`,
+        );
+      }
+
+      const expectedPublishedVersionIds = [
+        pilot.category.versionId,
+        pilot.skill.versionId,
+        pilot.path.versionId,
+        pilot.module.versionId,
+        pilot.lesson.versionId,
+        pilot.level.versionId,
+        ...pilot.challenges.map((challenge) => challenge.versionId),
+      ];
+
+      for (const entityVersionId of expectedPublishedVersionIds) {
+        const publicationRows = await transaction
+          .select({
+            state: contentPublicationRecords.state,
+          })
+          .from(contentPublicationRecords)
+          .where(eq(contentPublicationRecords.entityVersionId, entityVersionId));
+
+        if (!publicationRows.some((row) => row.state === "published")) {
+          throw new Error(
+            `Published pilot graph is missing publication evidence for entity version ${entityVersionId}.`,
+          );
+        }
+      }
+
+      console.log(
+        `SkillUp launch catalog is present and the immutable reviewed pilot hierarchy is already published (${launchCatalogSeed.length} skills, ${pilotLearningSeed.challenges.length} pilot challenges).`,
+      );
+      return;
+    }
+
     await transaction
       .insert(skillCategories)
       .values({
