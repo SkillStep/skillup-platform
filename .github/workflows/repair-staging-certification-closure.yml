@@ -1,0 +1,140 @@
+name: Repair Staging Certification Closure
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.head_ref == 'fix/staging-certification-closure-20260819'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      APP_ENV: test
+      DATABASE_URL: postgresql://skillup_local:skillup_local_only@127.0.0.1:5432/skillup
+      POSTGRES_DB: skillup
+      POSTGRES_USER: skillup_local
+      POSTGRES_PASSWORD: skillup_local_only
+      PUBLIC_APP_URL: https://skillup.example
+      SESSION_SECRET: ci-only-session-secret-at-least-32-random-bytes
+      EMAIL_PROVIDER: disabled
+      FEATURE_AI_GENERATION_ENABLED: "false"
+      AI_PROVIDER: disabled
+      AI_FALLBACK_PROVIDER: disabled
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: fix/staging-certification-closure-20260819
+          fetch-depth: 0
+      - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Patch proven schema and deployment defects
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+
+          admin=Path('apps/api/src/admin-service.ts')
+          text=admin.read_text()
+          replacements={
+            'select sum(pl.points)':'select sum(pl.points_delta)',
+            "from level_play_sessions where status = 'completed'":"from level_play_sessions where state = 'completed'",
+          }
+          for old,new in replacements.items():
+              if old in text:
+                  text=text.replace(old,new,1)
+              elif new not in text:
+                  raise SystemExit(f'Admin source fragment missing: {old}')
+          admin.write_text(text)
+
+          deploy=Path('.github/workflows/deploy-staging.yml')
+          text=deploy.read_text()
+          old='''            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+            docker compose -f docker-compose.staging.yml ps'''
+          new='''            docker compose -f docker-compose.staging.yml pull
+            docker compose -f docker-compose.staging.yml up -d postgres
+            for attempt in $(seq 1 45); do
+              if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then
+                break
+              fi
+              sleep 2
+            done
+            test "$(docker inspect skillup-postgres-staging-container --format '{{.State.Health.Status}}')" = healthy
+
+            echo "Applying database migrations and deterministic launch seeds before application startup"
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/migrate.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/seed.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/complete-launch-seed-v2.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/complete-launch-smoke.js
+            echo "STAGING DATABASE MIGRATION + LAUNCH SEED: PASS"
+
+            docker compose -f docker-compose.staging.yml up -d --remove-orphans
+            docker compose -f docker-compose.staging.yml ps'''
+          if old in text:
+              text=text.replace(old,new,1)
+          elif 'STAGING DATABASE MIGRATION + LAUNCH SEED: PASS' not in text:
+              raise SystemExit('Expected staging deploy startup block was not found')
+          deploy.write_text(text)
+
+          quality=Path('.github/workflows/foundation.yml')
+          text=quality.read_text()
+          old='''      - name: Smoke commercial API against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:commercial
+
+      - name: Smoke gameplay resume against migrated PostgreSQL'''
+          new='''      - name: Smoke commercial API against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:commercial
+
+      - name: Smoke Premium reporting against migrated PostgreSQL
+        run: pnpm --filter @skillup/api smoke:premium-reporting
+
+      - name: Smoke gameplay resume against migrated PostgreSQL'''
+          if old in text:
+              text=text.replace(old,new,1)
+          elif 'Smoke Premium reporting against migrated PostgreSQL' not in text:
+              raise SystemExit('Expected Quality CI commercial smoke block was not found')
+          quality.write_text(text)
+          PY
+
+      - name: Validate repaired PostgreSQL contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile
+          pnpm format
+          docker compose -f infra/compose.yaml up -d postgres
+          pnpm db:wait
+          pnpm db:migrate
+          pnpm db:seed
+          pnpm shared:build
+          pnpm --filter @skillup/api exec vitest run src/admin-postgres.test.ts src/auth-postgres.test.ts --reporter=verbose
+          pnpm --filter @skillup/api smoke:premium-reporting
+          pnpm format:check
+          pnpm typecheck
+          git diff --check
+
+      - name: Commit validated permanent repair
+        shell: bash
+        run: |
+          set -euo pipefail
+          git add apps/api/src/admin-service.ts .github/workflows/deploy-staging.yml .github/workflows/foundation.yml
+          if git diff --cached --quiet; then
+            echo 'Permanent repair is already committed.'
+            exit 0
+          fi
+          git config user.name 'skillup-ci-bot'
+          git config user.email 'skillup-ci-bot@users.noreply.github.com'
+          git commit -m 'fix: enforce staging data readiness and Admin schema contracts'
+          git push origin HEAD:fix/staging-certification-closure-20260819
