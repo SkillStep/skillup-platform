@@ -35,7 +35,7 @@ jobs:
           cat > docker-compose.qa-mailpit.yml <<'YAML'
           services:
             mailpit:
-              image: ghcr.io/axllent/mailpit:v1.30.6@sha256:7f33095f80e901f6ad08028f06ca284aa58fe84942be5496008d041d3b9f4d4d
+              image: axllent/mailpit:v1.30.6
               container_name: skillup-mailpit-staging-container
               restart: unless-stopped
               environment:
