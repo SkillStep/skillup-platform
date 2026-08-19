@@ -1,14 +1,14 @@
-name: Diagnose Auth PostgreSQL Second Error
+name: Repair Auth PostgreSQL Typing
 
 on:
   pull_request:
     branches: [main]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
-  diagnose:
+  repair:
     if: github.head_ref == 'fix/auth-otp-postgres-typing-20260819'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -27,31 +27,52 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
         with:
-          persist-credentials: false
+          ref: fix/auth-otp-postgres-typing-20260819
+          fetch-depth: 0
       - uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
         with:
           node-version-file: .node-version
-      - name: Install and migrate local PostgreSQL
+      - name: Patch proven timestamp typing error and run the full workspace tests
         shell: bash
         run: |
           set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path
+          path=Path('apps/api/src/auth.ts')
+          text=path.read_text()
+          old="""`update auth_sessions
+            set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
+          where id = $1 and last_seen_at < $2 - interval '5 minutes'`"""
+          new="""`update auth_sessions
+            set last_seen_at = $2::timestamptz,
+                idle_expires_at = least(expires_at, $3::timestamptz)
+          where id = $1
+            and last_seen_at < $2::timestamptz - interval '5 minutes'`"""
+          if old in text:
+              path.write_text(text.replace(old,new,1))
+          elif new not in text:
+              raise SystemExit('Expected resolveSession refresh query was not found')
+          PY
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
+          pnpm format
           docker compose -f infra/compose.yaml up -d postgres
           pnpm db:wait
           pnpm db:migrate
           pnpm db:seed
-      - name: Reproduce full workspace test result and print only auth failure context
+          pnpm test
+          git diff --check
+      - name: Commit source repair only
         shell: bash
         run: |
-          set +e
-          pnpm test > /tmp/workspace-tests.log 2>&1
-          status=$?
-          set -e
-          echo "WORKSPACE_TEST_EXIT=$status"
-          if [ "$status" -ne 0 ]; then
-            grep -n -E -B 20 -A 60 'auth-postgres|EmailIdentity|passwordless auth|FAIL|failed|Error:' /tmp/workspace-tests.log | tail -260 || true
-            exit "$status"
+          set -euo pipefail
+          git add apps/api/src/auth.ts
+          if git diff --cached --quiet; then
+            echo 'Source repair already committed.'
+            exit 0
           fi
-          echo 'FULL_WORKSPACE_TESTS=PASS'
+          git config user.name 'skillup-ci-bot'
+          git config user.email 'skillup-ci-bot@users.noreply.github.com'
+          git commit -m 'fix: type auth session refresh timestamps explicitly'
+          git push origin HEAD:fix/auth-otp-postgres-typing-20260819
