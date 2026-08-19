@@ -96,7 +96,8 @@ export function createAdminService(
              (select count(*)::integer from ai_generation_requests where status = 'completed') as "completedAiJobs",
              (select count(*)::integer from ai_generation_requests where status = 'failed') as "failedAiJobs",
              (select count(*)::integer from ai_job_attempts where status = 'cancelled') as "cancelledAiAttempts",
-             (select coalesce(sum(estimated_cost_usd), 0)::numeric(12,6) from ai_job_attempts where status = 'completed') as "estimatedAiCostUsd",
+             (select (coalesce(sum(estimated_cost_microusd), 0)::numeric / 1000000)::numeric(12,6)
+                from ai_job_attempts where status = 'completed') as "estimatedAiCostUsd",
              (select count(*)::integer
                 from analytics_events
                where received_at > occurred_at + interval '5 minutes') as "analyticsEventsDelayedOverFiveMinutes",
