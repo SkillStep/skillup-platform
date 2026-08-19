@@ -277,7 +277,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          cat > /tmp/grant-premium.mjs <<'NODE'
+          cat > qa/staging-certification/grant-premium.mjs <<'NODE'
           import { request } from '@playwright/test';
           const baseURL=process.env.STAGING_WEB_URL; const origin=new URL(baseURL).origin;
           const learner=await request.newContext({baseURL,storageState:'qa/staging-certification/artifacts/.auth/learner.json',extraHTTPHeaders:{origin}});
@@ -297,7 +297,8 @@ jobs:
             console.log('AUDITED_PREMIUM_QA_ENTITLEMENT=PASS');
           } finally { await learner.dispose(); await admin.dispose(); }
           NODE
-          node /tmp/grant-premium.mjs
+          node qa/staging-certification/grant-premium.mjs
+          rm -f qa/staging-certification/grant-premium.mjs
 
       - name: Run all non-visual Playwright projects
         shell: bash
@@ -365,3 +366,4 @@ jobs:
           if [ -f /tmp/mailbox-adapter.pid ]; then kill "$(cat /tmp/mailbox-adapter.pid)" 2>/dev/null || true; fi
           ssh -S /tmp/skillup-ssh-control -O exit "$STAGING_SSH_USER@$STAGING_HOST" 2>/dev/null || true
           rm -f /tmp/skillup-staging-key /tmp/skillup-ssh-control /tmp/skillup-mailbox-adapter.py
+          rm -f qa/staging-certification/grant-premium.mjs
