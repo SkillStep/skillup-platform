@@ -77,13 +77,13 @@ jobs:
           const api = JSON.parse(process.env.API_VERSION);
           const ready = JSON.parse(process.env.API_READY);
           const expected = process.env.EXPECTED_RELEASE_SHA;
-          if (web.status !== 'ok' || web.releaseSha !== expected || api.releaseSha !== expected || ready.releaseSha !== expected) {
+          if (web.status !== "ok" || web.releaseSha !== expected || api.releaseSha !== expected || ready.releaseSha !== expected) {
             throw new Error(`Staging is not running the locked candidate ${expected}.`);
           }
-          if (ready.status !== 'ok') throw new Error('API database readiness is not healthy.');
-          if (!web.pipelineId || !web.artifactRef || !web.imageDigest || !web.rollbackRef) throw new Error('Web release identity is incomplete.');
-          if (!api.pipelineId || !api.artifactRef || !api.imageDigest || !api.rollbackRef) throw new Error('API release identity is incomplete.');
-          if (web.pipelineId !== api.pipelineId || web.rollbackRef !== api.rollbackRef) throw new Error('Web/API deployment identity is inconsistent.');
+          if (ready.status !== "ok") throw new Error("API database readiness is not healthy.");
+          if (!web.pipelineId || !web.artifactRef || !web.imageDigest || !web.rollbackRef) throw new Error("Web release identity is incomplete.");
+          if (!api.pipelineId || !api.artifactRef || !api.imageDigest || !api.rollbackRef) throw new Error("API release identity is incomplete.");
+          if (web.pipelineId !== api.pipelineId || web.rollbackRef !== api.rollbackRef) throw new Error("Web/API deployment identity is inconsistent.");
           for (const [key, value] of Object.entries({
             STAGING_EXPECTED_RELEASE_SHA: expected,
             STAGING_DEPLOYMENT_PIPELINE_ID: web.pipelineId,
@@ -117,242 +117,65 @@ jobs:
           ssh-keyscan -H "$STAGING_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
           chmod 600 "$HOME/.ssh/known_hosts"
 
-      - name: Probe whether deployed SMTP credentials can read the QA mailbox
-        continue-on-error: true
-        shell: bash
-        env:
-          STAGING_HOST: ${{ secrets.STAGING_HOST }}
-          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-        run: |
-          set -euo pipefail
-          ssh -i "$HOME/.ssh/skillup-qa" "$STAGING_SSH_USER@$STAGING_HOST" 'python3 -' <<'PY'
-          import imaplib
-          from pathlib import Path
-
-          values = {}
-          for line in Path('/opt/skillup/.env').read_text(encoding='utf-8').splitlines():
-              if not line or line.lstrip().startswith('#') or '=' not in line:
-                  continue
-              key, value = line.split('=', 1)
-              value = value.strip()
-              if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-                  value = value[1:-1]
-              values[key.strip()] = value
-
-          smtp_host = values.get('SMTP_HOST', '')
-          username = values.get('SMTP_USERNAME', '')
-          password = values.get('SMTP_PASSWORD', '')
-          if not smtp_host or not username or not password:
-              print('QA mailbox IMAP compatibility: unavailable (SMTP credentials incomplete)')
-              raise SystemExit(0)
-
-          candidates = []
-          lowered = smtp_host.lower()
-          if 'gmail' in lowered or 'google' in lowered:
-              candidates.append('imap.gmail.com')
-          if lowered.startswith('smtp.'):
-              candidates.append('imap.' + smtp_host[5:])
-          if 'imap.gmail.com' not in candidates:
-              candidates.append('imap.gmail.com')
-
-          for host in dict.fromkeys(candidates):
-              try:
-                  mailbox = imaplib.IMAP4_SSL(host, 993, timeout=10)
-                  mailbox.login(username, password)
-                  mailbox.select('INBOX', readonly=True)
-                  status, data = mailbox.search(None, 'TO', 'skillup+qa-learner@codistan.org')
-                  count = len(data[0].split()) if status == 'OK' and data and data[0] else 0
-                  mailbox.logout()
-                  print(f'QA mailbox IMAP compatibility: PASS; matching QA messages visible: {count}')
-                  raise SystemExit(0)
-              except Exception:
-                  continue
-          print('QA mailbox IMAP compatibility: unavailable with deployed SMTP credentials')
-          PY
-
       - name: Create audited staging QA identities, roles, entitlements and temporary sessions
         shell: bash
         env:
           STAGING_HOST: ${{ secrets.STAGING_HOST }}
           STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
-          EXPECTED_RELEASE_SHA: 8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e
         run: |
           set -euo pipefail
-          state_json="$(ssh -i "$HOME/.ssh/skillup-qa" "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' 2> >(cat >&2) <<'REMOTE'
-          set -euo pipefail
-          cd /opt/skillup
-          test -f .env
-          expected='8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e'
-          running_sha="$(grep '^RELEASE_SHA=' .env | tail -1 | cut -d= -f2-)"
-          test "$running_sha" = "$expected"
-          ai_ref="$(grep '^AI_RELEASE_ARTIFACT_REF=' .env | tail -1 | cut -d= -f2-)"
-          ai_digest="$(grep '^AI_RELEASE_IMAGE_DIGEST=' .env | tail -1 | cut -d= -f2-)"
-          case "$ai_ref" in *"$expected"*) ;; *) echo 'AI artifact does not match candidate release' >&2; exit 1;; esac
-          case "$ai_digest" in sha256:*) ;; *) echo 'AI image digest is missing' >&2; exit 1;; esac
-          compose='docker compose -f docker-compose.staging.yml'
-          running="$($compose ps --services --filter status=running)"
-          for service in postgres api web ai-worker; do
-            printf '%s\n' "$running" | grep -qx "$service" || { echo "Required staging service not running: $service" >&2; exit 1; }
-          done
-          echo 'STAGING SERVICE + AI DEPLOYMENT IDENTITY: PASS' >&2
-
-          $compose run --rm --no-deps -T api node --input-type=module <<'NODE'
-          import { createHmac, randomBytes, randomUUID } from 'node:crypto';
-          import pg from 'pg';
-          const { Pool } = pg;
-          const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1 });
-          const db = await pool.connect();
-          const releaseSha = process.env.RELEASE_SHA;
-          const sessionSecret = process.env.SESSION_SECRET;
-          if (!sessionSecret) throw new Error('SESSION_SECRET is unavailable in the API runtime.');
-          const cookieName = process.env.SESSION_COOKIE_NAME || 'skillup_session';
-          const absoluteHours = Number(process.env.SESSION_ABSOLUTE_HOURS || 168);
-          const idleMinutes = Number(process.env.SESSION_IDLE_MINUTES || 60);
-          const identities = {
-            learner: 'skillup+qa-learner@codistan.org',
-            'free-learner': 'skillup+qa-free-learner@codistan.org',
-            onboarding: 'skillup+qa-onboarding@codistan.org',
-            admin: 'skillup+qa-admin@codistan.org',
-            analyst: 'skillup+qa-analyst@codistan.org',
-            'content-editor': 'skillup+qa-content-editor@codistan.org',
-            'content-reviewer': 'skillup+qa-content-reviewer@codistan.org',
-            publisher: 'skillup+qa-publisher@codistan.org',
-            'payment-operator': 'skillup+qa-payment-operator@codistan.org',
-            'learner-support': 'skillup+qa-learner-support@codistan.org',
-            'security-admin': 'skillup+qa-security-admin@codistan.org',
-            'revoked-admin': 'skillup+qa-revoked-admin@codistan.org',
-          };
-          const roleMap = {
-            admin: ['content_editor','content_reviewer','publisher','learner_support','payment_operator','analyst','security_admin'],
-            analyst: ['analyst'],
-            'content-editor': ['content_editor'],
-            'content-reviewer': ['content_reviewer'],
-            publisher: ['publisher'],
-            'payment-operator': ['payment_operator'],
-            'learner-support': ['learner_support'],
-            'security-admin': ['security_admin'],
-            'revoked-admin': ['security_admin'],
-          };
-          const sessions = {};
-          function tokenDigest(token) {
-            return createHmac('sha256', sessionSecret).update(`session:${token}`).digest('hex');
-          }
-          async function ensureUser(email) {
-            const normalized = email.trim().toLowerCase();
-            let found = await db.query('select user_id from user_email_identities where email_normalized=$1', [normalized]);
-            let userId = found.rows[0]?.user_id;
-            if (!userId) {
-              const user = await db.query("insert into users (status,created_at,updated_at) values ('active',now(),now()) returning id");
-              userId = user.rows[0].id;
-              await db.query(`insert into user_email_identities
-                (user_id,email_normalized,email_display,verified_at,created_at,updated_at)
-                values ($1,$2,$2,now(),now(),now())`, [userId, normalized]);
-              await db.query(`insert into learner_profiles
-                (user_id,display_name,locale,age_band,learning_goal,onboarding_status,created_at,updated_at)
-                values ($1,'Staging QA','en','18_24','Automated staging UAT certification','completed',now(),now())`, [userId]);
-            } else {
-              await db.query("update users set status='active', deletion_requested_at=null, deleted_at=null, updated_at=now() where id=$1", [userId]);
-              await db.query(`insert into learner_profiles
-                (user_id,display_name,locale,age_band,learning_goal,onboarding_status,created_at,updated_at)
-                values ($1,'Staging QA','en','18_24','Automated staging UAT certification','completed',now(),now())
-                on conflict (user_id) do nothing`, [userId]);
-            }
-            return userId;
-          }
-          try {
-            await db.query('begin');
-            const userIds = {};
-            for (const [name,email] of Object.entries(identities)) userIds[name] = await ensureUser(email);
-
-            for (const [name,roles] of Object.entries(roleMap)) {
-              const userId = userIds[name];
-              await db.query(`insert into admin_principals (user_id,status,created_at)
-                values ($1,'active',now()) on conflict (user_id) do update set status='active',suspended_at=null`, [userId]);
-              for (const role of roles) {
-                await db.query(`insert into admin_role_assignments (user_id,role,reason,created_at)
-                  select $1,$2,'Staging UAT certification fixture',now()
-                  where not exists (select 1 from admin_role_assignments where user_id=$1 and role=$2 and revoked_at is null)`, [userId, role]);
-              }
-              await db.query(`insert into privileged_audit_events
-                (actor_user_id,actor_role,action,target_type,target_id,result,reason,correlation_id,release_sha,metadata)
-                values (null,'bootstrap','admin.qa_fixture','user',$1,'succeeded','Staging UAT certification role fixture',$2,$3,$4::jsonb)`,
-                [userId, randomUUID(), releaseSha, JSON.stringify({ roles })]);
-            }
-
-            const learnerId = userIds.learner;
-            const freeId = userIds['free-learner'];
-            const plan = await db.query(`select v.id from commercial_plan_versions v join commercial_plans p on p.id=v.plan_id
-              where p.code='premium-monthly' and p.status='active' and v.status='active' order by v.version desc limit 1`);
-            const planVersionId = plan.rows[0]?.id;
-            if (!planVersionId) throw new Error('Active premium-monthly plan version is missing.');
-            const existing = await db.query(`select id from entitlements where user_id=$1 and status in ('active','grace')
-              and coalesce(grace_ends_at,ends_at)>now() order by ends_at desc limit 1`, [learnerId]);
-            if (!existing.rows[0]?.id) {
-              const entitlement = await db.query(`insert into entitlements
-                (user_id,plan_version_id,source_order_id,status,starts_at,ends_at,created_at,updated_at)
-                values ($1,$2,null,'active',now()-interval '1 minute',now()+interval '30 days',now(),now()) returning id`, [learnerId,planVersionId]);
-              await db.query(`insert into entitlement_events
-                (entitlement_id,action,actor_type,reason,evidence_reference,previous_status,next_status)
-                values ($1,'qa_fixture_grant','system','Staging UAT certification premium fixture',$2,null,'active')`,
-                [entitlement.rows[0].id, `release:${releaseSha}`]);
-            }
-            const freeEntitlements = await db.query(`update entitlements set status='revoked',revoked_at=coalesce(revoked_at,now()),updated_at=now()
-              where user_id=$1 and status in ('active','grace') returning id`, [freeId]);
-            for (const row of freeEntitlements.rows) {
-              await db.query(`insert into entitlement_events
-                (entitlement_id,action,actor_type,reason,evidence_reference,previous_status,next_status)
-                values ($1,'qa_fixture_revoke','system','Maintain deterministic free learner fixture',$2,'active','revoked')`,
-                [row.id, `release:${releaseSha}`]);
-            }
-            await db.query('delete from learner_daily_mission_usage where user_id in ($1,$2)', [learnerId,freeId]);
-
-            const revokedId = userIds['revoked-admin'];
-            await db.query('update admin_role_assignments set revoked_at=coalesce(revoked_at,now()) where user_id=$1 and revoked_at is null', [revokedId]);
-            await db.query("update admin_principals set status='revoked',suspended_at=coalesce(suspended_at,now()) where user_id=$1", [revokedId]);
-            await db.query(`insert into privileged_audit_events
-              (actor_user_id,actor_role,action,target_type,target_id,result,reason,correlation_id,release_sha,metadata)
-              values (null,'bootstrap','admin.qa_revoke','user',$1,'succeeded','Staging UAT certification revoked-admin fixture',$2,$3,'{}'::jsonb)`,
-              [revokedId, randomUUID(), releaseSha]);
-
-            for (const [name,userId] of Object.entries(userIds)) {
-              const token = randomBytes(32).toString('base64url');
-              const now = new Date();
-              const expires = new Date(now.getTime() + absoluteHours*3600000);
-              const idle = new Date(now.getTime() + idleMinutes*60000);
-              await db.query(`insert into auth_sessions
-                (user_id,token_digest,expires_at,idle_expires_at,last_seen_at,created_at)
-                values ($1,$2,$3,$4,$5,$5)`, [userId,tokenDigest(token),expires,idle,now]);
-              sessions[name] = token;
-            }
-            await db.query('commit');
-            process.stdout.write(JSON.stringify({ cookieName, sessions }));
-          } catch (error) {
-            await db.query('rollback');
-            throw error;
-          } finally {
-            db.release();
-            await pool.end();
-          }
-          NODE
-          REMOTE
+          state_json="$(
+            ssh -T \
+              -o ServerAliveInterval=15 \
+              -o ServerAliveCountMax=4 \
+              -i "$HOME/.ssh/skillup-qa" \
+              "$STAGING_SSH_USER@$STAGING_HOST" \
+              'set -euo pipefail
+               cd /opt/skillup
+               test -f .env
+               expected="8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e"
+               running_sha="$(grep "^RELEASE_SHA=" .env | tail -1 | cut -d= -f2-)"
+               test "$running_sha" = "$expected"
+               ai_ref="$(grep "^AI_RELEASE_ARTIFACT_REF=" .env | tail -1 | cut -d= -f2-)"
+               ai_digest="$(grep "^AI_RELEASE_IMAGE_DIGEST=" .env | tail -1 | cut -d= -f2-)"
+               case "$ai_ref" in *"$expected"*) ;; *) echo "AI artifact does not match candidate release" >&2; exit 1;; esac
+               case "$ai_digest" in sha256:*) ;; *) echo "AI image digest is missing" >&2; exit 1;; esac
+               compose="docker compose -f docker-compose.staging.yml"
+               running="$($compose ps --services --filter status=running)"
+               for service in postgres api web ai-worker; do
+                 printf "%s\n" "$running" | grep -qx "$service" || { echo "Required staging service not running: $service" >&2; exit 1; }
+               done
+               echo "STAGING SERVICE + AI DEPLOYMENT IDENTITY: PASS" >&2
+               exec $compose exec -T api node --input-type=module' \
+              < qa/staging-certification/provision-live-qa.mjs
           )"
+
           STATE_JSON="$state_json" STAGING_WEB_URL="$STAGING_WEB_URL" node <<'NODE'
-          const fs = require('node:fs');
-          const path = require('node:path');
+          const fs = require("node:fs");
+          const path = require("node:path");
           const payload = JSON.parse(process.env.STATE_JSON);
           const host = new URL(process.env.STAGING_WEB_URL).hostname;
-          const root = path.resolve('qa/staging-certification/artifacts/.auth');
+          const root = path.resolve("qa/staging-certification/artifacts/.auth");
           fs.mkdirSync(root, { recursive: true });
-          const expires = Math.floor(Date.now()/1000) + 55*60;
-          for (const [name,token] of Object.entries(payload.sessions)) {
+          const expires = Math.floor(Date.now() / 1000) + 55 * 60;
+          for (const [name, token] of Object.entries(payload.sessions)) {
             fs.writeFileSync(path.join(root, `${name}.json`), JSON.stringify({
-              cookies: [{ name: payload.cookieName, value: token, domain: host, path: '/', expires, httpOnly: true, secure: true, sameSite: 'Lax' }],
+              cookies: [{
+                name: payload.cookieName,
+                value: token,
+                domain: host,
+                path: "/",
+                expires,
+                httpOnly: true,
+                secure: true,
+                sameSite: "Lax",
+              }],
               origins: [],
             }));
           }
           NODE
           unset state_json
-          echo 'AUDITED STAGING QA FIXTURES + TEMPORARY AUTH STATES: PASS'
+          echo "AUDITED STAGING QA FIXTURES + TEMPORARY AUTH STATES: PASS"
 
       - name: Run comprehensive browser certification except true OTP receipt/verify
         shell: bash
@@ -381,7 +204,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p artifacts/staging-certification
-          cat > artifacts/staging-certification/uat-probe-scope.md <<EOF
+          cat > artifacts/staging-certification/uat-probe-scope.md <<'EOF'
           # SkillUp staging UAT probe
 
           - Locked release: 8dd0fb92470fc847dd8eeef0f98fd0daf0cddd8e
