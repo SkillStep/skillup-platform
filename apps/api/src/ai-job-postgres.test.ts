@@ -57,7 +57,10 @@ describeWithPostgres("AI job queue against PostgreSQL", () => {
       );
       requestId = request.id;
 
-      const claimed = await queue.claim({ workerId: "postgres-regression-worker", leaseSeconds: 120 });
+      const claimed = await queue.claim({
+        workerId: "postgres-regression-worker",
+        leaseSeconds: 120,
+      });
       expect(claimed?.["requestId"]).toBe(requestId);
       expect(claimed?.["attemptNumber"]).toBe(1);
       expect(claimed?.["leaseToken"]).toEqual(expect.any(String));
