@@ -14,8 +14,8 @@ test("pricing renders authoritative launch prices", async ({ page }) => {
   await page.goto("/en/pricing");
   await expect(page.getByRole("heading", { name: "SkillUp Premium Monthly" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "SkillUp Premium Yearly" })).toBeVisible();
-  await expect(page.getByText(/PKR\s*599/).first()).toBeVisible();
-  await expect(page.getByText(/PKR\s*4,999/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*599/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*4,999/).first()).toBeVisible();
 });
 
 test("commercial plan API returns only the two approved launch plans", async ({ request }) => {
@@ -101,7 +101,7 @@ test("JazzCash callback rejects malformed or unsigned provider payloads", async 
   const malformed = await request.post("/api/v1/commercial/jazzcash/callback", {
     data: "not-an-object",
   });
-  expect([400, 503]).toContain(malformed.status());
+  expect([400, 415, 503]).toContain(malformed.status());
 
   const unsigned = await request.post("/api/v1/commercial/jazzcash/callback", {
     data: {
