@@ -384,7 +384,7 @@ if (!hasHardBlock() && !hasStatus("FAIL")) {
 
 summary.decision = hasStatus("FAIL")
   ? "FAILED"
-  : hasStatus("BLOCKED")
+  : hasHardBlock()
     ? "BLOCKED"
     : "READY FOR UAT";
 await writeSummary();
