@@ -8,6 +8,7 @@ on:
 permissions:
   actions: read
   contents: read
+  statuses: write
 
 jobs:
   resolve-deployment:
@@ -111,3 +112,39 @@ jobs:
       ai_image_digest: ${{ needs.resolve-deployment.outputs.ai_image_digest }}
       previous_release_ref: ${{ needs.resolve-deployment.outputs.previous_release_ref }}
     secrets: inherit
+
+  report-status:
+    name: Publish live staging certification status
+    if: ${{ always() }}
+    needs: [resolve-deployment, certify]
+    runs-on: ubuntu-24.04
+    env:
+      TARGET_SHA: ${{ github.event.workflow_run.head_sha }}
+      DEPLOY_RESULT: ${{ github.event.workflow_run.conclusion }}
+      RESOLVE_RESULT: ${{ needs.resolve-deployment.result }}
+      CERTIFY_RESULT: ${{ needs.certify.result }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Publish machine-readable status on exact release
+        shell: bash
+        run: |
+          set -euo pipefail
+          state="failure"
+          description="Staging deployment or certification failed"
+          if [ "$DEPLOY_RESULT" = "success" ] && [ "$RESOLVE_RESULT" = "success" ] && [ "$CERTIFY_RESULT" = "success" ]; then
+            state="success"
+            description="Exact staging release passed mandatory certification"
+          fi
+
+          payload="$(jq -n \
+            --arg state "$state" \
+            --arg description "$description" \
+            --arg context "staging-certification/live" \
+            '{state:$state,description:$description,context:$context}')"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data "$payload" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" >/dev/null
