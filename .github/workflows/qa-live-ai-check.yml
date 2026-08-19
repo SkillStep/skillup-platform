@@ -29,7 +29,7 @@ jobs:
           set -euo pipefail
           ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
-          out="$(docker exec -e AI_EVALUATION_LIVE=true skillup-ai-worker-staging-container skillup-ai-worker-evaluate)"
+          out="$(docker exec -e AI_EVALUATION_LIVE=true skillup-ai-worker-staging-container python -m skillup_ai_worker.evaluate)"
           REPORT="$out" python3 - <<'PY'
           import json, os
           report=json.loads(os.environ['REPORT'])
