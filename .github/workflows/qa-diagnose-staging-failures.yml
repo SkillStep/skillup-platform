@@ -1,0 +1,46 @@
+name: QA Diagnose Remaining Staging Failures
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'qa/final-staging-8f5a3db'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Diagnose live database/content and sanitized runtime errors
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" >/tmp/k; chmod 600 /tmp/k
+          for attempt in $(seq 1 10); do
+            if ssh -i /tmp/k -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" bash -s <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+          echo '=== LEVEL DIAGNOSTIC ==='
+          docker exec skillup-postgres-staging-container psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "
+            select 'level='||l.id||' slug='||l.slug from levels l where l.id='3c315a1a-824a-413e-836d-69a9fc8bad1f'::uuid;
+            select 'version='||lv.id||' level='||lv.level_id||' locale='||lv.locale||' state='||lv.state||' version_no='||lv.version from level_versions lv where lv.level_id='3c315a1a-824a-413e-836d-69a9fc8bad1f'::uuid order by lv.version;
+          " || true
+          echo '=== PUBLISHED LEVEL COUNTS ==='
+          docker exec skillup-postgres-staging-container psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select count(*) filter(where state='published')||'/'||count(*) from level_versions;" || true
+          echo '=== RECENT API DATABASE ERRORS (SANITIZED) ==='
+          docker logs --since 45m skillup-api-staging-container 2>&1 | grep -E '42883|operator does not exist|internal_error|unexpected server|premium|supportLearner|report' | tail -160 || true
+          echo '=== AI QUEUE STATE ==='
+          docker exec skillup-postgres-staging-container psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc "select status||':'||count(*) from ai_generation_requests where created_at > now()-interval '2 hours' group by status order by status;" || true
+          docker logs --since 45m skillup-ai-worker-staging-container 2>&1 | grep -E 'error|failed|queued|artifact|request' | tail -100 || true
+          REMOTE
+            then exit 0; fi
+            sleep $((4+attempt*2))
+          done
+          exit 31
