@@ -16,6 +16,9 @@ const visualBaselinesApproved =
 const artifactsRoot = path.resolve(directory, "artifacts");
 const authRoot = path.join(artifactsRoot, ".auth");
 
+const exactSpecs = (...names) =>
+  new RegExp(`(?:^|/)(?:${names.map((name) => name.replaceAll(".", "\\.")).join("|")})$`);
+
 export default defineConfig({
   testDir: path.join(directory, "tests"),
   outputDir: path.join(artifactsRoot, "test-results"),
@@ -43,20 +46,32 @@ export default defineConfig({
   projects: [
     {
       name: "auth-setup",
-      testMatch: /auth\.setup\.mjs/,
+      testMatch: exactSpecs("auth.setup.mjs"),
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "public-desktop",
-      testMatch:
-        /public\.spec\.mjs|auth-ui\.spec\.mjs|auth-negative\.spec\.mjs|runtime-ui\.spec\.mjs|session-lifecycle\.spec\.mjs|accessibility-public\.spec\.mjs/,
+      testMatch: exactSpecs(
+        "public.spec.mjs",
+        "auth-ui.spec.mjs",
+        "auth-negative.spec.mjs",
+        "runtime-ui.spec.mjs",
+        "session-lifecycle.spec.mjs",
+        "accessibility-public.spec.mjs",
+      ),
       use: { ...devices["Desktop Chrome"] },
     },
     {
       name: "learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch:
-        /learner\.spec\.mjs|premium\.spec\.mjs|account\.spec\.mjs|account-ui\.spec\.mjs|gameplay-negative\.spec\.mjs|accessibility-learner\.spec\.mjs/,
+      testMatch: exactSpecs(
+        "learner.spec.mjs",
+        "premium.spec.mjs",
+        "account.spec.mjs",
+        "account-ui.spec.mjs",
+        "gameplay-negative.spec.mjs",
+        "accessibility-learner.spec.mjs",
+      ),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
@@ -65,7 +80,7 @@ export default defineConfig({
     {
       name: "learner-mobile",
       dependencies: ["auth-setup"],
-      testMatch: /learner\.spec\.mjs|premium\.spec\.mjs|responsive\.spec\.mjs/,
+      testMatch: exactSpecs("learner.spec.mjs", "premium.spec.mjs", "responsive.spec.mjs"),
       use: {
         ...devices["Pixel 7"],
         storageState: path.join(authRoot, "learner.json"),
@@ -74,7 +89,7 @@ export default defineConfig({
     {
       name: "free-learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /free-learner\.spec\.mjs/,
+      testMatch: exactSpecs("free-learner.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "free-learner.json"),
@@ -83,7 +98,7 @@ export default defineConfig({
     {
       name: "onboarding-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /onboarding\.spec\.mjs/,
+      testMatch: exactSpecs("onboarding.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "onboarding.json"),
@@ -92,8 +107,13 @@ export default defineConfig({
     {
       name: "admin-desktop",
       dependencies: ["auth-setup"],
-      testMatch:
-        /admin\.spec\.mjs|ai\.spec\.mjs|ai-negative\.spec\.mjs|premium-operations\.spec\.mjs|premium-ui\.spec\.mjs/,
+      testMatch: exactSpecs(
+        "admin.spec.mjs",
+        "ai.spec.mjs",
+        "ai-negative.spec.mjs",
+        "premium-operations.spec.mjs",
+        "premium-ui.spec.mjs",
+      ),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
@@ -102,7 +122,7 @@ export default defineConfig({
     {
       name: "analyst-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /analyst\.spec\.mjs/,
+      testMatch: exactSpecs("analyst.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "analyst.json"),
@@ -111,7 +131,7 @@ export default defineConfig({
     {
       name: "content-editor-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /content-editor\.spec\.mjs/,
+      testMatch: exactSpecs("content-editor.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "content-editor.json"),
@@ -120,7 +140,7 @@ export default defineConfig({
     {
       name: "content-reviewer-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /content-reviewer\.spec\.mjs/,
+      testMatch: exactSpecs("content-reviewer.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "content-reviewer.json"),
@@ -129,7 +149,7 @@ export default defineConfig({
     {
       name: "publisher-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /publisher\.spec\.mjs/,
+      testMatch: exactSpecs("publisher.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "publisher.json"),
@@ -138,7 +158,7 @@ export default defineConfig({
     {
       name: "payment-operator-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /payment-operator\.spec\.mjs/,
+      testMatch: exactSpecs("payment-operator.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "payment-operator.json"),
@@ -147,7 +167,7 @@ export default defineConfig({
     {
       name: "learner-support-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /learner-support\.spec\.mjs/,
+      testMatch: exactSpecs("learner-support.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner-support.json"),
@@ -156,7 +176,7 @@ export default defineConfig({
     {
       name: "security-admin-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /security-admin\.spec\.mjs/,
+      testMatch: exactSpecs("security-admin.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "security-admin.json"),
@@ -165,7 +185,7 @@ export default defineConfig({
     {
       name: "revoked-admin-desktop",
       dependencies: ["auth-setup"],
-      testMatch: /revoked-admin\.spec\.mjs/,
+      testMatch: exactSpecs("revoked-admin.spec.mjs"),
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "revoked-admin.json"),
@@ -174,7 +194,7 @@ export default defineConfig({
     {
       name: "visual-desktop",
       dependencies: ["auth-setup"],
-      testMatch: visualBaselinesApproved ? /visual\.spec\.mjs/ : /$a/,
+      testMatch: visualBaselinesApproved ? exactSpecs("visual.spec.mjs") : /$a/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "admin.json"),
@@ -183,7 +203,7 @@ export default defineConfig({
     {
       name: "visual-learner-desktop",
       dependencies: ["auth-setup"],
-      testMatch: visualBaselinesApproved ? /visual-learner\.spec\.mjs/ : /$a/,
+      testMatch: visualBaselinesApproved ? exactSpecs("visual-learner.spec.mjs") : /$a/,
       use: {
         ...devices["Desktop Chrome"],
         storageState: path.join(authRoot, "learner.json"),
