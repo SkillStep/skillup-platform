@@ -38,14 +38,14 @@ async function run(): Promise<void> {
     for (const userId of Object.values(users)) {
       await connection.query(
         `insert into users (id, status, created_at, updated_at)
-         values ($1, 'active', $2, $2)
+         values ($1, 'active', $2::timestamptz, $2::timestamptz)
          on conflict (id) do nothing`,
         [userId, new Date("2026-07-01T00:00:00.000Z")],
       );
       await connection.query(
         `insert into learner_profiles
           (user_id, locale, age_band, onboarding_status, created_at, updated_at)
-         values ($1, 'en', '18_24', 'completed', $2, $2)
+         values ($1, 'en', '18_24', 'completed', $2::timestamptz, $2::timestamptz)
          on conflict (user_id) do nothing`,
         [userId, new Date("2026-07-01T00:00:00.000Z")],
       );
@@ -71,9 +71,9 @@ async function run(): Promise<void> {
            idempotency_key, merchant_reference, checkout_expires_at, completed_at,
            created_at, updated_at)
          values ($1, $2, 'sandbox', $3, 59900, 'PKR', $4, $5,
-                 $6 + interval '30 minutes',
-                 case when $3 in ('succeeded','refunded') then $6 else null end,
-                 $6, $6)
+                 $6::timestamptz + interval '30 minutes',
+                 case when $3 in ('succeeded','refunded') then $6::timestamptz else null end,
+                 $6::timestamptz, $6::timestamptz)
          returning id`,
         [
           userId,
@@ -98,7 +98,8 @@ async function run(): Promise<void> {
     await connection.query(
       `insert into entitlements
         (user_id, plan_version_id, source_order_id, status, starts_at, ends_at, created_at, updated_at)
-       values ($1, $2, $3, 'active', $4, $4 + interval '1 month', $4, $4)`,
+       values ($1, $2, $3, 'active', $4::timestamptz,
+               $4::timestamptz + interval '1 month', $4::timestamptz, $4::timestamptz)`,
       [users.activation, planVersionId, activationOrder, new Date("2026-08-01T05:00:00.000Z")],
     );
 
@@ -111,7 +112,8 @@ async function run(): Promise<void> {
     await connection.query(
       `insert into entitlements
         (user_id, plan_version_id, source_order_id, status, starts_at, ends_at, created_at, updated_at)
-       values ($1, $2, $3, 'expired', $4, $4 + interval '1 month', $4, $4)`,
+       values ($1, $2, $3, 'expired', $4::timestamptz,
+               $4::timestamptz + interval '1 month', $4::timestamptz, $4::timestamptz)`,
       [users.renewal, planVersionId, firstRenewalOrder, new Date("2026-06-01T05:00:00.000Z")],
     );
     const renewalOrder = await insertOrder(
@@ -123,7 +125,8 @@ async function run(): Promise<void> {
     await connection.query(
       `insert into entitlements
         (user_id, plan_version_id, source_order_id, status, starts_at, ends_at, created_at, updated_at)
-       values ($1, $2, $3, 'active', $4, $4 + interval '1 month', $4, $4)`,
+       values ($1, $2, $3, 'active', $4::timestamptz,
+               $4::timestamptz + interval '1 month', $4::timestamptz, $4::timestamptz)`,
       [users.renewal, planVersionId, renewalOrder, new Date("2026-07-01T05:00:00.000Z")],
     );
     await insertOrder(users.renewal, "100004", "failed", new Date("2026-08-02T05:00:00.000Z"));
@@ -131,7 +134,8 @@ async function run(): Promise<void> {
     await connection.query(
       `insert into entitlements
         (user_id, plan_version_id, source_order_id, status, starts_at, ends_at, created_at, updated_at)
-       values ($1, $2, null, 'active', $3, $3 + interval '14 days', $3, $3)`,
+       values ($1, $2, null, 'active', $3::timestamptz,
+               $3::timestamptz + interval '14 days', $3::timestamptz, $3::timestamptz)`,
       [users.manual, planVersionId, new Date("2026-08-02T06:00:00.000Z")],
     );
 
@@ -145,7 +149,7 @@ async function run(): Promise<void> {
       `insert into reconciliation_cases
         (order_id, mismatch_kind, status, provider_evidence, internal_evidence, created_at)
        values ($1, 'missing_provider', 'open', '{}'::jsonb,
-               '{"reason":"premium smoke stale pending"}'::jsonb, $2)`,
+               '{"reason":"premium smoke stale pending"}'::jsonb, $2::timestamptz)`,
       [pendingOrder, new Date("2026-08-01T07:00:00.000Z")],
     );
 
