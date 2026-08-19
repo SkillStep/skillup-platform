@@ -181,18 +181,24 @@ try {
   }
 
   const freeEntitlements = await db.query(
-    `update entitlements
-        set status = 'revoked', revoked_at = coalesce(revoked_at, now()), updated_at = now()
+    `select id, status
+       from entitlements
       where user_id = $1 and status in ('active', 'grace')
-      returning id, status`,
+      for update`,
     [freeId],
   );
   for (const row of freeEntitlements.rows) {
     await db.query(
+      `update entitlements
+          set status = 'revoked', revoked_at = coalesce(revoked_at, now()), updated_at = now()
+        where id = $1`,
+      [row.id],
+    );
+    await db.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, evidence_reference, previous_status, next_status)
        values ($1, 'revoke', 'system', 'Maintain deterministic free learner fixture', $2, $3, 'revoked')`,
-      [row.id, `release:${releaseSha}`, row.status === "grace" ? "grace" : "active"],
+      [row.id, `release:${releaseSha}`, row.status],
     );
   }
 
