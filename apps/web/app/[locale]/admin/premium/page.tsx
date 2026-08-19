@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../../discovery-shell";
+import { PremiumAuthBoundary } from "./premium-auth-boundary";
 import styles from "./premium.module.css";
 import { PremiumWorkspace } from "./premium-workspace";
 
@@ -41,7 +42,9 @@ export default async function PremiumAdminPage({ params }: PageProps) {
             </Link>
           </p>
         </header>
-        <PremiumWorkspace />
+        <PremiumAuthBoundary>
+          <PremiumWorkspace />
+        </PremiumAuthBoundary>
       </main>
       <PublicFooter />
     </>
