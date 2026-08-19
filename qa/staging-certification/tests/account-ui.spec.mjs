@@ -17,7 +17,14 @@ test("learner can change and restore a privacy preference through the browser", 
   const initial = await marketing.isChecked();
   expect(initial).toBe(original.marketingConsent);
 
+  const privacyUpdate = page.waitForResponse(
+    (response) =>
+      response.request().method() === "PATCH" &&
+      new URL(response.url()).pathname === "/api/v1/account/privacy",
+  );
   await marketing.click();
+  const updateResponse = await privacyUpdate;
+  expect(updateResponse.ok()).toBe(true);
   await expect(page.getByText("Privacy preferences saved.")).toBeVisible();
   await expect(marketing).toBeChecked({ checked: !initial });
 
@@ -48,10 +55,25 @@ test("account deletion can be scheduled and cancelled through the browser cooldo
   await page.goto("/en/account");
 
   await page.getByLabel(/I understand the cooldown and retained records/).check();
+  const scheduleRequest = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      new URL(response.url()).pathname === "/api/v1/account/deletion",
+  );
   await page.getByRole("button", { name: "Schedule account deletion" }).click();
+  const scheduleResponse = await scheduleRequest;
+  expect(scheduleResponse.ok()).toBe(true);
   await expect(
-    page.getByText("Account deletion is scheduled. You can cancel it during the cooldown."),
+    page.getByText("Account deletion is scheduled. You can cancel it during the cooldown period."),
   ).toBeVisible();
+
+  const cancelRequest = page.waitForResponse(
+    (response) =>
+      response.request().method() === "DELETE" &&
+      new URL(response.url()).pathname === "/api/v1/account/deletion",
+  );
   await page.getByRole("button", { name: "Cancel deletion" }).click();
+  const cancelResponse = await cancelRequest;
+  expect(cancelResponse.ok()).toBe(true);
   await expect(page.getByText("Account deletion cancelled.")).toBeVisible();
 });
