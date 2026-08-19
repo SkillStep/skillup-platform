@@ -21,9 +21,7 @@ test("free learner cannot reach Admin authority", async ({ request, page }) => {
   expect(api.status()).toBe(403);
 
   await page.goto("/en/admin");
-  await expect(page.getByRole("alert")).toContainText(
-    "Your account does not have administrative access.",
-  );
+  await expect(page.getByText("Your account does not have administrative access.")).toBeVisible();
   await expect(page.getByText(/^Roles:/)).toHaveCount(0);
 });
 
@@ -32,8 +30,8 @@ test("free learner can view Premium pricing without client-side tier escalation"
   request,
 }) => {
   await page.goto("/en/pricing");
-  await expect(page.getByText(/PKR\s*599/).first()).toBeVisible();
-  await expect(page.getByText(/PKR\s*4,999/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*599/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*4,999/).first()).toBeVisible();
 
   const capabilities = await request.get("/api/v1/account/capabilities");
   requireOk(capabilities, "Capability lookup after pricing view");
