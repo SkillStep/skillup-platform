@@ -107,6 +107,7 @@ jobs:
           corepack prepare pnpm@11.17.0 --activate
           pnpm install --frozen-lockfile
           pnpm format
+          pnpm shared:build
           pnpm --filter @skillup/api typecheck
           git diff --check
       - name: Commit source repair only
