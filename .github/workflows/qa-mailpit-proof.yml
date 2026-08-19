@@ -31,6 +31,9 @@ jobs:
           ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
           set -euo pipefail
           cd /opt/skillup
+          export IMAGE_BASE=ghcr.io/skillstep/skillup-platform
+          export IMAGE_TAG="$(sed -n 's/^RELEASE_SHA=//p' .env | tail -1)"
+          test -n "$IMAGE_TAG"
 
           cat > docker-compose.qa-mailpit.yml <<'YAML'
           services:
