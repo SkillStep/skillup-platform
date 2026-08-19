@@ -40,18 +40,23 @@ jobs:
           from pathlib import Path
           path=Path('apps/api/src/auth.ts')
           text=path.read_text()
-          old="""`update auth_sessions
-            set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
-          where id = $1 and last_seen_at < $2 - interval '5 minutes'`"""
-          new="""`update auth_sessions
-            set last_seen_at = $2::timestamptz,
-                idle_expires_at = least(expires_at, $3::timestamptz)
-          where id = $1
-            and last_seen_at < $2::timestamptz - interval '5 minutes'`"""
-          if old in text:
-              path.write_text(text.replace(old,new,1))
-          elif new not in text:
-              raise SystemExit('Expected resolveSession refresh query was not found')
+          replacements=[
+            (
+              "set last_seen_at = $2, idle_expires_at = least(expires_at, $3)",
+              "set last_seen_at = $2::timestamptz, idle_expires_at = least(expires_at, $3::timestamptz)",
+            ),
+            (
+              "where id = $1 and last_seen_at < $2 - interval '5 minutes'",
+              "where id = $1 and last_seen_at < $2::timestamptz - interval '5 minutes'",
+            ),
+          ]
+          changed=False
+          for old,new in replacements:
+              if old in text:
+                  text=text.replace(old,new,1); changed=True
+              elif new not in text:
+                  raise SystemExit(f'Expected resolveSession fragment was not found: {old}')
+          if changed: path.write_text(text)
           PY
           corepack enable
           corepack prepare pnpm@11.17.0 --activate
