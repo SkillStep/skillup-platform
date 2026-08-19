@@ -34,4 +34,6 @@ try {
   await fs.rm(stateRoot, { recursive: true, force: true });
 }
 
-console.log("All mandatory staging QA accounts are verified and available for fixture provisioning.");
+console.log(
+  "All mandatory staging QA accounts are verified and available for fixture provisioning.",
+);
