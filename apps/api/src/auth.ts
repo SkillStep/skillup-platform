@@ -316,7 +316,7 @@ export function createAuthService(
         await client.query(
           `insert into auth_sessions
             (user_id, token_digest, expires_at, idle_expires_at, last_seen_at, created_at)
-           values ($1, $2, $3, least($4, $3), $5, $5)`,
+           values ($1, $2, $3::timestamptz, least($4::timestamptz, $3::timestamptz), $5::timestamptz, $5::timestamptz)`,
           [userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
         );
 
@@ -369,8 +369,8 @@ export function createAuthService(
       const extendedIdle = addMinutes(seenAt, options.sessionIdleMinutes);
       await options.pool.query(
         `update auth_sessions
-            set last_seen_at = $2, idle_expires_at = least(expires_at, $3)
-          where id = $1 and last_seen_at < $2 - interval '5 minutes'`,
+            set last_seen_at = $2::timestamptz, idle_expires_at = least(expires_at, $3::timestamptz)
+          where id = $1 and last_seen_at < $2::timestamptz - interval '5 minutes'`,
         [row.session_id, seenAt, extendedIdle],
       );
 
