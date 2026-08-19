@@ -14,7 +14,7 @@ test("passwordless sign-in delivers and verifies a real staging OTP", async ({ p
 
   await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
   const code = await retrieveOtpForUi(email, startedAfter);
-  await page.getByLabel("Six-digit code").fill(code);
+  await page.getByLabel("Four-digit code").fill(code);
   await page.getByRole("button", { name: "Verify and continue" }).click();
 
   await page.waitForURL((url) => !url.pathname.endsWith("/sign-in"));
