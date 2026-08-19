@@ -1,0 +1,47 @@
+name: QA Live AI Check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    env:
+      STAGING_HOST: ${{ secrets.STAGING_HOST }}
+      STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+      STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+    steps:
+      - name: Prepare SSH key
+        shell: bash
+        run: |
+          set -euo pipefail
+          printf '%s\n' "$STAGING_SSH_KEY" > /tmp/staging-key
+          chmod 600 /tmp/staging-key
+      - name: Run sanitized live AI evaluation
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i /tmp/staging-key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 "$STAGING_SSH_USER@$STAGING_HOST" 'bash -s' <<'REMOTE'
+          set -euo pipefail
+          out="$(docker exec -e AI_EVALUATION_LIVE=true skillup-ai-worker-staging-container skillup-ai-worker-evaluate)"
+          REPORT="$out" python3 - <<'PY'
+          import json, os
+          report=json.loads(os.environ['REPORT'])
+          print('AI_EVALUATION_MODE='+str(report.get('mode')))
+          print('AI_EVALUATION_CASES='+str(report.get('cases')))
+          print('AI_EVALUATION_PASSED='+str(report.get('passed')))
+          print('AI_EVALUATION_FAILED='+str(report.get('failed')))
+          providers=sorted({str(r.get('provider')) for r in report.get('results',[]) if r.get('provider')})
+          print('AI_EVALUATION_PROVIDERS='+','.join(providers))
+          if report.get('status')!='passed' or report.get('failed')!=0:
+              raise SystemExit(1)
+          PY
+          echo 'LIVE_AI_PROVIDER_EVALUATION=PASS'
+          REMOTE
+          rm -f /tmp/staging-key
