@@ -16,10 +16,10 @@ function required(name: string): string {
 }
 
 async function main(): Promise<void> {
-  if (process.env.APP_ENV !== "staging") {
+  if (process.env["APP_ENV"] !== "staging") {
     throw new Error("Staging QA OTP recovery is allowed only when APP_ENV=staging.");
   }
-  if (process.env.STAGING_QA_OTP_READ_CONFIRM !== CONFIRMATION) {
+  if (process.env["STAGING_QA_OTP_READ_CONFIRM"] !== CONFIRMATION) {
     throw new Error("The staging QA OTP recovery confirmation is missing or invalid.");
   }
 
