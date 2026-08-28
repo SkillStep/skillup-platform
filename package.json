@@ -13,7 +13,7 @@
     "dev": "pnpm shared:build && pnpm --parallel --filter @skillup/api --filter @skillup/web dev",
     "dev:web": "pnpm shared:build && pnpm --filter @skillup/web dev",
     "dev:api": "pnpm shared:build && pnpm --filter @skillup/api dev",
-    "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs && node tools/staging-qa-brevo-mailbox-bridge.mjs --self-test",
+    "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs && node tools/staging-qa-ssh-otp-bridge.mjs --self-test",
     "deployment:check": "node tools/validate-deployment.mjs",
     "production:check": "node tools/validate-production-readiness.mjs",
     "security:secrets": "node tools/scan-secrets.mjs",

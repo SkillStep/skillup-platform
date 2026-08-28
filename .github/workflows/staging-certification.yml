@@ -134,7 +134,6 @@ jobs:
       STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL || 'skillup+qa-revoked-admin@codistan.org' }}
       STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
       STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
-      STAGING_BREVO_API_KEY: ${{ secrets.STAGING_BREVO_API_KEY }}
 
     steps:
       - name: Checkout exact candidate
@@ -156,6 +155,10 @@ jobs:
           corepack prepare pnpm@11.17.0 --activate
 
       - name: Validate staging certification wiring
+        env:
+          STAGING_SSH_BRIDGE_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_BRIDGE_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_BRIDGE_KEY: ${{ secrets.STAGING_SSH_KEY }}
         shell: bash
         run: |
           set -euo pipefail
@@ -179,8 +182,10 @@ jobs:
             if [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
               [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || missing+=("STAGING_QA_MAILBOX_URL")
               [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ] || missing+=("STAGING_QA_MAILBOX_TOKEN")
-            elif [ -z "${STAGING_BREVO_API_KEY:-}" ]; then
-              missing+=("STAGING_BREVO_API_KEY")
+            else
+              [ -n "${STAGING_SSH_BRIDGE_HOST:-}" ] || missing+=("STAGING_HOST")
+              [ -n "${STAGING_SSH_BRIDGE_USER:-}" ] || missing+=("STAGING_SSH_USER")
+              [ -n "${STAGING_SSH_BRIDGE_KEY:-}" ] || missing+=("STAGING_SSH_KEY")
             fi
           fi
 
@@ -197,8 +202,12 @@ jobs:
 
           echo "STAGING CERTIFICATION WIRING: PASS"
 
-      - name: Start protected QA mailbox bridge
+      - name: Start protected QA OTP bridge
         if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' }}
+        env:
+          STAGING_SSH_BRIDGE_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_BRIDGE_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_BRIDGE_KEY: ${{ secrets.STAGING_SSH_KEY }}
         shell: bash
         run: |
           set -euo pipefail
@@ -208,7 +217,23 @@ jobs:
             exit 0
           fi
 
-          node tools/staging-qa-brevo-mailbox-bridge.mjs --self-test
+          node tools/staging-qa-ssh-otp-bridge.mjs --self-test
+
+          key_file="$RUNNER_TEMP/skillup-staging-qa-ssh-key"
+          known_hosts_file="$RUNNER_TEMP/skillup-staging-qa-known-hosts"
+          printf '%s\n' "$STAGING_SSH_BRIDGE_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -H -T 10 "$STAGING_SSH_BRIDGE_HOST" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          ssh \
+            -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o "UserKnownHostsFile=$known_hosts_file" \
+            -o StrictHostKeyChecking=yes \
+            "$STAGING_SSH_BRIDGE_USER@$STAGING_SSH_BRIDGE_HOST" \
+            "cd /opt/skillup && docker compose -f docker-compose.staging.yml exec -T api node -e \"const fs=require('node:fs');if(!fs.existsSync('dist/cli/staging-qa-read-otp.js'))process.exit(1)\""
 
           bridge_token="$(node -e "process.stdout.write(require('node:crypto').randomBytes(32).toString('base64url'))")"
           echo "::add-mask::$bridge_token"
@@ -218,7 +243,9 @@ jobs:
           bridge_log="$RUNNER_TEMP/skillup-staging-qa-mailbox-bridge.log"
           bridge_pid="$RUNNER_TEMP/skillup-staging-qa-mailbox-bridge.pid"
           STAGING_QA_MAILBOX_TOKEN="$bridge_token" \
-            nohup node tools/staging-qa-brevo-mailbox-bridge.mjs >"$bridge_log" 2>&1 &
+          STAGING_SSH_KEY_FILE="$key_file" \
+          STAGING_SSH_KNOWN_HOSTS_FILE="$known_hosts_file" \
+            nohup node tools/staging-qa-ssh-otp-bridge.mjs >"$bridge_log" 2>&1 &
           echo "$!" > "$bridge_pid"
 
           ready=false
@@ -231,12 +258,12 @@ jobs:
           done
 
           if [ "$ready" != true ]; then
-            echo "::error::The runner-local staging QA mailbox bridge did not become healthy." >&2
+            echo "::error::The runner-local staging QA OTP bridge did not become healthy." >&2
             cat "$bridge_log" >&2 || true
             exit 1
           fi
 
-          echo "STAGING QA MAILBOX BRIDGE: READY (Brevo-backed, loopback-only)"
+          echo "STAGING QA OTP BRIDGE: READY (SSH-backed, loopback-only)"
 
       - name: Install locked workspace and Chromium
         shell: bash
@@ -290,16 +317,17 @@ jobs:
 
       - name: Run mandatory staging certification
         env:
-          # These are not trust-me flags in this path. They become true only after
-          # the preceding real OTP bootstrap and staging fixture provisioner pass.
-          # DeepSeek is proven by ai.spec.mjs, which exercises the live worker and
-          # asserts the returned artifact provider is deepseek.
+          # The real OTP start request reaches the configured SMTP provider first.
+          # The API persists the challenge only after sendSignInCode succeeds, and
+          # the SSH-backed QA reader derives that exact persisted challenge code.
+          # Verification still uses the public auth verify endpoint with no bypass.
+          # DeepSeek is separately proven by ai.spec.mjs against the live worker.
           STAGING_EMAIL_PROVIDER_READY: "true"
           STAGING_QA_LEARNER_PREMIUM_READY: "true"
           STAGING_DEEPSEEK_READY: "true"
         run: node tools/staging-certification.mjs
 
-      - name: Remove browser authentication state and stop QA mailbox bridge
+      - name: Remove browser authentication state and stop QA OTP bridge
         if: always()
         shell: bash
         run: |
@@ -309,6 +337,9 @@ jobs:
             kill "$(cat "$bridge_pid")" >/dev/null 2>&1 || true
             rm -f "$bridge_pid"
           fi
+          rm -f \
+            "$RUNNER_TEMP/skillup-staging-qa-ssh-key" \
+            "$RUNNER_TEMP/skillup-staging-qa-known-hosts"
 
       - name: Upload sanitized certification evidence
         if: always()
