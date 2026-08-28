@@ -32,7 +32,7 @@ services:
       - no-new-privileges:true
 
   api:
-    image: ${IMAGE_BASE}-api:${IMAGE_TAG:-staging}
+    image: ${API_RELEASE_ARTIFACT_REF:-ghcr.io/skillstep/skillup-platform-api:staging}
     container_name: skillup-api-staging-container
     restart: unless-stopped
     env_file: .env
@@ -46,7 +46,7 @@ services:
         condition: service_healthy
 
   web:
-    image: ${IMAGE_BASE}-web:${IMAGE_TAG:-staging}
+    image: ${WEB_RELEASE_ARTIFACT_REF:-ghcr.io/skillstep/skillup-platform-web:staging}
     container_name: skillup-web-staging-container
     restart: unless-stopped
     env_file: .env
@@ -59,7 +59,7 @@ services:
       - api
 
   ai-worker:
-    image: ${IMAGE_BASE}-ai-worker:${IMAGE_TAG:-staging}
+    image: ${AI_RELEASE_ARTIFACT_REF:-ghcr.io/skillstep/skillup-platform-ai-worker:staging}
     container_name: skillup-ai-worker-staging-container
     restart: unless-stopped
     env_file: .env
