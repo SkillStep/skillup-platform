@@ -180,7 +180,7 @@ async function provisionPremiumLearner(email: string): Promise<void> {
     await connection.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, previous_status, next_status, created_at)
-       values ($1, 'staging_qa_refresh', 'system', $2, $3, 'active', now())`,
+       values ($1, 'correct', 'system', $2, $3, 'active', now())`,
       [
         existing.id,
         "Refresh deterministic Premium staging certification entitlement",
@@ -200,7 +200,7 @@ async function provisionPremiumLearner(email: string): Promise<void> {
     await connection.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, previous_status, next_status, created_at)
-       values ($1, 'staging_qa_grant', 'system', $2, null, 'active', now())`,
+       values ($1, 'activate', 'system', $2, null, 'active', now())`,
       [entitlementId, "Grant deterministic Premium staging certification entitlement"],
     );
   }
@@ -226,7 +226,7 @@ async function provisionFreeLearner(email: string): Promise<void> {
     await connection.query(
       `insert into entitlement_events
         (entitlement_id, action, actor_type, reason, previous_status, next_status, created_at)
-       values ($1, 'staging_qa_revoke', 'system', $2, $3, 'revoked', now())`,
+       values ($1, 'revoke', 'system', $2, $3, 'revoked', now())`,
       [
         entitlement.id,
         "Ensure deterministic free-tier staging certification fixture",
