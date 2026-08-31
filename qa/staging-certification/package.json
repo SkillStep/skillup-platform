@@ -11,6 +11,6 @@
     "certify:visual": "playwright test --grep @visual"
   },
   "devDependencies": {
-    "@playwright/test": "1.62.0"
+    "@playwright/test": "1.62.1"
   }
 }
