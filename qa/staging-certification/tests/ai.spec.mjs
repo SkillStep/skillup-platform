@@ -50,8 +50,10 @@ test("DeepSeek request reaches human review, publication and rollback", async ({
       promptVersion: "summarize.v1",
       requestedItems: 1,
       inputPayload: {
-        source_material:
+        source_material: [
           "SkillUp is a reviewed learning platform. Automated staging certification verifies deployed behavior before human UAT.",
+          `This certification execution is ${qaRunId}.`,
+        ].join(" "),
       },
     },
   });
