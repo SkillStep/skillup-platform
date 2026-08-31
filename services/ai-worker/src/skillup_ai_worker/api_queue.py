@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict, dataclass
+from decimal import Decimal, InvalidOperation
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlencode
@@ -30,6 +31,32 @@ def _provider_payload(task: TaskName, payload: dict[str, Any]) -> dict[str, Any]
     if "locale" not in policy_for(task).allowed_input_fields:
         cleaned.pop("locale", None)
     return cleaned
+
+
+def _api_cost(value: str) -> str:
+    """Return the canonical fixed-point decimal accepted by the internal completion API."""
+    try:
+        parsed = Decimal(value)
+    except InvalidOperation as error:
+        raise ValueError("AI result cost is not a valid decimal.") from error
+    if not parsed.is_finite() or parsed < 0:
+        raise ValueError("AI result cost must be a finite non-negative decimal.")
+    if parsed == 0:
+        return "0"
+    normalized = format(parsed, "f")
+    whole, separator, fraction = normalized.partition(".")
+    if separator:
+        fraction = fraction.rstrip("0")
+    if len(fraction) > 12:
+        raise ValueError("AI result cost exceeds the internal API decimal precision.")
+    return whole if not fraction else f"{whole}.{fraction}"
+
+
+def _api_attempts(value: int) -> int:
+    """Preserve provider-attempt semantics while satisfying one claimed queue completion."""
+    if value < 0:
+        raise ValueError("AI result attempts cannot be negative.")
+    return max(1, value)
 
 
 class ApiJobQueue:
@@ -152,9 +179,9 @@ class ApiJobQueue:
                 "inputTokens": result.input_tokens,
                 "cachedInputTokens": result.cached_input_tokens,
                 "outputTokens": result.output_tokens,
-                "estimatedCostUsd": result.estimated_cost_usd,
+                "estimatedCostUsd": _api_cost(result.estimated_cost_usd),
                 "latencyMs": result.latency_ms,
-                "attempts": result.attempts,
+                "attempts": _api_attempts(result.attempts),
                 "inputFingerprint": result.input_fingerprint,
                 "providerRequestId": result.provider_request_id,
                 "releaseSha": result.release_sha,
