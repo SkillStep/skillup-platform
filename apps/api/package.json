@@ -17,15 +17,15 @@
     "@skillup/contracts": "workspace:*",
     "@skillup/database": "workspace:*",
     "@skillup/gameplay-engine": "workspace:*",
-    "fastify": "5.10.0",
-    "nodemailer": "9.0.3",
-    "pg": "8.22.0",
+    "fastify": "5.12.1",
+    "nodemailer": "9.0.6",
+    "pg": "8.23.0",
     "zod": "4.4.3"
   },
   "devDependencies": {
     "@types/node": "24.12.1",
     "@types/nodemailer": "8.0.1",
-    "@types/pg": "8.20.0",
+    "@types/pg": "8.23.1",
     "tsx": "4.23.1",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
