@@ -57,9 +57,7 @@ const targets = [
   { name: "launch_catalog", path: "/en/skills", accept: "text/html" },
 ];
 
-const jobs = targets.flatMap((target) =>
-  Array.from({ length: requestsPerTarget }, () => target),
-);
+const jobs = targets.flatMap((target) => Array.from({ length: requestsPerTarget }, () => target));
 const observations = new Map(
   targets.map((target) => [target.name, { durations: [], failures: [] }]),
 );
