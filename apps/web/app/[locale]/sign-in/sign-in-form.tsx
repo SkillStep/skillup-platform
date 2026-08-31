@@ -1,6 +1,6 @@
 "use client";
 
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useEffect, useId, useState } from "react";
 
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
@@ -39,12 +39,17 @@ async function readError(response: Response): Promise<string> {
 export function SignInForm({ returnTo }: SignInFormProps) {
   const emailId = useId();
   const codeId = useId();
+  const [hydrated, setHydrated] = useState(false);
   const [email, setEmail] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -186,7 +191,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
             />
             <p className={styles["help"]}>Use an address you can access on this device.</p>
           </div>
-          <button className={styles["action"]} type="submit" disabled={busy}>
+          <button className={styles["action"]} type="submit" disabled={!hydrated || busy}>
             {busy ? "Requesting code…" : "Send sign-in code"}
           </button>
         </form>

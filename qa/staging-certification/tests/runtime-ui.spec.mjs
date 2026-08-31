@@ -35,14 +35,19 @@ test("critical public navigation survives refresh, back and forward", async ({ p
   await expect(page.getByText(/(?:PKR|Rs)\s*599\s*\/\s*month/i).first()).toBeVisible();
 });
 
-test("critical public pages do not emit uncaught page errors", async ({ page }) => {
+test("critical public pages do not emit uncaught page errors", async ({ page, request }) => {
   const errors = [];
   page.on("pageerror", (error) => errors.push(error.message));
 
   for (const route of ["/en", "/en/skills", "/en/pricing", "/en/sign-in"]) {
-    const response = await page.goto(route);
-    expect(response?.ok()).toBeTruthy();
-  }
+    const httpResponse = await request.get(route);
+    expect(httpResponse.ok(), `${route} should return a successful HTTP response`).toBe(true);
 
-  expect(errors).toEqual([]);
+    await page.goto(route, { waitUntil: "domcontentloaded" });
+    await expect(page, `${route} should finish browser navigation`).toHaveURL(
+      new RegExp(`${route.replaceAll("/", "\\/")}$`),
+    );
+    await expect(page.getByRole("main"), `${route} should render its main landmark`).toBeVisible();
+    expect(errors, `${route} should not emit an uncaught page error`).toEqual([]);
+  }
 });

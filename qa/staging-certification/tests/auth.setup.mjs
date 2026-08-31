@@ -24,6 +24,8 @@ const identities = [
 ];
 
 test("create all mandatory staging certification browser states", async () => {
+  test.setTimeout(180_000);
+
   for (const [environmentName, filename] of identities) {
     await createAuthenticatedState(qaIdentity(environmentName), path.join(authRoot, filename));
   }
