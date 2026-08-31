@@ -16,10 +16,10 @@ function failurePool(attemptCount: number): Readonly<{
 }> {
   const calls: QueryCall[] = [];
   const database = {
-    query: async (text: string, values: readonly unknown[] = []) => {
+    query: (text: string, values: readonly unknown[] = []) => {
       calls.push({ text, values });
       if (text.includes("from ai_generation_requests") && text.includes("for update")) {
-        return {
+        return Promise.resolve({
           rows: [
             {
               id: requestId,
@@ -32,16 +32,16 @@ function failurePool(attemptCount: number): Readonly<{
               correlation_id: "ai-job-failure-regression",
             },
           ],
-        };
+        });
       }
-      return { rows: [] };
+      return Promise.resolve({ rows: [] });
     },
     release: () => undefined,
   };
 
   return {
     pool: {
-      connect: async () => database,
+      connect: () => Promise.resolve(database),
     } as unknown as Parameters<typeof createAiJobService>[0]["pool"],
     calls,
   };
@@ -49,7 +49,8 @@ function failurePool(attemptCount: number): Readonly<{
 
 function failureUpdate(calls: readonly QueryCall[]): QueryCall {
   const call = calls.find(
-    ({ text }) => text.includes("update ai_generation_requests") && text.includes("next_attempt_at"),
+    ({ text }) =>
+      text.includes("update ai_generation_requests") && text.includes("next_attempt_at"),
   );
   if (!call) throw new Error("AI failure state update was not executed.");
   return call;
