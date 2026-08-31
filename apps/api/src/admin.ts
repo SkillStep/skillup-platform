@@ -155,6 +155,12 @@ export function registerAdminRoutes(
       .send(await options.adminService.createGenerationRequest(admin, body, request.id));
   });
 
+  app.get("/v1/admin/ai/requests/:id", async (request) => {
+    await requireAdmin(request, options, "ai.request");
+    const { id } = IdParamsSchema.parse(request.params);
+    return { request: await options.adminService.getGenerationRequest(id) };
+  });
+
   app.post("/v1/admin/ai/requests/:id/cancel", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdmin(request, options, "ai.request");

@@ -37,6 +37,18 @@ export type GenerationRequestInput = Readonly<{
   inputPayload: Readonly<Record<string, unknown>>;
 }>;
 
+export type GenerationRequestStatus = Readonly<{
+  id: string;
+  status: string;
+  provider: string | null;
+  model: string | null;
+  attemptCount: number;
+  lastError: string | null;
+  createdAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}>;
+
 export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
   Readonly<{
     createGenerationRequest: (
@@ -44,6 +56,7 @@ export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
       input: GenerationRequestInput,
       correlationId: string,
     ) => Promise<Readonly<{ id: string; status: string; correlationId: string }>>;
+    getGenerationRequest: (requestId: string) => Promise<GenerationRequestStatus>;
     cancelGenerationRequest: (
       actor: AdminIdentity,
       requestId: string,
@@ -96,7 +109,9 @@ export function createAdminService(
              (select count(*)::integer from ai_generation_requests where status = 'completed') as "completedAiJobs",
              (select count(*)::integer from ai_generation_requests where status = 'failed') as "failedAiJobs",
              (select count(*)::integer from ai_job_attempts where status = 'cancelled') as "cancelledAiAttempts",
-             (select coalesce(sum(estimated_cost_usd), 0)::numeric(12,6) from ai_job_attempts where status = 'completed') as "estimatedAiCostUsd",
+             (select (coalesce(sum(estimated_cost_microusd), 0)::numeric / 1000000)::numeric(12,6)
+                from ai_job_attempts
+               where status = 'completed') as "estimatedAiCostUsd",
              (select count(*)::integer
                 from analytics_events
                where received_at > occurred_at + interval '5 minutes') as "analyticsEventsDelayedOverFiveMinutes",
@@ -166,6 +181,31 @@ export function createAdminService(
         },
       });
       return { id: row.id, status: row.status, correlationId: row.correlation_id };
+    },
+
+    getGenerationRequest: async (requestId) => {
+      const result = await options.pool.query<GenerationRequestStatus>(
+        `select
+           id,
+           status,
+           provider,
+           model,
+           attempt_count as "attemptCount",
+           last_error as "lastError",
+           created_at as "createdAt",
+           started_at as "startedAt",
+           completed_at as "completedAt"
+         from ai_generation_requests
+         where id = $1`,
+        [requestId],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        throw Object.assign(new Error("The AI generation request was not found."), {
+          statusCode: 404,
+        });
+      }
+      return row;
     },
 
     cancelGenerationRequest: async (actor, requestId, reason, correlationId) => {

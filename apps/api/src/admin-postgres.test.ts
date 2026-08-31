@@ -3,7 +3,7 @@ import { randomUUID } from "node:crypto";
 import { Pool } from "pg";
 import { afterAll, describe, expect, it } from "vitest";
 
-import { createAdminService } from "./admin-service.js";
+import { createAdminService } from "./admin-service-v2.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
 const describeWithPostgres = databaseUrl ? describe : describe.skip;
@@ -16,7 +16,7 @@ afterAll(async () => {
 });
 
 describeWithPostgres("Admin read models against PostgreSQL", () => {
-  it("loads learner support and metrics using the migrated schema", async () => {
+  it("loads learner support and expanded metrics using the migrated schema", async () => {
     if (!pool) throw new Error("DATABASE_URL is required for the PostgreSQL Admin regression.");
 
     const userId = randomUUID();
@@ -44,6 +44,7 @@ describeWithPostgres("Admin read models against PostgreSQL", () => {
       const metrics = await admin.metrics();
       expect(Number(metrics["activeLearners"] ?? 0)).toBeGreaterThanOrEqual(1);
       expect(Number(metrics["completedSessions"] ?? 0)).toBeGreaterThanOrEqual(0);
+      expect(Number(metrics["estimatedAiCostUsd"] ?? 0)).toBeGreaterThanOrEqual(0);
     } finally {
       await pool.query("delete from users where id = $1", [userId]);
     }

@@ -15,6 +15,7 @@ export function PwaStatus() {
   const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const refreshing = useRef(false);
+  const updateRequested = useRef(false);
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -32,7 +33,7 @@ export function PwaStatus() {
     window.addEventListener("appinstalled", handleInstalled);
 
     const handleControllerChange = () => {
-      if (refreshing.current) return;
+      if (!updateRequested.current || refreshing.current) return;
       refreshing.current = true;
       window.location.reload();
     };
@@ -70,7 +71,9 @@ export function PwaStatus() {
   }
 
   function update(): void {
-    waitingWorker?.postMessage({ type: "SKIP_WAITING" });
+    if (!waitingWorker) return;
+    updateRequested.current = true;
+    waitingWorker.postMessage({ type: "SKIP_WAITING" });
   }
 
   if (online && !installPrompt && !waitingWorker) return null;
