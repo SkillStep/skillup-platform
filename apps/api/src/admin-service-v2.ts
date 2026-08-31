@@ -37,6 +37,18 @@ export type GenerationRequestInput = Readonly<{
   inputPayload: Readonly<Record<string, unknown>>;
 }>;
 
+export type GenerationRequestStatus = Readonly<{
+  id: string;
+  status: string;
+  provider: string | null;
+  model: string | null;
+  attemptCount: number;
+  lastError: string | null;
+  createdAt: Date;
+  startedAt: Date | null;
+  completedAt: Date | null;
+}>;
+
 export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
   Readonly<{
     createGenerationRequest: (
@@ -44,6 +56,7 @@ export type AdminService = Omit<BaseAdminService, "createGenerationRequest"> &
       input: GenerationRequestInput,
       correlationId: string,
     ) => Promise<Readonly<{ id: string; status: string; correlationId: string }>>;
+    getGenerationRequest: (requestId: string) => Promise<GenerationRequestStatus>;
     cancelGenerationRequest: (
       actor: AdminIdentity,
       requestId: string,
@@ -168,6 +181,31 @@ export function createAdminService(
         },
       });
       return { id: row.id, status: row.status, correlationId: row.correlation_id };
+    },
+
+    getGenerationRequest: async (requestId) => {
+      const result = await options.pool.query<GenerationRequestStatus>(
+        `select
+           id,
+           status,
+           provider,
+           model,
+           attempt_count as "attemptCount",
+           last_error as "lastError",
+           created_at as "createdAt",
+           started_at as "startedAt",
+           completed_at as "completedAt"
+         from ai_generation_requests
+         where id = $1`,
+        [requestId],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        throw Object.assign(new Error("The AI generation request was not found."), {
+          statusCode: 404,
+        });
+      }
+      return row;
     },
 
     cancelGenerationRequest: async (actor, requestId, reason, correlationId) => {
