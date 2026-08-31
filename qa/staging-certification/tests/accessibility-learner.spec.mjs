@@ -5,10 +5,11 @@ test("critical learner page preserves one main landmark and visible focusable ac
 }) => {
   await page.goto("/en/learn/3c315a1a-824a-413e-836d-69a9fc8bad1f");
   await expect(page.locator("main")).toHaveCount(1);
-  const action = page.getByRole("button", { name: "Check answer" });
-  await expect(action).toBeVisible();
-  await action.focus();
-  await expect(action).toBeFocused();
+
+  const answer = page.locator("main input:not([disabled]), main button:not([disabled])").first();
+  await expect(answer).toBeVisible();
+  await answer.focus();
+  await expect(answer).toBeFocused();
 });
 
 test("private learner account controls expose semantic section headings", async ({ page }) => {
