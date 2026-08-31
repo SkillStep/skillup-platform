@@ -20,17 +20,22 @@ test("web health exposes security headers and no-cache release metadata", async 
 
 test("bounded read-only staging capacity smoke stays within the reviewed latency budget", async () => {
   test.setTimeout(60_000);
-  const result = spawnSync(process.execPath, [path.join(root, "tools", "staging-capacity-smoke.mjs")], {
-    cwd: root,
-    env: process.env,
-    encoding: "utf8",
-  });
+  const result = spawnSync(
+    process.execPath,
+    [path.join(root, "tools", "staging-capacity-smoke.mjs")],
+    {
+      cwd: root,
+      env: process.env,
+      encoding: "utf8",
+    },
+  );
 
   if (result.stdout) console.log(result.stdout.trim());
   if (result.stderr) console.error(result.stderr.trim());
-  expect(result.status, result.stderr || result.stdout || "Capacity smoke did not return a status.").toBe(
-    0,
-  );
+  expect(
+    result.status,
+    result.stderr || result.stdout || "Capacity smoke did not return a status.",
+  ).toBe(0);
 });
 
 test("PWA manifest and offline fallback are deployable", async ({ request, page }) => {
