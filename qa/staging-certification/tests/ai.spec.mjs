@@ -10,9 +10,20 @@ async function requireOk(response, label) {
   }
 }
 
-async function waitForArtifact(request, correlationId) {
+async function waitForArtifact(request, requestId, correlationId) {
   const deadline = Date.now() + 90_000;
+  let lastStatus = null;
   while (Date.now() < deadline) {
+    const statusResponse = await request.get(`/api/v1/admin/ai/requests/${requestId}`);
+    await requireOk(statusResponse, "AI request status");
+    const statusBody = await statusResponse.json();
+    lastStatus = statusBody.request;
+    if (["failed", "cancelled"].includes(lastStatus.status)) {
+      throw new Error(
+        `AI request ${requestId} became ${lastStatus.status} after ${lastStatus.attemptCount} attempt(s): ${lastStatus.lastError ?? "no diagnostic was recorded"}`,
+      );
+    }
+
     const response = await request.get("/api/v1/admin/ai/artifacts?limit=100");
     await requireOk(response, "AI artifact list");
     const body = await response.json();
@@ -20,7 +31,9 @@ async function waitForArtifact(request, correlationId) {
     if (artifact) return artifact;
     await new Promise((resolve) => setTimeout(resolve, 2_000));
   }
-  throw new Error(`AI artifact for correlation ${correlationId} did not arrive within 90 seconds.`);
+  throw new Error(
+    `AI artifact for correlation ${correlationId} did not arrive within 90 seconds. Last request status: ${JSON.stringify(lastStatus)}`,
+  );
 }
 
 test("DeepSeek request reaches human review, publication and rollback", async ({ request }) => {
@@ -46,7 +59,7 @@ test("DeepSeek request reaches human review, publication and rollback", async ({
   const createdBody = await created.json();
   expect(createdBody.status).toBe("queued");
 
-  const artifact = await waitForArtifact(request, createdBody.correlationId);
+  const artifact = await waitForArtifact(request, createdBody.id, createdBody.correlationId);
   expect(artifact.provider).toBe(expectedProvider);
   expect(["in_review", "held"]).toContain(artifact.status);
   expect(Number(artifact.qualityScore)).toBeGreaterThanOrEqual(Number(artifact.qualityThreshold));
