@@ -413,14 +413,14 @@ export function createAiJobService(
                   lease_token = null,
                   lease_expires_at = null,
                   next_attempt_at = $3,
-                  completed_at = case when $2 = 'failed' then $4 else null end,
+                  completed_at = $4::timestamptz,
                   last_error = $5
             where id = $1`,
           [
             requestId,
             terminal ? "failed" : "queued",
             new Date(failedAt.getTime() + delaySeconds * 1000),
-            failedAt,
+            terminal ? failedAt : null,
             `${input.errorCode}: ${input.errorMessage}`,
           ],
         );
