@@ -15,7 +15,7 @@
     "dev:api": "pnpm shared:build && pnpm --filter @skillup/api dev",
     "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs && node tools/staging-qa-ssh-otp-bridge.mjs --self-test",
     "deployment:check": "node tools/validate-deployment.mjs",
-    "production:check": "node tools/validate-production-readiness.mjs",
+    "production:check": "node tools/validate-production-readiness.mjs && node tools/validate-production-promotion.mjs",
     "security:secrets": "node tools/scan-secrets.mjs",
     "format": "biome format --write .",
     "format:check": "biome format .",
