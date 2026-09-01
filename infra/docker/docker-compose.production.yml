@@ -1,0 +1,56 @@
+# Production application compose contract.
+#
+# This file intentionally contains no database service and no default image tags.
+# Production PostgreSQL must be externally managed and supplied through DATABASE_URL.
+# Only immutable staging-certified image references may be injected by the guarded
+# Production Promotion workflow. Web/API ports bind to loopback so TLS and public
+# ingress remain the responsibility of the approved production edge/reverse proxy.
+
+name: skillup-production
+
+services:
+  api:
+    image: ${API_RELEASE_ARTIFACT_REF:?API_RELEASE_ARTIFACT_REF is required}
+    container_name: skillup-api-production-container
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${API_RELEASE_ARTIFACT_REF:?API_RELEASE_ARTIFACT_REF is required}
+      RELEASE_IMAGE_DIGEST: ${API_RELEASE_IMAGE_DIGEST:?API_RELEASE_IMAGE_DIGEST is required}
+    ports:
+      - "127.0.0.1:4021:3001"
+    security_opt:
+      - no-new-privileges:true
+
+  web:
+    image: ${WEB_RELEASE_ARTIFACT_REF:?WEB_RELEASE_ARTIFACT_REF is required}
+    container_name: skillup-web-production-container
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${WEB_RELEASE_ARTIFACT_REF:?WEB_RELEASE_ARTIFACT_REF is required}
+      RELEASE_IMAGE_DIGEST: ${WEB_RELEASE_IMAGE_DIGEST:?WEB_RELEASE_IMAGE_DIGEST is required}
+    ports:
+      - "127.0.0.1:3021:3000"
+    depends_on:
+      - api
+    security_opt:
+      - no-new-privileges:true
+
+  ai-worker:
+    image: ${AI_RELEASE_ARTIFACT_REF:?AI_RELEASE_ARTIFACT_REF is required}
+    container_name: skillup-ai-worker-production-container
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RELEASE_ARTIFACT_REF: ${AI_RELEASE_ARTIFACT_REF:?AI_RELEASE_ARTIFACT_REF is required}
+      RELEASE_IMAGE_DIGEST: ${AI_RELEASE_IMAGE_DIGEST:?AI_RELEASE_IMAGE_DIGEST is required}
+    volumes:
+      - skillup_production_ai_worker_data:/var/lib/skillup-ai
+    depends_on:
+      - api
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  skillup_production_ai_worker_data:
