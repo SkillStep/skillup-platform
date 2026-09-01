@@ -12,7 +12,7 @@ on:
         required: true
         type: string
       staging_deploy_run_attempt:
-        description: Staging Deploy workflow run attempt used for the identity artifact
+        description: Staging Deploy attempt used for the identity artifact
         required: true
         default: "1"
         type: string
@@ -50,7 +50,7 @@ jobs:
           AUTHORIZATION_PHRASE: ${{ inputs.authorization_phrase }}
         run: |
           set -euo pipefail
-          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::release_sha must be a full 40-character lowercase commit SHA"; exit 1; }
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::release_sha must be a full lowercase commit SHA"; exit 1; }
           test "$AUTHORIZATION_PHRASE" = "PROMOTE-CERTIFIED-STAGING-ARTIFACTS" || { echo "::error::Explicit production promotion phrase did not match"; exit 1; }
 
       - name: Verify exact SHA has live staging certification
@@ -60,16 +60,11 @@ jobs:
           RELEASE_SHA: ${{ inputs.release_sha }}
         run: |
           set -euo pipefail
-          status_json="$(curl --fail --silent --show-error \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${RELEASE_SHA}/status")"
+          status_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${RELEASE_SHA}/status")"
           STATUS_JSON="$status_json" node <<'NODE'
           const payload = JSON.parse(process.env.STATUS_JSON || "{}");
           const match = (payload.statuses || []).find((s) => s.context === "staging-certification/live");
-          if (!match || match.state !== "success") {
-            throw new Error("Exact release SHA is missing staging-certification/live=success.");
-          }
+          if (!match || match.state !== "success") throw new Error("Exact release SHA is missing staging-certification/live=success.");
           NODE
 
       - name: Verify source staging deployment run
@@ -83,18 +78,13 @@ jobs:
           set -euo pipefail
           [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "::error::staging_deploy_run_id must be numeric"; exit 1; }
           [[ "$RUN_ATTEMPT" =~ ^[0-9]+$ ]] || { echo "::error::staging_deploy_run_attempt must be numeric"; exit 1; }
-          run_json="$(curl --fail --silent --show-error \
-            -H "Authorization: Bearer $GH_TOKEN" \
-            -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"
+          run_json="$(curl --fail --silent --show-error -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/vnd.github+json" "https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs/${RUN_ID}")"
           RUN_JSON="$run_json" node <<'NODE'
           const run = JSON.parse(process.env.RUN_JSON || "{}");
           if (run.conclusion !== "success") throw new Error("Source Staging Deploy run did not complete successfully.");
           if (run.head_sha !== process.env.RELEASE_SHA) throw new Error("Source Staging Deploy run head SHA does not match release_sha.");
-          if (!String(run.path || "").endsWith("/.github/workflows/deploy-staging.yml") && run.path !== ".github/workflows/deploy-staging.yml") {
-            throw new Error(`Unexpected source workflow path: ${run.path}`);
-          }
-          if (Number(run.run_attempt) !== Number(process.env.RUN_ATTEMPT)) throw new Error("Source run attempt does not match requested artifact attempt.");
+          if (run.path !== ".github/workflows/deploy-staging.yml") throw new Error(`Unexpected source workflow path: ${run.path}`);
+          if (Number(run.run_attempt) !== Number(process.env.RUN_ATTEMPT)) throw new Error("Source run attempt mismatch.");
           NODE
 
       - uses: actions/checkout@v4
@@ -109,10 +99,7 @@ jobs:
         run: |
           set -euo pipefail
           git fetch origin main --depth=200
-          git merge-base --is-ancestor "$RELEASE_SHA" origin/main || {
-            echo "::error::release_sha is not an ancestor of current main" >&2
-            exit 1
-          }
+          git merge-base --is-ancestor "$RELEASE_SHA" origin/main || { echo "::error::release_sha is not an ancestor of current main"; exit 1; }
 
       - name: Download exact staging deployment identity
         uses: actions/download-artifact@v4
@@ -137,25 +124,20 @@ jobs:
           const identity = JSON.parse(fs.readFileSync(process.env.IDENTITY_PATH, "utf8"));
           const sha = process.env.RELEASE_SHA;
           const digest = /^sha256:[0-9a-f]{64}$/;
-          const expectedRefs = {
+          const expected = {
             webArtifactRef: `ghcr.io/skillstep/skillup-platform-web:${sha}`,
             apiArtifactRef: `ghcr.io/skillstep/skillup-platform-api:${sha}`,
             aiArtifactRef: `ghcr.io/skillstep/skillup-platform-ai-worker:${sha}`,
           };
           if (identity.releaseSha !== sha || identity.aiReleaseSha !== sha) throw new Error("Staging identity release SHA mismatch.");
-          for (const [key, expected] of Object.entries(expectedRefs)) {
-            if (identity[key] !== expected) throw new Error(`${key} mismatch: expected ${expected}, received ${identity[key]}`);
-          }
-          for (const key of ["webImageDigest", "apiImageDigest", "aiImageDigest"]) {
-            if (!digest.test(String(identity[key] || ""))) throw new Error(`${key} is not an immutable SHA256 digest.`);
-          }
+          for (const [key, value] of Object.entries(expected)) if (identity[key] !== value) throw new Error(`${key} mismatch.`);
+          for (const key of ["webImageDigest", "apiImageDigest", "aiImageDigest"]) if (!digest.test(String(identity[key] || ""))) throw new Error(`${key} is not immutable.`);
           const output = process.env.GITHUB_OUTPUT;
-          fs.appendFileSync(output, `web_artifact_ref=${identity.webArtifactRef}\n`);
-          fs.appendFileSync(output, `web_image_digest=${identity.webImageDigest}\n`);
-          fs.appendFileSync(output, `api_artifact_ref=${identity.apiArtifactRef}\n`);
-          fs.appendFileSync(output, `api_image_digest=${identity.apiImageDigest}\n`);
-          fs.appendFileSync(output, `ai_artifact_ref=${identity.aiArtifactRef}\n`);
-          fs.appendFileSync(output, `ai_image_digest=${identity.aiImageDigest}\n`);
+          for (const [name, key] of [
+            ["web_artifact_ref", "webArtifactRef"], ["web_image_digest", "webImageDigest"],
+            ["api_artifact_ref", "apiArtifactRef"], ["api_image_digest", "apiImageDigest"],
+            ["ai_artifact_ref", "aiArtifactRef"], ["ai_image_digest", "aiImageDigest"],
+          ]) fs.appendFileSync(output, `${name}=${identity[key]}\n`);
           NODE
 
       - uses: docker/setup-buildx-action@v3
@@ -177,13 +159,8 @@ jobs:
         run: |
           set -euo pipefail
           verify() {
-            ref="$1"
-            expected="$2"
-            actual="$(docker buildx imagetools inspect "$ref" --format '{{.Manifest.Digest}}')"
-            test "$actual" = "$expected" || {
-              echo "::error::Immutable image digest mismatch for $ref. Expected $expected, received $actual" >&2
-              exit 1
-            }
+            actual="$(docker buildx imagetools inspect "$1" --format '{{.Manifest.Digest}}')"
+            test "$actual" = "$2" || { echo "::error::Immutable digest mismatch for $1"; exit 1; }
           }
           verify "$WEB_REF" "$WEB_DIGEST"
           verify "$API_REF" "$API_DIGEST"
@@ -211,7 +188,7 @@ jobs:
           set -euo pipefail
           test -n "$PRODUCTION_PUBLIC_URL" || { echo "::error::production environment variable PRODUCTION_PUBLIC_URL is required"; exit 1; }
           [[ "$PRODUCTION_PUBLIC_URL" =~ ^https:// ]] || { echo "::error::PRODUCTION_PUBLIC_URL must use HTTPS"; exit 1; }
-          test "$PRODUCTION_PUBLIC_URL" != "https://skillupshop.codistan.org" || { echo "::error::Production URL must not reuse the certified staging hostname"; exit 1; }
+          test "$PRODUCTION_PUBLIC_URL" != "https://skillupshop.codistan.org" || { echo "::error::Production URL must not reuse staging"; exit 1; }
 
       - name: Encode production compose file
         id: compose
@@ -250,30 +227,19 @@ jobs:
             printf '%s' "$COMPOSE_B64" | base64 -d > /opt/skillup-production/docker-compose.production.yml.tmp
             mv /opt/skillup-production/docker-compose.production.yml.tmp /opt/skillup-production/docker-compose.production.yml
             cd /opt/skillup-production
-            test -f .env || { echo "::error::/opt/skillup-production/.env is missing" >&2; exit 1; }
+            test -f .env || { echo "::error::/opt/skillup-production/.env is missing"; exit 1; }
             chmod 600 .env
-
             for required in DATABASE_URL SESSION_SECRET EMAIL_PROVIDER FEATURE_PREMIUM_ENABLED FEATURE_JAZZCASH_ENABLED FEATURE_AI_GENERATION_ENABLED; do
-              grep -q "^${required}=" .env || { echo "::error::Required production setting ${required} is missing" >&2; exit 1; }
+              grep -q "^${required}=" .env || { echo "::error::Required production setting ${required} is missing"; exit 1; }
             done
 
             current_health="$(curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3021/api/health || true)"
-            previous_ref="$(HEALTH_JSON="$current_health" node <<'NODE'
-            try {
-              const health = JSON.parse(process.env.HEALTH_JSON || "{}");
-              const artifact = typeof health.artifactRef === "string" ? health.artifactRef.trim() : "";
-              if (artifact && artifact !== "local" && artifact !== "unknown") process.stdout.write(artifact);
-              else process.stdout.write("bootstrap:no-previous-production-release");
-            } catch {
-              process.stdout.write("bootstrap:no-previous-production-release");
-            }
-            NODE
-            )"
+            previous_ref="$(printf '%s' "$current_health" | python3 -c 'import json,sys; d=json.load(sys.stdin) if not sys.stdin.isatty() else {}; a=str(d.get("artifactRef","")).strip(); print(a if a and a not in {"local","unknown"} else "bootstrap:no-previous-production-release")' 2>/dev/null || printf '%s' 'bootstrap:no-previous-production-release')"
+            export PREVIOUS_REF="$previous_ref"
 
             python3 - <<'PY'
             import os
             from pathlib import Path
-
             path = Path('.env')
             updates = {
                 'APP_ENV': 'production',
@@ -289,23 +255,18 @@ jobs:
                 'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
                 'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
             }
-            lines = path.read_text(encoding='utf-8').splitlines()
-            output = []
-            written = set()
-            for line in lines:
+            output, written = [], set()
+            for line in path.read_text(encoding='utf-8').splitlines():
                 if not line.strip() or line.lstrip().startswith('#') or '=' not in line:
-                    output.append(line)
-                    continue
+                    output.append(line); continue
                 key = line.split('=', 1)[0].strip()
                 if key in updates:
                     if key not in written:
-                        output.append(f'{key}={updates[key]}')
-                        written.add(key)
-                    continue
-                output.append(line)
+                        output.append(f'{key}={updates[key]}'); written.add(key)
+                else:
+                    output.append(line)
             for key, value in updates.items():
-                if key not in written:
-                    output.append(f'{key}={value}')
+                if key not in written: output.append(f'{key}={value}')
             path.write_text('\n'.join(output) + '\n', encoding='utf-8')
             PY
             chmod 600 .env
@@ -313,32 +274,21 @@ jobs:
             echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
             docker compose -f docker-compose.production.yml config --quiet
             docker compose -f docker-compose.production.yml pull
-
-            echo "Applying reviewed forward migrations before application startup"
-            docker compose -f docker-compose.production.yml run --rm --no-deps api \
-              node node_modules/@skillup/database/dist/cli/migrate.js
-
+            echo "Applying reviewed forward migrations"
+            docker compose -f docker-compose.production.yml run --rm --no-deps api node node_modules/@skillup/database/dist/cli/migrate.js
             docker compose -f docker-compose.production.yml up -d --remove-orphans
 
             wait_for() {
-              label="$1"
-              url="$2"
               for attempt in $(seq 1 45); do
-                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then
-                  echo "$label is healthy"
-                  return 0
-                fi
+                if curl --fail --silent --show-error --max-time 3 "$2" >/dev/null; then echo "$1 is healthy"; return 0; fi
                 sleep 2
               done
-              echo "::error::$label did not become healthy: $url" >&2
-              return 1
+              echo "::error::$1 did not become healthy: $2"; return 1
             }
             wait_for "API health" "http://127.0.0.1:4021/v1/health"
             wait_for "API database readiness" "http://127.0.0.1:4021/v1/ready"
             wait_for "Web health" "http://127.0.0.1:3021/api/health"
             echo "PRODUCTION HOST PROMOTION: PASS"
-        env:
-          PREVIOUS_REF: bootstrap:no-previous-production-release
 
       - name: Verify public production edge and release identity
         shell: bash
@@ -351,21 +301,17 @@ jobs:
           EXPECTED_API_IMAGE_DIGEST: ${{ needs.preflight.outputs.api_image_digest }}
         run: |
           set -euo pipefail
-          for path in /api/health /api/v1/health /api/v1/ready /en/sign-in; do
-            curl --fail --silent --show-error --location --max-time 10 "$BASE$path" >/dev/null
-          done
+          for path in /api/health /api/v1/health /api/v1/ready /en/sign-in; do curl --fail --silent --show-error --location --max-time 10 "$BASE$path" >/dev/null; done
           web_health="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/health")"
           api_health="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/health")"
           api_ready="$(curl --fail --silent --show-error --max-time 10 "$BASE/api/v1/ready")"
           WEB_HEALTH="$web_health" API_HEALTH="$api_health" API_READY="$api_ready" node <<'NODE'
-          const web = JSON.parse(process.env.WEB_HEALTH);
-          const api = JSON.parse(process.env.API_HEALTH);
-          const ready = JSON.parse(process.env.API_READY);
+          const web = JSON.parse(process.env.WEB_HEALTH), api = JSON.parse(process.env.API_HEALTH), ready = JSON.parse(process.env.API_READY);
           const sha = process.env.EXPECTED_RELEASE_SHA;
           if (web.releaseSha !== sha || api.releaseSha !== sha || ready.releaseSha !== sha) throw new Error("Production release SHA mismatch.");
           if (web.artifactRef !== process.env.EXPECTED_WEB_ARTIFACT_REF || web.imageDigest !== process.env.EXPECTED_WEB_IMAGE_DIGEST) throw new Error("Production web image identity mismatch.");
           if (api.artifactRef !== process.env.EXPECTED_API_ARTIFACT_REF || api.imageDigest !== process.env.EXPECTED_API_IMAGE_DIGEST) throw new Error("Production API image identity mismatch.");
-          if (ready.artifactRef !== process.env.EXPECTED_API_ARTIFACT_REF || ready.imageDigest !== process.env.EXPECTED_API_IMAGE_DIGEST) throw new Error("Production API readiness image identity mismatch.");
+          if (ready.artifactRef !== process.env.EXPECTED_API_ARTIFACT_REF || ready.imageDigest !== process.env.EXPECTED_API_IMAGE_DIGEST) throw new Error("Production API readiness identity mismatch.");
           NODE
           echo "PRODUCTION PUBLIC RELEASE IDENTITY: PASS"
 
@@ -385,18 +331,7 @@ jobs:
           set -euo pipefail
           mkdir -p artifacts
           node <<'NODE' > artifacts/production-promotion-identity.json
-          process.stdout.write(`${JSON.stringify({
-            releaseSha: process.env.RELEASE_SHA,
-            pipelineId: process.env.PIPELINE_ID,
-            productionPublicUrl: process.env.PRODUCTION_PUBLIC_URL,
-            webArtifactRef: process.env.WEB_ARTIFACT_REF,
-            webImageDigest: process.env.WEB_IMAGE_DIGEST,
-            apiArtifactRef: process.env.API_ARTIFACT_REF,
-            apiImageDigest: process.env.API_IMAGE_DIGEST,
-            aiArtifactRef: process.env.AI_ARTIFACT_REF,
-            aiImageDigest: process.env.AI_IMAGE_DIGEST,
-            providerActivationIncluded: false,
-          }, null, 2)}\n`);
+          process.stdout.write(`${JSON.stringify({releaseSha:process.env.RELEASE_SHA,pipelineId:process.env.PIPELINE_ID,productionPublicUrl:process.env.PRODUCTION_PUBLIC_URL,webArtifactRef:process.env.WEB_ARTIFACT_REF,webImageDigest:process.env.WEB_IMAGE_DIGEST,apiArtifactRef:process.env.API_ARTIFACT_REF,apiImageDigest:process.env.API_IMAGE_DIGEST,aiArtifactRef:process.env.AI_ARTIFACT_REF,aiImageDigest:process.env.AI_IMAGE_DIGEST,providerActivationIncluded:false}, null, 2)}\n`);
           NODE
 
       - uses: actions/upload-artifact@v4
