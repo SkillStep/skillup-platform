@@ -5,7 +5,8 @@ const root = resolve(import.meta.dirname, "..");
 
 function read(path) {
   const absolute = resolve(root, path);
-  if (!existsSync(absolute)) throw new Error(`Required production-promotion file is missing: ${path}`);
+  if (!existsSync(absolute))
+    throw new Error(`Required production-promotion file is missing: ${path}`);
   return readFileSync(absolute, "utf8");
 }
 
