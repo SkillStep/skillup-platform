@@ -156,6 +156,7 @@ export function createJazzCashCpsClient(
   fetcher: FetchLike = fetch,
 ): JazzCashCpsClient {
   const provider = requireCpsConfig(config);
+  const timeoutSeconds = config.JAZZCASH_CPS_TIMEOUT_SECONDS ?? 15;
 
   return {
     inquire: async ({ merchantReference }) => {
@@ -166,12 +167,7 @@ export function createJazzCashCpsClient(
         pp_Version: config.JAZZCASH_VERSION,
       };
       fields["pp_SecureHash"] = jazzCashSecureHash(fields, provider.integritySalt);
-      const response = await postJson(
-        fetcher,
-        provider.statusUrl,
-        fields,
-        config.JAZZCASH_CPS_TIMEOUT_SECONDS,
-      );
+      const response = await postJson(fetcher, provider.statusUrl, fields, timeoutSeconds);
       const signatureVerified = validateResponseSignature(response, provider.integritySalt);
       if (signatureVerified === false) {
         throw new JazzCashCpsError("The JazzCash status response signature is invalid.", false);
@@ -207,12 +203,7 @@ export function createJazzCashCpsClient(
       };
       fields["pp_SecureHash"] = jazzCashSecureHash(fields, provider.integritySalt);
       const body = config.JAZZCASH_REFUND_ENVELOPE === "flat" ? fields : { RefundRequest: fields };
-      const response = await postJson(
-        fetcher,
-        provider.refundUrl,
-        body,
-        config.JAZZCASH_CPS_TIMEOUT_SECONDS,
-      );
+      const response = await postJson(fetcher, provider.refundUrl, body, timeoutSeconds);
       const signatureVerified = validateResponseSignature(response, provider.integritySalt);
       if (signatureVerified === false) {
         throw new JazzCashCpsError("The JazzCash refund response signature is invalid.", false);
