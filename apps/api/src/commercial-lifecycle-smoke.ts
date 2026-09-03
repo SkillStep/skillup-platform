@@ -49,7 +49,6 @@ const {
   CI: continuousIntegration,
   SKILLUP_DISPOSABLE_DATABASE: disposableDatabaseOptIn,
 } = process.env;
-// CI or an explicit local opt-in must confirm that this database is disposable.
 const disposableDatabaseConfirmed =
   continuousIntegration === "true" || disposableDatabaseOptIn === "true";
 const loopbackDatabase =
@@ -79,6 +78,8 @@ const config = readApiConfig({
   JAZZCASH_INTEGRITY_SALT: "smoke-integrity-salt",
   JAZZCASH_PAYMENT_URL: "https://sandbox.jazzcash.example/checkout",
   JAZZCASH_RETURN_URL: "https://skillup.example/en/account/payment-return",
+  JAZZCASH_STATUS_URL: "https://sandbox.jazzcash.example/status",
+  JAZZCASH_REFUND_URL: "https://sandbox.jazzcash.example/refund",
   RELEASE_SHA: "commercial-lifecycle-smoke",
   LOG_LEVEL: "silent",
 });
@@ -297,8 +298,5 @@ try {
     "SkillUp commercial lifecycle smoke passed (idempotent checkout, signed success, replay protection, order/customer binding, mismatch reconciliation and refund revocation verified).",
   );
 } finally {
-  // The lifecycle intentionally writes append-only evidence. CI tears down this disposable database
-  // volume after the job, so deleting audit/payment history here would violate the same invariant
-  // the smoke is meant to prove.
   await client.close();
 }
