@@ -11,10 +11,10 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "terms",
     key: "terms",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "SkillUp Terms of Use",
     summary:
-      "These provisional launch terms explain acceptable use, account responsibilities, learning-content limits and service availability.",
+      "These launch terms explain acceptable use, account responsibilities, learning-content limits and service availability.",
     sections: [
       {
         heading: "Use SkillUp responsibly",
@@ -42,10 +42,10 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "privacy",
     key: "privacy",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "SkillUp Privacy Notice",
     summary:
-      "This provisional notice explains what learner information SkillUp uses, why it is needed and which controls are available.",
+      "This notice explains what learner information SkillUp uses, why it is needed and which controls are available.",
     sections: [
       {
         heading: "Information required to operate SkillUp",
@@ -73,27 +73,28 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "refund",
     key: "refund",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "SkillUp Refund and Cancellation Policy",
     summary:
-      "This provisional policy describes manual renewal, payment review, refunds and the effect of a refund on premium access.",
+      "This policy describes manual renewal, payment review, refunds and the effect of a refund on premium access.",
     sections: [
       {
-        heading: "Manual renewal",
+        heading: "Manual renewal and cancellation",
         body: [
           "Launch plans use manual renewal unless recurring payment is separately approved and clearly disclosed in a later policy version.",
-          "An expiring plan does not automatically charge the learner under the current launch policy.",
+          "An expiring plan does not automatically charge the learner under the current launch policy. To stop using Premium, no recurring cancellation action is required under manual renewal; access returns to the free plan at expiry.",
         ],
       },
       {
         heading: "Payment and refund review",
         body: [
           "Payment disputes and refund requests are reviewed against both JazzCash evidence and SkillUp's authoritative order, payment-event and entitlement records.",
-          "Provider processing and settlement timing can affect when a successful refund appears.",
+          "To request a payment or refund review, use the SkillUp support page and include the SkillUp merchant reference and provider reference shown in your private payment history. Never send a JazzCash PIN, one-time code, password or full payment credential.",
+          "Provider processing and settlement timing can affect when an approved refund appears.",
         ],
       },
       {
-        heading: "Effect on learning history",
+        heading: "Effect on premium access and learning history",
         body: [
           "An approved refund revokes future premium capabilities without deleting completed learning history, earned evidence or required transaction audit records.",
         ],
@@ -103,7 +104,7 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "ai-disclosure",
     key: "ai_disclosure",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "SkillUp AI Use Disclosure",
     summary:
       "This disclosure explains where approved AI models may assist and which human-review, privacy and authority boundaries apply.",
@@ -134,7 +135,7 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "sharing",
     key: "leaderboard_sharing",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "Leaderboard and Achievement Sharing",
     summary:
       "Sharing is optional and uses approved public aliases and achievement information rather than private account details.",
@@ -157,7 +158,7 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "fair-use",
     key: "fair_use",
-    version: "2026-08-01",
+    version: "2026-09-03",
     title: "SkillUp Fair Use Policy",
     summary:
       "This policy protects learning quality and service availability by limiting automation, manipulation and attempts to bypass controls.",
