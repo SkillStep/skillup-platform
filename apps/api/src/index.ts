@@ -17,7 +17,12 @@ import {
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createGameplayService } from "./gameplay.js";
+import { createJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createMaintenanceRunner } from "./maintenance.js";
+import {
+  createPaymentOperationsService,
+  registerPaymentOperationsRoutes,
+} from "./payment-operations.js";
 import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
@@ -41,7 +46,11 @@ const authService = createAuthService({
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
 const commercialService = createCommercialService({ pool: database.pool, config });
-const commercialAutomationService = createCommercialAutomationService({ pool: database.pool });
+const jazzCashCps = config.FEATURE_JAZZCASH_ENABLED ? createJazzCashCpsClient(config) : undefined;
+const commercialAutomationService = createCommercialAutomationService({
+  pool: database.pool,
+  jazzCashCps,
+});
 const adminService = createAdminService({
   pool: database.pool,
   releaseSha: config.RELEASE_SHA,
@@ -61,6 +70,10 @@ const premiumReportingService = createPremiumReportingService({
   adminService,
 });
 const premiumMembershipService = createPremiumMembershipService({
+  pool: database.pool,
+  adminService,
+});
+const paymentOperationsService = createPaymentOperationsService({
   pool: database.pool,
   adminService,
 });
@@ -104,6 +117,12 @@ registerPremiumReportingRoutes(app, {
   adminService,
   reportingService: premiumReportingService,
   membershipService: premiumMembershipService,
+});
+registerPaymentOperationsRoutes(app, {
+  config,
+  authService,
+  adminService,
+  paymentOperationsService,
 });
 
 const workerSecret = process.env["AI_WORKER_SHARED_SECRET"]?.trim();
