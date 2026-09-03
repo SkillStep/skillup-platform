@@ -51,14 +51,12 @@ function stringRecord(input: unknown): ProviderRecord {
 }
 
 function responseRecord(input: unknown): ProviderRecord {
-  const direct = stringRecord(input);
-  if (Object.keys(direct).length > 0) return direct;
   if (!input || typeof input !== "object" || Array.isArray(input)) return {};
+  const record: Record<string, string> = { ...stringRecord(input) };
   for (const value of Object.values(input)) {
-    const nested = stringRecord(value);
-    if (Object.keys(nested).length > 0) return nested;
+    Object.assign(record, stringRecord(value));
   }
-  return {};
+  return record;
 }
 
 function canonicalDigest(fields: ProviderRecord): string {
@@ -208,8 +206,7 @@ export function createJazzCashCpsClient(
         pp_Password: provider.password,
       };
       fields["pp_SecureHash"] = jazzCashSecureHash(fields, provider.integritySalt);
-      const body =
-        config.JAZZCASH_REFUND_ENVELOPE === "flat" ? fields : { RefundRequest: fields };
+      const body = config.JAZZCASH_REFUND_ENVELOPE === "flat" ? fields : { RefundRequest: fields };
       const response = await postJson(
         fetcher,
         provider.refundUrl,
