@@ -20,6 +20,8 @@ const sandboxJazzCashEnvironment: NodeJS.ProcessEnv = {
   JAZZCASH_PAYMENT_URL:
     "https://sandbox.jazzcash.com.pk/CustomerPortal/transactionmanagement/merchantform/",
   JAZZCASH_RETURN_URL: "https://skillup.example/en/account/payment-return",
+  JAZZCASH_STATUS_URL: "https://sandbox.example/jazzcash/status",
+  JAZZCASH_REFUND_URL: "https://sandbox.example/jazzcash/refund",
 };
 
 describe("API runtime configuration", () => {
@@ -109,6 +111,21 @@ describe("API runtime configuration", () => {
     ).toThrow("JAZZCASH_MERCHANT_ID is required when JazzCash is enabled");
   });
 
+  it("requires CPS inquiry and refund endpoints before enabling JazzCash", () => {
+    expect(() =>
+      readApiConfig({
+        ...sandboxJazzCashEnvironment,
+        JAZZCASH_STATUS_URL: undefined,
+      }),
+    ).toThrow("JAZZCASH_STATUS_URL is required when JazzCash is enabled");
+    expect(() =>
+      readApiConfig({
+        ...sandboxJazzCashEnvironment,
+        JAZZCASH_REFUND_URL: undefined,
+      }),
+    ).toThrow("JAZZCASH_REFUND_URL is required when JazzCash is enabled");
+  });
+
   it("accepts a complete isolated sandbox configuration", () => {
     const config = readApiConfig(sandboxJazzCashEnvironment);
 
@@ -116,6 +133,8 @@ describe("API runtime configuration", () => {
     expect(config.FEATURE_PREMIUM_ENABLED).toBe(true);
     expect(config.FEATURE_JAZZCASH_ENABLED).toBe(true);
     expect(config.JAZZCASH_CHECKOUT_MINUTES).toBe(15);
+    expect(config.JAZZCASH_CPS_TIMEOUT_SECONDS).toBe(15);
+    expect(config.JAZZCASH_REFUND_ENVELOPE).toBe("refund-request");
   });
 
   it("rejects sandbox mode in production", () => {
@@ -134,5 +153,15 @@ describe("API runtime configuration", () => {
         JAZZCASH_RETURN_URL: "https://attacker.example/payment-return",
       }),
     ).toThrow("The JazzCash return URL must use the public SkillUp origin");
+  });
+
+  it("requires CPS endpoints to use HTTPS in staging", () => {
+    expect(() =>
+      readApiConfig({
+        ...sandboxJazzCashEnvironment,
+        APP_ENV: "staging",
+        JAZZCASH_STATUS_URL: "http://sandbox.example/jazzcash/status",
+      }),
+    ).toThrow("JAZZCASH_STATUS_URL must use HTTPS outside local/test environments");
   });
 });
