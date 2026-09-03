@@ -48,6 +48,10 @@ const ApiConfigSchema = z
     JAZZCASH_INTEGRITY_SALT: z.string().min(8).max(500).optional(),
     JAZZCASH_PAYMENT_URL: OptionalUrlSchema,
     JAZZCASH_RETURN_URL: OptionalUrlSchema,
+    JAZZCASH_STATUS_URL: OptionalUrlSchema,
+    JAZZCASH_REFUND_URL: OptionalUrlSchema,
+    JAZZCASH_REFUND_ENVELOPE: z.enum(["refund-request", "flat"]).default("refund-request"),
+    JAZZCASH_CPS_TIMEOUT_SECONDS: z.coerce.number().int().min(3).max(60).default(15),
     JAZZCASH_VERSION: z.string().trim().min(1).max(20).default("1.1"),
     JAZZCASH_TXN_TYPE: z.enum(["MWALLET", "MIGS", "OTC"]).default("MWALLET"),
     JAZZCASH_BANK_ID: z.string().trim().min(1).max(40).default("TBANK"),
@@ -122,6 +126,8 @@ const ApiConfigSchema = z
       "JAZZCASH_INTEGRITY_SALT",
       "JAZZCASH_PAYMENT_URL",
       "JAZZCASH_RETURN_URL",
+      "JAZZCASH_STATUS_URL",
+      "JAZZCASH_REFUND_URL",
     ];
     for (const field of requiredJazzCashFields) {
       if (!config[field]) {
@@ -148,7 +154,12 @@ const ApiConfigSchema = z
       });
     }
 
-    for (const field of ["JAZZCASH_PAYMENT_URL", "JAZZCASH_RETURN_URL"] as const) {
+    for (const field of [
+      "JAZZCASH_PAYMENT_URL",
+      "JAZZCASH_RETURN_URL",
+      "JAZZCASH_STATUS_URL",
+      "JAZZCASH_REFUND_URL",
+    ] as const) {
       const value = config[field];
       if (
         value &&
