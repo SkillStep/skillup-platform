@@ -11,6 +11,7 @@ type PageProps = Readonly<{
 }>;
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
+const supportEmail = process.env["PUBLIC_SUPPORT_EMAIL"] ?? "admin@codistan.org";
 
 export const dynamic = "force-dynamic";
 
@@ -39,13 +40,18 @@ export default async function SupportPage({ params }: PageProps) {
             or full payment credential. Keep those details private.
           </p>
           <div className={styles["cardLinks"]}>
-            <Link className={styles["primaryLink"]} href="/en/account">
+            <a className={styles["primaryLink"]} href={`mailto:${supportEmail}`}>
+              Email SkillUp support
+            </a>
+            <Link className={styles["secondaryLink"]} href="/en/account">
               Open private account controls
             </Link>
-            <Link className={styles["secondaryLink"]} href="/en/sign-in">
-              Recover access with email verification
-            </Link>
           </div>
+          <p className={styles["detailSummary"]}>
+            Launch support email: <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. For payment
+            or refund review, include the SkillUp merchant reference and provider reference shown in
+            your private payment history.
+          </p>
         </section>
 
         <div className={styles["contentGrid"]}>
@@ -69,8 +75,9 @@ export default async function SupportPage({ params }: PageProps) {
             <h2>JazzCash and premium</h2>
             <p>
               Keep the SkillUp merchant reference and provider reference shown in your private
-              payment history. Never share your JazzCash PIN or one-time code. Pending, failed,
-              duplicated and refunded payments are reviewed against both systems.
+              payment history. Email {supportEmail} for payment or refund review. Never share your
+              JazzCash PIN or one-time code. Pending, failed, duplicated and refunded payments are
+              reviewed against both systems.
             </p>
           </section>
           <section className={styles["contentCard"]}>
@@ -107,6 +114,7 @@ export default async function SupportPage({ params }: PageProps) {
             description:
               "Safe recovery, learning, payment, privacy and accessibility support guidance.",
             url,
+            email: supportEmail,
             inLanguage: "en-PK",
           }}
         />
