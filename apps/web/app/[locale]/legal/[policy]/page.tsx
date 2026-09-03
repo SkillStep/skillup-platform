@@ -62,7 +62,7 @@ export default async function PolicyPage({ params }: PageProps) {
           ]}
         />
         <section className={styles["detailHero"]} aria-labelledby="policy-title">
-          <p className={styles["eyebrow"]}>Version {policy.version} · provisional launch copy</p>
+          <p className={styles["eyebrow"]}>Version {policy.version} · current launch policy</p>
           <h1 id="policy-title">{policy.title}</h1>
           <p className={styles["detailSummary"]}>{policy.summary}</p>
           <div className={styles["cardLinks"]}>
@@ -87,11 +87,11 @@ export default async function PolicyPage({ params }: PageProps) {
         </div>
 
         <section className={styles["contentCard"]}>
-          <h2>Version and approval status</h2>
+          <h2>Version and updates</h2>
           <p>
-            This is versioned provisional launch copy dated August 1, 2026. Final legally approved
-            wording can be published as a new policy version. Existing acknowledgements remain
-            attached to the exact version accepted.
+            This is the current published SkillUp policy version. Material updates are released as a
+            new version, and any acknowledgement requirement remains attached to the exact version
+            accepted by the learner.
           </p>
         </section>
 
@@ -102,7 +102,7 @@ export default async function PolicyPage({ params }: PageProps) {
             name: policy.title,
             description: policy.summary,
             url: policyUrl,
-            dateModified: "2026-08-01",
+            dateModified: policy.version,
             inLanguage: "en-PK",
             isPartOf: { "@type": "WebSite", name: "SkillUp", url: homeUrl },
           }}

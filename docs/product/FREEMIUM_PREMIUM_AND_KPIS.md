@@ -1,11 +1,11 @@
 # Freemium, Premium and Pilot KPI Contract
 
-**Status:** MVP implementation baseline. Commercial wording, JazzCash contract terms, tax treatment and refund language require final legal/finance review before launch.
+**Status:** Product-owner approved launch commercial baseline as of September 3, 2026. JazzCash merchant activation, provider-specific contract terms and live transaction verification remain separate payment-provider gates.
 
 ## 1. Pricing
 
-- **Monthly Premium:** PKR 599, inclusive of tax as currently proposed.
-- **Yearly Premium:** PKR 4,999, inclusive of tax as currently proposed.
+- **Monthly Premium:** PKR 599 displayed checkout price.
+- **Yearly Premium:** PKR 4,999 displayed checkout price.
 - The MVP offers monthly and yearly plans only.
 - No token packs, lifetime plans, family plans, school plans or costume marketplace are included in the first payment pilot.
 
@@ -44,6 +44,8 @@ Premium learners receive:
 - priority access to selected new paths or beta features;
 - premium support routing for payment and entitlement problems.
 
+The launch pricing surface summarizes these benefits as expanded learning levels, detailed progress insights, advanced reviewed AI-assisted challenges and premium profile avatars.
+
 “Unlimited” refers to learner access to approved product content. It does not permit unbounded live model calls, automated scraping, account sharing, denial-of-service behavior or bypass of safety limits.
 
 ## 5. Upgrade triggers
@@ -78,7 +80,7 @@ Premium activates only after the server verifies a successful JazzCash transacti
 
 ### Renewal
 
-The MVP assumes manual renewal unless JazzCash contractually supports an approved recurring-payment flow. Renewal reminders may be sent only with consent and clear expiry information.
+The MVP uses manual renewal unless JazzCash contractually supports a separately approved recurring-payment flow. Renewal reminders may be sent only with consent and clear expiry information.
 
 ### Expiry
 
@@ -96,11 +98,11 @@ No silent paid grace period is assumed. A short operational grace state may be u
 
 ### Refund and reversal
 
-Refund eligibility follows approved legal and payment-provider policy. A refund or charge reversal must create a separate auditable transaction and entitlement adjustment; transaction history is never rewritten.
+Refund requests are reviewed against JazzCash evidence and SkillUp's authoritative order, payment-event and entitlement records. An approved refund or charge reversal creates a separate auditable transaction and entitlement adjustment; transaction history is never rewritten. Learners use the public SkillUp support page for payment/refund review and must not send PINs, OTPs, passwords or full payment credentials.
 
 ### Account deletion
 
-Account deletion must explain what can be deleted immediately, what payment/audit data must be retained, and whether an active entitlement can be transferred or refunded. No transfer is assumed in the MVP.
+Account deletion explains what can be deleted immediately and what payment, fraud-prevention, legal or privileged audit data must be retained. No entitlement transfer is assumed in the MVP.
 
 ## 7. JazzCash pilot funnel
 
@@ -201,16 +203,17 @@ The following require separate approval:
 - automatic recurring debits;
 - third-party course marketplace.
 
-## 11. Policy work required before launch
+## 11. Launch policy set
 
-- Terms of service
-- Privacy notice
-- Cookie/analytics consent policy
-- Refund and cancellation policy
-- Age and parental-consent handling
-- AI-assisted content disclosure
-- Content disclaimer and reporting policy
-- Account deletion and retention policy
-- Payment support SLA
-- Abuse, account sharing and fair-use policy
-- Leaderboard and social-sharing privacy policy
+The public launch policy set is versioned and published in the product. Current launch coverage includes:
+
+- Terms of Use;
+- Privacy Notice;
+- Refund and Cancellation Policy;
+- AI Use Disclosure;
+- Fair Use Policy;
+- leaderboard and achievement-sharing privacy controls;
+- account export/deletion/retention disclosures;
+- payment/refund support through the public SkillUp support page.
+
+Launch support defaults to `admin@codistan.org` and can be overridden with `PUBLIC_SUPPORT_EMAIL` in the deployment environment. Merchant-specific JazzCash behavior, settlement rules, provider refund mechanics and any future recurring-payment terms remain gated by the approved provider contract and live verification evidence.
