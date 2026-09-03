@@ -189,6 +189,8 @@ const ApiConfigSchema = z
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
 type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
+  | "JAZZCASH_REFUND_ENVELOPE"
+  | "JAZZCASH_CPS_TIMEOUT_SECONDS"
   | "RELEASE_PIPELINE_ID"
   | "RELEASE_ARTIFACT_REF"
   | "RELEASE_IMAGE_DIGEST"
@@ -197,6 +199,8 @@ type OptionalInjectedConfig =
 export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
+    JAZZCASH_REFUND_ENVELOPE?: "refund-request" | "flat";
+    JAZZCASH_CPS_TIMEOUT_SECONDS?: number;
     RELEASE_PIPELINE_ID?: string;
     RELEASE_ARTIFACT_REF?: string;
     RELEASE_IMAGE_DIGEST?: string;
