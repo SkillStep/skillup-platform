@@ -1,0 +1,48 @@
+name: Temporary lockfile regeneration
+
+on:
+  push:
+    branches:
+      - release/finalize-commercial-copy
+
+permissions:
+  contents: write
+
+jobs:
+  regenerate:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout release branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: release/finalize-commercial-copy
+          fetch-depth: 1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+          check-latest: false
+
+      - name: Regenerate lockfile using pinned pnpm
+        shell: bash
+        run: |
+          set -euo pipefail
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --lockfile-only
+          git diff --check
+
+      - name: Commit generated lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- pnpm-lock.yaml; then
+            echo "No lockfile change produced."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pnpm-lock.yaml
+          git commit -m "fix(security): refresh lockfile for fast-uri patches"
+          git push origin HEAD:release/finalize-commercial-copy
