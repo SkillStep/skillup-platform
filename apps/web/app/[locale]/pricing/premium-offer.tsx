@@ -14,12 +14,21 @@ type Plan = Readonly<{
   checkoutAvailable: boolean;
 }>;
 
-type CheckoutResponse = Readonly<{
-  order?: Readonly<{ id: string }>;
-  method?: "POST";
-  action?: string;
-  fields?: Readonly<Record<string, string>>;
+type BillingError = Readonly<{
+  error?: string;
   message?: string;
+}>;
+
+type WalletLinkResponse = Readonly<{
+  requestId?: string;
+  portalUrl?: string;
+  method?: "POST";
+  fields?: Readonly<Record<string, string>>;
+}>;
+
+type BillingStatus = Readonly<{
+  wallet?: Readonly<{ status?: string }>;
+  alreadySubscribed?: boolean;
 }>;
 
 const capabilityLabels: Readonly<Record<string, string>> = {
@@ -37,20 +46,18 @@ function formatPrice(amountMinor: number): string {
   }).format(amountMinor / 100);
 }
 
-async function responseMessage(response: Response): Promise<string> {
+async function errorBody(response: Response): Promise<BillingError> {
   try {
-    const body = (await response.json()) as CheckoutResponse;
-    if (body.message) return body.message;
+    return (await response.json()) as BillingError;
   } catch {
-    // A provider or proxy error may not be JSON.
+    return {};
   }
-  return "Checkout could not be started. Please try again.";
 }
 
-function submitProviderForm(action: string, fields: Readonly<Record<string, string>>): void {
+function submitHostedForm(portalUrl: string, fields: Readonly<Record<string, string>>): void {
   const form = document.createElement("form");
   form.method = "POST";
-  form.action = action;
+  form.action = portalUrl;
   form.hidden = true;
 
   for (const [name, value] of Object.entries(fields)) {
@@ -65,9 +72,37 @@ function submitProviderForm(action: string, fields: Readonly<Record<string, stri
   form.submit();
 }
 
+async function recoverAlreadyLinked(planCode: Plan["code"]): Promise<boolean> {
+  const statusResponse = await fetch("/api/v1/billing/status", {
+    credentials: "same-origin",
+    cache: "no-store",
+  });
+  if (!statusResponse.ok) return false;
+  const status = (await statusResponse.json()) as BillingStatus;
+  if (status.alreadySubscribed) {
+    window.location.assign("/en/account?billing=already-subscribed");
+    return true;
+  }
+  if (status.wallet?.status !== "linked") return false;
+
+  const subscriptionResponse = await fetch("/api/v1/billing/subscriptions", {
+    method: "POST",
+    credentials: "same-origin",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ planCode, skipTrial: true }),
+  });
+  if (subscriptionResponse.ok || subscriptionResponse.status === 409) {
+    window.location.assign("/en/account?billing=resubscribed");
+    return true;
+  }
+  return false;
+}
+
 export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   const [busyPlan, setBusyPlan] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [msisdn, setMsisdn] = useState("");
+  const [consent, setConsent] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -82,17 +117,27 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   }, []);
 
   async function startCheckout(planCode: Plan["code"]) {
+    if (!/^\d{11,15}$/.test(msisdn)) {
+      setMessage("Enter a valid JazzCash mobile number using 11–15 digits.");
+      return;
+    }
+    if (!consent) {
+      setMessage("Confirm the automatic-billing consent before linking your JazzCash wallet.");
+      return;
+    }
+
     setBusyPlan(planCode);
     setMessage(null);
 
     try {
-      const response = await fetch("/api/v1/commercial/orders", {
+      const response = await fetch("/api/v1/billing/wallets/link", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
           planCode,
-          idempotencyKey: crypto.randomUUID(),
+          msisdn,
+          consentToAutoPay: true,
         }),
       });
       if (response.status === 401) {
@@ -100,18 +145,26 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
         return;
       }
       if (!response.ok) {
-        setMessage(await responseMessage(response));
+        const error = await errorBody(response);
+        if (response.status === 409 && error.error === "already_linked") {
+          if (await recoverAlreadyLinked(planCode)) return;
+        }
+        if (response.status === 409 && error.error === "already_subscribed") {
+          window.location.assign("/en/account?billing=already-subscribed");
+          return;
+        }
+        setMessage(error.message ?? "JazzCash wallet linking could not be started. Please try again.");
         return;
       }
 
-      const checkout = (await response.json()) as CheckoutResponse;
-      if (!checkout.action || !checkout.fields || checkout.method !== "POST") {
-        setMessage("Checkout configuration is incomplete. No payment was attempted.");
+      const link = (await response.json()) as WalletLinkResponse;
+      if (!link.portalUrl || !link.fields || link.method !== "POST") {
+        setMessage("Wallet-link configuration is incomplete. No payment was attempted.");
         return;
       }
-      submitProviderForm(checkout.action, checkout.fields);
+      submitHostedForm(link.portalUrl, link.fields);
     } catch {
-      setMessage("Checkout could not be started. Check your connection and try again.");
+      setMessage("Wallet linking could not be started. Check your connection and try again.");
     } finally {
       setBusyPlan(null);
     }
@@ -121,6 +174,8 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     <div className={styles["grid"]}>
       {plans.map((plan) => {
         const yearly = plan.billingPeriod === "year";
+        const msisdnId = `jazzcash-msisdn-${plan.code}`;
+        const consentId = `jazzcash-consent-${plan.code}`;
         return (
           <article
             className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
@@ -138,6 +193,35 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
                 <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
               ))}
             </ul>
+
+            {plan.checkoutAvailable ? (
+              <div className={styles["walletForm"]}>
+                <label htmlFor={msisdnId}>JazzCash mobile number</label>
+                <input
+                  id={msisdnId}
+                  inputMode="numeric"
+                  autoComplete="tel"
+                  placeholder="03001234567"
+                  value={msisdn}
+                  onChange={(event) => setMsisdn(event.target.value.replace(/\D/g, "").slice(0, 15))}
+                  disabled={busyPlan !== null}
+                />
+                <label className={styles["consent"]} htmlFor={consentId}>
+                  <input
+                    id={consentId}
+                    type="checkbox"
+                    checked={consent}
+                    onChange={(event) => setConsent(event.target.checked)}
+                    disabled={busyPlan !== null}
+                  />
+                  <span>
+                    I authorize automatic JazzCash billing for this plan until I cancel the
+                    subscription or unlink my wallet.
+                  </span>
+                </label>
+              </div>
+            ) : null}
+
             <button
               className={styles["action"]}
               type="button"
@@ -145,13 +229,14 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
               onClick={() => void startCheckout(plan.code)}
             >
               {busyPlan === plan.code
-                ? "Preparing secure checkout…"
+                ? "Opening secure JazzCash…"
                 : plan.checkoutAvailable
-                  ? "Continue with JazzCash"
-                  : "Merchant activation pending"}
+                  ? "Link JazzCash & continue"
+                  : "Payment activation pending"}
             </button>
             <p className={styles["note"]}>
-              Premium activates only after SkillUp verifies the provider response.
+              Your MPIN is entered only on JazzCash&apos;s hosted page. SkillUp grants Premium only
+              from authoritative payment-service status—not from the browser return page.
             </p>
             {message && busyPlan === null ? (
               <p className={styles["message"]} role="alert">
