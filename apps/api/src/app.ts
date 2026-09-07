@@ -138,6 +138,8 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
               paths: [
                 "req.headers.authorization",
                 "req.headers.cookie",
+                "req.headers.x-api-key",
+                "req.headers.x-payment-signature",
                 "res.headers.set-cookie",
                 "password",
                 "token",
@@ -146,6 +148,8 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
                 "otp",
                 "secret",
                 "secretDigest",
+                "apiKey",
+                "webhookSecret",
                 "pp_Password",
                 "pp_SecureHash",
               ],
