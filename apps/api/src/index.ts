@@ -23,6 +23,11 @@ import {
   createPaymentOperationsService,
   registerPaymentOperationsRoutes,
 } from "./payment-operations.js";
+import {
+  createPaymentServiceBillingService,
+  registerPaymentServiceBillingRoutes,
+} from "./payment-service-billing.js";
+import { createPaymentServiceClient } from "./payment-service-client.js";
 import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
@@ -51,6 +56,16 @@ const commercialAutomationService = createCommercialAutomationService({
   pool: database.pool,
   jazzCashCps,
 });
+const paymentServiceClient = config.FEATURE_PAYMENT_SERVICE_ENABLED
+  ? createPaymentServiceClient(config)
+  : undefined;
+const paymentServiceBilling = paymentServiceClient
+  ? createPaymentServiceBillingService({
+      pool: database.pool,
+      config,
+      client: paymentServiceClient,
+    })
+  : undefined;
 const adminService = createAdminService({
   pool: database.pool,
   releaseSha: config.RELEASE_SHA,
@@ -89,6 +104,14 @@ const app = buildApi({
   accountLifecycleService,
   analyticsService,
 });
+
+if (paymentServiceBilling) {
+  registerPaymentServiceBillingRoutes(app, {
+    config,
+    authService,
+    billingService: paymentServiceBilling,
+  });
+}
 
 registerRecommendationRoutes(app, {
   config,
@@ -144,10 +167,14 @@ const maintenance = createMaintenanceRunner({
     error: (context, message) => app.log.error(context, message),
   },
   tasks: [
-    {
-      name: "commercial-automation",
-      run: () => commercialAutomationService.run(100),
-    },
+    ...(config.FEATURE_PAYMENT_SERVICE_ENABLED
+      ? []
+      : [
+          {
+            name: "commercial-automation",
+            run: () => commercialAutomationService.run(100),
+          },
+        ]),
     {
       name: "scheduled-plan-activation",
       run: () => premiumReportingService.activateDuePlanVersions(20),
