@@ -1,12 +1,15 @@
 # Freemium, Premium and Pilot KPI Contract
 
-**Status:** Product-owner approved launch commercial baseline as of September 3, 2026. JazzCash merchant activation, provider-specific contract terms and live transaction verification remain separate payment-provider gates.
+**Status:** Product-owner approved launch commercial baseline as of September 7, 2026. SkillUp's preferred payment architecture is browser → SkillUp BFF/API → external payment service → JazzCash hosted wallet portal. External payment-service staging configuration and live JazzCash sandbox verification remain separate gates.
 
 ## 1. Pricing
 
-- **Monthly Premium:** PKR 599 displayed checkout price.
-- **Yearly Premium:** PKR 4,999 displayed checkout price.
+- **Monthly Premium:** PKR 599 displayed checkout price (`59900` paisas).
+- **Yearly Premium:** PKR 4,999 displayed checkout price (`499900` paisas).
 - The MVP offers monthly and yearly plans only.
+- The payment-service product catalog must use the configured monthly/yearly plan codes and the exact prices above.
+- Step-down billing is disabled for launch by setting `stepAmountMinor` equal to `fullAmountMinor` unless a later product approval changes that decision.
+- Launch billing uses `trialHours: 0` so successful wallet linking queues the first charge rather than silently introducing a free trial.
 - No token packs, lifetime plans, family plans, school plans or costume marketplace are included in the first payment pilot.
 
 ## 2. Product principle
@@ -66,59 +69,68 @@ Upgrade prompts must not:
 - disguise payment as a required learning step;
 - repeatedly interrupt the same session after dismissal.
 
-## 6. Entitlement lifecycle
+## 6. Payment and entitlement lifecycle
 
-### Activation
+### Architecture and authority
 
-Premium activates only after the server verifies a successful JazzCash transaction and records an idempotent entitlement operation.
+The browser never calls the payment service directly and never receives the product API key. SkillUp's authenticated BFF derives `userId` from the learner session and calls the payment service server-to-server. JazzCash MPIN entry happens only on JazzCash's hosted wallet page.
 
-### Duration
+Premium access is never granted from a browser redirect, query parameter or screenshot. Signed payment-service webhooks and authoritative payment-service status reconciliation drive SkillUp's local entitlement state.
 
-- Monthly: one calendar-month-equivalent duration defined in the payment contract.
-- Yearly: one year-equivalent duration defined in the payment contract.
-- Exact duration arithmetic and timezone are server-defined and tested.
+### Wallet link and first charge
 
-### Renewal
+- The learner selects monthly or yearly Premium, enters a JazzCash MSISDN and explicitly consents to automatic billing.
+- SkillUp starts wallet linking through the payment service and submits the returned hosted-form fields to JazzCash.
+- On successful wallet link, the payment service owns the wallet token and subscription lifecycle.
+- Launch plans use `trialHours: 0`, so the first charge is queued immediately after successful linking.
+- SkillUp must not create a duplicate first subscription after wallet-link success. `already_linked` and `already_subscribed` are recovery states, not reasons to charge twice.
 
-The MVP uses manual renewal unless JazzCash contractually supports a separately approved recurring-payment flow. Renewal reminders may be sent only with consent and clear expiry information.
+### Duration and renewal
 
-### Expiry
+- Monthly billing uses the payment service's monthly interval contract (30-day interval in the supplied integration contract).
+- Yearly billing uses the payment service's yearly interval contract.
+- After a successful paid period, the payment service automatically bills the linked wallet on the next due date until the subscription is canceled or the wallet is unlinked.
+- The account surface shows the authoritative current period and next-due information returned by the payment service.
 
-At expiry:
+### Cancel subscription
 
-- the account returns to free limits;
-- learning history, earned achievements and profile remain available;
-- premium-only future actions become locked;
-- previously earned progress is not deleted;
-- payment and entitlement audit history is retained according to policy.
+Canceling a subscription stops future renewal for that subscription while the JazzCash wallet stays linked. Payment-service cancellation is immediate in the billing ledger, but SkillUp product access remains available through the already-paid `current_period_end`.
 
-### Grace period
+### Unlink wallet
 
-No silent paid grace period is assumed. A short operational grace state may be used only for a verified payment-status delay or platform reconciliation incident.
+Unlinking removes the saved wallet token/authorization and stops all future SkillUp debits for that user. The payment service cancels open subscriptions. SkillUp retains already-paid access through the recorded current-period end.
+
+### Past due, payment failure and expiry
+
+- `past_due` may retain bounded grace/access through an already-paid period while payment-service dunning continues.
+- `payment_failed` after retries and `expired` remove Premium access when no paid period remains.
+- Pending provider outcomes are reconciled through the payment service; SkillUp does not offer a second “charge now” action for the same billing period.
 
 ### Refund and reversal
 
-Refund requests are reviewed against JazzCash evidence and SkillUp's authoritative order, payment-event and entitlement records. An approved refund or charge reversal creates a separate auditable transaction and entitlement adjustment; transaction history is never rewritten. Learners use the public SkillUp support page for payment/refund review and must not send PINs, OTPs, passwords or full payment credentials.
+Refunds are operations/backend actions, not checkout controls. Refund/reversal events are reconciled against the authoritative payment-service status and SkillUp's local entitlement/audit history. An approved refund may revoke the affected Premium entitlement; completed learning history and required transaction evidence are retained.
 
 ### Account deletion
 
 Account deletion explains what can be deleted immediately and what payment, fraud-prevention, legal or privileged audit data must be retained. No entitlement transfer is assumed in the MVP.
 
-## 7. JazzCash pilot funnel
+## 7. Launch wallet billing funnel
 
 ```text
 Pricing viewed
 → Plan selected
-→ Payment order created
-→ JazzCash flow opened
-→ Payment pending/success/failed/cancelled
-→ Server verification
-→ Entitlement activated
+→ MSISDN + auto-pay consent
+→ Wallet link requested through SkillUp BFF
+→ JazzCash hosted wallet page
+→ Wallet linked
+→ Subscription/first charge queued
+→ Payment-service status + signed webhook
+→ SkillUp entitlement reconciled
 → First premium action
-→ Renewal or expiry
+→ Automatic renewal, cancellation/unlink, failure or refund
 ```
 
-Every stage requires a stable event definition, server reference and deduplication rule.
+Every stage requires a stable server reference and deduplication rule.
 
 ## 8. 60–90 day pilot KPIs
 
@@ -143,17 +155,20 @@ Every stage requires a stable event definition, server reference and deduplicati
 
 - Free learner to pricing-view rate
 - Pricing view to plan selection
-- Plan selection to payment initiation
-- Payment initiation to verified success
-- Verified success to first premium action
+- Plan selection to wallet-link initiation
+- Wallet-link initiation to linked wallet
+- Linked wallet to successful first charge
+- Successful first charge to first premium action
 - Monthly and yearly plan mix
 - Entitlement activation delay
-- Renewal intent, renewal completion and expiry reactivation
+- Renewal success, past-due recovery, cancellation/unlink and expiry/reactivation
 
 ### Payment quality
 
-- Payment success, failure, cancellation and pending rates
-- Duplicate callback attempts prevented
+- Wallet-link success/failure rate
+- Payment success, failure, pending and refund rates
+- Duplicate webhook attempts prevented
+- Stale/out-of-order webhook events ignored
 - Reconciliation mismatch count
 - Manual correction count and reason
 - Refund/reversal rate
@@ -184,7 +199,7 @@ Every stage requires a stable event definition, server reference and deduplicati
 These are planning thresholds for the pilot, not guaranteed forecasts:
 
 - Payment/entitlement mismatch: **zero tolerated as an unresolved systemic defect**.
-- Duplicate successful entitlement from one order: **zero**.
+- Duplicate successful entitlement from one billing period/event: **zero**.
 - Critical payment or account-security incident: pause affected flow and follow incident runbook.
 - Content with repeated accuracy reports: automatically remove from recommendation and enter review.
 - Premium conversion should be interpreted alongside learning retention; a high conversion rate caused by an unusable free plan is not success.
@@ -200,7 +215,8 @@ The following require separate approval:
 - family, institution or corporate subscriptions;
 - referral cash rewards;
 - influencer commissions;
-- automatic recurring debits;
+- pause/resume controls in the customer UI;
+- monthly↔yearly in-place plan switching or proration;
 - third-party course marketplace.
 
 ## 11. Launch policy set
@@ -214,6 +230,7 @@ The public launch policy set is versioned and published in the product. Current 
 - Fair Use Policy;
 - leaderboard and achievement-sharing privacy controls;
 - account export/deletion/retention disclosures;
+- automatic wallet-billing consent and cancel/unlink disclosures;
 - payment/refund support through the public SkillUp support page.
 
-Launch support defaults to `admin@codistan.org` and can be overridden with `PUBLIC_SUPPORT_EMAIL` in the deployment environment. Merchant-specific JazzCash behavior, settlement rules, provider refund mechanics and any future recurring-payment terms remain gated by the approved provider contract and live verification evidence.
+Launch support defaults to `admin@codistan.org` and can be overridden with `PUBLIC_SUPPORT_EMAIL` in the deployment environment. Payment-service/JazzCash sandbox behavior, settlement behavior and provider refund mechanics remain gated by the live external staging contract and verification evidence.
