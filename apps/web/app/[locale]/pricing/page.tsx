@@ -20,6 +20,12 @@ type Plan = Readonly<{
   checkoutAvailable: boolean;
 }>;
 
+type ExternalPlan = Readonly<{
+  interval?: "weekly" | "monthly" | "yearly";
+  fullAmountMinor?: number;
+  currency?: string;
+}>;
+
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 const apiBaseUrl = process.env["API_BASE_URL"] ?? "http://localhost:3001";
 
@@ -66,14 +72,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: canonicalUrl(publicAppUrl, "en", "pricing") },
     openGraph: {
       title: "SkillUp Premium pricing",
-      description: "Monthly PKR 599 or yearly PKR 4,999, with verified JazzCash activation.",
+      description: "Monthly PKR 599 or yearly PKR 4,999, with server-verified JazzCash billing.",
       type: "website",
       url: canonicalUrl(publicAppUrl, "en", "pricing"),
     },
   };
 }
 
-async function loadPlans(): Promise<readonly Plan[]> {
+async function loadCommercialPlans(): Promise<readonly Plan[]> {
   try {
     const response = await fetch(new URL("/v1/commercial/plans", apiBaseUrl), {
       cache: "no-store",
@@ -86,6 +92,54 @@ async function loadPlans(): Promise<readonly Plan[]> {
   } catch {
     return launchPlans;
   }
+}
+
+async function paymentServiceAvailability(): Promise<ReadonlySet<string>> {
+  try {
+    const response = await fetch(new URL("/v1/billing/plans", apiBaseUrl), {
+      cache: "no-store",
+      signal: AbortSignal.timeout(4_000),
+    });
+    if (!response.ok) return new Set();
+    const plans = (await response.json()) as readonly ExternalPlan[];
+    if (!Array.isArray(plans)) return new Set();
+
+    const available = new Set<string>();
+    if (
+      plans.some(
+        (plan) =>
+          plan.interval === "monthly" &&
+          plan.fullAmountMinor === 59_900 &&
+          plan.currency === "PKR",
+      )
+    ) {
+      available.add("premium-monthly");
+    }
+    if (
+      plans.some(
+        (plan) =>
+          plan.interval === "yearly" &&
+          plan.fullAmountMinor === 499_900 &&
+          plan.currency === "PKR",
+      )
+    ) {
+      available.add("premium-yearly");
+    }
+    return available;
+  } catch {
+    return new Set();
+  }
+}
+
+async function loadPlans(): Promise<readonly Plan[]> {
+  const [commercialPlans, externalAvailable] = await Promise.all([
+    loadCommercialPlans(),
+    paymentServiceAvailability(),
+  ]);
+  return commercialPlans.map((plan) => ({
+    ...plan,
+    checkoutAvailable: plan.checkoutAvailable || externalAvailable.has(plan.code),
+  }));
 }
 
 export default async function PricingPage({ params }: PageProps) {
@@ -120,18 +174,16 @@ export default async function PricingPage({ params }: PageProps) {
         <section className={styles["policy"]} aria-label="Premium commitments">
           <article>
             <h2>Server-verified access</h2>
-            <p>Browser claims and payment screenshots cannot activate premium.</p>
+            <p>Browser redirects and payment screenshots cannot activate Premium.</p>
           </article>
           <article>
-            <h2>Recoverable payment states</h2>
-            <p>
-              Pending, failed, cancelled, expired and refunded payments stay visible and traceable.
-            </p>
+            <h2>Hosted wallet security</h2>
+            <p>Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.</p>
           </article>
           <article>
-            <h2>No learning-history loss</h2>
+            <h2>Billing controls</h2>
             <p>
-              Expiry or refund changes access, not completed attempts, points or earned progress.
+              Subscription cancellation and wallet unlinking are available from your private account.
             </p>
           </article>
         </section>
