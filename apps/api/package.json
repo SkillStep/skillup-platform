@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "smoke:commercial": "node --env-file-if-exists=../../.env --import tsx src/commercial-lifecycle-smoke.ts",
-    "smoke:premium-reporting": "node --env-file-if-exists=../../.env --import tsx src/premium-reporting-staging-smoke.ts"
+    "smoke:premium-reporting": "node --env-file-if-exists=../../.env --import tsx src/premium-reporting-staging-smoke.ts",
+    "payments:sync-plans": "node --env-file-if-exists=../../.env --import tsx src/payment-service-plan-sync.ts"
   },
   "dependencies": {
     "@skillup/content-schema": "workspace:*",
