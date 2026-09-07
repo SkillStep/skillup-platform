@@ -148,6 +148,13 @@
       "when": 1785731100000,
       "tag": "0020_premium_plan_scheduling",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1788799200000,
+      "tag": "0021_external_payment_service_state",
+      "breakpoints": true
     }
   ]
 }
