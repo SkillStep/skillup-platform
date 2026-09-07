@@ -16,6 +16,11 @@ import {
 } from "./content-operations.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
+import {
+  createExternalBillingService,
+  registerExternalBillingRoutes,
+} from "./external-billing.js";
+import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createMaintenanceRunner } from "./maintenance.js";
@@ -23,11 +28,6 @@ import {
   createPaymentOperationsService,
   registerPaymentOperationsRoutes,
 } from "./payment-operations.js";
-import {
-  createPaymentServiceBillingService,
-  registerPaymentServiceBillingRoutes,
-} from "./payment-service-billing.js";
-import { createPaymentServiceClient } from "./payment-service-client.js";
 import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
@@ -56,14 +56,14 @@ const commercialAutomationService = createCommercialAutomationService({
   pool: database.pool,
   jazzCashCps,
 });
-const paymentServiceClient = config.FEATURE_PAYMENT_SERVICE_ENABLED
-  ? createPaymentServiceClient(config)
+const externalPaymentClient = config.FEATURE_PAYMENT_SERVICE_ENABLED
+  ? createExternalPaymentClient(config)
   : undefined;
-const paymentServiceBilling = paymentServiceClient
-  ? createPaymentServiceBillingService({
+const externalBilling = externalPaymentClient
+  ? createExternalBillingService({
       pool: database.pool,
       config,
-      client: paymentServiceClient,
+      client: externalPaymentClient,
     })
   : undefined;
 const adminService = createAdminService({
@@ -105,11 +105,11 @@ const app = buildApi({
   analyticsService,
 });
 
-if (paymentServiceBilling) {
-  registerPaymentServiceBillingRoutes(app, {
+if (externalBilling) {
+  registerExternalBillingRoutes(app, {
     config,
     authService,
-    billingService: paymentServiceBilling,
+    billingService: externalBilling,
   });
 }
 
