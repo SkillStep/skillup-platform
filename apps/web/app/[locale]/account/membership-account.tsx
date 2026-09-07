@@ -32,7 +32,53 @@ type PaymentOrder = Readonly<{
 type AccountResponse = Readonly<{
   entitlement?: Entitlement | null;
   orders?: readonly PaymentOrder[];
-  message?: string;
+}>;
+
+type BillingSubscription = Readonly<{
+  id: string;
+  plan_code: string;
+  amount_minor: number;
+  currency: "PKR";
+  interval: "weekly" | "monthly" | "yearly";
+  status:
+    | "initiated"
+    | "trialing"
+    | "active"
+    | "past_due"
+    | "paused"
+    | "payment_failed"
+    | "expired"
+    | "canceled";
+  next_due_at?: string | null;
+  current_period_end?: string | null;
+  trial_ends_at?: string | null;
+}>;
+
+type BillingStatus = Readonly<{
+  wallet: Readonly<{
+    status: "none" | "pending" | "linked" | "unlinked" | "failed";
+    msisdn_masked?: string | null;
+  }>;
+  alreadySubscribed: boolean;
+  status: Readonly<{
+    wallet_linked: boolean;
+    subscription_status: BillingSubscription["status"] | null;
+    current_period_paid: boolean;
+    next_due_at?: string | null;
+    last_payment_status?: "pending" | "completed" | "failed" | "expired" | "refunded" | null;
+  }>;
+  subscriptions: readonly BillingSubscription[];
+}>;
+
+type BillingPayment = Readonly<{
+  id: string;
+  amount_minor: number;
+  charge_kind?: "full" | "step";
+  currency: "PKR";
+  status: "pending" | "completed" | "failed" | "expired" | "refunded";
+  txn_ref_no?: string | null;
+  response_message?: string | null;
+  created_at: string;
 }>;
 
 const capabilityLabels: Readonly<Record<string, string>> = {
@@ -59,42 +105,86 @@ function money(amountMinor: number): string {
 
 function queryMessage(): string | null {
   const parameters = new URLSearchParams(window.location.search);
+  const wallet = parameters.get("wallet");
+  const billing = parameters.get("billing");
+  if (wallet === "linked")
+    return "JazzCash wallet linked. Billing status is being verified before Premium access changes.";
+  if (wallet === "failed") return "JazzCash wallet linking was not completed. No new billing access was granted.";
+  if (billing === "already-subscribed") return "This account already has an open Premium subscription.";
+  if (billing === "resubscribed") return "Subscription request accepted. Refreshing the authoritative billing status.";
+
   const payment = parameters.get("payment");
   if (payment === "succeeded") return "Payment verified. Premium access is active.";
   if (payment === "pending") return "Payment is still pending. Refresh this page after a moment.";
   if (payment === "failed") return "Payment was not completed. No premium access was granted.";
   if (payment === "cancelled") return "Checkout was cancelled. No payment was recorded.";
-  if (payment === "expired")
-    return "The checkout session expired. Start a new checkout when ready.";
+  if (payment === "expired") return "The checkout session expired. Start a new checkout when ready.";
   if (payment === "refunded") return "The payment was refunded and premium access was updated.";
-  if (payment === "error")
-    return "The provider response could not be verified. Support can review the reference.";
   return null;
+}
+
+function displayPlan(code: string): string {
+  if (code === "monthly") return "SkillUp Premium Monthly";
+  if (code === "yearly") return "SkillUp Premium Yearly";
+  return code.replaceAll("-", " ");
 }
 
 export function MembershipAccount() {
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [account, setAccount] = useState<AccountResponse>({});
+  const [billing, setBilling] = useState<BillingStatus | null>(null);
+  const [payments, setPayments] = useState<readonly BillingPayment[]>([]);
+  const [billingAvailable, setBillingAvailable] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const loadAccount = useCallback(async (signal: AbortSignal | null = null) => {
     setError(null);
     try {
-      const response = await fetch("/api/v1/commercial/account", {
+      const accountResponse = await fetch("/api/v1/commercial/account", {
         credentials: "same-origin",
         cache: "no-store",
         signal,
       });
-      if (response.status === 401) {
+      if (accountResponse.status === 401) {
         window.location.replace(withReturnTo("/en/sign-in", "/en/account"));
         return;
       }
-      if (!response.ok) {
+      if (!accountResponse.ok) {
         setError("Your membership information is temporarily unavailable.");
         return;
       }
-      setAccount((await response.json()) as AccountResponse);
+      setAccount((await accountResponse.json()) as AccountResponse);
+
+      const [statusResponse, paymentsResponse] = await Promise.all([
+        fetch("/api/v1/billing/status", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal,
+        }),
+        fetch("/api/v1/billing/payments", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal,
+        }),
+      ]);
+
+      if (statusResponse.ok && paymentsResponse.ok) {
+        setBilling((await statusResponse.json()) as BillingStatus);
+        setPayments((await paymentsResponse.json()) as readonly BillingPayment[]);
+        setBillingAvailable(true);
+      } else if ([404, 503].includes(statusResponse.status)) {
+        setBilling(null);
+        setPayments([]);
+        setBillingAvailable(false);
+      } else if (statusResponse.status === 401) {
+        window.location.replace(withReturnTo("/en/sign-in", "/en/account"));
+        return;
+      } else {
+        setBillingAvailable(true);
+        setError("Billing status is temporarily unavailable. Your learning account remains safe.");
+      }
     } catch (requestError) {
       if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
         setError("Your membership information is temporarily unavailable.");
@@ -111,12 +201,39 @@ export function MembershipAccount() {
     return () => controller.abort();
   }, [loadAccount]);
 
+  async function mutateBilling(path: string, successMessage: string): Promise<void> {
+    setBusy(true);
+    setError(null);
+    try {
+      const response = await fetch(path, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "content-type": "application/json" },
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => ({}))) as Readonly<{ message?: string }>;
+        setError(body.message ?? "The billing request could not be completed.");
+        return;
+      }
+      setMessage(successMessage);
+      await loadAccount();
+    } catch {
+      setError("The billing request could not be completed. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return <section className={styles["panel"]}>Loading your private membership…</section>;
   }
 
   const entitlement = account.entitlement ?? null;
-  const orders = account.orders ?? [];
+  const legacyOrders = account.orders ?? [];
+  const subscription =
+    billing?.subscriptions.find((candidate) =>
+      ["initiated", "trialing", "active", "past_due", "paused"].includes(candidate.status),
+    ) ?? billing?.subscriptions[0] ?? null;
 
   return (
     <>
@@ -134,9 +251,7 @@ export function MembershipAccount() {
             <strong>{entitlement ? entitlement.planCode.replaceAll("-", " ") : "Free plan"}</strong>
             <span>
               {entitlement
-                ? `${entitlement.status} through ${dateLabel(
-                    entitlement.graceEndsAt ?? entitlement.endsAt,
-                  )}`
+                ? `${entitlement.status} through ${dateLabel(entitlement.graceEndsAt ?? entitlement.endsAt)}`
                 : "Useful reviewed learning remains available without payment."}
             </span>
           </div>
@@ -160,6 +275,7 @@ export function MembershipAccount() {
           <button
             className={`${styles["button"]} ${styles["secondary"]}`}
             type="button"
+            disabled={busy}
             onClick={() => void loadAccount()}
           >
             Refresh status
@@ -167,9 +283,124 @@ export function MembershipAccount() {
         </div>
       </section>
 
+      {billingAvailable && billing ? (
+        <section className={styles["panel"]} aria-labelledby="billing-status-title">
+          <h2 id="billing-status-title">JazzCash billing</h2>
+          <div className={styles["billingGrid"]}>
+            <div>
+              <strong>Wallet</strong>
+              <span>
+                {billing.wallet.status}
+                {billing.wallet.msisdn_masked ? ` · ${billing.wallet.msisdn_masked}` : ""}
+              </span>
+            </div>
+            <div>
+              <strong>Subscription</strong>
+              <span>{subscription ? `${displayPlan(subscription.plan_code)} · ${subscription.status}` : "None"}</span>
+            </div>
+            <div>
+              <strong>Current period</strong>
+              <span>
+                {subscription?.current_period_end
+                  ? `Access through ${dateLabel(subscription.current_period_end)}`
+                  : subscription?.trial_ends_at
+                    ? `Trial through ${dateLabel(subscription.trial_ends_at)}`
+                    : "No active paid period"}
+              </span>
+            </div>
+            <div>
+              <strong>Next billing</strong>
+              <span>
+                {subscription?.next_due_at
+                  ? `${money(subscription.amount_minor)} on ${dateLabel(subscription.next_due_at)}`
+                  : "No upcoming charge shown"}
+              </span>
+            </div>
+          </div>
+
+          <p className={styles["billingNote"]}>
+            Cancel subscription stops future renewal for this plan while keeping the wallet linked.
+            Unlink wallet removes the saved JazzCash authorization and stops all future debits for
+            SkillUp. Already-paid access remains available through the current paid period.
+          </p>
+
+          <div className={styles["actions"]}>
+            {subscription && !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
+              <button
+                className={`${styles["button"]} ${styles["secondary"]}`}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Cancel this Premium subscription? Future renewal will stop, but your JazzCash wallet remains linked.",
+                    )
+                  ) {
+                    void mutateBilling(
+                      `/api/v1/billing/subscriptions/${encodeURIComponent(subscription.id)}/cancel`,
+                      "Subscription canceled. Paid-period access is retained through its recorded end date.",
+                    );
+                  }
+                }}
+              >
+                Cancel subscription
+              </button>
+            ) : null}
+            {billing.wallet.status === "linked" ? (
+              <button
+                className={`${styles["button"]} ${styles["dangerButton"]}`}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Unlink JazzCash wallet? This removes the saved authorization and stops future SkillUp debits.",
+                    )
+                  ) {
+                    void mutateBilling(
+                      "/api/v1/billing/wallet/unlink",
+                      "JazzCash wallet unlinked. Future SkillUp debits are stopped.",
+                    );
+                  }
+                }}
+              >
+                Unlink JazzCash wallet
+              </button>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
       <section className={styles["panel"]} aria-labelledby="payment-history-title">
         <h2 id="payment-history-title">Payment history</h2>
-        {orders.length === 0 ? (
+        {billingAvailable ? (
+          payments.length === 0 ? (
+            <p>No payment has been recorded for this account.</p>
+          ) : (
+            <table className={styles["orders"]}>
+              <thead>
+                <tr>
+                  <th>Status</th>
+                  <th>Amount</th>
+                  <th>Charge</th>
+                  <th>Created</th>
+                  <th>Reference</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payments.map((payment) => (
+                  <tr key={payment.id}>
+                    <td>{payment.status}</td>
+                    <td>{money(payment.amount_minor)}</td>
+                    <td>{payment.charge_kind ?? "—"}</td>
+                    <td>{dateLabel(payment.created_at)}</td>
+                    <td className={styles["reference"]}>{payment.txn_ref_no ?? payment.id}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )
+        ) : legacyOrders.length === 0 ? (
           <p>No payment order has been created for this account.</p>
         ) : (
           <table className={styles["orders"]}>
@@ -183,7 +414,7 @@ export function MembershipAccount() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order) => (
+              {legacyOrders.map((order) => (
                 <tr key={order.id}>
                   <td>{order.planName}</td>
                   <td>{order.status}</td>
