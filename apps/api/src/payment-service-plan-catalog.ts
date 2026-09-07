@@ -1,9 +1,9 @@
 import type { ApiConfig } from "./config.js";
-import type { PaymentServiceClient, PaymentServicePlan } from "./payment-service-client.js";
+import type { ExternalPaymentClient, ExternalPaymentPlan } from "./external-payment-client.js";
 
 export type LaunchPaymentPlan = Readonly<{
   localCode: "premium-monthly" | "premium-yearly";
-  external: PaymentServicePlan;
+  external: ExternalPaymentPlan;
 }>;
 
 export function launchPaymentServicePlans(config: ApiConfig): readonly LaunchPaymentPlan[] {
@@ -33,30 +33,38 @@ export function launchPaymentServicePlans(config: ApiConfig): readonly LaunchPay
   ] as const;
 }
 
+export function paymentServicePlanMatches(
+  expected: ExternalPaymentPlan,
+  actual: ExternalPaymentPlan | undefined,
+): boolean {
+  return Boolean(
+    actual &&
+      actual.code === expected.code &&
+      actual.interval === expected.interval &&
+      actual.fullAmountMinor === expected.fullAmountMinor &&
+      actual.stepAmountMinor === expected.stepAmountMinor &&
+      (actual.trialHours ?? 24) === expected.trialHours &&
+      actual.currency === "PKR",
+  );
+}
+
 export function assertPaymentServiceLaunchPlans(
   config: ApiConfig,
-  actualPlans: readonly PaymentServicePlan[],
+  actualPlans: readonly ExternalPaymentPlan[],
 ): void {
   for (const expected of launchPaymentServicePlans(config)) {
     const actual = actualPlans.find((plan) => plan.code === expected.external.code);
-    if (!actual) {
-      throw new Error(`Payment-service plan ${expected.external.code} is missing.`);
-    }
-    if (
-      actual.interval !== expected.external.interval ||
-      actual.fullAmountMinor !== expected.external.fullAmountMinor ||
-      actual.stepAmountMinor !== expected.external.stepAmountMinor ||
-      (actual.trialHours ?? 24) !== expected.external.trialHours ||
-      actual.currency !== "PKR"
-    ) {
-      throw new Error(`Payment-service plan ${expected.external.code} does not match SkillUp launch pricing.`);
+    if (!paymentServicePlanMatches(expected.external, actual)) {
+      throw new Error(
+        `Payment-service plan ${expected.external.code} is missing or does not match SkillUp launch pricing.`,
+      );
     }
   }
 }
 
 export async function syncPaymentServiceLaunchPlans(
   config: ApiConfig,
-  client: PaymentServiceClient,
+  client: ExternalPaymentClient,
 ): Promise<readonly LaunchPaymentPlan[]> {
   const expected = launchPaymentServicePlans(config);
   await client.upsertPlans(expected.map((plan) => plan.external));
