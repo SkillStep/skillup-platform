@@ -1,0 +1,46 @@
+name: Temporary payment safety patch
+
+on:
+  push:
+    branches:
+      - payments/external-service-integration
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          ref: payments/external-service-integration
+          fetch-depth: 1
+      - name: Apply targeted refund precedence guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('apps/api/src/external-billing.ts')
+          s = p.read_text()
+          old = '''function chooseAccess(status: ExternalPaymentStatus, now: Date): AccessDecision {\n  const decisions = status.subscriptions'''
+          new = '''function chooseAccess(status: ExternalPaymentStatus, now: Date): AccessDecision {\n  if (status.status.last_payment_status === "refunded") {\n    const refunded = [...status.subscriptions].sort(\n      (left, right) => subscriptionTimestamp(right) - subscriptionTimestamp(left),\n    )[0] ?? null;\n    return { mode: "none", endsAt: null, subscription: refunded };\n  }\n\n  const decisions = status.subscriptions'''
+          if old in s:
+              p.write_text(s.replace(old, new, 1))
+          elif 'last_payment_status === "refunded"' not in s:
+              raise SystemExit('Expected chooseAccess anchor not found')
+          PY
+          git diff --check
+      - name: Commit patch when needed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- apps/api/src/external-billing.ts; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add apps/api/src/external-billing.ts
+          git commit -m "fix(payments): prioritize refunds over paid-period access"
+          git push origin HEAD:payments/external-service-integration
