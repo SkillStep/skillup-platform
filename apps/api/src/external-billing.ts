@@ -224,6 +224,13 @@ function subscriptionTimestamp(subscription: ExternalSubscription): number {
 }
 
 function chooseAccess(status: ExternalPaymentStatus, now: Date): AccessDecision {
+  if (status.status.last_payment_status === "refunded") {
+    const refunded = [...status.subscriptions].sort(
+      (left, right) => subscriptionTimestamp(right) - subscriptionTimestamp(left),
+    )[0] ?? null;
+    return { mode: "none", endsAt: null, subscription: refunded };
+  }
+
   const decisions = status.subscriptions
     .map((subscription) => accessForSubscription(subscription, status, now))
     .filter((decision) => decision.mode !== "none" && decision.endsAt);
