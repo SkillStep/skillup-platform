@@ -164,12 +164,15 @@ export default async function PricingPage({ params }: PageProps) {
           </article>
           <article>
             <h2>Hosted wallet security</h2>
-            <p>Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.</p>
+            <p>
+              Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.
+            </p>
           </article>
           <article>
             <h2>Billing controls</h2>
             <p>
-              Subscription cancellation and wallet unlinking are available from your private account.
+              Subscription cancellation and wallet unlinking are available from your private
+              account.
             </p>
           </article>
         </section>

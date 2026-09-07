@@ -79,10 +79,8 @@ describe("external payment-service client", () => {
   });
 
   it("maps upstream API-key rejection to a server integration error rather than learner 401", async () => {
-    const client = createExternalPaymentClient(
-      config,
-      (async () => jsonResponse({ error: "unauthorized", message: "bad key" }, 401)) as typeof fetch,
-    );
+    const client = createExternalPaymentClient(config, (async () =>
+      jsonResponse({ error: "unauthorized", message: "bad key" }, 401)) as typeof fetch);
 
     await expect(client.listPlans()).rejects.toMatchObject({
       statusCode: 502,
@@ -91,10 +89,8 @@ describe("external payment-service client", () => {
   });
 
   it("fails closed on malformed successful responses", async () => {
-    const client = createExternalPaymentClient(
-      config,
-      (async () => jsonResponse({ wallet: "not-a-valid-status-response" })) as typeof fetch,
-    );
+    const client = createExternalPaymentClient(config, (async () =>
+      jsonResponse({ wallet: "not-a-valid-status-response" })) as typeof fetch);
 
     await expect(client.getStatus("11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({
       statusCode: 502,
@@ -103,15 +99,17 @@ describe("external payment-service client", () => {
   });
 
   it("preserves documented payment-service errors such as rate limiting", async () => {
-    const client = createExternalPaymentClient(
-      config,
-      (async () =>
-        jsonResponse({ error: "rate_limited", message: "Back off and retry later" }, 429)) as typeof fetch,
-    );
+    const client = createExternalPaymentClient(config, (async () =>
+      jsonResponse(
+        { error: "rate_limited", message: "Back off and retry later" },
+        429,
+      )) as typeof fetch);
 
-    await expect(client.listPayments("11111111-1111-4111-8111-111111111111")).rejects.toMatchObject({
-      statusCode: 429,
-      errorCode: "rate_limited",
-    } satisfies Partial<ExternalPaymentRequestError>);
+    await expect(client.listPayments("11111111-1111-4111-8111-111111111111")).rejects.toMatchObject(
+      {
+        statusCode: 429,
+        errorCode: "rate_limited",
+      } satisfies Partial<ExternalPaymentRequestError>,
+    );
   });
 });

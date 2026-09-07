@@ -16,10 +16,7 @@ import {
 } from "./content-operations.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
-import {
-  createExternalBillingService,
-  registerExternalBillingRoutes,
-} from "./external-billing.js";
+import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";

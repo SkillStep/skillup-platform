@@ -146,7 +146,8 @@ const ApiConfigSchema = z
       }
       if (
         config.PAYMENT_SERVICE_APP_RETURN_URL &&
-        new URL(config.PAYMENT_SERVICE_APP_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
+        new URL(config.PAYMENT_SERVICE_APP_RETURN_URL).origin !==
+          new URL(config.PUBLIC_APP_URL).origin
       ) {
         context.addIssue({
           code: "custom",

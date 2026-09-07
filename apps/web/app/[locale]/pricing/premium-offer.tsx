@@ -153,7 +153,9 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
           window.location.assign("/en/account?billing=already-subscribed");
           return;
         }
-        setMessage(error.message ?? "JazzCash wallet linking could not be started. Please try again.");
+        setMessage(
+          error.message ?? "JazzCash wallet linking could not be started. Please try again.",
+        );
         return;
       }
 
@@ -203,7 +205,9 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
                   autoComplete="tel"
                   placeholder="03001234567"
                   value={msisdn}
-                  onChange={(event) => setMsisdn(event.target.value.replace(/\D/g, "").slice(0, 15))}
+                  onChange={(event) =>
+                    setMsisdn(event.target.value.replace(/\D/g, "").slice(0, 15))
+                  }
                   disabled={busyPlan !== null}
                 />
                 <label className={styles["consent"]} htmlFor={consentId}>

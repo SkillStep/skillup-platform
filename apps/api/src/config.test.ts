@@ -202,9 +202,9 @@ describe("API runtime configuration", () => {
   });
 
   it("rejects sandbox mode in production", () => {
-    expect(() =>
-      readApiConfig({ ...sandboxJazzCashEnvironment, APP_ENV: "production" }),
-    ).toThrow("Production requires JAZZCASH_MODE=production");
+    expect(() => readApiConfig({ ...sandboxJazzCashEnvironment, APP_ENV: "production" })).toThrow(
+      "Production requires JAZZCASH_MODE=production",
+    );
   });
 
   it("requires the direct JazzCash return URL to remain on the SkillUp origin", () => {

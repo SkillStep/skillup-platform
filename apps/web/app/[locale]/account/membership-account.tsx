@@ -121,7 +121,8 @@ function queryMessage(): string | null {
   if (wallet === "failed") {
     return "JazzCash wallet linking was not completed. No new billing access was granted.";
   }
-  if (billing === "already-subscribed") return "This account already has an open Premium subscription.";
+  if (billing === "already-subscribed")
+    return "This account already has an open Premium subscription.";
   if (billing === "resubscribed") {
     return "Subscription request accepted. Refreshing the authoritative billing status.";
   }
@@ -131,7 +132,8 @@ function queryMessage(): string | null {
   if (payment === "pending") return "Payment is still pending. Refresh this page after a moment.";
   if (payment === "failed") return "Payment was not completed. No Premium access was granted.";
   if (payment === "cancelled") return "Checkout was cancelled. No payment was recorded.";
-  if (payment === "expired") return "The checkout session expired. Start a new checkout when ready.";
+  if (payment === "expired")
+    return "The checkout session expired. Start a new checkout when ready.";
   if (payment === "refunded") return "The payment was refunded and Premium access was updated.";
   return null;
 }
@@ -289,7 +291,9 @@ export function MembershipAccount() {
   const subscription =
     billing?.subscriptions.find((candidate) =>
       OPEN_SUBSCRIPTION_STATUSES.includes(candidate.status),
-    ) ?? billing?.subscriptions[0] ?? null;
+    ) ??
+    billing?.subscriptions[0] ??
+    null;
 
   return (
     <>
@@ -353,7 +357,9 @@ export function MembershipAccount() {
             <div>
               <strong>Subscription</strong>
               <span>
-                {subscription ? `${displayPlan(subscription.plan_code)} · ${subscription.status}` : "None"}
+                {subscription
+                  ? `${displayPlan(subscription.plan_code)} · ${subscription.status}`
+                  : "None"}
               </span>
             </div>
             <div>
@@ -383,7 +389,8 @@ export function MembershipAccount() {
           </p>
 
           <div className={styles["actions"]}>
-            {subscription && !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
+            {subscription &&
+            !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
               <button
                 className={`${styles["button"]} ${styles["secondary"]}`}
                 type="button"

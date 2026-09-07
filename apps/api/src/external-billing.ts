@@ -101,27 +101,36 @@ type AccessDecision = Readonly<{
 
 export type ExternalBillingService = Readonly<{
   listPlans: () => Promise<readonly BillingPlan[]>;
-  linkWallet: (input: Readonly<{
-    userId: string;
-    planCode: LocalPlanCode;
-    msisdn: string;
-  }>) => ReturnType<ExternalPaymentClient["linkWallet"]>;
+  linkWallet: (
+    input: Readonly<{
+      userId: string;
+      planCode: LocalPlanCode;
+      msisdn: string;
+    }>,
+  ) => ReturnType<ExternalPaymentClient["linkWallet"]>;
   getWallet: (userId: string) => ReturnType<ExternalPaymentClient["getWallet"]>;
   unlinkWallet: (userId: string) => ReturnType<ExternalPaymentClient["unlinkWallet"]>;
   getStatus: (userId: string) => Promise<ExternalPaymentStatus>;
-  createSubscription: (input: Readonly<{
-    userId: string;
-    planCode: LocalPlanCode;
-    skipTrial?: boolean;
-  }>) => ReturnType<ExternalPaymentClient["createSubscription"]>;
+  createSubscription: (
+    input: Readonly<{
+      userId: string;
+      planCode: LocalPlanCode;
+      skipTrial?: boolean;
+    }>,
+  ) => ReturnType<ExternalPaymentClient["createSubscription"]>;
   cancelSubscription: (userId: string, subscriptionId: string) => Promise<unknown>;
   listPayments: (userId: string) => ReturnType<ExternalPaymentClient["listPayments"]>;
-  getPayment: (userId: string, paymentId: string) => ReturnType<ExternalPaymentClient["getPayment"]>;
-  handleWebhook: (input: Readonly<{
-    rawBody: Buffer;
-    signature: string | undefined;
-    eventHeader: string | undefined;
-  }>) => Promise<Readonly<{ duplicate: boolean; stale: boolean }>>;
+  getPayment: (
+    userId: string,
+    paymentId: string,
+  ) => ReturnType<ExternalPaymentClient["getPayment"]>;
+  handleWebhook: (
+    input: Readonly<{
+      rawBody: Buffer;
+      signature: string | undefined;
+      eventHeader: string | undefined;
+    }>,
+  ) => Promise<Readonly<{ duplicate: boolean; stale: boolean }>>;
 }>;
 
 class BillingRequestError extends Error {
@@ -137,7 +146,9 @@ class BillingRequestError extends Error {
 }
 
 function launchPlan(config: ApiConfig, localCode: LocalPlanCode) {
-  const plan = launchPaymentServicePlans(config).find((candidate) => candidate.localCode === localCode);
+  const plan = launchPaymentServicePlans(config).find(
+    (candidate) => candidate.localCode === localCode,
+  );
   if (!plan) throw new Error(`Missing launch plan ${localCode}.`);
   return plan;
 }
@@ -167,7 +178,11 @@ function headerValue(value: string | string[] | undefined): string | undefined {
   return Array.isArray(value) ? value[0] : value;
 }
 
-function validWebhookSignature(rawBody: Buffer, signature: string | undefined, secret: string): boolean {
+function validWebhookSignature(
+  rawBody: Buffer,
+  signature: string | undefined,
+  secret: string,
+): boolean {
   if (!signature || !/^[a-fA-F0-9]{64}$/.test(signature)) return false;
   const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
   return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(signature.toLowerCase(), "hex"));
@@ -225,9 +240,10 @@ function subscriptionTimestamp(subscription: ExternalSubscription): number {
 
 function chooseAccess(status: ExternalPaymentStatus, now: Date): AccessDecision {
   if (status.status.last_payment_status === "refunded") {
-    const refunded = [...status.subscriptions].sort(
-      (left, right) => subscriptionTimestamp(right) - subscriptionTimestamp(left),
-    )[0] ?? null;
+    const refunded =
+      [...status.subscriptions].sort(
+        (left, right) => subscriptionTimestamp(right) - subscriptionTimestamp(left),
+      )[0] ?? null;
     return { mode: "none", endsAt: null, subscription: refunded };
   }
 
@@ -254,7 +270,10 @@ function chooseAccess(status: ExternalPaymentStatus, now: Date): AccessDecision 
   return { mode: "none", endsAt: null, subscription: primary };
 }
 
-function assertSubscriptionLaunchContract(config: ApiConfig, subscription: ExternalSubscription): LocalPlanCode {
+function assertSubscriptionLaunchContract(
+  config: ApiConfig,
+  subscription: ExternalSubscription,
+): LocalPlanCode {
   const localCode = localPlanCode(config, subscription.plan_code);
   const expected = launchPlan(config, localCode).external;
   if (
@@ -300,7 +319,11 @@ async function markWebhook(
   if (!row) {
     throw new BillingRequestError(404, "unknown_payment_user", "The payment user does not exist.");
   }
-  if (row.event_type !== event.type || row.user_id !== event.userId || row.payload_digest !== digest) {
+  if (
+    row.event_type !== event.type ||
+    row.user_id !== event.userId ||
+    row.payload_digest !== digest
+  ) {
     throw new BillingRequestError(
       409,
       "payment_event_id_conflict",
@@ -329,7 +352,10 @@ async function finishWebhook(
   );
 }
 
-function terminalEntitlementState(status: ExternalPaymentStatus, subscription: ExternalSubscription | null) {
+function terminalEntitlementState(
+  status: ExternalPaymentStatus,
+  subscription: ExternalSubscription | null,
+) {
   if (status.status.last_payment_status === "refunded") {
     return { status: "refunded", action: "refund" } as const;
   }
@@ -475,16 +501,17 @@ export function createExternalBillingService(
             [entitlementId, input.reason, nextStatus, subscription.id],
           );
         } else {
-          const action =
-            ["revoked", "refunded", "expired", "cancelled"].includes(existingEntitlement.status)
+          const action = ["revoked", "refunded", "expired", "cancelled"].includes(
+            existingEntitlement.status,
+          )
+            ? "reactivate"
+            : existingEntitlement.status === "grace" && nextStatus === "active"
               ? "reactivate"
-              : existingEntitlement.status === "grace" && nextStatus === "active"
-                ? "reactivate"
-                : nextStatus === "grace"
-                  ? "grace"
-                  : access.endsAt > existingEntitlement.ends_at
-                    ? "extend"
-                    : "correct";
+              : nextStatus === "grace"
+                ? "grace"
+                : access.endsAt > existingEntitlement.ends_at
+                  ? "extend"
+                  : "correct";
           await connection.query(
             `update entitlements
                 set plan_version_id = $2,
@@ -687,7 +714,11 @@ export function createExternalBillingService(
         );
       }
       if (!validWebhookSignature(rawBody, signature, secret)) {
-        throw new BillingRequestError(401, "invalid_payment_signature", "Invalid payment signature.");
+        throw new BillingRequestError(
+          401,
+          "invalid_payment_signature",
+          "Invalid payment signature.",
+        );
       }
 
       let parsedBody: unknown;

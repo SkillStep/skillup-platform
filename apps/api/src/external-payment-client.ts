@@ -129,20 +129,24 @@ export class ExternalPaymentRequestError extends Error {
 export type ExternalPaymentClient = Readonly<{
   listPlans: () => Promise<readonly ExternalPaymentPlan[]>;
   upsertPlans: (plans: readonly ExternalPaymentPlan[]) => Promise<unknown>;
-  linkWallet: (input: Readonly<{
-    userId: string;
-    msisdn: string;
-    planCode: string;
-    appReturnUrl: string;
-  }>) => Promise<ExternalWalletLink>;
+  linkWallet: (
+    input: Readonly<{
+      userId: string;
+      msisdn: string;
+      planCode: string;
+      appReturnUrl: string;
+    }>,
+  ) => Promise<ExternalWalletLink>;
   getWallet: (userId: string) => Promise<ExternalWallet>;
   unlinkWallet: (userId: string) => Promise<Readonly<{ status: "unlinked" }>>;
   getStatus: (userId: string) => Promise<ExternalPaymentStatus>;
-  createSubscription: (input: Readonly<{
-    userId: string;
-    planCode: string;
-    skipTrial?: boolean;
-  }>) => Promise<ExternalSubscription>;
+  createSubscription: (
+    input: Readonly<{
+      userId: string;
+      planCode: string;
+      skipTrial?: boolean;
+    }>,
+  ) => Promise<ExternalSubscription>;
   cancelSubscription: (subscriptionId: string) => Promise<unknown>;
   listPayments: (userId: string) => Promise<readonly ExternalPaymentRecord[]>;
   getPayment: (paymentId: string) => Promise<ExternalPaymentRecord>;
@@ -244,7 +248,11 @@ export function createExternalPaymentClient(
         );
       }
       if (parsed.success) {
-        throw new ExternalPaymentRequestError(response.status, parsed.data.error, parsed.data.message);
+        throw new ExternalPaymentRequestError(
+          response.status,
+          parsed.data.error,
+          parsed.data.message,
+        );
       }
       throw new ExternalPaymentRequestError(
         response.status >= 400 && response.status < 600 ? response.status : 502,

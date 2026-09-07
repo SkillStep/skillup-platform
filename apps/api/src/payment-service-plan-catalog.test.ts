@@ -53,10 +53,7 @@ describe("SkillUp payment-service launch catalog", () => {
     ).toThrow("does not match SkillUp launch pricing");
 
     expect(() =>
-      assertPaymentServiceLaunchPlans(config, [
-        { ...expected[0]!, trialHours: 24 },
-        expected[1]!,
-      ]),
+      assertPaymentServiceLaunchPlans(config, [{ ...expected[0]!, trialHours: 24 }, expected[1]!]),
     ).toThrow("does not match SkillUp launch pricing");
   });
 
@@ -71,9 +68,6 @@ describe("SkillUp payment-service launch catalog", () => {
     const result = await syncPaymentServiceLaunchPlans(config, client);
     expect(upsertPlans).toHaveBeenCalledWith(expected);
     expect(listPlans).toHaveBeenCalledTimes(1);
-    expect(result.map(({ localCode }) => localCode)).toEqual([
-      "premium-monthly",
-      "premium-yearly",
-    ]);
+    expect(result.map(({ localCode }) => localCode)).toEqual(["premium-monthly", "premium-yearly"]);
   });
 });

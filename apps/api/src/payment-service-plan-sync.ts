@@ -4,7 +4,9 @@ import { syncPaymentServiceLaunchPlans } from "./payment-service-plan-catalog.js
 
 const config = readApiConfig();
 if (!config.FEATURE_PAYMENT_SERVICE_ENABLED) {
-  throw new Error("FEATURE_PAYMENT_SERVICE_ENABLED=true is required to sync payment-service plans.");
+  throw new Error(
+    "FEATURE_PAYMENT_SERVICE_ENABLED=true is required to sync payment-service plans.",
+  );
 }
 
 const client = createExternalPaymentClient(config);
