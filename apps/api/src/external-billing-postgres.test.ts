@@ -225,14 +225,14 @@ describeWithPostgres("external payment-service webhook entitlement lifecycle", (
       "2026-09-07T10:05:00.000Z",
     );
     expect(await service.handleWebhook(stale)).toEqual({ duplicate: false, stale: true });
-    entitlement = await database.pool.query<{ status: string }>(
+    const staleEntitlement = await database.pool.query<{ status: string }>(
       `select e.status
          from payment_service_subscription_state s
          join entitlements e on e.id = s.entitlement_id
         where s.user_id = $1`,
       [userId],
     );
-    expect(entitlement.rows[0]?.status).toBe("active");
+    expect(staleEntitlement.rows[0]?.status).toBe("active");
 
     authoritativeStatus = statusFor("canceled", "refunded");
     const refunded = signedEvent(
