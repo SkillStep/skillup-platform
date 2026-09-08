@@ -278,10 +278,10 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
     FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
-    PAYMENT_SERVICE_BASE_URL?: string;
-    PAYMENT_SERVICE_API_KEY?: string;
-    PAYMENT_SERVICE_WEBHOOK_SECRET?: string;
-    PAYMENT_SERVICE_APP_RETURN_URL?: string;
+    PAYMENT_SERVICE_BASE_URL?: string | undefined;
+    PAYMENT_SERVICE_API_KEY?: string | undefined;
+    PAYMENT_SERVICE_WEBHOOK_SECRET?: string | undefined;
+    PAYMENT_SERVICE_APP_RETURN_URL?: string | undefined;
     PAYMENT_SERVICE_MONTHLY_PLAN_CODE?: string;
     PAYMENT_SERVICE_YEARLY_PLAN_CODE?: string;
     PAYMENT_SERVICE_TIMEOUT_SECONDS?: number;
