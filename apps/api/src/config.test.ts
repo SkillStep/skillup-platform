@@ -128,7 +128,8 @@ describe("API runtime configuration", () => {
         FEATURE_PAYMENT_SERVICE_ENABLED: "true",
         PAYMENT_SERVICE_BASE_URL: externalPaymentEnvironment["PAYMENT_SERVICE_BASE_URL"],
         PAYMENT_SERVICE_API_KEY: externalPaymentEnvironment["PAYMENT_SERVICE_API_KEY"],
-        PAYMENT_SERVICE_WEBHOOK_SECRET: externalPaymentEnvironment["PAYMENT_SERVICE_WEBHOOK_SECRET"],
+        PAYMENT_SERVICE_WEBHOOK_SECRET:
+          externalPaymentEnvironment["PAYMENT_SERVICE_WEBHOOK_SECRET"],
       }),
     ).toThrow("Direct JazzCash and external payment-service modes cannot be enabled together");
   });
