@@ -20,6 +20,11 @@ type Plan = Readonly<{
   checkoutAvailable: boolean;
 }>;
 
+type BillingPlan = Readonly<{
+  localCode?: "premium-monthly" | "premium-yearly";
+  launchReady?: boolean;
+}>;
+
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 const apiBaseUrl = process.env["API_BASE_URL"] ?? "http://localhost:3001";
 
@@ -66,14 +71,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: canonicalUrl(publicAppUrl, "en", "pricing") },
     openGraph: {
       title: "SkillUp Premium pricing",
-      description: "Monthly PKR 599 or yearly PKR 4,999, with verified JazzCash activation.",
+      description: "Monthly PKR 599 or yearly PKR 4,999, with server-verified JazzCash billing.",
       type: "website",
       url: canonicalUrl(publicAppUrl, "en", "pricing"),
     },
   };
 }
 
-async function loadPlans(): Promise<readonly Plan[]> {
+async function loadCommercialPlans(): Promise<readonly Plan[]> {
   try {
     const response = await fetch(new URL("/v1/commercial/plans", apiBaseUrl), {
       cache: "no-store",
@@ -88,6 +93,41 @@ async function loadPlans(): Promise<readonly Plan[]> {
   }
 }
 
+async function paymentServiceAvailability(): Promise<ReadonlySet<Plan["code"]>> {
+  try {
+    const response = await fetch(new URL("/v1/billing/plans", apiBaseUrl), {
+      cache: "no-store",
+      signal: AbortSignal.timeout(4_000),
+    });
+    if (!response.ok) return new Set();
+    const plans = (await response.json()) as readonly BillingPlan[];
+    if (!Array.isArray(plans)) return new Set();
+
+    return new Set(
+      plans
+        .filter(
+          (plan): plan is BillingPlan & { localCode: Plan["code"]; launchReady: true } =>
+            plan.launchReady === true &&
+            (plan.localCode === "premium-monthly" || plan.localCode === "premium-yearly"),
+        )
+        .map((plan) => plan.localCode),
+    );
+  } catch {
+    return new Set();
+  }
+}
+
+async function loadPlans(): Promise<readonly Plan[]> {
+  const [commercialPlans, externalAvailable] = await Promise.all([
+    loadCommercialPlans(),
+    paymentServiceAvailability(),
+  ]);
+  return commercialPlans.map((plan) => ({
+    ...plan,
+    checkoutAvailable: plan.checkoutAvailable || externalAvailable.has(plan.code),
+  }));
+}
+
 export default async function PricingPage({ params }: PageProps) {
   const { locale } = await params;
   if (locale !== "en") notFound();
@@ -99,7 +139,7 @@ export default async function PricingPage({ params }: PageProps) {
       <main className={styles["main"]}>
         <header className={styles["hero"]}>
           <p className="eyebrow">Clear, Pakistan-first pricing</p>
-          <h1>Learn free. Upgrade when premium value is clear.</h1>
+          <h1>Learn free. Upgrade when Premium value is clear.</h1>
           <p>
             The free experience includes useful reviewed learning. Premium expands available levels,
             progress insights and approved advanced challenges without erasing your history if a
@@ -113,25 +153,26 @@ export default async function PricingPage({ params }: PageProps) {
           <h2 id="free-title">The free experience remains meaningful.</h2>
           <p>
             You can create a profile, play reviewed pilot levels, receive explanations, earn points
-            and keep progress without purchasing premium.
+            and keep progress without purchasing Premium.
           </p>
         </section>
 
         <section className={styles["policy"]} aria-label="Premium commitments">
           <article>
             <h2>Server-verified access</h2>
-            <p>Browser claims and payment screenshots cannot activate premium.</p>
+            <p>Browser redirects and payment screenshots cannot activate Premium.</p>
           </article>
           <article>
-            <h2>Recoverable payment states</h2>
+            <h2>Hosted wallet security</h2>
             <p>
-              Pending, failed, cancelled, expired and refunded payments stay visible and traceable.
+              Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.
             </p>
           </article>
           <article>
-            <h2>No learning-history loss</h2>
+            <h2>Billing controls</h2>
             <p>
-              Expiry or refund changes access, not completed attempts, points or earned progress.
+              Subscription cancellation and wallet unlinking are available from your private
+              account.
             </p>
           </article>
         </section>

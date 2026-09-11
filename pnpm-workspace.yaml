@@ -7,7 +7,7 @@ catalogMode: strict
 linkWorkspacePackages: true
 
 overrides:
-  sharp: 0.35.3
+  sharp: 0.35.4
   postcss: 8.5.23
   "fast-uri@3": 3.1.6
   "fast-uri@4": 4.1.3

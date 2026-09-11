@@ -11,16 +11,24 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "terms",
     key: "terms",
-    version: "2026-09-03",
+    version: "2026-09-07",
     title: "SkillUp Terms of Use",
     summary:
-      "These launch terms explain acceptable use, account responsibilities, learning-content limits and service availability.",
+      "These launch terms explain acceptable use, account responsibilities, Premium wallet billing, learning-content limits and service availability.",
     sections: [
       {
         heading: "Use SkillUp responsibly",
         body: [
           "Use SkillUp lawfully, keep your account and verification codes secure, and do not share sessions with another person.",
           "Do not disrupt the service, scrape unpublished content, manipulate scores, evade mission or payment controls, or attempt unauthorized security testing.",
+        ],
+      },
+      {
+        heading: "Premium wallet billing",
+        body: [
+          "When you explicitly link a JazzCash wallet for a Premium plan, you authorize automatic billing for that selected subscription until you cancel the subscription or unlink the wallet. The authoritative plan price and billing schedule come from SkillUp and its payment service, not from browser-supplied amounts.",
+          "Your JazzCash MPIN is entered only on JazzCash's hosted page. SkillUp does not ask you to enter or send an MPIN, payment password or one-time payment credential to SkillUp support.",
+          "Canceling a subscription stops future renewal for that subscription while the wallet can remain linked. Unlinking the wallet removes its saved billing authorization for SkillUp and stops future debits for all open SkillUp subscriptions tied to that wallet. Access already paid for remains available through the recorded current-period end unless a refund, reversal, fraud or security action requires otherwise.",
         ],
       },
       {
@@ -73,30 +81,37 @@ export const publicPolicies: readonly PublicPolicy[] = [
   {
     slug: "refund",
     key: "refund",
-    version: "2026-09-03",
+    version: "2026-09-07",
     title: "SkillUp Refund and Cancellation Policy",
     summary:
-      "This policy describes manual renewal, payment review, refunds and the effect of a refund on premium access.",
+      "This policy describes automatic wallet billing, subscription cancellation, wallet unlinking, payment review, refunds and their effect on Premium access.",
     sections: [
       {
-        heading: "Manual renewal and cancellation",
+        heading: "Automatic billing and consent",
         body: [
-          "Launch plans use manual renewal unless recurring payment is separately approved and clearly disclosed in a later policy version.",
-          "An expiring plan does not automatically charge the learner under the current launch policy. To stop using Premium, no recurring cancellation action is required under manual renewal; access returns to the free plan at expiry.",
+          "Linking a JazzCash wallet requires explicit consent to automatic billing for the selected Premium subscription. Charges are created from the server-authoritative plan price and schedule; the browser cannot set the charge amount.",
+          "The current launch plans are configured without a free billing trial, so the first charge can be initiated after successful wallet linking. Any billing state or next-due date shown in the private account is based on the authoritative payment-service record.",
+        ],
+      },
+      {
+        heading: "Cancel subscription or unlink wallet",
+        body: [
+          "Cancel subscription stops future renewal for that Premium subscription while leaving the JazzCash wallet linked. Unlink wallet removes the saved JazzCash authorization for SkillUp and stops future debits for all open SkillUp subscriptions associated with that wallet.",
+          "Cancellation or wallet unlinking does not erase an already-paid period. Premium access continues through the recorded current-period end unless a refund, reversal, fraud or security action requires an earlier entitlement adjustment.",
         ],
       },
       {
         heading: "Payment and refund review",
         body: [
-          "Payment disputes and refund requests are reviewed against both JazzCash evidence and SkillUp's authoritative order, payment-event and entitlement records.",
-          "To request a payment or refund review, use the SkillUp support page and include the SkillUp merchant reference and provider reference shown in your private payment history. Never send a JazzCash PIN, one-time code, password or full payment credential.",
+          "Payment disputes and refund requests are reviewed against the payment service, JazzCash evidence and SkillUp's authoritative entitlement and audit records. SkillUp does not promise an unsupported refund window, proration or settlement time.",
+          "To request a payment or refund review, use the SkillUp support page and include the payment reference shown in your private payment history. Never send a JazzCash PIN, one-time code, password or full payment credential.",
           "Provider processing and settlement timing can affect when an approved refund appears.",
         ],
       },
       {
-        heading: "Effect on premium access and learning history",
+        heading: "Effect on Premium access and learning history",
         body: [
-          "An approved refund revokes future premium capabilities without deleting completed learning history, earned evidence or required transaction audit records.",
+          "An approved refund or reversal may revoke the affected Premium entitlement without deleting completed learning history, earned evidence or required transaction audit records.",
         ],
       },
     ],

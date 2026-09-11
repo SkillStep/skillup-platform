@@ -41,6 +41,18 @@ const ApiConfigSchema = z
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
+
+    // Preferred launch integration: browser -> SkillUp BFF -> external payment service -> JazzCash.
+    FEATURE_PAYMENT_SERVICE_ENABLED: EnvironmentBooleanSchema,
+    PAYMENT_SERVICE_BASE_URL: OptionalUrlSchema,
+    PAYMENT_SERVICE_API_KEY: z.string().trim().min(16).max(1_000).optional(),
+    PAYMENT_SERVICE_WEBHOOK_SECRET: z.string().min(16).max(1_000).optional(),
+    PAYMENT_SERVICE_APP_RETURN_URL: OptionalUrlSchema,
+    PAYMENT_SERVICE_MONTHLY_PLAN_CODE: z.string().trim().min(1).max(64).default("monthly"),
+    PAYMENT_SERVICE_YEARLY_PLAN_CODE: z.string().trim().min(1).max(64).default("yearly"),
+    PAYMENT_SERVICE_TIMEOUT_SECONDS: z.coerce.number().int().min(3).max(60).default(15),
+
+    // Legacy direct-provider path. Keep fail-closed during the payment-service migration.
     FEATURE_JAZZCASH_ENABLED: EnvironmentBooleanSchema,
     JAZZCASH_MODE: z.enum(["disabled", "sandbox", "production"]).default("disabled"),
     JAZZCASH_MERCHANT_ID: z.string().trim().min(1).max(100).optional(),
@@ -93,6 +105,65 @@ const ApiConfigSchema = z
       }
     }
 
+    if (config.FEATURE_PAYMENT_SERVICE_ENABLED) {
+      if (!config.FEATURE_PREMIUM_ENABLED) {
+        context.addIssue({
+          code: "custom",
+          path: ["FEATURE_PREMIUM_ENABLED"],
+          message: "Premium must be enabled before the payment service can be enabled.",
+        });
+      }
+      if (config.FEATURE_JAZZCASH_ENABLED) {
+        context.addIssue({
+          code: "custom",
+          path: ["FEATURE_JAZZCASH_ENABLED"],
+          message: "Direct JazzCash and external payment-service modes cannot be enabled together.",
+        });
+      }
+      for (const field of [
+        "PAYMENT_SERVICE_BASE_URL",
+        "PAYMENT_SERVICE_API_KEY",
+        "PAYMENT_SERVICE_WEBHOOK_SECRET",
+      ] as const) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when the payment service is enabled.`,
+          });
+        }
+      }
+      if (
+        config.PAYMENT_SERVICE_BASE_URL &&
+        (config.APP_ENV === "staging" || config.APP_ENV === "production") &&
+        !config.PAYMENT_SERVICE_BASE_URL.startsWith("https://")
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["PAYMENT_SERVICE_BASE_URL"],
+          message: "PAYMENT_SERVICE_BASE_URL must use HTTPS outside local/test environments.",
+        });
+      }
+      if (
+        config.PAYMENT_SERVICE_APP_RETURN_URL &&
+        new URL(config.PAYMENT_SERVICE_APP_RETURN_URL).origin !==
+          new URL(config.PUBLIC_APP_URL).origin
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["PAYMENT_SERVICE_APP_RETURN_URL"],
+          message: "The payment-service app return URL must use the public SkillUp origin.",
+        });
+      }
+      if (config.PAYMENT_SERVICE_MONTHLY_PLAN_CODE === config.PAYMENT_SERVICE_YEARLY_PLAN_CODE) {
+        context.addIssue({
+          code: "custom",
+          path: ["PAYMENT_SERVICE_YEARLY_PLAN_CODE"],
+          message: "Monthly and yearly payment-service plan codes must differ.",
+        });
+      }
+    }
+
     if (config.FEATURE_JAZZCASH_ENABLED && !config.FEATURE_PREMIUM_ENABLED) {
       context.addIssue({
         code: "custom",
@@ -109,86 +180,93 @@ const ApiConfigSchema = z
           message: "JAZZCASH_MODE must remain disabled while the feature flag is off.",
         });
       }
-      return;
-    }
-
-    if (config.JAZZCASH_MODE === "disabled") {
-      context.addIssue({
-        code: "custom",
-        path: ["JAZZCASH_MODE"],
-        message: "An enabled JazzCash integration requires sandbox or production mode.",
-      });
-    }
-
-    const requiredJazzCashFields: ReadonlyArray<keyof typeof config> = [
-      "JAZZCASH_MERCHANT_ID",
-      "JAZZCASH_PASSWORD",
-      "JAZZCASH_INTEGRITY_SALT",
-      "JAZZCASH_PAYMENT_URL",
-      "JAZZCASH_RETURN_URL",
-      "JAZZCASH_STATUS_URL",
-      "JAZZCASH_REFUND_URL",
-    ];
-    for (const field of requiredJazzCashFields) {
-      if (!config[field]) {
+    } else {
+      if (config.JAZZCASH_MODE === "disabled") {
         context.addIssue({
           code: "custom",
-          path: [field],
-          message: `${field} is required when JazzCash is enabled.`,
+          path: ["JAZZCASH_MODE"],
+          message: "An enabled JazzCash integration requires sandbox or production mode.",
         });
       }
-    }
 
-    if (config.APP_ENV === "production" && config.JAZZCASH_MODE !== "production") {
-      context.addIssue({
-        code: "custom",
-        path: ["JAZZCASH_MODE"],
-        message: "Production requires JAZZCASH_MODE=production.",
-      });
-    }
-    if (config.APP_ENV !== "production" && config.JAZZCASH_MODE === "production") {
-      context.addIssue({
-        code: "custom",
-        path: ["JAZZCASH_MODE"],
-        message: "Production JazzCash mode is not allowed outside production.",
-      });
-    }
+      const requiredJazzCashFields: ReadonlyArray<keyof typeof config> = [
+        "JAZZCASH_MERCHANT_ID",
+        "JAZZCASH_PASSWORD",
+        "JAZZCASH_INTEGRITY_SALT",
+        "JAZZCASH_PAYMENT_URL",
+        "JAZZCASH_RETURN_URL",
+        "JAZZCASH_STATUS_URL",
+        "JAZZCASH_REFUND_URL",
+      ];
+      for (const field of requiredJazzCashFields) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when JazzCash is enabled.`,
+          });
+        }
+      }
 
-    for (const field of [
-      "JAZZCASH_PAYMENT_URL",
-      "JAZZCASH_RETURN_URL",
-      "JAZZCASH_STATUS_URL",
-      "JAZZCASH_REFUND_URL",
-    ] as const) {
-      const value = config[field];
+      if (config.APP_ENV === "production" && config.JAZZCASH_MODE !== "production") {
+        context.addIssue({
+          code: "custom",
+          path: ["JAZZCASH_MODE"],
+          message: "Production requires JAZZCASH_MODE=production.",
+        });
+      }
+      if (config.APP_ENV !== "production" && config.JAZZCASH_MODE === "production") {
+        context.addIssue({
+          code: "custom",
+          path: ["JAZZCASH_MODE"],
+          message: "Production JazzCash mode is not allowed outside production.",
+        });
+      }
+
+      for (const field of [
+        "JAZZCASH_PAYMENT_URL",
+        "JAZZCASH_RETURN_URL",
+        "JAZZCASH_STATUS_URL",
+        "JAZZCASH_REFUND_URL",
+      ] as const) {
+        const value = config[field];
+        if (
+          value &&
+          (config.APP_ENV === "staging" || config.APP_ENV === "production") &&
+          !value.startsWith("https://")
+        ) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} must use HTTPS outside local/test environments.`,
+          });
+        }
+      }
+
       if (
-        value &&
-        (config.APP_ENV === "staging" || config.APP_ENV === "production") &&
-        !value.startsWith("https://")
+        config.JAZZCASH_RETURN_URL &&
+        new URL(config.JAZZCASH_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
       ) {
         context.addIssue({
           code: "custom",
-          path: [field],
-          message: `${field} must use HTTPS outside local/test environments.`,
+          path: ["JAZZCASH_RETURN_URL"],
+          message: "The JazzCash return URL must use the public SkillUp origin.",
         });
       }
-    }
-
-    if (
-      config.JAZZCASH_RETURN_URL &&
-      new URL(config.JAZZCASH_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
-    ) {
-      context.addIssue({
-        code: "custom",
-        path: ["JAZZCASH_RETURN_URL"],
-        message: "The JazzCash return URL must use the public SkillUp origin.",
-      });
     }
   });
 
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
 type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
+  | "FEATURE_PAYMENT_SERVICE_ENABLED"
+  | "PAYMENT_SERVICE_BASE_URL"
+  | "PAYMENT_SERVICE_API_KEY"
+  | "PAYMENT_SERVICE_WEBHOOK_SECRET"
+  | "PAYMENT_SERVICE_APP_RETURN_URL"
+  | "PAYMENT_SERVICE_MONTHLY_PLAN_CODE"
+  | "PAYMENT_SERVICE_YEARLY_PLAN_CODE"
+  | "PAYMENT_SERVICE_TIMEOUT_SECONDS"
   | "JAZZCASH_REFUND_ENVELOPE"
   | "JAZZCASH_CPS_TIMEOUT_SECONDS"
   | "RELEASE_PIPELINE_ID"
@@ -199,6 +277,14 @@ type OptionalInjectedConfig =
 export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
+    FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
+    PAYMENT_SERVICE_BASE_URL?: string | undefined;
+    PAYMENT_SERVICE_API_KEY?: string | undefined;
+    PAYMENT_SERVICE_WEBHOOK_SECRET?: string | undefined;
+    PAYMENT_SERVICE_APP_RETURN_URL?: string | undefined;
+    PAYMENT_SERVICE_MONTHLY_PLAN_CODE?: string;
+    PAYMENT_SERVICE_YEARLY_PLAN_CODE?: string;
+    PAYMENT_SERVICE_TIMEOUT_SECONDS?: number;
     JAZZCASH_REFUND_ENVELOPE?: "refund-request" | "flat";
     JAZZCASH_CPS_TIMEOUT_SECONDS?: number;
     RELEASE_PIPELINE_ID?: string;

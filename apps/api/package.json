@@ -10,7 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "smoke:commercial": "node --env-file-if-exists=../../.env --import tsx src/commercial-lifecycle-smoke.ts",
-    "smoke:premium-reporting": "node --env-file-if-exists=../../.env --import tsx src/premium-reporting-staging-smoke.ts"
+    "smoke:premium-reporting": "node --env-file-if-exists=../../.env --import tsx src/premium-reporting-staging-smoke.ts",
+    "payments:sync-plans": "node --env-file-if-exists=../../.env --import tsx src/payment-service-plan-sync.ts"
   },
   "dependencies": {
     "@skillup/content-schema": "workspace:*",
@@ -18,7 +19,7 @@
     "@skillup/database": "workspace:*",
     "@skillup/gameplay-engine": "workspace:*",
     "fastify": "5.12.1",
-    "nodemailer": "9.0.6",
+    "nodemailer": "9.1.1",
     "pg": "8.23.0",
     "zod": "4.4.3"
   },

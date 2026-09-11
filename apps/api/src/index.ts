@@ -16,6 +16,8 @@ import {
 } from "./content-operations.js";
 import { readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
+import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
+import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createMaintenanceRunner } from "./maintenance.js";
@@ -51,6 +53,16 @@ const commercialAutomationService = createCommercialAutomationService({
   pool: database.pool,
   jazzCashCps,
 });
+const externalPaymentClient = config.FEATURE_PAYMENT_SERVICE_ENABLED
+  ? createExternalPaymentClient(config)
+  : undefined;
+const externalBilling = externalPaymentClient
+  ? createExternalBillingService({
+      pool: database.pool,
+      config,
+      client: externalPaymentClient,
+    })
+  : undefined;
 const adminService = createAdminService({
   pool: database.pool,
   releaseSha: config.RELEASE_SHA,
@@ -89,6 +101,14 @@ const app = buildApi({
   accountLifecycleService,
   analyticsService,
 });
+
+if (externalBilling) {
+  registerExternalBillingRoutes(app, {
+    config,
+    authService,
+    billingService: externalBilling,
+  });
+}
 
 registerRecommendationRoutes(app, {
   config,
@@ -144,10 +164,14 @@ const maintenance = createMaintenanceRunner({
     error: (context, message) => app.log.error(context, message),
   },
   tasks: [
-    {
-      name: "commercial-automation",
-      run: () => commercialAutomationService.run(100),
-    },
+    ...(config.FEATURE_PAYMENT_SERVICE_ENABLED
+      ? []
+      : [
+          {
+            name: "commercial-automation",
+            run: () => commercialAutomationService.run(100),
+          },
+        ]),
     {
       name: "scheduled-plan-activation",
       run: () => premiumReportingService.activateDuePlanVersions(20),

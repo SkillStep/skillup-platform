@@ -67,6 +67,37 @@
   margin-right: 0.5rem;
 }
 
+.billingGrid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.billingGrid > div {
+  background: var(--surface-50);
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  padding: 0.9rem;
+}
+
+.billingGrid strong,
+.billingGrid span {
+  display: block;
+}
+
+.billingGrid span {
+  color: var(--ink-700);
+  font-size: 0.9rem;
+  margin-top: 0.25rem;
+}
+
+.billingNote {
+  color: var(--ink-700);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  margin: 1rem 0 0;
+}
+
 .orders {
   border-collapse: collapse;
   width: 100%;
@@ -133,6 +164,11 @@
   min-height: 46px;
   padding: 0.7rem 1rem;
   text-decoration: none;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .button:focus-visible,
@@ -263,6 +299,10 @@
 }
 
 @media (max-width: 680px) {
+  .billingGrid {
+    grid-template-columns: 1fr;
+  }
+
   .orders,
   .orders tbody,
   .orders tr,
