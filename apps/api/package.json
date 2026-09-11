@@ -19,7 +19,7 @@
     "@skillup/database": "workspace:*",
     "@skillup/gameplay-engine": "workspace:*",
     "fastify": "5.12.1",
-    "nodemailer": "9.0.6",
+    "nodemailer": "9.1.1",
     "pg": "8.23.0",
     "zod": "4.4.3"
   },
