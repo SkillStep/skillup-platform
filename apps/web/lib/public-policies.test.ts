@@ -5,7 +5,15 @@ import { publicPolicies } from "./public-policies";
 describe("public launch policies", () => {
   it("publishes the approved launch policy version", () => {
     expect(publicPolicies).not.toHaveLength(0);
-    expect(publicPolicies.every((policy) => policy.version === "2026-09-03")).toBe(true);
+    const terms = publicPolicies.find((policy) => policy.key === "terms");
+    const refund = publicPolicies.find((policy) => policy.key === "refund");
+    expect(terms?.version).toBe("2026-09-07");
+    expect(refund?.version).toBe("2026-09-07");
+    expect(
+      publicPolicies
+        .filter((policy) => policy.key !== "terms" && policy.key !== "refund")
+        .every((policy) => policy.version === "2026-09-03"),
+    ).toBe(true);
   });
 
   it("contains no provisional or work-in-progress wording", () => {
@@ -20,7 +28,6 @@ describe("public launch policies", () => {
     const refund = publicPolicies.find((policy) => policy.key === "refund");
     expect(refund).toBeDefined();
     expect(JSON.stringify(refund)).toContain("SkillUp support page");
-    expect(JSON.stringify(refund)).toContain("merchant reference");
-    expect(JSON.stringify(refund)).toContain("provider reference");
+    expect(JSON.stringify(refund)).toContain("payment reference");
   });
 });
