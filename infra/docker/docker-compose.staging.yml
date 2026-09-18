@@ -39,6 +39,8 @@ services:
     environment:
       RELEASE_ARTIFACT_REF: ${API_RELEASE_ARTIFACT_REF:-local}
       RELEASE_IMAGE_DIGEST: ${API_RELEASE_IMAGE_DIGEST:-local}
+    extra_hosts:
+      - "payments.codistan.org:172.17.0.1"
     ports:
       - "4020:3001"
     depends_on:
