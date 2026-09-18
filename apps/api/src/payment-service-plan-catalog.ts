@@ -43,7 +43,7 @@ export function paymentServicePlanMatches(
       actual.interval === expected.interval &&
       actual.fullAmountMinor === expected.fullAmountMinor &&
       actual.stepAmountMinor === expected.stepAmountMinor &&
-      (actual.trialHours ?? 24) === expected.trialHours &&
+      (actual.trialHours ?? 0) === (expected.trialHours ?? 0) &&
       actual.currency === "PKR",
   );
 }
