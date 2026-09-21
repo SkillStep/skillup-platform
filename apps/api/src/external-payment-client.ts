@@ -24,13 +24,46 @@ const SubscriptionStatusSchema = z.enum([
 ]);
 const PaymentStatusSchema = z.enum(["pending", "completed", "failed", "expired", "refunded"]);
 
+const MinorAmountSchema = z.union([
+  z.number().int().positive(),
+  z
+    .string()
+    .regex(/^\d+$/)
+    .transform((value) => Number.parseInt(value, 10))
+    .pipe(z.number().int().positive()),
+]);
+
+const TrialHoursSchema = z.union([
+  z.number().int().min(0).max(720),
+  z
+    .string()
+    .regex(/^\d+$/)
+    .transform((value) => Number.parseInt(value, 10))
+    .pipe(z.number().int().min(0).max(720)),
+]);
+
+/** Normalize payment-service plan payloads (camelCase or snake_case, number or digit-string amounts). */
+export function normalizeExternalPaymentPlan(input: unknown): unknown {
+  if (!input || typeof input !== "object") return input;
+  const row = input as Record<string, unknown>;
+  return {
+    ...row,
+    code: row["code"],
+    interval: row["interval"],
+    fullAmountMinor: row["fullAmountMinor"] ?? row["full_amount_minor"],
+    stepAmountMinor: row["stepAmountMinor"] ?? row["step_amount_minor"],
+    trialHours: row["trialHours"] ?? row["trial_hours"],
+    currency: row["currency"] ?? "PKR",
+  };
+}
+
 export const ExternalPaymentPlanSchema = z
   .object({
     code: z.string().min(1).max(64),
     interval: z.enum(["weekly", "monthly", "yearly"]),
-    fullAmountMinor: z.number().int().positive(),
-    stepAmountMinor: z.number().int().positive(),
-    trialHours: z.number().int().min(0).max(720).optional(),
+    fullAmountMinor: MinorAmountSchema,
+    stepAmountMinor: MinorAmountSchema,
+    trialHours: TrialHoursSchema.optional(),
     currency: z.string().length(3).default("PKR"),
   })
   .passthrough();
@@ -264,8 +297,20 @@ export function createExternalPaymentClient(
   }
 
   return {
-    listPlans: async () =>
-      parseUpstream(z.array(ExternalPaymentPlanSchema), await request("/v1/plans")),
+    listPlans: async () => {
+      const payload = await request("/v1/plans");
+      if (!Array.isArray(payload)) {
+        throw new ExternalPaymentRequestError(
+          502,
+          "invalid_upstream_response",
+          "The payment service returned an invalid response.",
+        );
+      }
+      return parseUpstream(
+        z.array(ExternalPaymentPlanSchema),
+        payload.map((plan) => normalizeExternalPaymentPlan(plan)),
+      );
+    },
 
     upsertPlans: (plans) =>
       request("/v1/plans", {

@@ -112,4 +112,47 @@ describe("external payment-service client", () => {
       } satisfies Partial<ExternalPaymentRequestError>,
     );
   });
+
+  it("normalizes snake_case plan catalogs with digit-string amounts", async () => {
+    const fetcher = vi.fn(async () =>
+      jsonResponse([
+        {
+          id: "plan-1",
+          code: "monthly",
+          interval: "monthly",
+          full_amount_minor: "59900",
+          step_amount_minor: "59900",
+          trial_hours: 0,
+          currency: "PKR",
+        },
+        {
+          code: "yearly",
+          interval: "yearly",
+          full_amount_minor: "499900",
+          step_amount_minor: "499900",
+          trial_hours: "0",
+          currency: "PKR",
+        },
+      ]),
+    );
+    const client = createExternalPaymentClient(config, fetcher as typeof fetch);
+    await expect(client.listPlans()).resolves.toEqual([
+      expect.objectContaining({
+        code: "monthly",
+        interval: "monthly",
+        fullAmountMinor: 59_900,
+        stepAmountMinor: 59_900,
+        trialHours: 0,
+        currency: "PKR",
+      }),
+      expect.objectContaining({
+        code: "yearly",
+        interval: "yearly",
+        fullAmountMinor: 499_900,
+        stepAmountMinor: 499_900,
+        trialHours: 0,
+        currency: "PKR",
+      }),
+    ]);
+  });
 });

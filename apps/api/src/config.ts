@@ -293,9 +293,20 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     ROLLBACK_ARTIFACT_REF?: string;
   }>;
 
+function omitEmptyEnvValues(environment: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const normalized: NodeJS.ProcessEnv = { ...environment };
+  for (const [key, value] of Object.entries(normalized)) {
+    if (value === "") {
+      delete normalized[key];
+    }
+  }
+  return normalized;
+}
+
 export function readApiConfig(environment: NodeJS.ProcessEnv = process.env): ApiConfig {
+  const normalized = omitEmptyEnvValues(environment);
   return ApiConfigSchema.parse({
-    ...environment,
-    API_PORT: environment["API_PORT"] ?? environment["PORT"],
+    ...normalized,
+    API_PORT: normalized["API_PORT"] ?? normalized["PORT"],
   });
 }
