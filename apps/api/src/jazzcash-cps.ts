@@ -19,6 +19,9 @@ export type JazzCashCpsEvidence = Readonly<{
 }>;
 
 export type JazzCashCpsClient = Readonly<{
+  doTransaction: (
+    fields: Readonly<Record<string, string>>,
+  ) => Promise<Readonly<Record<string, string>>>;
   inquire: (input: Readonly<{ merchantReference: string }>) => Promise<JazzCashCpsEvidence>;
   refund: (
     input: Readonly<{
@@ -128,6 +131,7 @@ function requireCpsConfig(config: ApiConfig): Readonly<{
   merchantId: string;
   password: string;
   integritySalt: string;
+  paymentUrl: string;
   statusUrl: string;
   refundUrl: string;
 }> {
@@ -137,6 +141,7 @@ function requireCpsConfig(config: ApiConfig): Readonly<{
     !config.JAZZCASH_MERCHANT_ID ||
     !config.JAZZCASH_PASSWORD ||
     !config.JAZZCASH_INTEGRITY_SALT ||
+    !config.JAZZCASH_PAYMENT_URL ||
     !config.JAZZCASH_STATUS_URL ||
     !config.JAZZCASH_REFUND_URL
   ) {
@@ -146,6 +151,7 @@ function requireCpsConfig(config: ApiConfig): Readonly<{
     merchantId: config.JAZZCASH_MERCHANT_ID,
     password: config.JAZZCASH_PASSWORD,
     integritySalt: config.JAZZCASH_INTEGRITY_SALT,
+    paymentUrl: config.JAZZCASH_PAYMENT_URL,
     statusUrl: config.JAZZCASH_STATUS_URL,
     refundUrl: config.JAZZCASH_REFUND_URL,
   };
@@ -159,6 +165,18 @@ export function createJazzCashCpsClient(
   const timeoutSeconds = config.JAZZCASH_CPS_TIMEOUT_SECONDS ?? 15;
 
   return {
+    doTransaction: async (fields) => {
+      const response = await postJson(fetcher, provider.paymentUrl, fields, timeoutSeconds);
+      const signatureVerified = validateResponseSignature(response, provider.integritySalt);
+      if (signatureVerified === false) {
+        throw new JazzCashCpsError(
+          "The JazzCash DoTransaction response signature is invalid.",
+          false,
+        );
+      }
+      return response;
+    },
+
     inquire: async ({ merchantReference }) => {
       const fields: Record<string, string> = {
         pp_TxnRefNo: merchantReference,

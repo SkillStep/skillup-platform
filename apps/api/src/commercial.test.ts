@@ -40,4 +40,27 @@ describe("JazzCash request authentication", () => {
       ),
     ).toBe(false);
   });
+
+  it("builds an uppercase secure hash for DoTransaction-shaped MWALLET fields", () => {
+    const fields = {
+      pp_Amount: "10000",
+      pp_BillReference: "B20260917150138",
+      pp_Description: "SkillUp premium membership",
+      pp_Language: "EN",
+      pp_MerchantID: "MC990726",
+      pp_Password: "sandbox-password",
+      pp_ReturnURL: "http://localhost:3000/en/account/payment-return",
+      pp_TxnCurrency: "PKR",
+      pp_TxnDateTime: "20260917150138",
+      pp_TxnExpiryDateTime: "20260918150138",
+      pp_TxnRefNo: "SU20260917150138ABCD",
+      pp_TxnType: "MWALLET",
+      pp_Version: "1.1",
+      ppmpf_1: "03123456789",
+    };
+    const salt = "sandbox-integrity-salt";
+    const hash = jazzCashSecureHash(fields, salt).toUpperCase();
+    expect(hash).toMatch(/^[A-F0-9]{64}$/);
+    expect(verifyJazzCashSecureHash({ ...fields, pp_SecureHash: hash }, salt)).toBe(true);
+  });
 });

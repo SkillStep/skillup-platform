@@ -14,12 +14,13 @@ import {
   createContentOperationsService,
   registerContentOperationsRoutes,
 } from "./content-operations.js";
-import { readApiConfig } from "./config.js";
+import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";
+import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import { createMaintenanceRunner } from "./maintenance.js";
 import {
   createPaymentOperationsService,
@@ -47,8 +48,19 @@ const authService = createAuthService({
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
-const commercialService = createCommercialService({ pool: database.pool, config });
 const jazzCashCps = config.FEATURE_JAZZCASH_ENABLED ? createJazzCashCpsClient(config) : undefined;
+const commercialService = createCommercialService({
+  pool: database.pool,
+  config,
+  ...(jazzCashCps ? { jazzCashCps } : {}),
+});
+const jazzCashV11BillingService = isJazzCashV11CheckoutEnabled(config)
+  ? createJazzCashV11BillingService({
+      pool: database.pool,
+      config,
+      commercialService,
+    })
+  : undefined;
 const commercialAutomationService = createCommercialAutomationService({
   pool: database.pool,
   jazzCashCps,
@@ -96,6 +108,7 @@ const app = buildApi({
   gameplayService,
   progressService,
   commercialService,
+  ...(jazzCashV11BillingService ? { jazzCashV11BillingService } : {}),
   adminService,
   capabilityService,
   accountLifecycleService,

@@ -14,17 +14,16 @@ Do not enable payment traffic until the merchant account, current sandbox URLs, 
 
 ## Architecture
 
-1. The authenticated learner selects a versioned plan.
+1. The authenticated learner selects a versioned plan and supplies a JazzCash mobile number.
 2. SkillUp creates an idempotent server-side `payment_order` using the authoritative plan price.
-3. The API creates the provider form and HMAC-SHA256 secure hash.
-4. The browser posts the signed form directly to the configured JazzCash payment URL.
-5. JazzCash returns to the same-origin SkillUp return handler.
-6. The API verifies the secure hash, order reference, PKR currency and exact amount before changing order state.
-7. A successful verified order creates exactly one server-authoritative entitlement.
-8. Replayed callbacks remain idempotent. Amount, currency and status mismatches open reconciliation cases.
-9. Stale pending JazzCash orders can be checked through a signed server-to-server CPS payment inquiry.
-10. A payment operator can queue a full provider refund only for a verified successful order. The server supplies the authoritative order amount and currency; the browser cannot choose a refund amount.
-11. An accepted CPS refund records provider evidence, marks the order and entitlement refunded, and removes active Premium capability without deleting learning history or audit evidence.
+3. The API builds the signed MWALLET `DoTransaction` payload (HMAC-SHA256 secure hash).
+4. SkillUp POSTs JSON server-to-server to the configured JazzCash `DoTransaction` URL.
+5. The API verifies the secure hash, order reference, PKR currency and exact amount before changing order state.
+6. A successful verified response creates exactly one server-authoritative entitlement.
+7. Replayed provider responses remain idempotent. Amount, currency and status mismatches open reconciliation cases.
+8. Stale pending JazzCash orders can be checked through a signed server-to-server CPS payment inquiry.
+9. A payment operator can queue a full provider refund only for a verified successful order. The server supplies the authoritative order amount and currency; the browser cannot choose a refund amount.
+10. An accepted CPS refund records provider evidence, marks the order and entitlement refunded, and removes active Premium capability without deleting learning history or audit evidence.
 
 The browser never decides whether premium is active and never receives merchant credentials.
 
@@ -81,7 +80,7 @@ JAZZCASH_MODE=sandbox
 JAZZCASH_MERCHANT_ID=<secret>
 JAZZCASH_PASSWORD=<secret>
 JAZZCASH_INTEGRITY_SALT=<secret>
-JAZZCASH_PAYMENT_URL=<approved sandbox HTTPS URL>
+JAZZCASH_PAYMENT_URL=https://sandbox.jazzcash.com.pk/ApplicationAPI/API/Payment/DoTransaction
 JAZZCASH_RETURN_URL=https://<staging-host>/en/account/payment-return
 JAZZCASH_STATUS_URL=<approved sandbox HTTPS inquiry URL>
 JAZZCASH_REFUND_URL=<approved sandbox HTTPS refund URL>
@@ -89,8 +88,8 @@ JAZZCASH_REFUND_ENVELOPE=refund-request
 JAZZCASH_CPS_TIMEOUT_SECONDS=15
 JAZZCASH_VERSION=1.1
 JAZZCASH_TXN_TYPE=MWALLET
-JAZZCASH_BANK_ID=TBANK
-JAZZCASH_PRODUCT_ID=RETL
+JAZZCASH_BANK_ID=
+JAZZCASH_PRODUCT_ID=
 JAZZCASH_CHECKOUT_MINUTES=15
 ```
 
@@ -133,6 +132,34 @@ Record the order ID, merchant reference, provider reference, response code, enti
 20. Kill switch while existing payment evidence and entitlements remain intact.
 
 A screenshot is not payment evidence. Use provider reference/status evidence and SkillUp database/audit records.
+
+## Payment-orchestrator MWALLET v1.1 (local / non-production)
+
+SkillUp can proxy a one-time MWALLET charge through JazzCash payment-orchestrator when `PREMIUM_JAZZCASH_V11_CHECKOUT=true` and `DEPLOYMENT_ENVIRONMENT` is not production. The browser never talks to JazzCash; the API posts signed JSON to the m-wallet charge URL and activates entitlement only on verified `pp_ResponseCode=000`.
+
+Local sandbox testing currently requires the merchant-approved return URL:
+
+```text
+PREMIUM_JAZZCASH_V11_CHECKOUT=true
+DEPLOYMENT_ENVIRONMENT=local
+JAZZCASH_V11_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v1/rest/payments/m-wallet
+JAZZCASH_V11_INQUIRY_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v2/rest/payments/status/inquiry
+JAZZCASH_V11_MERCHANT_ID=<secret>
+JAZZCASH_V11_PASSWORD=<secret>
+JAZZCASH_V11_INTEGRITY_SALT=<secret>
+JAZZCASH_V11_RETURN_URL=https://maidanofficial.com/callback
+JAZZCASH_V11_TIMEOUT_MS=30000
+JAZZCASH_V11_CHECKOUT_MINUTES=15
+```
+
+Notes:
+
+- `pp_ReturnURL` must match a URL JazzCash has enabled for this merchant. Using a SkillUp localhost or unregistered webhook URL can yield provider `999` / insufficient merchant information even when the HMAC is correct.
+- Keep `https://maidanofficial.com/callback` for sandbox testing until SkillUp's own HTTPS payment-return URL is registered with JazzCash.
+- Before staging/production go-live, replace `JAZZCASH_V11_RETURN_URL` with SkillUp's owned callback and leave V11 disabled in production until that cutover is approved.
+- Local smoke: with API running, execute `apps/api/src/cli/local-jazzcash-v11-smoke.ts` (loads session, charge, inquiry, commercial account, capabilities). Direct field dump: `local-jazzcash-v11-dump.ts`.
+- Charge settlement uses `Goo…` merchant references and the V11 integrity salt; classic `FEATURE_JAZZCASH_ENABLED` may stay false while V11 checkout is under test.
+- Status inquiry against the orchestrator currently returns provider `110` (invalid SecureHash) with this merchant pack. Treat inquiry as blocked until JazzCash confirms the exact inquiry hash field set; successful MWALLET charge + SkillUp entitlement activation do not depend on inquiry.
 
 ## Promotion sequence
 

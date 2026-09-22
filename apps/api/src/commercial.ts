@@ -5,13 +5,19 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import type { AuthService } from "./auth.js";
-import type { ApiConfig } from "./config.js";
+import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
+import type { JazzCashCpsClient } from "./jazzcash-cps.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const CreateOrderSchema = z
   .object({
     planCode: z.enum(["premium-monthly", "premium-yearly"]),
     idempotencyKey: z.string().trim().min(12).max(128),
+    msisdn: z
+      .string()
+      .trim()
+      .regex(/^\d{11,15}$/, "Enter a JazzCash mobile number using 11–15 digits.")
+      .optional(),
   })
   .strict();
 
@@ -43,6 +49,7 @@ type Plan = Readonly<{
   capabilities: readonly string[];
   termsVersion: string;
   checkoutAvailable: boolean;
+  checkoutMode: "jazzcash_v11" | null;
 }>;
 
 type PaymentOrder = Readonly<{
@@ -70,9 +77,11 @@ type Entitlement = Readonly<{
 
 type Checkout = Readonly<{
   order: PaymentOrder;
-  method: "POST";
-  action: string;
-  fields: Readonly<Record<string, string>>;
+  method?: "POST";
+  action?: string;
+  fields?: Readonly<Record<string, string>>;
+  providerResponseCode?: string | null;
+  providerResponseMessage?: string | null;
 }>;
 
 export type CommercialService = Readonly<{
@@ -84,6 +93,7 @@ export type CommercialService = Readonly<{
     userId: string;
     planCode: "premium-monthly" | "premium-yearly";
     idempotencyKey: string;
+    msisdn?: string;
   }) => Promise<Checkout>;
   getOrder: (userId: string, orderId: string) => Promise<PaymentOrder>;
   handleJazzCashCallback: (fields: Readonly<Record<string, string>>) => Promise<PaymentOrder>;
@@ -134,19 +144,24 @@ function mapOrder(row: Record<string, unknown>): PaymentOrder {
 }
 
 function formatJazzCashTimestamp(date: Date): string {
-  const parts = [
-    date.getUTCFullYear().toString().padStart(4, "0"),
-    (date.getUTCMonth() + 1).toString().padStart(2, "0"),
-    date.getUTCDate().toString().padStart(2, "0"),
-    date.getUTCHours().toString().padStart(2, "0"),
-    date.getUTCMinutes().toString().padStart(2, "0"),
-    date.getUTCSeconds().toString().padStart(2, "0"),
-  ];
-  return parts.join("");
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Asia/Karachi",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? "";
+  return `${get("year")}${get("month")}${get("day")}${get("hour")}${get("minute")}${get("second")}`;
 }
 
 function merchantReference(now: Date): string {
-  const suffix = randomBytes(4).toString("hex").toUpperCase();
+  // JazzCash pp_TxnRefNo max length is 20. SU + yyyyMMddHHmmss + 4 hex == 20.
+  const suffix = randomBytes(2).toString("hex").toUpperCase();
   return `SU${formatJazzCashTimestamp(now)}${suffix}`;
 }
 
@@ -215,8 +230,6 @@ function createCheckoutFields(
     pp_Language: "EN",
     pp_MerchantID: config.JAZZCASH_MERCHANT_ID,
     pp_Password: config.JAZZCASH_PASSWORD,
-    pp_BankID: config.JAZZCASH_BANK_ID,
-    pp_ProductID: config.JAZZCASH_PRODUCT_ID,
     pp_TxnRefNo: row["merchant_reference"],
     pp_Amount: row["amount_minor"].toString(),
     pp_TxnCurrency: "PKR",
@@ -229,7 +242,51 @@ function createCheckoutFields(
     ppmpf_2: row["plan_code"],
     ppmpf_3: "launch-v1",
   };
+  if (config.JAZZCASH_BANK_ID) fields["pp_BankID"] = config.JAZZCASH_BANK_ID;
+  if (config.JAZZCASH_PRODUCT_ID) fields["pp_ProductID"] = config.JAZZCASH_PRODUCT_ID;
   fields["pp_SecureHash"] = jazzCashSecureHash(fields, config.JAZZCASH_INTEGRITY_SALT);
+  return fields;
+}
+
+function createDoTransactionFields(
+  config: ApiConfig,
+  row: Record<string, unknown>,
+  msisdn: string,
+): Readonly<Record<string, string>> {
+  if (
+    typeof row["merchant_reference"] !== "string" ||
+    typeof row["amount_minor"] !== "number" ||
+    !(row["created_at"] instanceof Date) ||
+    !(row["checkout_expires_at"] instanceof Date) ||
+    !config.JAZZCASH_MERCHANT_ID ||
+    !config.JAZZCASH_PASSWORD ||
+    !config.JAZZCASH_INTEGRITY_SALT ||
+    !config.JAZZCASH_RETURN_URL
+  ) {
+    throw new CommercialRequestError(503, "JazzCash checkout is not fully configured.");
+  }
+
+  const fields: Record<string, string> = {
+    pp_Amount: row["amount_minor"].toString(),
+    pp_BillReference: `B${formatJazzCashTimestamp(row["created_at"])}`,
+    pp_Description: "SkillUp premium membership",
+    pp_Language: "EN",
+    pp_MerchantID: config.JAZZCASH_MERCHANT_ID,
+    pp_Password: config.JAZZCASH_PASSWORD,
+    pp_ReturnURL: config.JAZZCASH_RETURN_URL,
+    pp_TxnCurrency: "PKR",
+    pp_TxnDateTime: formatJazzCashTimestamp(row["created_at"]),
+    pp_TxnExpiryDateTime: formatJazzCashTimestamp(row["checkout_expires_at"]),
+    pp_TxnRefNo: row["merchant_reference"],
+    pp_TxnType: config.JAZZCASH_TXN_TYPE,
+    pp_Version: config.JAZZCASH_VERSION,
+    ppmpf_1: msisdn,
+    ppmpf_2: "",
+    ppmpf_3: "",
+    ppmpf_4: "",
+    ppmpf_5: "",
+  };
+  fields["pp_SecureHash"] = jazzCashSecureHash(fields, config.JAZZCASH_INTEGRITY_SALT).toUpperCase();
   return fields;
 }
 
@@ -248,16 +305,75 @@ from payment_orders o
 join commercial_plan_versions v on v.id = o.plan_version_id
 join commercial_plans p on p.id = v.plan_id`;
 
+async function markOrderFromUnsignedDoTransaction(input: Readonly<{
+  pool: DatabaseClient["pool"];
+  orderId: string;
+  responseCode: string;
+  outcome: PaymentStatus;
+  providerFields: Readonly<Record<string, string>>;
+}>): Promise<PaymentOrder> {
+  const status: PaymentStatus =
+    input.outcome === "pending" ||
+    input.outcome === "cancelled" ||
+    input.outcome === "expired" ||
+    input.outcome === "failed"
+      ? input.outcome
+      : "failed";
+  const digest = payloadDigest(input.providerFields);
+  const providerEventId = `unsigned:${input.orderId}:${input.responseCode}:${digest.slice(0, 16)}`;
+  const connection = await input.pool.connect();
+  try {
+    await connection.query("begin");
+    await connection.query(
+      `insert into payment_events (
+         order_id,
+         provider,
+         provider_event_id,
+         event_type,
+         provider_status,
+         signature_verified,
+         payload_digest
+       )
+       values ($1, 'jazzcash', $2, 'checkout_return', $3, false, $4)
+       on conflict (provider, provider_event_id) do nothing`,
+      [input.orderId, providerEventId, input.responseCode, digest],
+    );
+    await connection.query(
+      `update payment_orders
+          set status = $2,
+              updated_at = now()
+        where id = $1
+          and status in ('created', 'pending')`,
+      [input.orderId, status],
+    );
+    const updated = await connection.query<Record<string, unknown>>(
+      `${orderSelect}
+       where o.id = $1`,
+      [input.orderId],
+    );
+    await connection.query("commit");
+    const row = updated.rows[0];
+    if (!row) throw new Error("The updated payment order could not be loaded.");
+    return mapOrder(row);
+  } catch (error) {
+    await connection.query("rollback").catch(() => undefined);
+    throw error;
+  } finally {
+    connection.release();
+  }
+}
+
 export function createCommercialService(
   options: Readonly<{
     pool: DatabaseClient["pool"];
     config: ApiConfig;
+    jazzCashCps?: JazzCashCpsClient;
     now?: () => Date;
   }>,
 ): CommercialService {
   const now = options.now ?? (() => new Date());
 
-  return {
+  const service: CommercialService = {
     listPlans: async () => {
       const result = await options.pool.query<{
         code: string;
@@ -287,9 +403,13 @@ export function createCommercialService(
         capabilities: row.capabilities,
         termsVersion: row.terms_version,
         checkoutAvailable:
-          options.config.FEATURE_PREMIUM_ENABLED &&
-          options.config.FEATURE_JAZZCASH_ENABLED &&
-          options.config.JAZZCASH_MODE !== "disabled",
+          (options.config.FEATURE_PREMIUM_ENABLED &&
+            options.config.FEATURE_JAZZCASH_ENABLED &&
+            options.config.JAZZCASH_MODE !== "disabled") ||
+          isJazzCashV11CheckoutEnabled(options.config),
+        checkoutMode: isJazzCashV11CheckoutEnabled(options.config)
+          ? ("jazzcash_v11" as const)
+          : null,
       }));
     },
 
@@ -343,7 +463,7 @@ export function createCommercialService(
       return { entitlement, orders: orders.rows.map(mapOrder) };
     },
 
-    createOrder: async ({ userId, planCode, idempotencyKey }) => {
+    createOrder: async ({ userId, planCode, idempotencyKey, msisdn }) => {
       if (
         !options.config.FEATURE_PREMIUM_ENABLED ||
         !options.config.FEATURE_JAZZCASH_ENABLED ||
@@ -352,8 +472,13 @@ export function createCommercialService(
       ) {
         throw new CommercialRequestError(503, "Premium checkout is not enabled yet.");
       }
+      if (msisdn && !options.jazzCashCps) {
+        throw new CommercialRequestError(503, "JazzCash DoTransaction is not configured.");
+      }
 
       const connection = await options.pool.connect();
+      let insertedRowCount = 0;
+      let orderRow: Record<string, unknown>;
       try {
         await connection.query("begin");
         const plan = await connection.query<{
@@ -404,6 +529,7 @@ export function createCommercialService(
             createdAt,
           ],
         );
+        insertedRowCount = inserted.rowCount ?? 0;
 
         const selectedOrder = await connection.query<Record<string, unknown>>(
           `${orderSelect}
@@ -414,6 +540,10 @@ export function createCommercialService(
         const row = selectedOrder.rows[0];
         if (!row) throw new Error("The payment order could not be loaded.");
         if (row["status"] !== "pending" && row["status"] !== "created") {
+          if (msisdn) {
+            await connection.query("commit");
+            return { order: mapOrder(row) };
+          }
           throw new CommercialRequestError(
             409,
             "This checkout request already reached a final state.",
@@ -423,7 +553,7 @@ export function createCommercialService(
           throw new CommercialRequestError(409, "This checkout request has expired.");
         }
 
-        if (inserted.rowCount === 1) {
+        if (insertedRowCount === 1) {
           await connection.query(
             `insert into commercial_events (user_id, event_name, plan_code, order_id, properties)
              values ($1, 'checkout_started', $2, $3, '{"provider":"jazzcash"}'::jsonb)`,
@@ -432,18 +562,71 @@ export function createCommercialService(
         }
 
         await connection.query("commit");
-        return {
-          order: mapOrder(row),
-          method: "POST",
-          action: options.config.JAZZCASH_PAYMENT_URL,
-          fields: createCheckoutFields(options.config, row),
-        };
+        orderRow = row;
       } catch (error) {
         await connection.query("rollback").catch(() => undefined);
         throw error;
       } finally {
         connection.release();
       }
+
+      if (!msisdn) {
+        return {
+          order: mapOrder(orderRow),
+          method: "POST",
+          action: options.config.JAZZCASH_PAYMENT_URL,
+          fields: createCheckoutFields(options.config, orderRow),
+        };
+      }
+
+      // Idempotent replay: do not charge JazzCash again for an existing pending order.
+      if (insertedRowCount !== 1) {
+        return { order: mapOrder(orderRow) };
+      }
+
+      const requestFields = createDoTransactionFields(options.config, orderRow, msisdn);
+      let providerFields: Readonly<Record<string, string>>;
+      try {
+        providerFields = await options.jazzCashCps!.doTransaction(requestFields);
+      } catch {
+        throw new CommercialRequestError(
+          502,
+          "JazzCash did not accept the payment request. No Premium entitlement was granted.",
+        );
+      }
+
+      const presentedHash = providerFields["pp_SecureHash"]?.trim() ?? "";
+      if (!presentedHash) {
+        const responseCode = providerFields["pp_ResponseCode"]?.trim() ?? "";
+        const outcome = responseCode ? providerOutcome(responseCode) : "failed";
+        if (outcome === "succeeded") {
+          throw new CommercialRequestError(
+            502,
+            "JazzCash returned success without a verifiable signature. No Premium entitlement was granted.",
+          );
+        }
+        // Sandbox/error DoTransaction bodies often omit pp_SecureHash. Record the failure
+        // against the pending order without treating an unsigned body as payment proof.
+        const failed = await markOrderFromUnsignedDoTransaction({
+          pool: options.pool,
+          orderId: String(orderRow["id"]),
+          responseCode: responseCode || "unknown",
+          outcome,
+          providerFields,
+        });
+        return {
+          order: failed,
+          providerResponseCode: providerFields["pp_ResponseCode"] ?? null,
+          providerResponseMessage: providerFields["pp_ResponseMessage"] ?? null,
+        };
+      }
+
+      const settled = await service.handleJazzCashCallback(providerFields);
+      return {
+        order: settled,
+        providerResponseCode: providerFields["pp_ResponseCode"] ?? null,
+        providerResponseMessage: providerFields["pp_ResponseMessage"] ?? null,
+      };
     },
 
     getOrder: async (userId, orderId) => {
@@ -458,17 +641,6 @@ export function createCommercialService(
     },
 
     handleJazzCashCallback: async (fields) => {
-      if (
-        !options.config.FEATURE_JAZZCASH_ENABLED ||
-        options.config.JAZZCASH_MODE === "disabled" ||
-        !options.config.JAZZCASH_INTEGRITY_SALT
-      ) {
-        throw new CommercialRequestError(503, "JazzCash callbacks are disabled.");
-      }
-      if (!verifyJazzCashSecureHash(fields, options.config.JAZZCASH_INTEGRITY_SALT)) {
-        throw new CommercialRequestError(400, "The JazzCash response signature is invalid.");
-      }
-
       const reference = fields["pp_TxnRefNo"];
       const responseCode = fields["pp_ResponseCode"];
       const amount = Number(fields["pp_Amount"]);
@@ -481,6 +653,26 @@ export function createCommercialService(
         currency !== "PKR"
       ) {
         throw new CommercialRequestError(400, "The JazzCash response is incomplete.");
+      }
+
+      const classicEnabled =
+        options.config.FEATURE_JAZZCASH_ENABLED &&
+        options.config.JAZZCASH_MODE !== "disabled" &&
+        Boolean(options.config.JAZZCASH_INTEGRITY_SALT);
+      const v11Enabled = isJazzCashV11CheckoutEnabled(options.config);
+      const isV11MerchantReference = reference.startsWith("Goo");
+      const integritySalt = isV11MerchantReference
+        ? v11Enabled
+          ? options.config.JAZZCASH_V11_INTEGRITY_SALT
+          : undefined
+        : classicEnabled
+          ? options.config.JAZZCASH_INTEGRITY_SALT
+          : undefined;
+      if (!integritySalt) {
+        throw new CommercialRequestError(503, "JazzCash callbacks are disabled.");
+      }
+      if (!verifyJazzCashSecureHash(fields, integritySalt)) {
+        throw new CommercialRequestError(400, "The JazzCash response signature is invalid.");
       }
 
       const digest = payloadDigest(fields);
@@ -760,6 +952,7 @@ export function createCommercialService(
       );
     },
   };
+  return service;
 }
 
 function bodyAsStringRecord(body: unknown): Readonly<Record<string, string>> {
@@ -801,6 +994,7 @@ export function registerCommercialRoutes(
         userId: learner.id,
         planCode: body.planCode,
         idempotencyKey: body.idempotencyKey,
+        ...(body.msisdn ? { msisdn: body.msisdn } : {}),
       }),
     );
   });
