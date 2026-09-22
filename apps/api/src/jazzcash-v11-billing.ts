@@ -5,12 +5,12 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import type { AuthService } from "./auth.js";
-import { jazzCashSecureHash, type CommercialService } from "./commercial.js";
+import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
 import {
   createJazzCashV11Client,
-  JazzCashV11Error,
   type JazzCashV11Client,
+  JazzCashV11Error,
   type JazzCashV11Fields,
   redactJazzCashV11Fields,
 } from "./jazzcash-v11.js";
@@ -88,7 +88,9 @@ class JazzCashV11BillingError extends Error {
   }
 }
 
-function resolvePlanCode(body: z.infer<typeof ChargeBodySchema>): "premium-monthly" | "premium-yearly" {
+function resolvePlanCode(
+  body: z.infer<typeof ChargeBodySchema>,
+): "premium-monthly" | "premium-yearly" {
   if (body.planCode) return body.planCode;
   const planId = body.planId?.trim().toLowerCase() ?? "";
   if (planId === "premium-monthly" || planId === "monthly") return "premium-monthly";
@@ -205,10 +207,7 @@ export type JazzCashV11BillingService = Readonly<{
       providerResponseMessage: string | null;
     }>
   >;
-  inquire: (input: {
-    userId: string;
-    txnRefNo: string;
-  }) => Promise<
+  inquire: (input: { userId: string; txnRefNo: string }) => Promise<
     Readonly<{
       order: PaymentOrder;
       checkoutMode: "jazzcash_v11";
@@ -338,7 +337,10 @@ export function createJazzCashV11BillingService(
           merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
         }
         if (!inserted) {
-          throw new JazzCashV11BillingError(409, "Could not allocate a unique JazzCash txn reference.");
+          throw new JazzCashV11BillingError(
+            409,
+            "Could not allocate a unique JazzCash txn reference.",
+          );
         }
 
         const selectedOrder = await connection.query<Record<string, unknown>>(

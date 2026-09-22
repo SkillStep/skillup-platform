@@ -286,7 +286,10 @@ function createDoTransactionFields(
     ppmpf_4: "",
     ppmpf_5: "",
   };
-  fields["pp_SecureHash"] = jazzCashSecureHash(fields, config.JAZZCASH_INTEGRITY_SALT).toUpperCase();
+  fields["pp_SecureHash"] = jazzCashSecureHash(
+    fields,
+    config.JAZZCASH_INTEGRITY_SALT,
+  ).toUpperCase();
   return fields;
 }
 
@@ -305,13 +308,15 @@ from payment_orders o
 join commercial_plan_versions v on v.id = o.plan_version_id
 join commercial_plans p on p.id = v.plan_id`;
 
-async function markOrderFromUnsignedDoTransaction(input: Readonly<{
-  pool: DatabaseClient["pool"];
-  orderId: string;
-  responseCode: string;
-  outcome: PaymentStatus;
-  providerFields: Readonly<Record<string, string>>;
-}>): Promise<PaymentOrder> {
+async function markOrderFromUnsignedDoTransaction(
+  input: Readonly<{
+    pool: DatabaseClient["pool"];
+    orderId: string;
+    responseCode: string;
+    outcome: PaymentStatus;
+    providerFields: Readonly<Record<string, string>>;
+  }>,
+): Promise<PaymentOrder> {
   const status: PaymentStatus =
     input.outcome === "pending" ||
     input.outcome === "cancelled" ||

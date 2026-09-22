@@ -103,9 +103,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
 
     try {
       const response = await fetch(
-        usesV11
-          ? "/api/v1/premium/billing/jazzcash-v11/charge"
-          : "/api/v1/commercial/orders",
+        usesV11 ? "/api/v1/premium/billing/jazzcash-v11/charge" : "/api/v1/commercial/orders",
         {
           method: "POST",
           credentials: "same-origin",
