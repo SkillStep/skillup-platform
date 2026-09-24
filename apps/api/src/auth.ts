@@ -901,15 +901,6 @@ async function requireLearner(
   return { learner, sessionToken };
 }
 
-function verificationResponse(
-  reply: Parameters<FastifyInstance["post"]>[1] extends (...args: infer A) => unknown ? A[1] : never,
-  config: ApiConfig,
-  verified: VerifiedSession,
-) {
-  reply.header("set-cookie", sessionCookie(config, verified.sessionToken, verified.sessionExpiresAt));
-  return reply.status(200).send({ learner: verified.learner });
-}
-
 export function registerAuthRoutes(
   app: FastifyInstance,
   options: Readonly<{ config: ApiConfig; authService: AuthService }>,
