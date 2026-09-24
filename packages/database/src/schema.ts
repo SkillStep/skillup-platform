@@ -203,7 +203,11 @@ export const userPhoneIdentities = pgTable(
   (table) => [
     uniqueIndex("user_phone_identities_phone_unique").on(table.phoneNormalized),
     uniqueIndex("user_phone_identities_user_unique").on(table.userId),
-    check("user_phone_identities_e164", sql`${table.phoneNormalized} ~ '^\\+923[0-9]{9}
+    check("user_phone_identities_e164", sql`${table.phoneNormalized} ~ '^\\+923[0-9]{9}$'`),
+  ],
+);
+
+export const authChallenges = pgTable(
   "auth_challenges",
   {
     id: uuid("id").primaryKey(),
