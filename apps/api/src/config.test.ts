@@ -226,4 +226,22 @@ describe("API runtime configuration", () => {
       }),
     ).toThrow("JAZZCASH_STATUS_URL must use HTTPS outside local/test environments");
   });
+  it("requires JazzCash v11 return URL to remain on the SkillUp origin", () => {
+    expect(() =>
+      readApiConfig({
+        ...requiredEnvironment,
+        APP_ENV: "staging",
+        DEPLOYMENT_ENVIRONMENT: "staging",
+        FEATURE_PREMIUM_ENABLED: "true",
+        PREMIUM_JAZZCASH_V11_CHECKOUT: "true",
+        JAZZCASH_V11_URL: "https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v1/rest/payments/m-wallet",
+        JAZZCASH_V11_INQUIRY_URL: "https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v2/rest/payments/status/inquiry",
+        JAZZCASH_V11_MERCHANT_ID: "MC12345",
+        JAZZCASH_V11_PASSWORD: "sandbox-password",
+        JAZZCASH_V11_INTEGRITY_SALT: "sandbox-integrity-salt",
+        JAZZCASH_V11_RETURN_URL: "https://attacker.example/payment-return",
+      }),
+    ).toThrow("The JazzCash v11 return URL must use the public SkillUp origin");
+  });
+
 });
