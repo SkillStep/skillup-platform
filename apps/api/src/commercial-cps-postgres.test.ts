@@ -115,7 +115,7 @@ describeWithPostgres("JazzCash CPS commercial jobs against PostgreSQL", () => {
 
     await database.pool.query(
       `insert into commercial_jobs (job_type, order_id, status, run_after)
-       values ('provider_status', $1, 'queued', now())`,
+       values ('provider_status', $1, 'queued', now() - interval '1 second')`,
       [checkout.order.id],
     );
     const statusProcessed = await automation.process(25);
@@ -131,7 +131,7 @@ describeWithPostgres("JazzCash CPS commercial jobs against PostgreSQL", () => {
 
     await database.pool.query(
       `insert into commercial_jobs (job_type, order_id, status, run_after)
-       values ('provider_refund', $1, 'queued', now())`,
+       values ('provider_refund', $1, 'queued', now() - interval '1 second')`,
       [checkout.order.id],
     );
     const refundProcessed = await automation.process(25);
