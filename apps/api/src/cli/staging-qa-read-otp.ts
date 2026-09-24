@@ -41,7 +41,8 @@ async function main(): Promise<void> {
     }>(
       `select id, secret_digest, created_at
          from auth_challenges
-        where email_normalized = $1
+        where identity_type = 'email'
+          and identity_normalized = $1
           and purpose = 'sign_in'
           and created_at >= $2
           and consumed_at is null
