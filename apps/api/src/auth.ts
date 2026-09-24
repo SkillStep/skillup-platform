@@ -231,14 +231,22 @@ export function createAuthService(
       const fingerprintDigest = digest(options.secret, `fingerprint:${requestFingerprint}`);
       const cutoff = addMinutes(requestedAt, -15);
 
-      const limits = await options.pool.query<{ email_count: string; fingerprint_count: string }>(
+      const limits = await options.pool.query<{
+        email_count: string;
+        fingerprint_count: string;
+        last_created_at: Date | null;
+      }>(
         `select
           (select count(*) from auth_challenges where email_normalized = $1 and created_at >= $2) as email_count,
-          (select count(*) from auth_challenges where request_fingerprint_digest = $3 and created_at >= $2) as fingerprint_count`,
+          (select count(*) from auth_challenges where request_fingerprint_digest = $3 and created_at >= $2) as fingerprint_count,
+          (select max(created_at) from auth_challenges where email_normalized = $1) as last_created_at`,
         [emailNormalized, cutoff, fingerprintDigest],
       );
 
       const counts = limits.rows[0];
+      if (counts?.last_created_at && requestedAt.getTime() - counts.last_created_at.getTime() < 60_000) {
+        throw new AuthRequestError(429, "Please wait 60 seconds before requesting another sign-in code.");
+      }
       if (Number(counts?.email_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
         throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
       }
@@ -383,13 +391,21 @@ export function createAuthService(
       }
       const fingerprintDigest = digest(options.secret, `fingerprint:${requestFingerprint}`);
       const cutoff = addMinutes(requestedAt, -15);
-      const limits = await options.pool.query<{ identity_count: string; fingerprint_count: string }>(
+      const limits = await options.pool.query<{
+        identity_count: string;
+        fingerprint_count: string;
+        last_created_at: Date | null;
+      }>(
         `select
           (select count(*) from auth_challenges where identity_type = 'phone' and email_normalized = $1 and created_at >= $2) as identity_count,
-          (select count(*) from auth_challenges where request_fingerprint_digest = $3 and created_at >= $2) as fingerprint_count`,
+          (select count(*) from auth_challenges where request_fingerprint_digest = $3 and created_at >= $2) as fingerprint_count,
+          (select max(created_at) from auth_challenges where identity_type = 'phone' and email_normalized = $1) as last_created_at`,
         [phoneNormalized, cutoff, fingerprintDigest],
       );
       const counts = limits.rows[0];
+      if (counts?.last_created_at && requestedAt.getTime() - counts.last_created_at.getTime() < 60_000) {
+        throw new AuthRequestError(429, "Please wait 60 seconds before requesting another sign-in code.");
+      }
       if (Number(counts?.identity_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
         throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
       }
