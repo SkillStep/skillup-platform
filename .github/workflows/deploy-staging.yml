@@ -170,13 +170,17 @@ jobs:
           AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
           PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
           COMPOSE_B64: ${{ steps.compose.outputs.compose_b64 }}
+          JAZZCASH_V11_MERCHANT_ID: ${{ secrets.JAZZCASH_V11_MERCHANT_ID }}
+          JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
+          JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
+          JAZZCASH_V11_RETURN_URL: ${{ secrets.JAZZCASH_V11_RETURN_URL }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL
           script: |
             set -euo pipefail
             mkdir -p /opt/skillup
@@ -204,6 +208,30 @@ jobs:
                 'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
                 'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
             }
+            # JazzCash V11 MWALLET sandbox: enable only when staging secrets are present.
+            merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
+            password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
+            integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip()
+            return_url = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip()
+            if merchant_id and password and integrity_salt and return_url:
+                updates.update({
+                    'FEATURE_PREMIUM_ENABLED': 'true',
+                    'FEATURE_PAYMENT_SERVICE_ENABLED': 'false',
+                    'FEATURE_JAZZCASH_ENABLED': 'false',
+                    'JAZZCASH_MODE': 'disabled',
+                    'DEPLOYMENT_ENVIRONMENT': 'staging',
+                    'PREMIUM_JAZZCASH_V11_CHECKOUT': 'true',
+                    'JAZZCASH_V11_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v1/rest/payments/m-wallet',
+                    'JAZZCASH_V11_INQUIRY_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v2/rest/payments/status/inquiry',
+                    'JAZZCASH_V11_MERCHANT_ID': merchant_id,
+                    'JAZZCASH_V11_PASSWORD': password,
+                    'JAZZCASH_V11_INTEGRITY_SALT': integrity_salt,
+                    'JAZZCASH_V11_RETURN_URL': return_url,
+                    'JAZZCASH_V11_TIMEOUT_MS': '30000',
+                    'JAZZCASH_V11_CHECKOUT_MINUTES': '15',
+                })
+            else:
+                print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
             lines = path.read_text(encoding='utf-8').splitlines()
             output = []
             written = set()

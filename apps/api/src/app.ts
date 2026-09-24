@@ -15,11 +15,15 @@ import { type CapabilityService, registerCapabilityRoutes } from "./capabilities
 import { type CommercialService, registerCommercialRoutes } from "./commercial.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
+import {
+  type JazzCashV11BillingService,
+  registerJazzCashV11BillingRoutes,
+} from "./jazzcash-v11-billing.js";
 import { type ProgressService, registerProgressRoutes } from "./progress.js";
 import { createRateLimitHook, type RateLimitOptions } from "./rate-limit.js";
 
 const API_BODY_LIMIT_BYTES = 128 * 1_024;
-const API_REQUEST_TIMEOUT_MS = 15_000;
+const API_REQUEST_TIMEOUT_MS = 35_000;
 const API_CONNECTION_TIMEOUT_MS = 10_000;
 const API_KEEP_ALIVE_TIMEOUT_MS = 72_000;
 
@@ -31,6 +35,7 @@ export type BuildApiOptions = Readonly<{
   gameplayService?: GameplayService | undefined;
   progressService?: ProgressService | undefined;
   commercialService?: CommercialService | undefined;
+  jazzCashV11BillingService?: JazzCashV11BillingService | undefined;
   adminService?: AdminService | undefined;
   capabilityService?: CapabilityService | undefined;
   accountLifecycleService?: AccountLifecycleService | undefined;
@@ -253,6 +258,13 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       commercialService: options.commercialService,
+    });
+  }
+  if (options.authService && options.jazzCashV11BillingService) {
+    registerJazzCashV11BillingRoutes(app, {
+      config,
+      authService: options.authService,
+      billingService: options.jazzCashV11BillingService,
     });
   }
   if (options.authService && options.adminService) {

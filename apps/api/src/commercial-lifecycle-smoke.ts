@@ -116,7 +116,7 @@ try {
     "Repeated order creation must resolve the original idempotent payment order.",
   );
   assert(
-    !Object.values(checkout.fields).includes(userId),
+    checkout.fields && !Object.values(checkout.fields).includes(userId),
     "JazzCash checkout fields must not expose the learner user ID.",
   );
 

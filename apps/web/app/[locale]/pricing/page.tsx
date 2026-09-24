@@ -18,6 +18,7 @@ type Plan = Readonly<{
   billingPeriod: "month" | "year";
   capabilities: readonly string[];
   checkoutAvailable: boolean;
+  checkoutMode?: "jazzcash_v11" | null;
 }>;
 
 type BillingPlan = Readonly<{
@@ -42,6 +43,7 @@ const launchPlans: readonly Plan[] = [
       "premium_avatars",
     ],
     checkoutAvailable: false,
+    checkoutMode: null,
   },
   {
     code: "premium-yearly",
@@ -56,6 +58,7 @@ const launchPlans: readonly Plan[] = [
       "premium_avatars",
     ],
     checkoutAvailable: false,
+    checkoutMode: null,
   },
 ];
 

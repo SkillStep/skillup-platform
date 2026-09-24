@@ -93,6 +93,7 @@ const FORBIDDEN_KEYS = new Set([
   "email",
   "phone",
   "cnic",
+  "mpin",
   "address",
 ]);
 

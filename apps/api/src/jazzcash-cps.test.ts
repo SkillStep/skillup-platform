@@ -33,6 +33,42 @@ function expectEvidence(value: JazzCashCpsEvidence, operation: "status" | "refun
 }
 
 describe("JazzCash CPS client", () => {
+  it("posts DoTransaction JSON to the configured payment URL", async () => {
+    const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      expect(String(url)).toBe("https://sandbox.example/checkout");
+      expect(init?.method).toBe("POST");
+      expect(init?.headers).toMatchObject({
+        accept: "application/json",
+        "content-type": "application/json",
+      });
+      const body = JSON.parse(String(init?.body)) as Record<string, string>;
+      expect(body["pp_TxnType"]).toBe("MWALLET");
+      expect(body["ppmpf_1"]).toBe("03123456789");
+      return jsonResponse({
+        pp_ResponseCode: "000",
+        pp_ResponseMessage: "Thank you for using JazzCash.",
+        pp_TxnRefNo: body["pp_TxnRefNo"],
+        pp_Amount: body["pp_Amount"],
+        pp_TxnCurrency: "PKR",
+        pp_RetreivalReferenceNo: "RRN-DOTXN-1",
+      });
+    });
+    const client = createJazzCashCpsClient(readApiConfig(environment), fetcher as typeof fetch);
+
+    const response = await client.doTransaction({
+      pp_Amount: "10000",
+      pp_MerchantID: "MC12345",
+      pp_Password: "sandbox-password",
+      pp_TxnType: "MWALLET",
+      pp_TxnRefNo: "SU20260917150138ABCD",
+      ppmpf_1: "03123456789",
+      pp_SecureHash: "abc",
+    });
+
+    expect(response["pp_ResponseCode"]).toBe("000");
+    expect(response["pp_RetreivalReferenceNo"]).toBe("RRN-DOTXN-1");
+  });
+
   it("sends a signed status inquiry without hard-coded provider credentials", async () => {
     const fetcher = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
       const body = JSON.parse(String(init?.body)) as Record<string, string>;

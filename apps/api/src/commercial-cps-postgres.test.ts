@@ -82,6 +82,9 @@ describeWithPostgres("JazzCash CPS commercial jobs against PostgreSQL", () => {
     const statusDigest = "a".repeat(64);
     const refundDigest = "b".repeat(64);
     const cps: JazzCashCpsClient = {
+      doTransaction: async () => {
+        throw new Error("DoTransaction is not used in this CPS refund test.");
+      },
       inquire: async ({ merchantReference }) => ({
         operation: "status",
         responseCode: "000",
