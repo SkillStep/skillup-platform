@@ -185,7 +185,16 @@ jobs:
           envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_PHONE_NUMBER
           script: |
             set -euo pipefail
+
+            # Keep the staging host deployable even when historical build/image cache fills disk.
+            # Running container images remain protected; volumes are never pruned here.
             mkdir -p /opt/skillup
+            rm -f /opt/skillup/docker-compose.staging.yml.tmp
+            docker container prune -f >/dev/null 2>&1 || true
+            docker image prune -af >/dev/null 2>&1 || true
+            docker builder prune -af >/dev/null 2>&1 || true
+            df -h / /opt/skillup || true
+
             printf '%s' "$COMPOSE_B64" | base64 -d > /opt/skillup/docker-compose.staging.yml.tmp
             mv /opt/skillup/docker-compose.staging.yml.tmp /opt/skillup/docker-compose.staging.yml
             cd /opt/skillup
