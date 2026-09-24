@@ -16,6 +16,7 @@ import {
 } from "./content-operations.js";
 import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
+import { createConfiguredSmsCodeDelivery } from "./sms-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
@@ -45,6 +46,7 @@ const authService = createAuthService({
   sessionIdleMinutes: config.SESSION_IDLE_MINUTES,
   sessionAbsoluteHours: config.SESSION_ABSOLUTE_HOURS,
   delivery: createConfiguredAuthCodeDelivery(config),
+  smsDelivery: createConfiguredSmsCodeDelivery(config),
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
