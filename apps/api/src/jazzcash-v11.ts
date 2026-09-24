@@ -210,15 +210,13 @@ export function createJazzCashV11Client(
     },
 
     inquire: async ({ txnRefNo }) => {
-      // Status inquiry pack: only non-empty classic fields are sent and hashed.
-      // Empty placeholder keys cause JazzCash response code 110 (invalid SecureHash).
+      // JazzCash Transaction Status Inquiry accepts exactly the merchant transaction
+      // reference, merchant credentials, API version and secure hash. Do not reuse
+      // charge-only fields here: extra fields change the HMAC input and produce 110.
       const fields: Record<string, string> = {
-        pp_Language: "EN",
         pp_MerchantID: provider.merchantId,
         pp_Password: provider.password,
-        pp_TxnCurrency: "PKR",
         pp_TxnRefNo: txnRefNo,
-        pp_TxnType: "MWALLET",
         pp_Version: "1.1",
       };
       fields["pp_SecureHash"] = jazzCashV11SecureHash(fields, provider.integritySalt);
