@@ -17,6 +17,20 @@ type AccountSession = Readonly<{
   current: boolean;
 }>;
 
+type LoginIdentity = Readonly<{
+  type: "email" | "phone";
+  display: string;
+  masked: string;
+  verifiedAt: string;
+}>;
+
+type IdentityChallenge = Readonly<{
+  challengeId: string;
+  channel: "email" | "phone";
+  maskedDestination: string;
+  expiresAt: string;
+}>;
+
 type PrivacySettings = Readonly<{
   analyticsConsent: "essential" | "product";
   marketingConsent: boolean;
@@ -63,23 +77,32 @@ export function AccountControls() {
   const [deleteReason, setDeleteReason] = useState("");
   const [deleteConfirmed, setDeleteConfirmed] = useState(false);
   const [deletionDue, setDeletionDue] = useState<string | null>(null);
+  const [identities, setIdentities] = useState<readonly LoginIdentity[]>([]);
+  const [identityInput, setIdentityInput] = useState("");
+  const [identityChallenge, setIdentityChallenge] = useState<IdentityChallenge | null>(null);
+  const [identityCode, setIdentityCode] = useState("");
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setError(null);
     try {
       const requestInit = signal ? { signal } : undefined;
-      const [sessionsResponse, privacyResponse] = await Promise.all([
+      const [sessionsResponse, privacyResponse, identitiesResponse] = await Promise.all([
         accountRequest("/account/sessions", requestInit),
         accountRequest("/account/privacy", requestInit),
+        accountRequest("/account/identities", requestInit),
       ]);
-      if (!sessionsResponse.ok || !privacyResponse.ok) {
+      if (!sessionsResponse.ok || !privacyResponse.ok || !identitiesResponse.ok) {
         throw new Error("Account controls are temporarily unavailable.");
       }
       const sessionBody = (await sessionsResponse.json()) as {
         sessions: readonly AccountSession[];
       };
+      const identityBody = (await identitiesResponse.json()) as {
+        identities: readonly LoginIdentity[];
+      };
       setSessions(sessionBody.sessions);
       setPrivacy((await privacyResponse.json()) as PrivacySettings);
+      setIdentities(identityBody.identities);
     } catch (requestError) {
       if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
         setError(
@@ -98,6 +121,90 @@ export function AccountControls() {
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
+
+  async function startIdentityLink(): Promise<void> {
+    setSaving(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const response = await accountRequest("/account/identities/start", {
+        method: "POST",
+        body: JSON.stringify({ identity: identityInput }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "That sign-in method could not be added.");
+      }
+      const challenge = (await response.json()) as IdentityChallenge;
+      setIdentityChallenge(challenge);
+      setIdentityCode("");
+      setMessage(`Enter the four-digit code sent to ${challenge.maskedDestination}.`);
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "The sign-in method could not be added.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function verifyIdentityLink(): Promise<void> {
+    if (!identityChallenge) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await accountRequest("/account/identities/verify", {
+        method: "POST",
+        body: JSON.stringify({
+          challengeId: identityChallenge.challengeId,
+          code: identityCode,
+        }),
+      });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "The verification code could not be accepted.");
+      }
+      const body = (await response.json()) as { identities: readonly LoginIdentity[] };
+      setIdentities(body.identities);
+      setIdentityChallenge(null);
+      setIdentityInput("");
+      setIdentityCode("");
+      setMessage("Verified sign-in method added.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "The verification could not be completed.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function removeIdentity(type: "email" | "phone"): Promise<void> {
+    setSaving(true);
+    setError(null);
+    try {
+      const response = await accountRequest(`/account/identities/${type}`, { method: "DELETE" });
+      if (!response.ok) {
+        const body = (await response.json().catch(() => null)) as { message?: string } | null;
+        throw new Error(body?.message ?? "That sign-in method could not be removed.");
+      }
+      const body = (await response.json()) as { identities: readonly LoginIdentity[] };
+      setIdentities(body.identities);
+      setMessage("Sign-in method removed.");
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "The sign-in method could not be removed.",
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function updatePrivacy(patch: Partial<PrivacySettings>): Promise<void> {
     if (!privacy) return;
@@ -230,6 +337,96 @@ export function AccountControls() {
           {error}
         </p>
       ) : null}
+
+      <section className={styles["panel"]} aria-labelledby="identity-settings-title">
+        <div className={styles["sectionHeading"]}>
+          <div>
+            <h2 id="identity-settings-title">Sign-in methods</h2>
+            <p>Use either verified method to sign in. You must always keep at least one.</p>
+          </div>
+        </div>
+        <ul className={styles["identityList"]}>
+          {identities.map((identity) => (
+            <li key={identity.type}>
+              <div>
+                <strong>{identity.type === "email" ? "Email" : "Mobile"}</strong>
+                <span>{identity.display}</span>
+                <small>Verified {dateTimeLabel(identity.verifiedAt)}</small>
+              </div>
+              <button
+                className={`${styles["button"]} ${styles["secondary"]}`}
+                type="button"
+                disabled={saving || identities.length <= 1}
+                onClick={() => void removeIdentity(identity.type)}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+
+        {identityChallenge ? (
+          <div className={styles["identityForm"]}>
+            <label>
+              Four-digit code sent to {identityChallenge.maskedDestination}
+              <input
+                className={styles["identityInput"]}
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{4}"
+                maxLength={4}
+                value={identityCode}
+                onChange={(event) =>
+                  setIdentityCode(event.currentTarget.value.replace(/\D/g, "").slice(0, 4))
+                }
+              />
+            </label>
+            <div className={styles["actions"]}>
+              <button
+                className={styles["button"]}
+                type="button"
+                disabled={saving || identityCode.length !== 4}
+                onClick={() => void verifyIdentityLink()}
+              >
+                Verify and add
+              </button>
+              <button
+                className={`${styles["button"]} ${styles["secondary"]}`}
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  setIdentityChallenge(null);
+                  setIdentityCode("");
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className={styles["identityForm"]}>
+            <label>
+              Add or change email/mobile
+              <input
+                className={styles["identityInput"]}
+                type="text"
+                autoComplete="username"
+                placeholder="0300 1234567 or you@example.com"
+                value={identityInput}
+                onChange={(event) => setIdentityInput(event.currentTarget.value)}
+              />
+            </label>
+            <button
+              className={styles["button"]}
+              type="button"
+              disabled={saving || identityInput.trim().length < 3}
+              onClick={() => void startIdentityLink()}
+            >
+              Send verification code
+            </button>
+          </div>
+        )}
+      </section>
 
       <section className={styles["panel"]} aria-labelledby="privacy-settings-title">
         <h2 id="privacy-settings-title">Privacy and sharing</h2>

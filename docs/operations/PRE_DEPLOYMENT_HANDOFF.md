@@ -11,7 +11,7 @@ Repository-side launch implementation is complete and includes:
 - five reviewed launch skills;
 - 68 levels and 204 challenges across all seven challenge formats;
 - baseline/end assessments, remediation and recommendations;
-- passwordless account, session, privacy, export and deletion lifecycle;
+- unified passwordless email/mobile OTP account, session, identity, privacy, export and deletion lifecycle;
 - progress, points, streaks, achievements, sharing and leaderboards;
 - public skills, paths, guides, questions, comparisons and glossary content;
 - premium capability authority and free daily mission enforcement;
@@ -48,6 +48,9 @@ Provide access through provider invitations or an approved secret manager. Do no
 - [ ] Approved SMTP/email provider.
 - [ ] Verified sender address/domain and DNS owner for SPF, DKIM and DMARC.
 - [ ] Staging SMTP credentials delivered through a protected channel.
+- [ ] Approved SMS/OTP provider account (Twilio for the current adapter).
+- [ ] Staging Twilio account SID/auth token/from-number delivered through protected secrets.
+- [ ] A controlled Pakistani QA mobile number for real SMS OTP acceptance.
 - [ ] Named deployment owner and backup.
 - [ ] Named rollback owner and backup.
 - [ ] Named database/backup owner.
@@ -86,6 +89,7 @@ Provide access through provider invitations or an approved secret manager. Do no
 - [ ] Production Railway/AWS project and approvers.
 - [ ] Production domain, DNS and TLS owner.
 - [ ] Production SMTP credentials separate from staging.
+- [ ] Production SMS/OTP credentials and sending number separate/reviewed for production.
 - [ ] JazzCash production credentials separate from sandbox.
 - [ ] Production monitoring/alerts and on-call ownership.
 - [ ] Legal approval for terms, privacy, refund/cancellation, AI disclosure and support copy.
@@ -108,7 +112,7 @@ Provide access through provider invitations or an approved secret manager. Do no
 3. Generate protected staging secrets.
 4. Deploy one exact reviewed `main` commit.
 5. Verify migrations, readiness, release identity and automated live smoke.
-6. Configure SMTP and complete account/privacy acceptance.
+6. Configure SMTP + SMS OTP and complete email/mobile account/privacy acceptance.
 7. Complete all five learning paths and admin/analytics acceptance.
 8. Enable premium capability staging tests.
 9. Add and evaluate the AI worker when approved.

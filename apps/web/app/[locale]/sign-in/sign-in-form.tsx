@@ -5,12 +5,12 @@ import { type FormEvent, useEffect, useId, useState } from "react";
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
-type ApiError = Readonly<{
-  message?: string;
-}>;
+type ApiError = Readonly<{ message?: string }>;
 
 type ChallengeResponse = Readonly<{
   challengeId: string;
+  channel: "email" | "phone";
+  maskedDestination: string;
   expiresAt: string;
 }>;
 
@@ -22,9 +22,7 @@ type VerifyResponse = Readonly<{
   }>;
 }>;
 
-type SignInFormProps = Readonly<{
-  returnTo: string;
-}>;
+type SignInFormProps = Readonly<{ returnTo: string }>;
 
 async function readError(response: Response): Promise<string> {
   try {
@@ -37,46 +35,61 @@ async function readError(response: Response): Promise<string> {
 }
 
 export function SignInForm({ returnTo }: SignInFormProps) {
-  const emailId = useId();
+  const identityId = useId();
   const codeId = useId();
   const [hydrated, setHydrated] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identity, setIdentity] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
 
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  useEffect(() => setHydrated(true), []);
+
+  async function requestCode(): Promise<void> {
+    const response = await fetch("/api/v1/auth/otp/start", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ identity }),
+    });
+
+    if (!response.ok) {
+      setIsError(true);
+      setMessage(await readError(response));
+      return;
+    }
+
+    const body = (await response.json()) as ChallengeResponse;
+    setChallenge(body);
+    setCode("");
+    setIsError(false);
+    setMessage(`Enter the four-digit code sent to ${body.maskedDestination}.`);
+  }
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-
     try {
-      const response = await fetch("/api/v1/auth/email/start", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      if (!response.ok) {
-        setIsError(true);
-        setMessage(await readError(response));
-        return;
-      }
-
-      const body = (await response.json()) as ChallengeResponse;
-      setChallenge(body);
-      setIsError(false);
-      setMessage("Enter the four-digit code sent to your email address.");
+      await requestCode();
     } catch {
       setIsError(true);
       setMessage("We could not reach SkillUp. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resend() {
+    setBusy(true);
+    setMessage(null);
+    try {
+      await requestCode();
+    } catch {
+      setIsError(true);
+      setMessage("We could not resend the code. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
@@ -89,7 +102,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
     setMessage(null);
 
     try {
-      const response = await fetch("/api/v1/auth/email/verify", {
+      const response = await fetch("/api/v1/auth/otp/verify", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
@@ -123,11 +136,11 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
   return (
     <div className={styles["card"]}>
-      <h2>{challenge ? "Check your email" : "Start with your email"}</h2>
+      <h2>{challenge ? "Enter your code" : "Sign in or create account"}</h2>
       <p className={styles["cardLead"]}>
         {challenge
-          ? `We sent a short-lived sign-in code to ${email}.`
-          : "No password to remember. We will send a short-lived verification code."}
+          ? `We sent a short-lived code to ${challenge.maskedDestination}.`
+          : "Use your email or Pakistani mobile number. No password is required."}
       </p>
 
       {challenge ? (
@@ -160,39 +173,52 @@ export function SignInForm({ returnTo }: SignInFormProps) {
               className={styles["secondaryAction"]}
               type="button"
               disabled={busy}
+              onClick={() => void resend()}
+            >
+              Resend code
+            </button>
+            <button
+              className={styles["secondaryAction"]}
+              type="button"
+              disabled={busy}
               onClick={() => {
                 setChallenge(null);
                 setCode("");
                 setMessage(null);
               }}
             >
-              Use a different email
+              Use a different email or number
             </button>
           </div>
         </form>
       ) : (
         <form className={styles["form"]} onSubmit={start}>
           <div className={styles["field"]}>
-            <label className={styles["label"]} htmlFor={emailId}>
-              Email address
+            <label className={styles["label"]} htmlFor={identityId}>
+              Email or mobile number
             </label>
             <input
               className={styles["input"]}
-              id={emailId}
-              name="email"
-              type="email"
-              autoComplete="email"
-              inputMode="email"
+              id={identityId}
+              name="identity"
+              type="text"
+              autoComplete="username"
               maxLength={254}
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              placeholder="0300 1234567 or you@example.com"
+              value={identity}
+              onChange={(event) => setIdentity(event.target.value)}
               required
             />
-            <p className={styles["help"]}>Use an address you can access on this device.</p>
+            <p className={styles["help"]}>
+              Pakistan mobile formats such as 0300 1234567 and +923001234567 are accepted.
+            </p>
           </div>
-          <button className={styles["action"]} type="submit" disabled={!hydrated || busy}>
-            {busy ? "Requesting code…" : "Send sign-in code"}
+          <button
+            className={styles["action"]}
+            type="submit"
+            disabled={!hydrated || busy || identity.trim().length < 3}
+          >
+            {busy ? "Sending code…" : "Continue"}
           </button>
         </form>
       )}

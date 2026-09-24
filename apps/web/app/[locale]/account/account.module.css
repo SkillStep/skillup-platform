@@ -298,6 +298,59 @@
   resize: vertical;
 }
 
+.identityList {
+  display: grid;
+  gap: 0.75rem;
+  list-style: none;
+  padding: 0;
+}
+
+.identityList li {
+  align-items: center;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  padding: 0.8rem 0;
+}
+
+.identityList strong,
+.identityList span,
+.identityList small {
+  display: block;
+}
+
+.identityList span,
+.identityList small {
+  color: var(--ink-700);
+  margin-top: 0.2rem;
+}
+
+.identityForm {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.identityForm label {
+  display: grid;
+  font-weight: 800;
+  gap: 0.4rem;
+}
+
+.identityInput {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font: inherit;
+  min-height: 46px;
+  padding: 0.7rem 0.8rem;
+}
+
+.identityInput:focus-visible {
+  outline: 3px solid var(--brand-300);
+  outline-offset: 3px;
+}
+
 @media (max-width: 680px) {
   .billingGrid {
     grid-template-columns: 1fr;
@@ -324,7 +377,8 @@
     padding: 0.2rem 0;
   }
 
-  .sessionList li {
+  .sessionList li,
+  .identityList li {
     align-items: stretch;
     flex-direction: column;
   }

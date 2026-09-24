@@ -307,8 +307,12 @@ export function createAccountLifecycleService(
       const [identity, profile, privacy, policies, sessions, progress, payments] =
         await Promise.all([
           options.pool.query(
-            `select email_display, verified_at, created_at
-             from user_email_identities where user_id = $1`,
+            `select 'email'::text as type, email_display as display, verified_at, created_at
+               from user_email_identities where user_id = $1
+             union all
+             select 'phone'::text as type, phone_display as display, verified_at, created_at
+               from user_phone_identities where user_id = $1
+             order by type`,
             [userId],
           ),
           options.pool.query(
@@ -451,6 +455,9 @@ export function createAccountLifecycleService(
               where user_id = $1`,
             [request.user_id, deletedEmail, processedAt],
           );
+          await database.query(`delete from user_phone_identities where user_id = $1`, [
+            request.user_id,
+          ]);
           await database.query(
             `update learner_profiles
                 set display_name = null,

@@ -176,6 +176,13 @@
       "when": 1789980000000,
       "tag": "0024_jazzcash_v11_goo_refs",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1790242200000,
+      "tag": "0025_unified_auth_identities",
+      "breakpoints": true
     }
   ]
 }

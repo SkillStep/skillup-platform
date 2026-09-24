@@ -94,13 +94,15 @@ try {
 
   const identityCounts = await client.pool.query<{
     users: number;
-    identities: number;
+    email_identities: number;
+    phone_identities: number;
     challenges: number;
     sessions: number;
     profiles: number;
   }>(`select
       (select count(*)::int from users) as users,
-      (select count(*)::int from user_email_identities) as identities,
+      (select count(*)::int from user_email_identities) as email_identities,
+      (select count(*)::int from user_phone_identities) as phone_identities,
       (select count(*)::int from auth_challenges) as challenges,
       (select count(*)::int from auth_sessions) as sessions,
       (select count(*)::int from learner_profiles) as profiles`);
@@ -108,7 +110,8 @@ try {
   if (
     !identity ||
     identity.users !== 0 ||
-    identity.identities !== 0 ||
+    identity.email_identities !== 0 ||
+    identity.phone_identities !== 0 ||
     identity.challenges !== 0 ||
     identity.sessions !== 0 ||
     identity.profiles !== 0

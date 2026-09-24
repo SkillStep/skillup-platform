@@ -1,7 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { readApiConfig } from "./config.js";
-import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
+import {
+  createConfiguredAuthCodeDelivery,
+  createTwilioSmsTransport,
+  type SmsTransport,
+} from "./email-delivery.js";
 
 type TestMessage = Readonly<{
   from: string;
@@ -27,14 +31,29 @@ const smtpConfig = readApiConfig({
   SMTP_PASSWORD: "test-only-password",
 });
 
-describe("configured authentication email delivery", () => {
-  it("sends a bounded one-time-code message without session or profile data", async () => {
+const twilioConfig = readApiConfig({
+  APP_ENV: "test",
+  PUBLIC_APP_URL: "https://skillup.example",
+  DATABASE_URL: "postgresql://skillup_test:test-only@127.0.0.1:5432/skillup_test",
+  SESSION_SECRET: "test-only-session-secret-at-least-32-bytes",
+  EMAIL_PROVIDER: "disabled",
+  SMS_PROVIDER: "twilio",
+  TWILIO_ACCOUNT_SID: "AC_test_account",
+  TWILIO_AUTH_TOKEN: "test-only-auth-token",
+  TWILIO_PHONE_NUMBER: "+15551234567",
+  SMS_REQUEST_TIMEOUT_SECONDS: "10",
+});
+
+describe("configured authentication code delivery", () => {
+  it("sends a bounded email one-time-code message without session or profile data", async () => {
     const sendMail = vi.fn(async (_message: TestMessage) => ({ messageId: "test-message" }));
     const delivery = createConfiguredAuthCodeDelivery(smtpConfig, { sendMail });
 
     await delivery.sendSignInCode({
-      email: "learner@example.com",
-      code: "123456",
+      channel: "email",
+      destination: "learner@example.com",
+      display: "learner@example.com",
+      code: "1234",
       expiresAt: new Date("2026-07-30T12:10:00.000Z"),
     });
 
@@ -43,28 +62,91 @@ describe("configured authentication email delivery", () => {
     expect(message).toMatchObject({
       from: "no-reply@skillup.example",
       to: "learner@example.com",
-      subject: "123456 is your SkillUp sign-in code",
+      subject: "1234 is your SkillUp sign-in code",
     });
-    expect(message?.text).toContain("Your one-time code is: 123456");
+    expect(message?.text).toContain("Your one-time code is: 1234");
     expect(message?.text).toContain("Do not share this code");
     expect(JSON.stringify(message)).not.toContain("sessionToken");
     expect(JSON.stringify(message)).not.toContain("learningGoal");
   });
 
-  it("fails safely while production delivery is disabled", async () => {
+  it("routes phone codes only to the configured SMS transport", async () => {
+    const send = vi.fn(async () => undefined);
+    const sms: SmsTransport = { send };
+    const delivery = createConfiguredAuthCodeDelivery(twilioConfig, undefined, sms);
+
+    await delivery.sendSignInCode({
+      channel: "phone",
+      destination: "+923001234567",
+      display: "03001234567",
+      code: "4321",
+      expiresAt: new Date("2026-07-30T12:10:00.000Z"),
+    });
+
+    expect(send).toHaveBeenCalledWith({
+      to: "+923001234567",
+      body: "Your SkillUp code is 4321. It expires in 10 minutes. Do not share this code.",
+    });
+  });
+
+  it("calls Twilio over bounded HTTPS form delivery without leaking credentials into payload", async () => {
+    const fetchImpl = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) => {
+      return new Response(JSON.stringify({ sid: "SM_test" }), { status: 201 });
+    }) as unknown as typeof fetch;
+    const transport = createTwilioSmsTransport(twilioConfig, fetchImpl);
+
+    await transport.send({
+      to: "+923001234567",
+      body: "Your SkillUp code is 4321. It expires in 10 minutes. Do not share this code.",
+    });
+
+    expect(fetchImpl).toHaveBeenCalledOnce();
+    const [url, init] = (fetchImpl as unknown as ReturnType<typeof vi.fn>).mock.calls[0] ?? [];
+    expect(String(url)).toBe(
+      "https://api.twilio.com/2010-04-01/Accounts/AC_test_account/Messages.json",
+    );
+    expect(init?.method).toBe("POST");
+    expect(init?.redirect).toBe("error");
+    expect(String(init?.body)).toContain("To=%2B923001234567");
+    expect(String(init?.body)).toContain("From=%2B15551234567");
+    expect(String(init?.body)).not.toContain("test-only-auth-token");
+    expect(new Headers(init?.headers).get("authorization")).toMatch(/^Basic /);
+  });
+
+  it("maps Twilio provider rejection to a safe service-unavailable error", async () => {
+    const fetchImpl = vi.fn(
+      async () => new Response("provider detail", { status: 400 }),
+    ) as unknown as typeof fetch;
+    const transport = createTwilioSmsTransport(twilioConfig, fetchImpl);
+
+    await expect(
+      transport.send({
+        to: "+923001234567",
+        body: "Your SkillUp code is 1234.",
+      }),
+    ).rejects.toMatchObject({
+      statusCode: 503,
+      message: "Sign-in SMS delivery is temporarily unavailable.",
+    });
+  });
+
+  it("fails safely when the requested channel is disabled", async () => {
     const disabled = readApiConfig({
       APP_ENV: "test",
       PUBLIC_APP_URL: "https://skillup.example",
       DATABASE_URL: "postgresql://skillup_test:test-only@127.0.0.1:5432/skillup_test",
       SESSION_SECRET: "test-only-session-secret-at-least-32-bytes",
       EMAIL_PROVIDER: "disabled",
+      SMS_PROVIDER: "disabled",
     });
     const delivery = createConfiguredAuthCodeDelivery(disabled);
 
     await expect(
       delivery.sendSignInCode({
-        email: "learner@example.com",
-        code: "123456",
+        channel: "phone",
+        destination: "+923001234567",
+        display: "03001234567",
+        code: "1234",
         expiresAt: new Date("2026-07-30T12:10:00.000Z"),
       }),
     ).rejects.toMatchObject({ statusCode: 503 });

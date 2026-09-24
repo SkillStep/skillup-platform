@@ -110,6 +110,8 @@ jobs:
       STAGING_PREVIOUS_RELEASE_REF: ${{ inputs.previous_release_ref || github.event.client_payload.previous_release_ref }}
       STAGING_QA_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       STAGING_REQUIRE_EMAIL: ${{ vars.STAGING_REQUIRE_EMAIL || 'true' }}
+      STAGING_REQUIRE_SMS: ${{ vars.STAGING_REQUIRE_SMS || 'true' }}
+      STAGING_QA_PHONE: ${{ vars.STAGING_QA_PHONE }}
       STAGING_REQUIRE_AI: ${{ vars.STAGING_REQUIRE_AI || 'true' }}
       STAGING_REQUIRE_JAZZCASH: ${{ vars.STAGING_REQUIRE_JAZZCASH || 'true' }}
       STAGING_REQUIRE_VISUALS: ${{ vars.STAGING_REQUIRE_VISUALS || 'true' }}
@@ -189,6 +191,13 @@ jobs:
             fi
           fi
 
+          if [ "${STAGING_REQUIRE_SMS,,}" = "true" ]; then
+            [ -n "${STAGING_QA_PHONE:-}" ] || missing+=("STAGING_QA_PHONE")
+            [ -n "${STAGING_SSH_BRIDGE_HOST:-}" ] || missing+=("STAGING_HOST")
+            [ -n "${STAGING_SSH_BRIDGE_USER:-}" ] || missing+=("STAGING_SSH_USER")
+            [ -n "${STAGING_SSH_BRIDGE_KEY:-}" ] || missing+=("STAGING_SSH_KEY")
+          fi
+
           if [ "${STAGING_REQUIRE_AI,,}" = "true" ]; then
             [ -n "${STAGING_AI_RELEASE_SHA:-}" ] || missing+=("STAGING_AI_RELEASE_SHA")
             [ -n "${STAGING_AI_ARTIFACT_REF:-}" ] || missing+=("STAGING_AI_ARTIFACT_REF")
@@ -203,7 +212,7 @@ jobs:
           echo "STAGING CERTIFICATION WIRING: PASS"
 
       - name: Start protected QA OTP bridge
-        if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' }}
+        if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' || env.STAGING_REQUIRE_SMS == 'true' }}
         env:
           STAGING_SSH_BRIDGE_HOST: ${{ secrets.STAGING_HOST }}
           STAGING_SSH_BRIDGE_USER: ${{ secrets.STAGING_SSH_USER }}
@@ -212,7 +221,7 @@ jobs:
         run: |
           set -euo pipefail
 
-          if [ -n "${STAGING_QA_MAILBOX_URL:-}" ] && [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
+          if [ "${STAGING_REQUIRE_SMS,,}" != "true" ] && [ -n "${STAGING_QA_MAILBOX_URL:-}" ] && [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
             echo "Using explicitly configured staging QA mailbox bridge."
             exit 0
           fi
@@ -276,6 +285,11 @@ jobs:
         shell: bash
         run: node tools/staging-qa-bootstrap-identities.mjs
 
+      - name: Verify real staging SMS OTP
+        if: ${{ env.STAGING_REQUIRE_SMS == 'true' }}
+        shell: bash
+        run: node tools/staging-qa-verify-phone.mjs
+
       - name: Provision deterministic staging-only roles and entitlements
         uses: appleboy/ssh-action@v1.2.0
         env:
@@ -317,7 +331,8 @@ jobs:
 
       - name: Run mandatory staging certification
         env:
-          # The real OTP start request reaches the configured SMTP provider first.
+          # Email and phone OTP provider calls are proven before the full suite.
+          # The real email OTP start request reaches the configured SMTP provider first.
           # The API persists the challenge only after sendSignInCode succeeds, and
           # the SSH-backed QA reader derives that exact persisted challenge code.
           # Verification still uses the public auth verify endpoint with no bypass.
