@@ -20,6 +20,7 @@ import { createConfiguredSmsCodeDelivery } from "./sms-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
+import { createIdentityManagementService, registerIdentityManagementRoutes } from "./identity-management.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import { createMaintenanceRunner } from "./maintenance.js";
@@ -46,6 +47,13 @@ const authService = createAuthService({
   sessionIdleMinutes: config.SESSION_IDLE_MINUTES,
   sessionAbsoluteHours: config.SESSION_ABSOLUTE_HOURS,
   delivery: createConfiguredAuthCodeDelivery(config),
+  smsDelivery: createConfiguredSmsCodeDelivery(config),
+});
+const identityManagementService = createIdentityManagementService({
+  pool: database.pool,
+  secret: config.SESSION_SECRET,
+  challengeMinutes: config.AUTH_CHALLENGE_MINUTES,
+  emailDelivery: createConfiguredAuthCodeDelivery(config),
   smsDelivery: createConfiguredSmsCodeDelivery(config),
 });
 const gameplayService = createGameplayService({ pool: database.pool });
@@ -124,6 +132,12 @@ if (externalBilling) {
     billingService: externalBilling,
   });
 }
+
+registerIdentityManagementRoutes(app, {
+  config,
+  authService,
+  service: identityManagementService,
+});
 
 registerRecommendationRoutes(app, {
   config,
