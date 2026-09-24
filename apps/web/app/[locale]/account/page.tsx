@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../discovery-shell";
 import { AccountControls } from "./account-controls";
+import { IdentityControls } from "./identity-controls";
 import styles from "./account.module.css";
 import { MembershipAccount } from "./membership-account";
 
@@ -37,6 +38,7 @@ export default async function AccountPage({ params }: PageProps) {
           </p>
         </header>
         <MembershipAccount />
+        <IdentityControls />
         <AccountControls />
       </main>
       <PublicFooter />
