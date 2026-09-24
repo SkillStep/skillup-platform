@@ -31,7 +31,9 @@ describe("Twilio SMS OTP delivery", () => {
     });
 
     expect(fetcher).toHaveBeenCalledOnce();
-    const [url, init] = fetcher.mock.calls[0]!;
+    const call = fetcher.mock.calls[0];
+    expect(call).toBeDefined();
+    const [url, init] = call ?? [];
     expect(String(url)).toContain("/Accounts/test-account-sid/Messages.json");
     expect(String(init?.body)).toContain("To=%2B923001234567");
     expect(String(init?.body)).toContain("Your+SkillUp+code+is+1234");
