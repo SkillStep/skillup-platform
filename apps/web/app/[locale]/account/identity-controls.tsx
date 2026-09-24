@@ -169,7 +169,9 @@ export function IdentityControls() {
             Verification code
             <input
               value={code}
-              onChange={(event) => setCode(event.currentTarget.value.replace(/\D/g, "").slice(0, 4))}
+              onChange={(event) =>
+                setCode(event.currentTarget.value.replace(/\D/g, "").slice(0, 4))
+              }
               inputMode="numeric"
               autoComplete="one-time-code"
               pattern="[0-9]{4}"

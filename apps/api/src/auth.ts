@@ -5,7 +5,12 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import type { ApiConfig } from "./config.js";
-import { formatPakistanPhone, maskIdentity, normalizePakistanPhone, parseSignInIdentity } from "./identity.js";
+import {
+  formatPakistanPhone,
+  maskIdentity,
+  normalizePakistanPhone,
+  parseSignInIdentity,
+} from "./identity.js";
 import type { SmsCodeDelivery } from "./sms-delivery.js";
 
 const StartEmailSignInSchema = z.object({
@@ -106,9 +111,7 @@ export type AuthService = Readonly<{
   startPhoneSignIn: (
     input: Readonly<{ phone: string; requestFingerprint: string }>,
   ) => Promise<Readonly<{ challengeId: string; expiresAt: Date }>>;
-  verifyPhoneSignIn: (
-    input: Readonly<{ challengeId: string; code: string }>,
-  ) => Promise<
+  verifyPhoneSignIn: (input: Readonly<{ challengeId: string; code: string }>) => Promise<
     Readonly<{
       sessionToken: string;
       sessionExpiresAt: Date;
@@ -244,8 +247,14 @@ export function createAuthService(
       );
 
       const counts = limits.rows[0];
-      if (counts?.last_created_at && requestedAt.getTime() - counts.last_created_at.getTime() < 60_000) {
-        throw new AuthRequestError(429, "Please wait 60 seconds before requesting another sign-in code.");
+      if (
+        counts?.last_created_at &&
+        requestedAt.getTime() - counts.last_created_at.getTime() < 60_000
+      ) {
+        throw new AuthRequestError(
+          429,
+          "Please wait 60 seconds before requesting another sign-in code.",
+        );
       }
       if (Number(counts?.email_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
         throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
@@ -385,7 +394,8 @@ export function createAuthService(
     startPhoneSignIn: async ({ phone, requestFingerprint }) => {
       const requestedAt = now();
       const phoneNormalized = normalizePakistanPhone(phone);
-      if (!phoneNormalized) throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
+      if (!phoneNormalized)
+        throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
       if (!options.smsDelivery) {
         throw new AuthRequestError(503, "Sign-in SMS delivery is temporarily unavailable.");
       }
@@ -403,10 +413,19 @@ export function createAuthService(
         [phoneNormalized, cutoff, fingerprintDigest],
       );
       const counts = limits.rows[0];
-      if (counts?.last_created_at && requestedAt.getTime() - counts.last_created_at.getTime() < 60_000) {
-        throw new AuthRequestError(429, "Please wait 60 seconds before requesting another sign-in code.");
+      if (
+        counts?.last_created_at &&
+        requestedAt.getTime() - counts.last_created_at.getTime() < 60_000
+      ) {
+        throw new AuthRequestError(
+          429,
+          "Please wait 60 seconds before requesting another sign-in code.",
+        );
       }
-      if (Number(counts?.identity_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
+      if (
+        Number(counts?.identity_count ?? 0) >= 5 ||
+        Number(counts?.fingerprint_count ?? 0) >= 20
+      ) {
         throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
       }
 

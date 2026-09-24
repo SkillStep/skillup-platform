@@ -27,7 +27,10 @@ const stateRoot = await fs.mkdtemp(path.join(os.tmpdir(), "skillup-staging-qa-bo
 
 try {
   const smsPhone = qaIdentity("STAGING_QA_SMS_PHONE");
-  await createAuthenticatedIdentityState(smsPhone, path.join(stateRoot, "STAGING_QA_SMS_PHONE.json"));
+  await createAuthenticatedIdentityState(
+    smsPhone,
+    path.join(stateRoot, "STAGING_QA_SMS_PHONE.json"),
+  );
   console.log("STAGING_QA_SMS_PHONE verified through the real staging SMS OTP flow.");
 
   for (const environmentName of identities) {

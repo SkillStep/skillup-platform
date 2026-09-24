@@ -19,7 +19,9 @@ describe("Twilio SMS OTP delivery", () => {
       TWILIO_AUTH_TOKEN: "test-only-auth-token-value",
       TWILIO_FROM_NUMBER: "+15005550006",
     });
-    const fetcher = vi.fn(async () => new Response(JSON.stringify({ sid: "test-message-id" }), { status: 201 }));
+    const fetcher = vi.fn(
+      async () => new Response(JSON.stringify({ sid: "test-message-id" }), { status: 201 }),
+    );
     const delivery = createConfiguredSmsCodeDelivery(config, fetcher as typeof fetch);
 
     await delivery.sendSignInCode({

@@ -88,9 +88,9 @@ describe("API runtime configuration", () => {
   });
 
   it("fails closed when Twilio SMS is enabled without protected credentials", () => {
-    expect(() =>
-      readApiConfig({ ...requiredEnvironment, SMS_PROVIDER: "twilio" }),
-    ).toThrow("TWILIO_ACCOUNT_SID is required when SMS_PROVIDER=twilio");
+    expect(() => readApiConfig({ ...requiredEnvironment, SMS_PROVIDER: "twilio" })).toThrow(
+      "TWILIO_ACCOUNT_SID is required when SMS_PROVIDER=twilio",
+    );
   });
 
   it("accepts complete Twilio SMS configuration", () => {

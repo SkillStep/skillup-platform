@@ -81,15 +81,17 @@ async function requireUserId(
 
 export type IdentityManagementService = ReturnType<typeof createIdentityManagementService>;
 
-export function createIdentityManagementService(options: Readonly<{
-  pool: DatabaseClient["pool"];
-  secret: string;
-  challengeMinutes: number;
-  emailDelivery: AuthCodeDelivery;
-  smsDelivery: SmsCodeDelivery;
-  now?: () => Date;
-  createCode?: () => string;
-}>) {
+export function createIdentityManagementService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    secret: string;
+    challengeMinutes: number;
+    emailDelivery: AuthCodeDelivery;
+    smsDelivery: SmsCodeDelivery;
+    now?: () => Date;
+    createCode?: () => string;
+  }>,
+) {
   const now = options.now ?? (() => new Date());
   const createCode = options.createCode ?? (() => randomInt(0, 10_000).toString().padStart(4, "0"));
 
@@ -106,10 +108,16 @@ export function createIdentityManagementService(options: Readonly<{
     ]);
     return {
       email: email.rows[0]
-        ? { value: email.rows[0].email_display, verifiedAt: email.rows[0].verified_at.toISOString() }
+        ? {
+            value: email.rows[0].email_display,
+            verifiedAt: email.rows[0].verified_at.toISOString(),
+          }
         : null,
       phone: phone.rows[0]
-        ? { value: phone.rows[0].phone_display, verifiedAt: phone.rows[0].verified_at.toISOString() }
+        ? {
+            value: phone.rows[0].phone_display,
+            verifiedAt: phone.rows[0].verified_at.toISOString(),
+          }
         : null,
     };
   }
@@ -127,7 +135,8 @@ export function createIdentityManagementService(options: Readonly<{
             [identity.normalized],
           );
     const owner = existing.rows[0]?.user_id;
-    if (owner === userId) throw new IdentityManagementError(409, "That sign-in identity is already linked.");
+    if (owner === userId)
+      throw new IdentityManagementError(409, "That sign-in identity is already linked.");
     if (owner) throw new IdentityManagementError(409, "That sign-in identity is already in use.");
 
     const requestedAt = now();
@@ -145,7 +154,12 @@ export function createIdentityManagementService(options: Readonly<{
           where purpose = 'identity_link' and request_fingerprint_digest = $4 and created_at >= $3) as fingerprint_count,
         (select max(created_at) from auth_challenges
           where purpose = 'identity_link' and identity_type = $1 and email_normalized = $2) as last_created_at`,
-      [identity.channel === "email" ? "email" : "phone", identity.normalized, cutoff, fingerprintDigest],
+      [
+        identity.channel === "email" ? "email" : "phone",
+        identity.normalized,
+        cutoff,
+        fingerprintDigest,
+      ],
     );
     if (
       limits.rows[0]?.last_created_at &&
@@ -160,7 +174,10 @@ export function createIdentityManagementService(options: Readonly<{
       Number(limits.rows[0]?.identity_count ?? 0) >= 5 ||
       Number(limits.rows[0]?.fingerprint_count ?? 0) >= 20
     ) {
-      throw new IdentityManagementError(429, "Please wait before requesting another verification code.");
+      throw new IdentityManagementError(
+        429,
+        "Please wait before requesting another verification code.",
+      );
     }
 
     const challengeId = randomUUID();
@@ -198,7 +215,12 @@ export function createIdentityManagementService(options: Readonly<{
     };
   }
 
-  async function verify(userId: string, challengeId: string, channel: "email" | "sms", code: string) {
+  async function verify(
+    userId: string,
+    challengeId: string,
+    channel: "email" | "sms",
+    code: string,
+  ) {
     const verifiedAt = now();
     const database = await options.pool.connect();
     try {
@@ -263,7 +285,8 @@ export function createIdentityManagementService(options: Readonly<{
         );
       } else {
         const identity = parseSignInIdentity(challenge.email_normalized);
-        if (identity.channel !== "sms") throw new IdentityManagementError(400, "Invalid phone identity.");
+        if (identity.channel !== "sms")
+          throw new IdentityManagementError(400, "Invalid phone identity.");
         await database.query(
           `insert into user_phone_identities
             (user_id, phone_normalized, phone_display, verified_at, created_at, updated_at)
@@ -295,7 +318,10 @@ export function createIdentityManagementService(options: Readonly<{
     const identities = await list(userId);
     const count = Number(Boolean(identities.email)) + Number(Boolean(identities.phone));
     if (count <= 1) {
-      throw new IdentityManagementError(409, "Add another verified sign-in method before removing this one.");
+      throw new IdentityManagementError(
+        409,
+        "Add another verified sign-in method before removing this one.",
+      );
     }
     if (channel === "email") {
       await options.pool.query("delete from user_email_identities where user_id = $1", [userId]);
@@ -325,9 +351,9 @@ export function registerIdentityManagementRoutes(
     requireTrustedOrigin(request, options.config);
     const userId = await requireUserId(request, options.config, options.authService);
     const body = StartIdentityLinkSchema.parse(request.body);
-    return reply.status(202).send(
-      await options.service.start(userId, body.identity, requestFingerprint(request)),
-    );
+    return reply
+      .status(202)
+      .send(await options.service.start(userId, body.identity, requestFingerprint(request)));
   });
 
   app.post("/v1/account/identities/otp/verify", async (request) => {

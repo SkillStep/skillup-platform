@@ -47,7 +47,9 @@ async function retrieveOtp(identity, startedAfter) {
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
-  throw new Error(`No staging OTP became available for the QA identity within ${OTP_WAIT_MS / 1_000} seconds.`);
+  throw new Error(
+    `No staging OTP became available for the QA identity within ${OTP_WAIT_MS / 1_000} seconds.`,
+  );
 }
 
 export async function createAuthenticatedIdentityState(identity, statePath) {

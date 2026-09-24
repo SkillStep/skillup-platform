@@ -231,7 +231,10 @@ export const authChallenges = pgTable(
       table.requestFingerprintDigest,
       table.createdAt,
     ),
-    check("auth_challenges_identity_type_allowed", sql`${table.identityType} in ('email', 'phone')`),
+    check(
+      "auth_challenges_identity_type_allowed",
+      sql`${table.identityType} in ('email', 'phone')`,
+    ),
     check("auth_challenges_purpose_allowed", sql`${table.purpose} in ('sign_in', 'identity_link')`),
     check("auth_challenges_attempts_range", sql`${table.attemptsRemaining} between 0 and 5`),
     check("auth_challenges_secret_digest_length", sql`char_length(${table.secretDigest}) = 64`),

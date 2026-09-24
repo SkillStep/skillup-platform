@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { formatPakistanPhone, maskIdentity, normalizePakistanPhone, parseSignInIdentity } from "./identity.js";
+import {
+  formatPakistanPhone,
+  maskIdentity,
+  normalizePakistanPhone,
+  parseSignInIdentity,
+} from "./identity.js";
 
 describe("unified sign-in identity parsing", () => {
   it.each([

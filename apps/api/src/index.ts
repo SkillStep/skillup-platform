@@ -20,7 +20,10 @@ import { createConfiguredSmsCodeDelivery } from "./sms-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
-import { createIdentityManagementService, registerIdentityManagementRoutes } from "./identity-management.js";
+import {
+  createIdentityManagementService,
+  registerIdentityManagementRoutes,
+} from "./identity-management.js";
 import { createJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import { createMaintenanceRunner } from "./maintenance.js";

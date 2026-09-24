@@ -43,7 +43,11 @@ const ApiConfigSchema = z
     SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
     TWILIO_ACCOUNT_SID: z.string().trim().min(3).max(100).optional(),
     TWILIO_AUTH_TOKEN: z.string().min(16).max(500).optional(),
-    TWILIO_FROM_NUMBER: z.string().trim().regex(/^\+[1-9]\d{7,14}$/).optional(),
+    TWILIO_FROM_NUMBER: z
+      .string()
+      .trim()
+      .regex(/^\+[1-9]\d{7,14}$/)
+      .optional(),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
 
     // Preferred launch integration: browser -> SkillUp BFF -> external payment service -> JazzCash.
@@ -123,7 +127,11 @@ const ApiConfigSchema = z
     }
 
     if (config.SMS_PROVIDER === "twilio") {
-      for (const field of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"] as const) {
+      for (const field of [
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_FROM_NUMBER",
+      ] as const) {
         if (!config[field]) {
           context.addIssue({
             code: "custom",

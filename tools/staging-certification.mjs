@@ -149,9 +149,11 @@ function blockForMissingConfiguration() {
   }
 
   if (bool("STAGING_REQUIRE_SMS", true)) {
-    const smsMissing = ["STAGING_QA_SMS_PHONE", "STAGING_QA_MAILBOX_URL", "STAGING_QA_MAILBOX_TOKEN"].filter(
-      (name) => !value(name),
-    );
+    const smsMissing = [
+      "STAGING_QA_SMS_PHONE",
+      "STAGING_QA_MAILBOX_URL",
+      "STAGING_QA_MAILBOX_TOKEN",
+    ].filter((name) => !value(name));
     if (!bool("STAGING_SMS_PROVIDER_READY") || smsMissing.length > 0) {
       setArea(
         "sms_authentication",
