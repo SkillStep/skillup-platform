@@ -133,14 +133,29 @@ export function createIdentityManagementService(options: Readonly<{
     const requestedAt = now();
     const fingerprintDigest = digest(options.secret, `fingerprint:${fingerprint}`);
     const cutoff = addMinutes(requestedAt, -15);
-    const limits = await options.pool.query<{ identity_count: string; fingerprint_count: string }>(
+    const limits = await options.pool.query<{
+      identity_count: string;
+      fingerprint_count: string;
+      last_created_at: Date | null;
+    }>(
       `select
         (select count(*) from auth_challenges
           where purpose = 'identity_link' and identity_type = $1 and email_normalized = $2 and created_at >= $3) as identity_count,
         (select count(*) from auth_challenges
-          where purpose = 'identity_link' and request_fingerprint_digest = $4 and created_at >= $3) as fingerprint_count`,
+          where purpose = 'identity_link' and request_fingerprint_digest = $4 and created_at >= $3) as fingerprint_count,
+        (select max(created_at) from auth_challenges
+          where purpose = 'identity_link' and identity_type = $1 and email_normalized = $2) as last_created_at`,
       [identity.channel === "email" ? "email" : "phone", identity.normalized, cutoff, fingerprintDigest],
     );
+    if (
+      limits.rows[0]?.last_created_at &&
+      requestedAt.getTime() - limits.rows[0].last_created_at.getTime() < 60_000
+    ) {
+      throw new IdentityManagementError(
+        429,
+        "Please wait 60 seconds before requesting another verification code.",
+      );
+    }
     if (
       Number(limits.rows[0]?.identity_count ?? 0) >= 5 ||
       Number(limits.rows[0]?.fingerprint_count ?? 0) >= 20
