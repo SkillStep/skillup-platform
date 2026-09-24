@@ -40,6 +40,11 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
+    SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
+    TWILIO_ACCOUNT_SID: z.string().trim().min(1).max(100).optional(),
+    TWILIO_AUTH_TOKEN: z.string().min(1).max(500).optional(),
+    TWILIO_PHONE_NUMBER: z.string().trim().regex(/^\\+[1-9]\\d{7,14}$/).optional(),
+    SMS_REQUEST_TIMEOUT_SECONDS: z.coerce.number().int().min(3).max(30).default(10),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
 
     // Preferred launch integration: browser -> SkillUp BFF -> external payment service -> JazzCash.
@@ -115,6 +120,18 @@ const ApiConfigSchema = z
           path: ["SMTP_PORT"],
           message: "SMTP_SECURE=true requires the implicit TLS port 465.",
         });
+      }
+    }
+
+    if (config.SMS_PROVIDER === "twilio") {
+      for (const field of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER"] as const) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when SMS_PROVIDER=twilio.`,
+          });
+        }
       }
     }
 
@@ -331,6 +348,8 @@ const ApiConfigSchema = z
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
 type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
+  | "SMS_PROVIDER"
+  | "SMS_REQUEST_TIMEOUT_SECONDS"
   | "FEATURE_PAYMENT_SERVICE_ENABLED"
   | "PAYMENT_SERVICE_BASE_URL"
   | "PAYMENT_SERVICE_API_KEY"
@@ -359,6 +378,8 @@ type OptionalInjectedConfig =
 export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
+    SMS_PROVIDER?: "disabled" | "twilio";
+    SMS_REQUEST_TIMEOUT_SECONDS?: number;
     FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
     PAYMENT_SERVICE_BASE_URL?: string | undefined;
     PAYMENT_SERVICE_API_KEY?: string | undefined;
