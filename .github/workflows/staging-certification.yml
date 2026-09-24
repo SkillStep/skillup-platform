@@ -183,25 +183,11 @@ jobs:
             -o "UserKnownHostsFile=$known_hosts_file" \
             -o StrictHostKeyChecking=yes \
             "$STAGING_SSH_BRIDGE_USER@$STAGING_SSH_BRIDGE_HOST" \
-            "python3 - <<'PY'
-from pathlib import Path
-import re
-
-path = Path('/opt/skillup/.env')
-if not path.exists():
-    raise SystemExit(0)
-value = ''
-for line in path.read_text(encoding='utf-8').splitlines():
-    if line.startswith('STAGING_QA_PHONE='):
-        value = line.split('=', 1)[1].strip()
-        break
-compact = re.sub(r'[\\s()-]', '', value)
-if re.fullmatch(r'\\+923\\d{9}', compact) or re.fullmatch(r'03\\d{9}', compact):
-    print(value, end='')
-PY")"
+            "grep -m1 '^STAGING_QA_PHONE=' /opt/skillup/.env 2>/dev/null | cut -d= -f2-" || true)"
 
           rm -f "$key_file" "$known_hosts_file"
-          if [ -n "$qa_phone" ]; then
+          compact_phone="$(printf '%s' "$qa_phone" | tr -d ' ()-')"
+          if [[ "$compact_phone" =~ ^\+923[0-9]{9}$ || "$compact_phone" =~ ^03[0-9]{9}$ ]]; then
             echo "::add-mask::$qa_phone"
             echo "STAGING_QA_PHONE=$qa_phone" >> "$GITHUB_ENV"
             echo "Resolved the staging QA phone from protected staging configuration."
