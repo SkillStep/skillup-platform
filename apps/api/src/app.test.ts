@@ -37,6 +37,7 @@ const testConfig: ApiConfig = {
 const learner = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "learner@example.com",
+  phone: null,
   profile: {
     displayName: null,
     locale: "en" as const,
@@ -57,6 +58,15 @@ function createAuthService(): AuthService {
       sessionToken: "test-session-token",
       sessionExpiresAt: new Date("2026-08-06T00:00:00.000Z"),
       learner,
+    })),
+    startPhoneSignIn: vi.fn(async () => ({
+      challengeId: "33333333-3333-4333-8333-333333333333",
+      expiresAt: new Date("2026-07-30T00:10:00.000Z"),
+    })),
+    verifyPhoneSignIn: vi.fn(async () => ({
+      sessionToken: "test-session-token",
+      sessionExpiresAt: new Date("2026-08-06T00:00:00.000Z"),
+      learner: { ...learner, email: null, phone: "0300 123 4567" },
     })),
     resolveSession: vi.fn(async (token) => (token === "test-session-token" ? learner : null)),
     revokeSession: vi.fn(async () => undefined),
@@ -152,6 +162,32 @@ describe("passwordless account routes", () => {
     expect(authService.startEmailSignIn).toHaveBeenCalledWith({
       email: "Learner@Example.com",
       requestFingerprint: "192.0.2.10|SkillUp test browser",
+    });
+  });
+
+  it("starts a unified phone challenge without exposing the OTP", async () => {
+    const authService = createAuthService();
+    const response = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/auth/otp/start",
+      headers: {
+        origin: "https://skillup.example",
+        "user-agent": "SkillUp test browser",
+      },
+      remoteAddress: "192.0.2.11",
+      payload: { identity: "0300 1234567" },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toMatchObject({
+      challengeId: "33333333-3333-4333-8333-333333333333",
+      channel: "sms",
+      maskedDestination: "+92300 **** 567",
+    });
+    expect(response.body).not.toContain("1234");
+    expect(authService.startPhoneSignIn).toHaveBeenCalledWith({
+      phone: "+923001234567",
+      requestFingerprint: "192.0.2.11|SkillUp test browser",
     });
   });
 
