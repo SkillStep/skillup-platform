@@ -37,6 +37,7 @@ const testConfig: ApiConfig = {
 const learner = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "learner@example.com",
+  phone: null,
   profile: {
     displayName: null,
     locale: "en" as const,
@@ -48,16 +49,60 @@ const learner = {
 };
 
 function createAuthService(): AuthService {
+  const verified = {
+    sessionToken: "test-session-token",
+    sessionExpiresAt: new Date("2026-08-06T00:00:00.000Z"),
+    learner,
+  };
   return {
+    startSignIn: vi.fn(async ({ identity }) => ({
+      challengeId: "22222222-2222-4222-8222-222222222222",
+      expiresAt: new Date("2026-07-30T00:10:00.000Z"),
+      channel: identity.includes("@") ? ("email" as const) : ("phone" as const),
+      maskedDestination: identity.includes("@") ? "l***@example.com" : "0300 *** 4567",
+    })),
+    verifySignIn: vi.fn(async () => verified),
     startEmailSignIn: vi.fn(async () => ({
       challengeId: "22222222-2222-4222-8222-222222222222",
       expiresAt: new Date("2026-07-30T00:10:00.000Z"),
     })),
-    verifyEmailSignIn: vi.fn(async () => ({
-      sessionToken: "test-session-token",
-      sessionExpiresAt: new Date("2026-08-06T00:00:00.000Z"),
-      learner,
+    verifyEmailSignIn: vi.fn(async () => verified),
+    listIdentities: vi.fn(async () => [
+      {
+        type: "email" as const,
+        display: "learner@example.com",
+        masked: "l***@example.com",
+        verifiedAt: "2026-07-30T00:00:00.000Z",
+      },
+    ]),
+    startIdentityLink: vi.fn(async ({ identity }) => ({
+      challengeId: "33333333-3333-4333-8333-333333333333",
+      expiresAt: new Date("2026-07-30T00:10:00.000Z"),
+      channel: identity.includes("@") ? ("email" as const) : ("phone" as const),
+      maskedDestination: identity.includes("@") ? "n***@example.com" : "0300 *** 4567",
     })),
+    verifyIdentityLink: vi.fn(async () => [
+      {
+        type: "email" as const,
+        display: "learner@example.com",
+        masked: "l***@example.com",
+        verifiedAt: "2026-07-30T00:00:00.000Z",
+      },
+      {
+        type: "phone" as const,
+        display: "03001234567",
+        masked: "0300 *** 4567",
+        verifiedAt: "2026-07-30T00:00:00.000Z",
+      },
+    ]),
+    removeIdentity: vi.fn(async () => [
+      {
+        type: "email" as const,
+        display: "learner@example.com",
+        masked: "l***@example.com",
+        verifiedAt: "2026-07-30T00:00:00.000Z",
+      },
+    ]),
     resolveSession: vi.fn(async (token) => (token === "test-session-token" ? learner : null)),
     revokeSession: vi.fn(async () => undefined),
     updateProfile: vi.fn(async (_userId, patch) => ({
@@ -125,6 +170,97 @@ describe("SkillUp API", () => {
       message: "The requested API resource was not found.",
     });
     expect(response.body).not.toContain("private-user-data");
+  });
+});
+
+describe("unified email/mobile OTP routes", () => {
+  it("starts a phone OTP challenge through the unified endpoint", async () => {
+    const authService = createAuthService();
+    const response = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/auth/otp/start",
+      headers: {
+        origin: "https://skillup.example",
+        "user-agent": "SkillUp mobile test",
+      },
+      remoteAddress: "192.0.2.20",
+      payload: { identity: "0300 1234567" },
+    });
+
+    expect(response.statusCode).toBe(202);
+    expect(response.json()).toEqual({
+      challengeId: "22222222-2222-4222-8222-222222222222",
+      channel: "phone",
+      maskedDestination: "0300 *** 4567",
+      expiresAt: "2026-07-30T00:10:00.000Z",
+      message: "If delivery is available, a sign-in code has been sent.",
+    });
+    expect(authService.startSignIn).toHaveBeenCalledWith({
+      identity: "0300 1234567",
+      requestFingerprint: "192.0.2.20|SkillUp mobile test",
+    });
+  });
+
+  it("verifies a unified challenge and sets the secure session boundary", async () => {
+    const authService = createAuthService();
+    const response = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/auth/otp/verify",
+      headers: { origin: "https://skillup.example" },
+      payload: {
+        challengeId: "22222222-2222-4222-8222-222222222222",
+        code: "1234",
+      },
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json()).toEqual({ learner });
+    expect(response.headers["set-cookie"]).toContain("skillup_session=test-session-token");
+    expect(authService.verifySignIn).toHaveBeenCalledWith({
+      challengeId: "22222222-2222-4222-8222-222222222222",
+      code: "1234",
+    });
+  });
+
+  it("lists and links verified login identities only for the authenticated learner", async () => {
+    const authService = createAuthService();
+    const listed = await createTestApi(undefined, authService).inject({
+      method: "GET",
+      url: "/v1/account/identities",
+      headers: { cookie: "skillup_session=test-session-token" },
+    });
+    expect(listed.statusCode).toBe(200);
+    expect(listed.json()).toMatchObject({
+      identities: [{ type: "email", display: "learner@example.com" }],
+    });
+
+    const started = await createTestApi(undefined, authService).inject({
+      method: "POST",
+      url: "/v1/account/identities/start",
+      headers: {
+        origin: "https://skillup.example",
+        cookie: "skillup_session=test-session-token",
+      },
+      payload: { identity: "+923001234567" },
+    });
+    expect(started.statusCode).toBe(202);
+    expect(started.json()).toMatchObject({
+      channel: "phone",
+      maskedDestination: "0300 *** 4567",
+    });
+    expect(authService.startIdentityLink).toHaveBeenCalledWith({
+      userId: learner.id,
+      identity: "+923001234567",
+      requestFingerprint: expect.any(String),
+    });
+  });
+
+  it("rejects identity management without an authenticated session", async () => {
+    const response = await createTestApi(undefined, createAuthService()).inject({
+      method: "GET",
+      url: "/v1/account/identities",
+    });
+    expect(response.statusCode).toBe(401);
   });
 });
 
