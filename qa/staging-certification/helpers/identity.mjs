@@ -13,17 +13,17 @@ function required(name) {
   return value;
 }
 
-function certificationUserAgent(email) {
+function certificationUserAgent(identity) {
   const reference = createHash("sha256")
-    .update(email.trim().toLowerCase())
+    .update(identity.trim().toLowerCase())
     .digest("hex")
     .slice(0, 12);
   return `SkillUp-Staging-Certification/${reference}`;
 }
 
-async function retrieveOtp(email, startedAfter) {
+async function retrieveOtp(identity, startedAfter) {
   const mailboxUrl = new URL(required("STAGING_QA_MAILBOX_URL"));
-  mailboxUrl.searchParams.set("email", email);
+  mailboxUrl.searchParams.set("identity", identity);
   mailboxUrl.searchParams.set("after", startedAfter);
   const token = required("STAGING_QA_MAILBOX_TOKEN");
   const deadline = Date.now() + OTP_WAIT_MS;
@@ -41,16 +41,16 @@ async function retrieveOtp(email, startedAfter) {
       const body = await response.json();
       if (typeof body?.code === "string" && /^\d{4}$/.test(body.code)) return body.code;
     } else if (response.status !== 404) {
-      throw new Error(`QA mailbox returned HTTP ${response.status}.`);
+      throw new Error(`QA OTP bridge returned HTTP ${response.status}.`);
     }
 
     await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
   }
 
-  throw new Error(`No staging OTP arrived for ${email} within ${OTP_WAIT_MS / 1_000} seconds.`);
+  throw new Error(`No staging OTP became available for the QA identity within ${OTP_WAIT_MS / 1_000} seconds.`);
 }
 
-export async function createAuthenticatedState(email, statePath) {
+export async function createAuthenticatedIdentityState(identity, statePath) {
   const baseURL = required("STAGING_WEB_URL");
   const origin = new URL(baseURL).origin;
   await fs.mkdir(path.dirname(statePath), { recursive: true });
@@ -59,33 +59,41 @@ export async function createAuthenticatedState(email, statePath) {
     baseURL,
     extraHTTPHeaders: {
       origin,
-      "user-agent": certificationUserAgent(email),
+      "user-agent": certificationUserAgent(identity),
     },
   });
 
   try {
     const startedAfter = new Date(Date.now() - 2_000).toISOString();
-    const start = await context.post("/api/v1/auth/email/start", { data: { email } });
+    const start = await context.post("/api/v1/auth/otp/start", { data: { identity } });
     if (!start.ok()) throw new Error(`OTP start failed with HTTP ${start.status()}.`);
     const challenge = await start.json();
-    if (typeof challenge?.challengeId !== "string") {
-      throw new Error("OTP start did not return a challenge identifier.");
+    if (
+      typeof challenge?.challengeId !== "string" ||
+      (challenge?.channel !== "email" && challenge?.channel !== "sms")
+    ) {
+      throw new Error("OTP start did not return a valid challenge.");
     }
 
-    const code = await retrieveOtp(email, startedAfter);
-    const verify = await context.post("/api/v1/auth/email/verify", {
-      data: { challengeId: challenge.challengeId, code },
+    const code = await retrieveOtp(identity, startedAfter);
+    const verify = await context.post("/api/v1/auth/otp/verify", {
+      data: { challengeId: challenge.challengeId, channel: challenge.channel, code },
     });
     if (!verify.ok()) throw new Error(`OTP verification failed with HTTP ${verify.status()}.`);
 
     await context.storageState({ path: statePath });
+    return await verify.json();
   } finally {
     await context.dispose();
   }
 }
 
-export async function retrieveOtpForUi(email, startedAfter) {
-  return retrieveOtp(email, startedAfter);
+export async function createAuthenticatedState(email, statePath) {
+  return createAuthenticatedIdentityState(email, statePath);
+}
+
+export async function retrieveOtpForUi(identity, startedAfter) {
+  return retrieveOtp(identity, startedAfter);
 }
 
 export function qaIdentity(name) {
