@@ -596,7 +596,7 @@ export function createAuthService(
 
       try {
         await client.query("begin");
-        const { challenge, identity } = await readChallenge(client, {
+        const { identity } = await readChallenge(client, {
           challengeId,
           code,
           purpose: "sign_in",
