@@ -173,13 +173,16 @@ jobs:
           JAZZCASH_V11_MERCHANT_ID: ${{ secrets.JAZZCASH_V11_MERCHANT_ID }}
           JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
+          TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+          TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
+          TWILIO_FROM_NUMBER: ${{ secrets.TWILIO_FROM_NUMBER }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_FROM_NUMBER
           script: |
             set -euo pipefail
             mkdir -p /opt/skillup
@@ -207,6 +210,21 @@ jobs:
                 'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
                 'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
             }
+            # SMS OTP: enable only when all protected Twilio staging secrets are present.
+            twilio_sid = (os.environ.get('TWILIO_ACCOUNT_SID') or '').strip()
+            twilio_token = (os.environ.get('TWILIO_AUTH_TOKEN') or '').strip()
+            twilio_from = (os.environ.get('TWILIO_FROM_NUMBER') or '').strip()
+            if twilio_sid and twilio_token and twilio_from:
+                updates.update({
+                    'SMS_PROVIDER': 'twilio',
+                    'TWILIO_ACCOUNT_SID': twilio_sid,
+                    'TWILIO_AUTH_TOKEN': twilio_token,
+                    'TWILIO_FROM_NUMBER': twilio_from,
+                })
+            else:
+                updates.update({'SMS_PROVIDER': 'disabled'})
+                print('Twilio staging secrets incomplete; SMS OTP remains disabled')
+
             # JazzCash V11 MWALLET sandbox: enable only when staging secrets are present.
             merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
             password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
