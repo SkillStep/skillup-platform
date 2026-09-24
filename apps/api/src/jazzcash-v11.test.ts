@@ -138,20 +138,32 @@ describe("JazzCash v11 orchestrator hashing", () => {
     expect(response["pp_RetreivalReferenceNo"]).toBe("RRN-V11-1");
   });
 
-  it("posts inquiry JSON without empty placeholder fields", async () => {
+  it("posts the exact JazzCash Transaction Status Inquiry field set", async () => {
     const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       expect(String(url)).toBe("https://onlinepayments.example/inquiry");
       const body = JSON.parse(String(init?.body)) as Record<string, string>;
-      expect(body).not.toHaveProperty("pp_Amount");
-      expect(body).not.toHaveProperty("pp_AuthCode");
-      expect(body).not.toHaveProperty("pp_TxnDateTime");
+      expect(Object.keys(body).sort()).toEqual(
+        ["pp_MerchantID", "pp_Password", "pp_SecureHash", "pp_TxnRefNo", "pp_Version"].sort(),
+      );
+      expect(body["pp_MerchantID"]).toBe("MC990726");
+      expect(body["pp_Password"]).toBe("cx4r0z207a");
       expect(body["pp_TxnRefNo"]).toBe("Goo20260922120000A1");
+      expect(body["pp_Version"]).toBe("1.1");
       expect(body["pp_SecureHash"]).toMatch(/^[A-F0-9]{64}$/);
+
+      const unhashed = { ...body };
+      delete unhashed["pp_SecureHash"];
+      expect(jazzCashV11SecureHash(unhashed, "jbw5a799l4")).toBe(body["pp_SecureHash"]);
+
       return new Response(
         JSON.stringify({
-          pp_ResponseCode: "000",
-          pp_ResponseMessage: "Success",
-          pp_TxnRefNo: body["pp_TxnRefNo"],
+          status: "SUCCESS",
+          rrn: "RRN-INQUIRY-1",
+          settlementDate: "20260922",
+          settlementExpiryDate: "20260923120000",
+          authCode: "AUTH1",
+          bankID: "",
+          productID: "",
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
@@ -159,7 +171,8 @@ describe("JazzCash v11 orchestrator hashing", () => {
 
     const client = createJazzCashV11Client(readApiConfig(v11Environment), fetcher as typeof fetch);
     const response = await client.inquire({ txnRefNo: "Goo20260922120000A1" });
-    expect(response["pp_ResponseCode"]).toBe("000");
+    expect(response["status"]).toBe("SUCCESS");
+    expect(response["rrn"]).toBe("RRN-INQUIRY-1");
   });
 });
 
