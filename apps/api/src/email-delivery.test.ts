@@ -110,7 +110,7 @@ describe("configured authentication code delivery", () => {
     expect(String(init?.body)).toContain("To=%2B923001234567");
     expect(String(init?.body)).toContain("From=%2B15551234567");
     expect(String(init?.body)).not.toContain("test-only-auth-token");
-    expect((init?.headers as Record<string, string> | undefined)?.authorization).toMatch(/^Basic /);
+    expect(new Headers(init?.headers).get("authorization")).toMatch(/^Basic /);
   });
 
   it("maps Twilio provider rejection to a safe service-unavailable error", async () => {
