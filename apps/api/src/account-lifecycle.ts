@@ -304,11 +304,16 @@ export function createAccountLifecycleService(
         [requestId, userId, requestedAt],
       );
 
-      const [identity, profile, privacy, policies, sessions, progress, payments] =
+      const [emailIdentity, phoneIdentity, profile, privacy, policies, sessions, progress, payments] =
         await Promise.all([
           options.pool.query(
             `select email_display, verified_at, created_at
              from user_email_identities where user_id = $1`,
+            [userId],
+          ),
+          options.pool.query(
+            `select phone_display, verified_at, created_at
+             from user_phone_identities where user_id = $1`,
             [userId],
           ),
           options.pool.query(
@@ -356,7 +361,10 @@ export function createAccountLifecycleService(
 
       const payload = {
         generatedAt: requestedAt.toISOString(),
-        identity: identity.rows,
+        identities: {
+          email: emailIdentity.rows,
+          phone: phoneIdentity.rows,
+        },
         profile: profile.rows,
         privacy: privacy.rows,
         policyAcceptances: policies.rows,
@@ -451,6 +459,9 @@ export function createAccountLifecycleService(
               where user_id = $1`,
             [request.user_id, deletedEmail, processedAt],
           );
+          await database.query(`delete from user_phone_identities where user_id = $1`, [
+            request.user_id,
+          ]);
           await database.query(
             `update learner_profiles
                 set display_name = null,
