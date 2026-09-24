@@ -35,6 +35,21 @@ const testConfig: ApiConfig = {
 };
 
 const authService: AuthService = {
+    startSignIn: vi.fn(async ({ identity }) => ({
+      challengeId: "77777777-7777-4777-8777-777777777777",
+      expiresAt: new Date("2026-07-30T12:10:00.000Z"),
+      channel: identity.includes("@") ? ("email" as const) : ("phone" as const),
+      maskedDestination: identity.includes("@") ? "l***@example.com" : "0300 *** 4567",
+    })),
+    verifySignIn: vi.fn(async () => {
+      throw new Error("Not used by this test.");
+    }),
+    listIdentities: vi.fn(async () => []),
+    startIdentityLink: vi.fn(async () => {
+      throw new Error("Not used by this test.");
+    }),
+    verifyIdentityLink: vi.fn(async () => []),
+    removeIdentity: vi.fn(async () => []),
   startEmailSignIn: vi.fn(async () => ({
     challengeId: "22222222-2222-4222-8222-222222222222",
     expiresAt: new Date("2026-07-30T00:10:00.000Z"),
