@@ -247,10 +247,7 @@ export const authChallenges = pgTable(
       sql`(${table.identityType} = 'email' and ${table.identityNormalized} = lower(btrim(${table.identityNormalized})))
           or (${table.identityType} = 'phone' and ${table.identityNormalized} ~ '^\\+923[0-9]{9}$')`,
     ),
-    check(
-      "auth_challenges_purpose_allowed",
-      sql`${table.purpose} in ('sign_in', 'link_identity')`,
-    ),
+    check("auth_challenges_purpose_allowed", sql`${table.purpose} in ('sign_in', 'link_identity')`),
     check(
       "auth_challenges_link_user_required",
       sql`(${table.purpose} = 'sign_in' and ${table.userId} is null)
