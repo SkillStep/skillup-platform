@@ -16,6 +16,10 @@ type MailTransport = Readonly<{
   sendMail: (message: SignInMessage) => Promise<unknown>;
 }>;
 
+export type SmsTransport = Readonly<{
+  send: (input: Readonly<{ to: string; body: string }>) => Promise<void>;
+}>;
+
 function formatExpiry(expiresAt: Date): string {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -59,9 +63,24 @@ function signInMessage(
   };
 }
 
+function smsSignInBody(code: string): string {
+  return `Your SkillUp code is ${code}. It expires in 10 minutes. Do not share this code.`;
+}
+
 function requireSmtpCredential(value: string | undefined, name: string): string {
   if (!value) throw new Error(`${name} is required for SMTP delivery.`);
   return value;
+}
+
+function requireSmsCredential(value: string | undefined, name: string): string {
+  if (!value) throw new Error(`${name} is required for Twilio SMS delivery.`);
+  return value;
+}
+
+function serviceUnavailable(message: string): Error {
+  const error = new Error(message);
+  Object.assign(error, { statusCode: 503 });
+  return error;
 }
 
 export function createSmtpTransport(config: ApiConfig): Transporter {
@@ -91,26 +110,75 @@ export function createSmtpTransport(config: ApiConfig): Transporter {
   });
 }
 
+export function createTwilioSmsTransport(
+  config: ApiConfig,
+  fetchImpl: typeof fetch = fetch,
+): SmsTransport {
+  if ((config.SMS_PROVIDER ?? "disabled") !== "twilio") {
+    throw new Error("Twilio transport cannot be created while SMS delivery is disabled.");
+  }
+
+  const accountSid = requireSmsCredential(config.TWILIO_ACCOUNT_SID, "TWILIO_ACCOUNT_SID");
+  const authToken = requireSmsCredential(config.TWILIO_AUTH_TOKEN, "TWILIO_AUTH_TOKEN");
+  const from = requireSmsCredential(config.TWILIO_PHONE_NUMBER, "TWILIO_PHONE_NUMBER");
+  const timeoutSeconds = config.SMS_REQUEST_TIMEOUT_SECONDS ?? 10;
+
+  return {
+    send: async ({ to, body }) => {
+      const endpoint = `https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(accountSid)}/Messages.json`;
+      const response = await fetchImpl(endpoint, {
+        method: "POST",
+        headers: {
+          authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString("base64")}`,
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ Body: body, From: from, To: to }),
+        redirect: "error",
+        signal: AbortSignal.timeout(timeoutSeconds * 1_000),
+      });
+
+      if (!response.ok) {
+        throw serviceUnavailable("Sign-in SMS delivery is temporarily unavailable.");
+      }
+    },
+  };
+}
+
 export function createConfiguredAuthCodeDelivery(
   config: ApiConfig,
   transport?: MailTransport,
+  smsTransport?: SmsTransport,
 ): AuthCodeDelivery {
-  if (config.EMAIL_PROVIDER !== "smtp") {
-    return {
-      sendSignInCode: async () => {
-        const error = new Error("Sign-in email delivery is temporarily unavailable.");
-        Object.assign(error, { statusCode: 503 });
-        throw error;
-      },
-    };
-  }
-
-  const smtp = transport ?? createSmtpTransport(config);
-  const from = requireSmtpCredential(config.EMAIL_FROM, "EMAIL_FROM");
+  const smtp = config.EMAIL_PROVIDER === "smtp" ? (transport ?? createSmtpTransport(config)) : null;
+  const sms =
+    (config.SMS_PROVIDER ?? "disabled") === "twilio"
+      ? (smsTransport ?? createTwilioSmsTransport(config))
+      : null;
 
   return {
     sendSignInCode: async (input) => {
-      await smtp.sendMail(signInMessage(from, input));
+      if (input.channel === "email") {
+        if (!smtp) {
+          throw serviceUnavailable("Sign-in email delivery is temporarily unavailable.");
+        }
+        const from = requireSmtpCredential(config.EMAIL_FROM, "EMAIL_FROM");
+        await smtp.sendMail(
+          signInMessage(from, {
+            email: input.destination,
+            code: input.code,
+            expiresAt: input.expiresAt,
+          }),
+        );
+        return;
+      }
+
+      if (!sms) {
+        throw serviceUnavailable("Sign-in SMS delivery is temporarily unavailable.");
+      }
+      await sms.send({
+        to: input.destination,
+        body: smsSignInBody(input.code),
+      });
     },
   };
 }
