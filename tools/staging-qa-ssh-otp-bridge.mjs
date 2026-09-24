@@ -14,15 +14,22 @@ function required(name) {
   return value;
 }
 
-function normalizeEmail(value) {
-  return value.trim().toLocaleLowerCase("en-US");
+function normalizeIdentity(value) {
+  const trimmed = value.trim();
+  if (trimmed.includes("@")) return trimmed.toLocaleLowerCase("en-US");
+  return trimmed.replace(/[\s()-]/g, "");
 }
 
-function qaEmailAllowlist() {
+function qaIdentityAllowlist() {
   return new Set(
     Object.entries(process.env)
-      .filter(([name, value]) => name.startsWith("STAGING_QA_") && name.endsWith("_EMAIL") && value)
-      .map(([, value]) => normalizeEmail(value)),
+      .filter(
+        ([name, value]) =>
+          name.startsWith("STAGING_QA_") &&
+          (name.endsWith("_EMAIL") || name === "STAGING_QA_SMS_PHONE") &&
+          value,
+      )
+      .map(([, value]) => normalizeIdentity(value)),
   );
 }
 
@@ -82,7 +89,7 @@ function runProcess(command, args, timeoutMs) {
   });
 }
 
-async function readOtpOverSsh(email, after) {
+async function readOtpOverSsh(identity, after) {
   const sshHost = required("STAGING_SSH_BRIDGE_HOST");
   const sshUser = required("STAGING_SSH_BRIDGE_USER");
   const keyFile = required("STAGING_SSH_KEY_FILE");
@@ -92,8 +99,9 @@ async function readOtpOverSsh(email, after) {
     "cd /opt/skillup &&",
     "docker compose -f docker-compose.staging.yml exec -T",
     `-e STAGING_QA_OTP_READ_CONFIRM=${shellQuote(REMOTE_CONFIRMATION)}`,
-    `-e STAGING_QA_OTP_EMAIL=${shellQuote(email)}`,
+    `-e STAGING_QA_OTP_IDENTITY=${shellQuote(identity)}`,
     `-e STAGING_QA_OTP_AFTER=${shellQuote(after)}`,
+    `-e STAGING_QA_SMS_PHONE=${shellQuote(process.env.STAGING_QA_SMS_PHONE?.trim() || "not-configured")}`,
     "api node dist/cli/staging-qa-read-otp.js",
   ].join(" ");
 
@@ -176,14 +184,14 @@ if (process.argv.includes("--self-test")) {
 const bridgeToken = required("STAGING_QA_MAILBOX_TOKEN");
 const host = process.env.STAGING_QA_MAILBOX_HOST?.trim() || DEFAULT_HOST;
 const port = Number.parseInt(process.env.STAGING_QA_MAILBOX_PORT ?? String(DEFAULT_PORT), 10);
-const allowedEmails = qaEmailAllowlist();
+const allowedIdentities = qaIdentityAllowlist();
 
 if (host !== DEFAULT_HOST)
   throw new Error("The staging QA SSH OTP bridge must bind to 127.0.0.1 only.");
 if (!Number.isInteger(port) || port < 1024 || port > 65535)
   throw new Error("Invalid staging QA SSH OTP bridge port.");
-if (allowedEmails.size === 0)
-  throw new Error("No staging QA email aliases are configured for the SSH OTP bridge.");
+if (allowedIdentities.size === 0)
+  throw new Error("No staging QA identities are configured for the SSH OTP bridge.");
 
 const server = http.createServer(async (request, response) => {
   try {
@@ -205,14 +213,16 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    const email = normalizeEmail(requestUrl.searchParams.get("email") ?? "");
-    if (!allowedEmails.has(email)) {
-      sendJson(response, 403, { error: "email_not_allowed" });
+    const rawIdentity =
+      requestUrl.searchParams.get("identity") ?? requestUrl.searchParams.get("email") ?? "";
+    const identity = normalizeIdentity(rawIdentity);
+    if (!allowedIdentities.has(identity)) {
+      sendJson(response, 403, { error: "identity_not_allowed" });
       return;
     }
 
     const after = parseAfter(requestUrl.searchParams.get("after") ?? "");
-    const code = await readOtpOverSsh(email, after);
+    const code = await readOtpOverSsh(identity, after);
     if (!code) {
       sendJson(response, 404, { error: "otp_not_available_yet" });
       return;
