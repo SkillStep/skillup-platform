@@ -43,7 +43,11 @@ const ApiConfigSchema = z
     SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
     TWILIO_ACCOUNT_SID: z.string().trim().min(1).max(100).optional(),
     TWILIO_AUTH_TOKEN: z.string().min(1).max(500).optional(),
-    TWILIO_PHONE_NUMBER: z.string().trim().regex(/^\\+[1-9]\\d{7,14}$/).optional(),
+    TWILIO_PHONE_NUMBER: z
+      .string()
+      .trim()
+      .regex(/^\+[1-9]\d{7,14}$/)
+      .optional(),
     SMS_REQUEST_TIMEOUT_SECONDS: z.coerce.number().int().min(3).max(30).default(10),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
 
