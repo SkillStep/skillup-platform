@@ -141,7 +141,9 @@ export function AccountControls() {
       setMessage(`Enter the four-digit code sent to ${challenge.maskedDestination}.`);
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : "The sign-in method could not be added.",
+        requestError instanceof Error
+          ? requestError.message
+          : "The sign-in method could not be added.",
       );
     } finally {
       setSaving(false);
@@ -172,7 +174,9 @@ export function AccountControls() {
       setMessage("Verified sign-in method added.");
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : "The verification could not be completed.",
+        requestError instanceof Error
+          ? requestError.message
+          : "The verification could not be completed.",
       );
     } finally {
       setSaving(false);
@@ -193,7 +197,9 @@ export function AccountControls() {
       setMessage("Sign-in method removed.");
     } catch (requestError) {
       setError(
-        requestError instanceof Error ? requestError.message : "The sign-in method could not be removed.",
+        requestError instanceof Error
+          ? requestError.message
+          : "The sign-in method could not be removed.",
       );
     } finally {
       setSaving(false);
