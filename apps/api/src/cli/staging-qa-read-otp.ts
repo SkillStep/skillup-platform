@@ -1,5 +1,6 @@
 import { Pool } from "pg";
 
+import { normalizePakistanPhone } from "../identity.js";
 import {
   isAllowedStagingQaEmail,
   normalizeStagingQaEmail,
@@ -15,6 +16,23 @@ function required(name: string): string {
   return value;
 }
 
+function resolveIdentity(raw: string): Readonly<{ type: "email" | "phone"; normalized: string }> {
+  if (raw.includes("@")) {
+    const email = normalizeStagingQaEmail(raw);
+    if (!isAllowedStagingQaEmail(email)) {
+      throw new Error("The requested address is not an approved SkillUp staging QA identity.");
+    }
+    return { type: "email", normalized: email };
+  }
+
+  const phone = normalizePakistanPhone(raw);
+  const allowedPhone = normalizePakistanPhone(required("STAGING_QA_SMS_PHONE"));
+  if (!phone || !allowedPhone || phone !== allowedPhone) {
+    throw new Error("The requested phone is not the approved SkillUp staging QA SMS identity.");
+  }
+  return { type: "phone", normalized: phone };
+}
+
 async function main(): Promise<void> {
   if (process.env["APP_ENV"] !== "staging") {
     throw new Error("Staging QA OTP recovery is allowed only when APP_ENV=staging.");
@@ -23,11 +41,7 @@ async function main(): Promise<void> {
     throw new Error("The staging QA OTP recovery confirmation is missing or invalid.");
   }
 
-  const email = normalizeStagingQaEmail(required("STAGING_QA_OTP_EMAIL"));
-  if (!isAllowedStagingQaEmail(email)) {
-    throw new Error("The requested address is not an approved SkillUp staging QA identity.");
-  }
-
+  const identity = resolveIdentity(required("STAGING_QA_OTP_IDENTITY"));
   const after = parseStagingQaAfter(required("STAGING_QA_OTP_AFTER"));
   const databaseUrl = required("DATABASE_URL");
   const sessionSecret = required("SESSION_SECRET");
@@ -42,14 +56,15 @@ async function main(): Promise<void> {
       `select id, secret_digest, created_at
          from auth_challenges
         where email_normalized = $1
+          and identity_type = $2
           and purpose = 'sign_in'
-          and created_at >= $2
+          and created_at >= $3
           and consumed_at is null
           and attempts_remaining > 0
           and expires_at > now()
         order by created_at desc
         limit 5`,
-      [email, after],
+      [identity.normalized, identity.type, after],
     );
 
     for (const challenge of result.rows) {
