@@ -148,6 +148,21 @@ function blockForMissingConfiguration() {
     }
   }
 
+  if (bool("STAGING_REQUIRE_SMS", true)) {
+    const smsMissing = ["STAGING_QA_SMS_PHONE", "STAGING_QA_MAILBOX_URL", "STAGING_QA_MAILBOX_TOKEN"].filter(
+      (name) => !value(name),
+    );
+    if (!bool("STAGING_SMS_PROVIDER_READY") || smsMissing.length > 0) {
+      setArea(
+        "sms_authentication",
+        "BLOCKED",
+        smsMissing.length > 0
+          ? `Staging SMS OTP certification inputs missing: ${smsMissing.join(", ")}`
+          : "Staging SMS OTP provider has not been marked ready.",
+      );
+    }
+  }
+
   if (!bool("STAGING_QA_LEARNER_PREMIUM_READY")) {
     setArea(
       "learner_fixture",
