@@ -347,6 +347,7 @@ const ApiConfigSchema = z
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
 type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
+  | "SMS_PROVIDER"
   | "FEATURE_PAYMENT_SERVICE_ENABLED"
   | "PAYMENT_SERVICE_BASE_URL"
   | "PAYMENT_SERVICE_API_KEY"
@@ -375,6 +376,7 @@ type OptionalInjectedConfig =
 export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
+    SMS_PROVIDER?: "disabled" | "twilio";
     FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
     PAYMENT_SERVICE_BASE_URL?: string | undefined;
     PAYMENT_SERVICE_API_KEY?: string | undefined;
