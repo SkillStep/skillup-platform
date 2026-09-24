@@ -87,6 +87,24 @@ describe("API runtime configuration", () => {
     ).toThrow("SMTP_SECURE=true requires the implicit TLS port 465");
   });
 
+  it("fails closed when Twilio SMS is enabled without protected credentials", () => {
+    expect(() =>
+      readApiConfig({ ...requiredEnvironment, SMS_PROVIDER: "twilio" }),
+    ).toThrow("TWILIO_ACCOUNT_SID is required when SMS_PROVIDER=twilio");
+  });
+
+  it("accepts complete Twilio SMS configuration", () => {
+    const config = readApiConfig({
+      ...requiredEnvironment,
+      SMS_PROVIDER: "twilio",
+      TWILIO_ACCOUNT_SID: "test-account-sid",
+      TWILIO_AUTH_TOKEN: "test-only-auth-token-value",
+      TWILIO_FROM_NUMBER: "+15005550006",
+    });
+    expect(config.SMS_PROVIDER).toBe("twilio");
+    expect(config.TWILIO_FROM_NUMBER).toBe("+15005550006");
+  });
+
   it("keeps premium, external payment service and direct JazzCash disabled by default", () => {
     const config = readApiConfig(requiredEnvironment);
     expect(config.FEATURE_PREMIUM_ENABLED).toBe(false);
