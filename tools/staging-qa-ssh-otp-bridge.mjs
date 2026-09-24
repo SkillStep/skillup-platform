@@ -82,7 +82,14 @@ function runProcess(command, args, timeoutMs) {
   });
 }
 
-async function readOtpOverSsh(email, after) {
+function normalizePhone(value) {
+  const compact = value.trim().replace(/[\s()-]/g, "");
+  if (/^\+923\d{9}$/.test(compact)) return compact;
+  if (/^03\d{9}$/.test(compact)) return `+92${compact.slice(1)}`;
+  throw new Error("Invalid staging QA phone.");
+}
+
+async function readOtpOverSsh(identityType, identity, after) {
   const sshHost = required("STAGING_SSH_BRIDGE_HOST");
   const sshUser = required("STAGING_SSH_BRIDGE_USER");
   const keyFile = required("STAGING_SSH_KEY_FILE");
@@ -92,7 +99,9 @@ async function readOtpOverSsh(email, after) {
     "cd /opt/skillup &&",
     "docker compose -f docker-compose.staging.yml exec -T",
     `-e STAGING_QA_OTP_READ_CONFIRM=${shellQuote(REMOTE_CONFIRMATION)}`,
-    `-e STAGING_QA_OTP_EMAIL=${shellQuote(email)}`,
+    identityType === "email"
+      ? `-e STAGING_QA_OTP_EMAIL=${shellQuote(identity)}`
+      : `-e STAGING_QA_OTP_PHONE=${shellQuote(identity)} -e STAGING_QA_PHONE=${shellQuote(identity)}`,
     `-e STAGING_QA_OTP_AFTER=${shellQuote(after)}`,
     "api node dist/cli/staging-qa-read-otp.js",
   ].join(" ");
@@ -205,14 +214,36 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    const email = normalizeEmail(requestUrl.searchParams.get("email") ?? "");
-    if (!allowedEmails.has(email)) {
-      sendJson(response, 403, { error: "email_not_allowed" });
+    const emailParam = requestUrl.searchParams.get("email")?.trim() ?? "";
+    const phoneParam = requestUrl.searchParams.get("phone")?.trim() ?? "";
+    if (Boolean(emailParam) === Boolean(phoneParam)) {
+      sendJson(response, 400, { error: "one_identity_required" });
       return;
     }
 
+    let identityType;
+    let identity;
+    if (emailParam) {
+      const email = normalizeEmail(emailParam);
+      if (!allowedEmails.has(email)) {
+        sendJson(response, 403, { error: "email_not_allowed" });
+        return;
+      }
+      identityType = "email";
+      identity = email;
+    } else {
+      const phone = normalizePhone(phoneParam);
+      const allowedPhone = process.env.STAGING_QA_PHONE?.trim();
+      if (!allowedPhone || normalizePhone(allowedPhone) !== phone) {
+        sendJson(response, 403, { error: "phone_not_allowed" });
+        return;
+      }
+      identityType = "phone";
+      identity = phone;
+    }
+
     const after = parseAfter(requestUrl.searchParams.get("after") ?? "");
-    const code = await readOtpOverSsh(email, after);
+    const code = await readOtpOverSsh(identityType, identity, after);
     if (!code) {
       sendJson(response, 404, { error: "otp_not_available_yet" });
       return;
