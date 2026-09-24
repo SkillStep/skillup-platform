@@ -14,7 +14,8 @@ type PageProps = Readonly<{
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Securely sign in or create a SkillUp account with a short-lived email or SMS verification code.",
+  description:
+    "Securely sign in or create a SkillUp account with a short-lived email or SMS verification code.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
