@@ -19,3 +19,8 @@ alter table "auth_challenges"
   add constraint "auth_challenges_identity_type_allowed" check ("identity_type" in ('email', 'phone'));
 create index if not exists "auth_challenges_identity_created_idx"
   on "auth_challenges" ("identity_type", "email_normalized", "created_at");
+
+alter table "auth_challenges"
+  drop constraint if exists "auth_challenges_purpose_allowed";
+alter table "auth_challenges"
+  add constraint "auth_challenges_purpose_allowed" check ("purpose" in ('sign_in', 'identity_link'));
