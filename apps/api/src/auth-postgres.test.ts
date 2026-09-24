@@ -69,7 +69,7 @@ describeWithPostgres("passwordless auth against PostgreSQL", () => {
   it("creates and resolves a first-time phone-only learner through the generic OTP flow", async () => {
     if (!pool) throw new Error("DATABASE_URL is required for the PostgreSQL auth regression.");
 
-    const suffix = randomUUID().replace(/\D/g, "").slice(0, 7).padEnd(7, "0");
+    const suffix = randomUUID().replace(/\D/g, "").slice(0, 8).padEnd(8, "0");
     const phone = `+9231${suffix}`;
     const now = new Date();
     const code = "4321";
