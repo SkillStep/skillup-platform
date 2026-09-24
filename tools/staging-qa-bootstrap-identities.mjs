@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 
 import {
+  createAuthenticatedIdentityState,
   createAuthenticatedState,
   qaIdentity,
 } from "../qa/staging-certification/helpers/identity.mjs";
@@ -25,6 +26,10 @@ const identities = [
 const stateRoot = await fs.mkdtemp(path.join(os.tmpdir(), "skillup-staging-qa-bootstrap-"));
 
 try {
+  const smsPhone = qaIdentity("STAGING_QA_SMS_PHONE");
+  await createAuthenticatedIdentityState(smsPhone, path.join(stateRoot, "STAGING_QA_SMS_PHONE.json"));
+  console.log("STAGING_QA_SMS_PHONE verified through the real staging SMS OTP flow.");
+
   for (const environmentName of identities) {
     const email = qaIdentity(environmentName);
     await createAuthenticatedState(email, path.join(stateRoot, `${environmentName}.json`));
@@ -35,5 +40,5 @@ try {
 }
 
 console.log(
-  "All mandatory staging QA accounts are verified and available for fixture provisioning.",
+  "All mandatory staging QA email and SMS identities are verified and available for fixture provisioning.",
 );
