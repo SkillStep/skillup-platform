@@ -282,7 +282,7 @@ export function createJazzCashV11BillingService(
                updated_at
              )
              values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
-             on conflict (user_id, idempotency_key) do nothing
+             on conflict do nothing
              returning id`,
             [
               userId,
