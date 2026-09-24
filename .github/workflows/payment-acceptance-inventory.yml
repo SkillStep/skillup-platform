@@ -1,0 +1,47 @@
+name: Payment Acceptance Inventory
+
+on:
+  push:
+    branches: [qa/payment-acceptance-20260924]
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-24.04
+    environment: staging
+    steps:
+      - name: Check staging payment configuration presence
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          timeout: 60s
+          command_timeout: 5m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            docker compose -f docker-compose.staging.yml exec -T api sh -lc '
+              for key in \
+                PREMIUM_JAZZCASH_V11_CHECKOUT \
+                JAZZCASH_V11_URL \
+                JAZZCASH_V11_INQUIRY_URL \
+                JAZZCASH_V11_REFUND_URL \
+                JAZZCASH_V11_MERCHANT_ID \
+                JAZZCASH_V11_PASSWORD \
+                JAZZCASH_V11_INTEGRITY_SALT \
+                JAZZCASH_V11_MERCHANT_MPIN \
+                JAZZCASH_REFUND_URL \
+                JAZZCASH_MERCHANT_ID \
+                JAZZCASH_PASSWORD \
+                JAZZCASH_INTEGRITY_SALT \
+                JAZZCASH_MERCHANT_MPIN; do
+                if [ -n "$(printenv "$key" 2>/dev/null || true)" ]; then
+                  echo "$key=PRESENT"
+                else
+                  echo "$key=MISSING"
+                fi
+              done
+            '
