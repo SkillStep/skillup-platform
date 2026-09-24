@@ -40,6 +40,10 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
+    SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
+    TWILIO_ACCOUNT_SID: z.string().trim().regex(/^AC[a-fA-F0-9]{32}$/).optional(),
+    TWILIO_AUTH_TOKEN: z.string().min(16).max(500).optional(),
+    TWILIO_FROM_NUMBER: z.string().trim().regex(/^\+[1-9]\d{7,14}$/).optional(),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
 
     // Preferred launch integration: browser -> SkillUp BFF -> external payment service -> JazzCash.
@@ -115,6 +119,18 @@ const ApiConfigSchema = z
           path: ["SMTP_PORT"],
           message: "SMTP_SECURE=true requires the implicit TLS port 465.",
         });
+      }
+    }
+
+    if (config.SMS_PROVIDER === "twilio") {
+      for (const field of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_FROM_NUMBER"] as const) {
+        if (!config[field]) {
+          context.addIssue({
+            code: "custom",
+            path: [field],
+            message: `${field} is required when SMS_PROVIDER=twilio.`,
+          });
+        }
       }
     }
 
