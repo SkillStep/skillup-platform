@@ -6,13 +6,8 @@ import { afterAll, describe, expect, it, vi } from "vitest";
 import { createCommercialAutomationService } from "./commercial-automation.js";
 import { createCommercialService } from "./commercial.js";
 import { readApiConfig } from "./config.js";
-import {
-  createJazzCashV11BillingService,
-} from "./jazzcash-v11-billing.js";
-import {
-  JazzCashV11Error,
-  type JazzCashV11Client,
-} from "./jazzcash-v11.js";
+import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
+import { JazzCashV11Error, type JazzCashV11Client } from "./jazzcash-v11.js";
 import type { JazzCashCpsClient } from "./jazzcash-cps.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
@@ -146,8 +141,7 @@ describeWithPostgres("JazzCash V11 essential launch acceptance", () => {
       entitlement_status: "active",
       entitlement_count: 1,
     });
-    const days =
-      ((row?.ends_at?.getTime() ?? 0) - (row?.starts_at?.getTime() ?? 0)) / 86_400_000;
+    const days = ((row?.ends_at?.getTime() ?? 0) - (row?.starts_at?.getTime() ?? 0)) / 86_400_000;
     expect(days).toBeGreaterThanOrEqual(27);
     expect(days).toBeLessThanOrEqual(32);
   });
@@ -181,8 +175,7 @@ describeWithPostgres("JazzCash V11 essential launch acceptance", () => {
       entitlement_status: "active",
       entitlement_count: 1,
     });
-    const days =
-      ((row?.ends_at?.getTime() ?? 0) - (row?.starts_at?.getTime() ?? 0)) / 86_400_000;
+    const days = ((row?.ends_at?.getTime() ?? 0) - (row?.starts_at?.getTime() ?? 0)) / 86_400_000;
     expect(days).toBeGreaterThanOrEqual(364);
     expect(days).toBeLessThanOrEqual(367);
   });
@@ -295,7 +288,11 @@ describeWithPostgres("JazzCash V11 essential launch acceptance", () => {
       }),
     ).rejects.toThrow("No Premium entitlement was granted");
 
-    const pending = await database.pool.query<{ id: string; merchant_reference: string; status: string }>(
+    const pending = await database.pool.query<{
+      id: string;
+      merchant_reference: string;
+      status: string;
+    }>(
       "select id, merchant_reference, status from payment_orders where user_id = $1 and idempotency_key = $2",
       [userId, idempotencyKey],
     );
