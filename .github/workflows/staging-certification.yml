@@ -110,10 +110,12 @@ jobs:
       STAGING_PREVIOUS_RELEASE_REF: ${{ inputs.previous_release_ref || github.event.client_payload.previous_release_ref }}
       STAGING_QA_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
       STAGING_REQUIRE_EMAIL: ${{ vars.STAGING_REQUIRE_EMAIL || 'true' }}
+      STAGING_REQUIRE_SMS: ${{ vars.STAGING_REQUIRE_SMS || 'true' }}
       STAGING_REQUIRE_AI: ${{ vars.STAGING_REQUIRE_AI || 'true' }}
       STAGING_REQUIRE_JAZZCASH: ${{ vars.STAGING_REQUIRE_JAZZCASH || 'true' }}
       STAGING_REQUIRE_VISUALS: ${{ vars.STAGING_REQUIRE_VISUALS || 'true' }}
       STAGING_EMAIL_PROVIDER_READY: ${{ vars.STAGING_EMAIL_PROVIDER_READY }}
+      STAGING_SMS_PROVIDER_READY: ${{ vars.STAGING_SMS_PROVIDER_READY }}
       STAGING_DEEPSEEK_READY: ${{ vars.STAGING_DEEPSEEK_READY }}
       STAGING_JAZZCASH_SANDBOX_READY: ${{ vars.STAGING_JAZZCASH_SANDBOX_READY }}
       STAGING_VISUAL_BASELINES_APPROVED: ${{ vars.STAGING_VISUAL_BASELINES_APPROVED }}
@@ -132,6 +134,7 @@ jobs:
       STAGING_QA_LEARNER_SUPPORT_EMAIL: ${{ vars.STAGING_QA_LEARNER_SUPPORT_EMAIL || 'skillup+qa-learner-support@codistan.org' }}
       STAGING_QA_SECURITY_ADMIN_EMAIL: ${{ vars.STAGING_QA_SECURITY_ADMIN_EMAIL || 'skillup+qa-security-admin@codistan.org' }}
       STAGING_QA_REVOKED_ADMIN_EMAIL: ${{ vars.STAGING_QA_REVOKED_ADMIN_EMAIL || 'skillup+qa-revoked-admin@codistan.org' }}
+      STAGING_QA_SMS_PHONE: ${{ secrets.STAGING_QA_SMS_PHONE }}
       STAGING_QA_MAILBOX_URL: ${{ vars.STAGING_QA_MAILBOX_URL }}
       STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
 
@@ -189,6 +192,18 @@ jobs:
             fi
           fi
 
+          if [ "${STAGING_REQUIRE_SMS,,}" = "true" ]; then
+            [ -n "${STAGING_QA_SMS_PHONE:-}" ] || missing+=("STAGING_QA_SMS_PHONE")
+            if [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ]; then
+              [ -n "${STAGING_QA_MAILBOX_URL:-}" ] || missing+=("STAGING_QA_MAILBOX_URL")
+              [ -n "${STAGING_QA_MAILBOX_TOKEN:-}" ] || missing+=("STAGING_QA_MAILBOX_TOKEN")
+            else
+              [ -n "${STAGING_SSH_BRIDGE_HOST:-}" ] || missing+=("STAGING_HOST")
+              [ -n "${STAGING_SSH_BRIDGE_USER:-}" ] || missing+=("STAGING_SSH_USER")
+              [ -n "${STAGING_SSH_BRIDGE_KEY:-}" ] || missing+=("STAGING_SSH_KEY")
+            fi
+          fi
+
           if [ "${STAGING_REQUIRE_AI,,}" = "true" ]; then
             [ -n "${STAGING_AI_RELEASE_SHA:-}" ] || missing+=("STAGING_AI_RELEASE_SHA")
             [ -n "${STAGING_AI_ARTIFACT_REF:-}" ] || missing+=("STAGING_AI_ARTIFACT_REF")
@@ -203,7 +218,7 @@ jobs:
           echo "STAGING CERTIFICATION WIRING: PASS"
 
       - name: Start protected QA OTP bridge
-        if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' }}
+        if: ${{ env.STAGING_REQUIRE_EMAIL == 'true' || env.STAGING_REQUIRE_SMS == 'true' }}
         env:
           STAGING_SSH_BRIDGE_HOST: ${{ secrets.STAGING_HOST }}
           STAGING_SSH_BRIDGE_USER: ${{ secrets.STAGING_SSH_USER }}
@@ -323,6 +338,7 @@ jobs:
           # Verification still uses the public auth verify endpoint with no bypass.
           # DeepSeek is separately proven by ai.spec.mjs against the live worker.
           STAGING_EMAIL_PROVIDER_READY: "true"
+          STAGING_SMS_PROVIDER_READY: "true"
           STAGING_QA_LEARNER_PREMIUM_READY: "true"
           STAGING_DEEPSEEK_READY: "true"
         run: node tools/staging-certification.mjs
