@@ -15,6 +15,13 @@ function required(name: string): string {
   return value;
 }
 
+function normalizePhone(value: string): string {
+  const compact = value.trim().replace(/[\s()-]/g, "");
+  if (/^\+923\d{9}$/.test(compact)) return compact;
+  if (/^03\d{9}$/.test(compact)) return `+92${compact.slice(1)}`;
+  throw new Error("STAGING_QA_OTP_PHONE must be a valid Pakistani mobile number.");
+}
+
 async function main(): Promise<void> {
   if (process.env["APP_ENV"] !== "staging") {
     throw new Error("Staging QA OTP recovery is allowed only when APP_ENV=staging.");
@@ -23,9 +30,28 @@ async function main(): Promise<void> {
     throw new Error("The staging QA OTP recovery confirmation is missing or invalid.");
   }
 
-  const email = normalizeStagingQaEmail(required("STAGING_QA_OTP_EMAIL"));
-  if (!isAllowedStagingQaEmail(email)) {
-    throw new Error("The requested address is not an approved SkillUp staging QA identity.");
+  const emailInput = process.env["STAGING_QA_OTP_EMAIL"]?.trim();
+  const phoneInput = process.env["STAGING_QA_OTP_PHONE"]?.trim();
+  if (Boolean(emailInput) === Boolean(phoneInput)) {
+    throw new Error("Exactly one staging QA OTP identity must be supplied.");
+  }
+
+  let identityType: "email" | "phone";
+  let identityNormalized: string;
+  if (emailInput) {
+    const email = normalizeStagingQaEmail(emailInput);
+    if (!isAllowedStagingQaEmail(email)) {
+      throw new Error("The requested address is not an approved SkillUp staging QA identity.");
+    }
+    identityType = "email";
+    identityNormalized = email;
+  } else {
+    identityType = "phone";
+    identityNormalized = normalizePhone(required("STAGING_QA_OTP_PHONE"));
+    const allowedPhone = process.env["STAGING_QA_PHONE"]?.trim();
+    if (!allowedPhone || normalizePhone(allowedPhone) !== identityNormalized) {
+      throw new Error("The requested phone is not the approved SkillUp staging QA identity.");
+    }
   }
 
   const after = parseStagingQaAfter(required("STAGING_QA_OTP_AFTER"));
@@ -41,16 +67,16 @@ async function main(): Promise<void> {
     }>(
       `select id, secret_digest, created_at
          from auth_challenges
-        where identity_type = 'email'
-          and identity_normalized = $1
+        where identity_type = $1
+          and identity_normalized = $2
           and purpose = 'sign_in'
-          and created_at >= $2
+          and created_at >= $3
           and consumed_at is null
           and attempts_remaining > 0
           and expires_at > now()
         order by created_at desc
         limit 5`,
-      [email, after],
+      [identityType, identityNormalized, after],
     );
 
     for (const challenge of result.rows) {
