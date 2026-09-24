@@ -124,7 +124,11 @@ const ApiConfigSchema = z
     }
 
     if (config.SMS_PROVIDER === "twilio") {
-      for (const field of ["TWILIO_ACCOUNT_SID", "TWILIO_AUTH_TOKEN", "TWILIO_PHONE_NUMBER"] as const) {
+      for (const field of [
+        "TWILIO_ACCOUNT_SID",
+        "TWILIO_AUTH_TOKEN",
+        "TWILIO_PHONE_NUMBER",
+      ] as const) {
         if (!config[field]) {
           context.addIssue({
             code: "custom",
