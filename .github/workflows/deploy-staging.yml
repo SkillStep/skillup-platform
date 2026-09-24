@@ -173,14 +173,13 @@ jobs:
           JAZZCASH_V11_MERCHANT_ID: ${{ secrets.JAZZCASH_V11_MERCHANT_ID }}
           JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
-          JAZZCASH_V11_RETURN_URL: ${{ secrets.JAZZCASH_V11_RETURN_URL }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT
           script: |
             set -euo pipefail
             mkdir -p /opt/skillup
@@ -212,8 +211,8 @@ jobs:
             merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
             password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
             integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip()
-            return_url = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip()
-            if merchant_id and password and integrity_salt and return_url:
+            return_url = 'https://skillupshop.codistan.org/en/account/payment-return'
+            if merchant_id and password and integrity_salt:
                 updates.update({
                     'FEATURE_PREMIUM_ENABLED': 'true',
                     'FEATURE_PAYMENT_SERVICE_ENABLED': 'false',
@@ -348,6 +347,7 @@ jobs:
           wait_for_public_url "Public web health" "$base/api/health"
           wait_for_public_url "Public API health" "$base/api/v1/health"
           wait_for_public_url "Public API database readiness" "$base/api/v1/ready"
+          wait_for_public_url "JazzCash return handler" "$base/en/account/payment-return"
 
           web_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/health")"
           api_health="$(curl --fail --silent --show-error --max-time 10 "$base/api/v1/health")"

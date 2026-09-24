@@ -315,6 +315,16 @@ const ApiConfigSchema = z
           });
         }
       }
+      if (
+        config.JAZZCASH_V11_RETURN_URL &&
+        new URL(config.JAZZCASH_V11_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
+      ) {
+        context.addIssue({
+          code: "custom",
+          path: ["JAZZCASH_V11_RETURN_URL"],
+          message: "The JazzCash v11 return URL must use the public SkillUp origin.",
+        });
+      }
     }
   });
 
