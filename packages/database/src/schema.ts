@@ -207,11 +207,19 @@ export const userPhoneIdentities = pgTable(
     uniqueIndex("user_phone_identities_user_unique").on(table.userId),
     check(
       "user_phone_identities_normalized_phone",
-      sql`${table.phoneNormalized} ~ '^\\+923[0-9]{9}
+      sql`${table.phoneNormalized} ~ '^\\+923[0-9]{9}$'`,
+    ),
+  ],
+);
+
+export const authChallenges = pgTable(
   "auth_challenges",
   {
     id: uuid("id").primaryKey(),
-    emailNormalized: text("email_normalized").notNull(),
+    identityType: text("identity_type").$type<AuthIdentityType>().notNull(),
+    identityNormalized: text("identity_normalized").notNull(),
+    identityDisplay: text("identity_display").notNull(),
+    userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     purpose: text("purpose").$type<AuthChallengePurpose>().notNull().default("sign_in"),
     secretDigest: text("secret_digest").notNull(),
     requestFingerprintDigest: text("request_fingerprint_digest").notNull(),
@@ -221,12 +229,33 @@ export const userPhoneIdentities = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("auth_challenges_email_created_idx").on(table.emailNormalized, table.createdAt),
+    index("auth_challenges_identity_created_idx").on(
+      table.identityType,
+      table.identityNormalized,
+      table.createdAt,
+    ),
     index("auth_challenges_fingerprint_created_idx").on(
       table.requestFingerprintDigest,
       table.createdAt,
     ),
-    check("auth_challenges_purpose_allowed", sql`${table.purpose} in ('sign_in')`),
+    check(
+      "auth_challenges_identity_type_allowed",
+      sql`${table.identityType} in ('email', 'phone')`,
+    ),
+    check(
+      "auth_challenges_identity_normalized",
+      sql`(${table.identityType} = 'email' and ${table.identityNormalized} = lower(btrim(${table.identityNormalized})))
+          or (${table.identityType} = 'phone' and ${table.identityNormalized} ~ '^\\+923[0-9]{9}$')`,
+    ),
+    check(
+      "auth_challenges_purpose_allowed",
+      sql`${table.purpose} in ('sign_in', 'link_identity')`,
+    ),
+    check(
+      "auth_challenges_link_user_required",
+      sql`(${table.purpose} = 'sign_in' and ${table.userId} is null)
+          or (${table.purpose} = 'link_identity' and ${table.userId} is not null)`,
+    ),
     check("auth_challenges_attempts_range", sql`${table.attemptsRemaining} between 0 and 5`),
     check("auth_challenges_secret_digest_length", sql`char_length(${table.secretDigest}) = 64`),
     check(
