@@ -9,7 +9,7 @@ create table if not exists "user_phone_identities" (
   constraint "user_phone_identities_e164" check (
     char_length("phone_normalized") = 13
     and left("phone_normalized", 4) = '+923'
-    and substring("phone_normalized" from 5) not like '%[^0-9]%'
+    and translate(substring("phone_normalized" from 5), '0123456789', '') = ''
   )
 );
 create unique index if not exists "user_phone_identities_phone_unique"
