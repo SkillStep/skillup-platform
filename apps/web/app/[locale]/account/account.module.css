@@ -334,3 +334,48 @@
     flex-direction: column;
   }
 }
+
+.identityList {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 1rem;
+}
+
+.identityList > div {
+  border: 1px solid var(--line);
+  border-radius: 0.85rem;
+  display: grid;
+  gap: 0.3rem;
+  padding: 0.9rem;
+}
+
+.identityList span {
+  color: var(--ink-700);
+  overflow-wrap: anywhere;
+}
+
+.identityForm {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.identityForm label {
+  display: grid;
+  font-weight: 800;
+  gap: 0.4rem;
+}
+
+.identityForm input {
+  border: 1px solid var(--line);
+  border-radius: 0.75rem;
+  font: inherit;
+  min-height: 46px;
+  padding: 0.7rem 0.8rem;
+}
+
+.identityForm input:focus-visible {
+  outline: 3px solid var(--brand-300);
+  outline-offset: 3px;
+}
