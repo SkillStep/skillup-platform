@@ -14,8 +14,14 @@ function apiBaseUrl(): URL {
   return url;
 }
 
+function publicAppOrigin(request: NextRequest): string {
+  const configured = process.env["PUBLIC_APP_URL"];
+  if (configured) return new URL(configured).origin;
+  return request.nextUrl.origin;
+}
+
 function accountRedirect(request: NextRequest, status: string, orderId?: string): NextResponse {
-  const url = new URL("/en/account", request.nextUrl.origin);
+  const url = new URL("/en/account", publicAppOrigin(request));
   url.searchParams.set("payment", status);
   if (orderId) url.searchParams.set("orderId", orderId);
   return NextResponse.redirect(url, 303);
