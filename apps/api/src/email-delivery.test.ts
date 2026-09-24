@@ -114,7 +114,9 @@ describe("configured authentication code delivery", () => {
   });
 
   it("maps Twilio provider rejection to a safe service-unavailable error", async () => {
-    const fetchImpl = vi.fn(async () => new Response("provider detail", { status: 400 })) as unknown as typeof fetch;
+    const fetchImpl = vi.fn(
+      async () => new Response("provider detail", { status: 400 }),
+    ) as unknown as typeof fetch;
     const transport = createTwilioSmsTransport(twilioConfig, fetchImpl);
 
     await expect(
