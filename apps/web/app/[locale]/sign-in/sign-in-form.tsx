@@ -65,9 +65,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
     setChallenge(body);
     setCode("");
     setIsError(false);
-    setMessage(
-      `Enter the four-digit code sent to ${body.maskedDestination}.`,
-    );
+    setMessage(`Enter the four-digit code sent to ${body.maskedDestination}.`);
   }
 
   async function start(event: FormEvent<HTMLFormElement>) {
