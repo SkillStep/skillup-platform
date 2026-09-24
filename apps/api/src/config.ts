@@ -41,7 +41,7 @@ const ApiConfigSchema = z
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
     SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
-    TWILIO_ACCOUNT_SID: z.string().trim().regex(/^AC[a-fA-F0-9]{32}$/).optional(),
+    TWILIO_ACCOUNT_SID: z.string().trim().min(3).max(100).optional(),
     TWILIO_AUTH_TOKEN: z.string().min(16).max(500).optional(),
     TWILIO_FROM_NUMBER: z.string().trim().regex(/^\+[1-9]\d{7,14}$/).optional(),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
