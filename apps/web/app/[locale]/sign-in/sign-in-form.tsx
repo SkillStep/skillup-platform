@@ -41,14 +41,22 @@ export function SignInForm({ returnTo }: SignInFormProps) {
   const [identity, setIdentity] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [code, setCode] = useState("");
+  const [resendSeconds, setResendSeconds] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
 
   useEffect(() => setHydrated(true), []);
 
-  async function start(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    if (resendSeconds <= 0) return;
+    const timer = window.setInterval(() => {
+      setResendSeconds((current) => Math.max(0, current - 1));
+    }, 1_000);
+    return () => window.clearInterval(timer);
+  }, [resendSeconds]);
+
+  async function requestCode() {
     setBusy(true);
     setMessage(null);
     try {
@@ -61,18 +69,27 @@ export function SignInForm({ returnTo }: SignInFormProps) {
       if (!response.ok) {
         setIsError(true);
         setMessage(await readError(response));
-        return;
+        return false;
       }
       const body = (await response.json()) as ChallengeResponse;
       setChallenge(body);
+      setCode("");
+      setResendSeconds(60);
       setIsError(false);
       setMessage(`Enter the four-digit code sent to ${body.maskedDestination}.`);
+      return true;
     } catch {
       setIsError(true);
       setMessage("We could not reach SkillUp. Check your connection and try again.");
+      return false;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function start(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await requestCode();
   }
 
   async function verify(event: FormEvent<HTMLFormElement>) {
@@ -153,10 +170,19 @@ export function SignInForm({ returnTo }: SignInFormProps) {
             <button
               className={styles["secondaryAction"]}
               type="button"
+              disabled={busy || resendSeconds > 0}
+              onClick={() => void requestCode()}
+            >
+              {resendSeconds > 0 ? `Resend code in ${resendSeconds}s` : "Resend code"}
+            </button>
+            <button
+              className={styles["secondaryAction"]}
+              type="button"
               disabled={busy}
               onClick={() => {
                 setChallenge(null);
                 setCode("");
+                setResendSeconds(0);
                 setMessage(null);
               }}
             >
@@ -176,7 +202,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
               name="identity"
               type="text"
               autoComplete="username"
-              inputMode="email"
+              inputMode={identity.trim() && !identity.includes("@") ? "tel" : "email"}
               maxLength={254}
               placeholder="name@example.com or 0300 1234567"
               value={identity}
