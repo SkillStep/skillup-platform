@@ -38,6 +38,7 @@ const testConfig: ApiConfig = {
 const learner = {
   id: "11111111-1111-4111-8111-111111111111",
   email: "learner@example.com",
+  phone: null,
   profile: {
     displayName: "Areeba",
     locale: "en" as const,
@@ -50,6 +51,21 @@ const learner = {
 
 function createAuthService(): AuthService {
   return {
+    startSignIn: vi.fn(async ({ identity }) => ({
+      challengeId: "77777777-7777-4777-8777-777777777777",
+      expiresAt: new Date("2026-07-30T12:10:00.000Z"),
+      channel: identity.includes("@") ? ("email" as const) : ("phone" as const),
+      maskedDestination: identity.includes("@") ? "l***@example.com" : "0300 *** 4567",
+    })),
+    verifySignIn: vi.fn(async () => {
+      throw new Error("Not used by this test.");
+    }),
+    listIdentities: vi.fn(async () => []),
+    startIdentityLink: vi.fn(async () => {
+      throw new Error("Not used by this test.");
+    }),
+    verifyIdentityLink: vi.fn(async () => []),
+    removeIdentity: vi.fn(async () => []),
     startEmailSignIn: vi.fn(async () => ({
       challengeId: "88888888-8888-4888-8888-888888888888",
       expiresAt: new Date("2026-07-30T12:10:00.000Z"),
