@@ -66,4 +66,6 @@ if (!verified?.learner?.phone) {
   throw new Error("Verified phone sign-in did not resolve a learner phone identity.");
 }
 
-console.log("STAGING PHONE OTP: PASS — Twilio accepted the SMS request and the exact public OTP challenge verified.");
+console.log(
+  "STAGING PHONE OTP: PASS — Twilio accepted the SMS request and the exact public OTP challenge verified.",
+);
