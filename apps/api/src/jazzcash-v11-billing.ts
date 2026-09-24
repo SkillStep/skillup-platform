@@ -491,13 +491,24 @@ export function createJazzCashV11BillingService(
         throw new JazzCashV11BillingError(502, "JazzCash status inquiry failed.");
       }
 
-      const responseCode = providerFields["pp_ResponseCode"]?.trim() ?? null;
-      const responseMessage = providerFields["pp_ResponseMessage"]?.trim() ?? null;
+      const rawStatus =
+        providerFields["pp_ResponseCode"]?.trim() ||
+        providerFields["responseCode"]?.trim() ||
+        providerFields["status"]?.trim() ||
+        null;
+      const responseMessage =
+        providerFields["pp_ResponseMessage"]?.trim() ||
+        providerFields["responseMessage"]?.trim() ||
+        null;
+      const normalizedStatus = rawStatus?.toUpperCase() ?? null;
+      const inquirySucceeded = normalizedStatus === "000" || normalizedStatus === "SUCCESS";
       const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
-      if (responseCode === "000" && integritySalt) {
+      if (inquirySucceeded && integritySalt) {
         const providerReference =
           providerFields["pp_RetreivalReferenceNo"] ||
+          providerFields["rrn"] ||
           providerFields["pp_AuthCode"] ||
+          providerFields["authCode"] ||
           `v11-inq-${txnRefNo}`;
         const settled = await options.commercialService.handleJazzCashCallback(
           signedSettlementFields({
@@ -511,7 +522,7 @@ export function createJazzCashV11BillingService(
         return {
           order: settled,
           checkoutMode: "jazzcash_v11",
-          providerResponseCode: responseCode,
+          providerResponseCode: rawStatus,
           providerResponseMessage: responseMessage,
         };
       }
@@ -519,7 +530,7 @@ export function createJazzCashV11BillingService(
       return {
         order: mapOrder(row),
         checkoutMode: "jazzcash_v11",
-        providerResponseCode: responseCode,
+        providerResponseCode: rawStatus,
         providerResponseMessage: responseMessage,
       };
     },
