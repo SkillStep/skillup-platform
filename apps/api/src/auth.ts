@@ -5,6 +5,8 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import { z } from "zod";
 
 import type { ApiConfig } from "./config.js";
+import { formatPakistanPhone, maskIdentity, normalizePakistanPhone, parseSignInIdentity } from "./identity.js";
+import type { SmsCodeDelivery } from "./sms-delivery.js";
 
 const StartEmailSignInSchema = z.object({
   email: z.string().trim().email().max(254),
@@ -13,6 +15,16 @@ const StartEmailSignInSchema = z.object({
 const VerifyEmailSignInSchema = z.object({
   challengeId: z.string().uuid(),
   code: z.string().regex(/^\d{4}$/),
+});
+
+const StartOtpSignInSchema = z.object({
+  identity: z.string().trim().min(3).max(254),
+});
+
+const VerifyOtpSignInSchema = z.object({
+  challengeId: z.string().uuid(),
+  code: z.string().regex(/^\d{4}$/),
+  channel: z.enum(["email", "sms"]),
 });
 
 const UpdateProfileSchema = z
@@ -43,13 +55,15 @@ export type LearnerProfile = Readonly<{
 
 export type AuthenticatedLearner = Readonly<{
   id: string;
-  email: string;
+  email: string | null;
+  phone: string | null;
   profile: LearnerProfile;
 }>;
 
 type LearnerRow = Readonly<{
   user_id: unknown;
   email_display: unknown;
+  phone_display: unknown;
   display_name: unknown;
   locale: unknown;
   age_band: unknown;
@@ -82,6 +96,18 @@ export type AuthService = Readonly<{
       challengeId: string;
       code: string;
     }>,
+  ) => Promise<
+    Readonly<{
+      sessionToken: string;
+      sessionExpiresAt: Date;
+      learner: AuthenticatedLearner;
+    }>
+  >;
+  startPhoneSignIn: (
+    input: Readonly<{ phone: string; requestFingerprint: string }>,
+  ) => Promise<Readonly<{ challengeId: string; expiresAt: Date }>>;
+  verifyPhoneSignIn: (
+    input: Readonly<{ challengeId: string; code: string }>,
   ) => Promise<
     Readonly<{
       sessionToken: string;
@@ -157,13 +183,17 @@ function profileFromRow(row: LearnerRow): LearnerProfile {
 }
 
 function learnerFromRow(row: LearnerRow): AuthenticatedLearner {
-  if (typeof row.user_id !== "string" || typeof row.email_display !== "string") {
+  if (typeof row.user_id !== "string") {
     throw new Error("The authentication query returned an invalid learner record.");
   }
+  const email = typeof row.email_display === "string" ? row.email_display : null;
+  const phone = typeof row.phone_display === "string" ? row.phone_display : null;
+  if (!email && !phone) throw new Error("The learner has no verified sign-in identity.");
 
   return {
     id: row.user_id,
-    email: row.email_display,
+    email,
+    phone,
     profile: profileFromRow(row),
   };
 }
@@ -184,6 +214,7 @@ export function createAuthService(
     sessionIdleMinutes: number;
     sessionAbsoluteHours: number;
     delivery: AuthCodeDelivery;
+    smsDelivery?: SmsCodeDelivery;
     now?: () => Date;
     createCode?: () => string;
     createSessionToken?: () => string;
@@ -220,8 +251,8 @@ export function createAuthService(
       await options.delivery.sendSignInCode({ email, code, expiresAt });
       await options.pool.query(
         `insert into auth_challenges
-          (id, email_normalized, purpose, secret_digest, request_fingerprint_digest, attempts_remaining, expires_at, created_at)
-         values ($1, $2, 'sign_in', $3, $4, 5, $5, $6)`,
+          (id, email_normalized, identity_type, purpose, secret_digest, request_fingerprint_digest, attempts_remaining, expires_at, created_at)
+         values ($1, $2, 'email', 'sign_in', $3, $4, 5, $5, $6)`,
         [challengeId, emailNormalized, secretDigest, fingerprintDigest, expiresAt, requestedAt],
       );
 
@@ -243,7 +274,7 @@ export function createAuthService(
         }>(
           `select email_normalized, secret_digest, attempts_remaining, expires_at, consumed_at
              from auth_challenges
-            where id = $1 and purpose = 'sign_in'
+            where id = $1 and purpose = 'sign_in' and identity_type = 'email'
             for update`,
           [challengeId],
         );
@@ -321,7 +352,7 @@ export function createAuthService(
         );
 
         const profile = await client.query<LearnerRow>(
-          `select $1::uuid as user_id, $2::text as email_display,
+          `select $1::uuid as user_id, $2::text as email_display, null::text as phone_display,
                   display_name, locale, age_band, avatar_key, learning_goal, onboarding_status
              from learner_profiles where user_id = $1`,
           [userId, emailDisplay],
@@ -343,15 +374,156 @@ export function createAuthService(
       }
     },
 
+    startPhoneSignIn: async ({ phone, requestFingerprint }) => {
+      const requestedAt = now();
+      const phoneNormalized = normalizePakistanPhone(phone);
+      if (!phoneNormalized) throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
+      if (!options.smsDelivery) {
+        throw new AuthRequestError(503, "Sign-in SMS delivery is temporarily unavailable.");
+      }
+      const fingerprintDigest = digest(options.secret, `fingerprint:${requestFingerprint}`);
+      const cutoff = addMinutes(requestedAt, -15);
+      const limits = await options.pool.query<{ identity_count: string; fingerprint_count: string }>(
+        `select
+          (select count(*) from auth_challenges where identity_type = 'phone' and email_normalized = $1 and created_at >= $2) as identity_count,
+          (select count(*) from auth_challenges where request_fingerprint_digest = $3 and created_at >= $2) as fingerprint_count`,
+        [phoneNormalized, cutoff, fingerprintDigest],
+      );
+      const counts = limits.rows[0];
+      if (Number(counts?.identity_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
+        throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
+      }
+
+      const challengeId = randomUUID();
+      const code = createCode();
+      const expiresAt = addMinutes(requestedAt, options.challengeMinutes);
+      const secretDigest = digest(options.secret, `challenge:${challengeId}:${code}`);
+
+      await options.smsDelivery.sendSignInCode({ phone: phoneNormalized, code, expiresAt });
+      await options.pool.query(
+        `insert into auth_challenges
+          (id, email_normalized, identity_type, purpose, secret_digest, request_fingerprint_digest, attempts_remaining, expires_at, created_at)
+         values ($1, $2, 'phone', 'sign_in', $3, $4, 5, $5, $6)`,
+        [challengeId, phoneNormalized, secretDigest, fingerprintDigest, expiresAt, requestedAt],
+      );
+      return { challengeId, expiresAt };
+    },
+
+    verifyPhoneSignIn: async ({ challengeId, code }) => {
+      const verifiedAt = now();
+      const client = await options.pool.connect();
+      try {
+        await client.query("begin");
+        const challengeResult = await client.query<{
+          email_normalized: string;
+          secret_digest: string;
+          attempts_remaining: number;
+          expires_at: Date;
+          consumed_at: Date | null;
+        }>(
+          `select email_normalized, secret_digest, attempts_remaining, expires_at, consumed_at
+             from auth_challenges
+            where id = $1 and purpose = 'sign_in' and identity_type = 'phone'
+            for update`,
+          [challengeId],
+        );
+        const challenge = challengeResult.rows[0];
+        const invalidOrExpired =
+          !challenge ||
+          challenge.consumed_at !== null ||
+          challenge.attempts_remaining <= 0 ||
+          challenge.expires_at.getTime() <= verifiedAt.getTime();
+        const presentedDigest = digest(options.secret, `challenge:${challengeId}:${code}`);
+        if (invalidOrExpired || !digestsMatch(challenge.secret_digest, presentedDigest)) {
+          if (challenge && challenge.consumed_at === null && challenge.attempts_remaining > 0) {
+            await client.query(
+              "update auth_challenges set attempts_remaining = greatest(attempts_remaining - 1, 0) where id = $1",
+              [challengeId],
+            );
+          }
+          await client.query("commit");
+          throw new AuthRequestError(400, "The sign-in code is invalid or expired.");
+        }
+
+        await client.query(
+          "update auth_challenges set consumed_at = $2, attempts_remaining = 0 where id = $1",
+          [challengeId, verifiedAt],
+        );
+
+        const existingIdentity = await client.query<{ user_id: string; phone_display: string }>(
+          `select p.user_id, p.phone_display
+             from user_phone_identities p
+             join users u on u.id = p.user_id
+            where p.phone_normalized = $1 and u.status = 'active'
+            for update`,
+          [challenge.email_normalized],
+        );
+
+        let userId: string;
+        let phoneDisplay: string;
+        if (existingIdentity.rows[0]) {
+          userId = existingIdentity.rows[0].user_id;
+          phoneDisplay = existingIdentity.rows[0].phone_display;
+        } else {
+          const user = await client.query<{ id: string }>(
+            "insert into users (status, created_at, updated_at) values ('active', $1, $1) returning id",
+            [verifiedAt],
+          );
+          const createdUserId = user.rows[0]?.id;
+          if (!createdUserId) throw new Error("The learner account could not be created.");
+          userId = createdUserId;
+          phoneDisplay = formatPakistanPhone(challenge.email_normalized);
+          await client.query(
+            `insert into user_phone_identities
+              (user_id, phone_normalized, phone_display, verified_at, created_at, updated_at)
+             values ($1, $2, $3, $4, $4, $4)`,
+            [userId, challenge.email_normalized, phoneDisplay, verifiedAt],
+          );
+          await client.query(
+            "insert into learner_profiles (user_id, created_at, updated_at) values ($1, $2, $2)",
+            [userId, verifiedAt],
+          );
+        }
+
+        const sessionToken = createToken();
+        const sessionTokenDigest = digest(options.secret, `session:${sessionToken}`);
+        const sessionExpiresAt = addHours(verifiedAt, options.sessionAbsoluteHours);
+        const idleExpiresAt = addMinutes(verifiedAt, options.sessionIdleMinutes);
+        await client.query(
+          `insert into auth_sessions
+            (user_id, token_digest, expires_at, idle_expires_at, last_seen_at, created_at)
+           values ($1, $2, $3::timestamptz, least($4::timestamptz, $3::timestamptz), $5::timestamptz, $5::timestamptz)`,
+          [userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
+        );
+
+        const profile = await client.query<LearnerRow>(
+          `select $1::uuid as user_id, null::text as email_display, $2::text as phone_display,
+                  display_name, locale, age_band, avatar_key, learning_goal, onboarding_status
+             from learner_profiles where user_id = $1`,
+          [userId, phoneDisplay],
+        );
+        const row = profile.rows[0];
+        if (!row) throw new Error("The learner profile could not be loaded.");
+        await client.query("commit");
+        return { sessionToken, sessionExpiresAt, learner: learnerFromRow(row) };
+      } catch (error) {
+        await client.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
     resolveSession: async (sessionToken) => {
       const seenAt = now();
       const tokenDigest = digest(options.secret, `session:${sessionToken}`);
       const result = await options.pool.query<SessionLearnerRow>(
-        `select s.id as session_id, s.expires_at, u.id as user_id, e.email_display,
+        `select s.id as session_id, s.expires_at, u.id as user_id, e.email_display, ph.phone_display,
                 p.display_name, p.locale, p.age_band, p.avatar_key, p.learning_goal, p.onboarding_status
            from auth_sessions s
            join users u on u.id = s.user_id
-           join user_email_identities e on e.user_id = u.id
+           left join user_email_identities e on e.user_id = u.id
+           left join user_phone_identities ph on ph.user_id = u.id
            join learner_profiles p on p.user_id = u.id
           where s.token_digest = $1
             and s.revoked_at is null
@@ -388,10 +560,11 @@ export function createAuthService(
     updateProfile: async (userId, patch) => {
       const updatedAt = now();
       const current = await options.pool.query<LearnerRow>(
-        `select u.id as user_id, e.email_display, p.display_name, p.locale, p.age_band,
+        `select u.id as user_id, e.email_display, ph.phone_display, p.display_name, p.locale, p.age_band,
                 p.avatar_key, p.learning_goal, p.onboarding_status
            from users u
-           join user_email_identities e on e.user_id = u.id
+           left join user_email_identities e on e.user_id = u.id
+           left join user_phone_identities ph on ph.user_id = u.id
            join learner_profiles p on p.user_id = u.id
           where u.id = $1 and u.status = 'active'`,
         [userId],
@@ -420,7 +593,7 @@ export function createAuthService(
             set display_name = $2, locale = $3, age_band = $4, avatar_key = $5,
                 learning_goal = $6, onboarding_status = $7, updated_at = $8
           where user_id = $1
-          returning $1::uuid as user_id, $9::text as email_display,
+          returning $1::uuid as user_id, $9::text as email_display, $10::text as phone_display,
                     display_name, locale, age_band, avatar_key, learning_goal, onboarding_status`,
         [
           userId,
@@ -431,7 +604,8 @@ export function createAuthService(
           merged.learningGoal,
           merged.onboardingStatus,
           updatedAt,
-          existing.email_display,
+          typeof existing.email_display === "string" ? existing.email_display : null,
+          typeof existing.phone_display === "string" ? existing.phone_display : null,
         ],
       );
       const row = updated.rows[0];
@@ -506,6 +680,43 @@ export function registerAuthRoutes(
   app: FastifyInstance,
   options: Readonly<{ config: ApiConfig; authService: AuthService }>,
 ): void {
+  app.post("/v1/auth/otp/start", async (request, reply) => {
+    requireTrustedOrigin(request, options.config);
+    const body = StartOtpSignInSchema.parse(request.body);
+    const identity = parseSignInIdentity(body.identity);
+    const challenge =
+      identity.channel === "email"
+        ? await options.authService.startEmailSignIn({
+            email: identity.normalized,
+            requestFingerprint: requestFingerprint(request),
+          })
+        : await options.authService.startPhoneSignIn({
+            phone: identity.normalized,
+            requestFingerprint: requestFingerprint(request),
+          });
+    return reply.status(202).send({
+      challengeId: challenge.challengeId,
+      channel: identity.channel,
+      maskedDestination: maskIdentity(identity),
+      expiresAt: challenge.expiresAt.toISOString(),
+      message: "If delivery is available, a sign-in code has been sent.",
+    });
+  });
+
+  app.post("/v1/auth/otp/verify", async (request, reply) => {
+    requireTrustedOrigin(request, options.config);
+    const body = VerifyOtpSignInSchema.parse(request.body);
+    const verified =
+      body.channel === "email"
+        ? await options.authService.verifyEmailSignIn(body)
+        : await options.authService.verifyPhoneSignIn(body);
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
+    return reply.status(200).send({ learner: verified.learner });
+  });
+
   app.post("/v1/auth/email/start", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const body = StartEmailSignInSchema.parse(request.body);
