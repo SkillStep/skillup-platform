@@ -464,12 +464,14 @@ export function createAuthService(
   const createCode = options.createCode ?? generateCode;
   const createToken = options.createSessionToken ?? generateSessionToken;
 
-  async function createChallenge(input: Readonly<{
-    identity: NormalizedIdentity;
-    purpose: "sign_in" | "link_identity";
-    userId: string | null;
-    requestFingerprint: string;
-  }>): Promise<ChallengeView> {
+  async function createChallenge(
+    input: Readonly<{
+      identity: NormalizedIdentity;
+      purpose: "sign_in" | "link_identity";
+      userId: string | null;
+      requestFingerprint: string;
+    }>,
+  ): Promise<ChallengeView> {
     const requestedAt = now();
     const fingerprintDigest = digest(options.secret, `fingerprint:${input.requestFingerprint}`);
     const cutoff = addMinutes(requestedAt, -15);
@@ -487,10 +489,7 @@ export function createAuthService(
     );
 
     const counts = limits.rows[0];
-    if (
-      Number(counts?.identity_count ?? 0) >= 5 ||
-      Number(counts?.fingerprint_count ?? 0) >= 20
-    ) {
+    if (Number(counts?.identity_count ?? 0) >= 5 || Number(counts?.fingerprint_count ?? 0) >= 20) {
       throw new AuthRequestError(429, "Please wait before requesting another sign-in code.");
     }
 
@@ -561,10 +560,7 @@ export function createAuthService(
       challenge.expires_at.getTime() <= verifiedAt.getTime() ||
       (input.userId !== undefined && challenge.user_id !== input.userId);
 
-    const presentedDigest = digest(
-      options.secret,
-      `challenge:${input.challengeId}:${input.code}`,
-    );
+    const presentedDigest = digest(options.secret, `challenge:${input.challengeId}:${input.code}`);
     if (invalidOrExpired || !digestsMatch(challenge.secret_digest, presentedDigest)) {
       if (challenge && challenge.consumed_at === null && challenge.attempts_remaining > 0) {
         await client.query(
@@ -679,7 +675,10 @@ export function createAuthService(
         throw new AuthRequestError(409, "That sign-in identity cannot be linked to this account.");
       }
       if (owner?.userId === userId) {
-        throw new AuthRequestError(409, "That sign-in identity is already verified on this account.");
+        throw new AuthRequestError(
+          409,
+          "That sign-in identity is already verified on this account.",
+        );
       }
 
       return createChallenge({
@@ -708,7 +707,10 @@ export function createAuthService(
 
         const owner = await identityOwner(client, identity);
         if (owner && owner.userId !== userId) {
-          throw new AuthRequestError(409, "That sign-in identity cannot be linked to this account.");
+          throw new AuthRequestError(
+            409,
+            "That sign-in identity cannot be linked to this account.",
+          );
         }
 
         await insertIdentity(client, userId, identity, verifiedAt, true);
@@ -739,7 +741,10 @@ export function createAuthService(
         );
         const count = (counts.rows[0]?.email_count ?? 0) + (counts.rows[0]?.phone_count ?? 0);
         if (count <= 1) {
-          throw new AuthRequestError(400, "Add another verified sign-in method before removing this one.");
+          throw new AuthRequestError(
+            400,
+            "Add another verified sign-in method before removing this one.",
+          );
         }
 
         const deleted =
@@ -926,7 +931,10 @@ export function registerAuthRoutes(
   app.post("/v1/auth/otp/verify", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const verified = await options.authService.verifySignIn(VerifyOtpSchema.parse(request.body));
-    reply.header("set-cookie", sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt));
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
     return reply.status(200).send({ learner: verified.learner });
   });
 
@@ -947,8 +955,13 @@ export function registerAuthRoutes(
 
   app.post("/v1/auth/email/verify", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
-    const verified = await options.authService.verifyEmailSignIn(VerifyOtpSchema.parse(request.body));
-    reply.header("set-cookie", sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt));
+    const verified = await options.authService.verifyEmailSignIn(
+      VerifyOtpSchema.parse(request.body),
+    );
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
     return reply.status(200).send({ learner: verified.learner });
   });
 
