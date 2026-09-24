@@ -5,12 +5,12 @@ import { type FormEvent, useEffect, useId, useState } from "react";
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
-type ApiError = Readonly<{
-  message?: string;
-}>;
+type ApiError = Readonly<{ message?: string }>;
 
 type ChallengeResponse = Readonly<{
   challengeId: string;
+  channel: "email" | "sms";
+  maskedDestination: string;
   expiresAt: string;
 }>;
 
@@ -22,9 +22,7 @@ type VerifyResponse = Readonly<{
   }>;
 }>;
 
-type SignInFormProps = Readonly<{
-  returnTo: string;
-}>;
+type SignInFormProps = Readonly<{ returnTo: string }>;
 
 async function readError(response: Response): Promise<string> {
   try {
@@ -37,43 +35,38 @@ async function readError(response: Response): Promise<string> {
 }
 
 export function SignInForm({ returnTo }: SignInFormProps) {
-  const emailId = useId();
+  const identityId = useId();
   const codeId = useId();
   const [hydrated, setHydrated] = useState(false);
-  const [email, setEmail] = useState("");
+  const [identity, setIdentity] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
 
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
+  useEffect(() => setHydrated(true), []);
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setBusy(true);
     setMessage(null);
-
     try {
-      const response = await fetch("/api/v1/auth/email/start", {
+      const response = await fetch("/api/v1/auth/otp/start", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ identity }),
       });
-
       if (!response.ok) {
         setIsError(true);
         setMessage(await readError(response));
         return;
       }
-
       const body = (await response.json()) as ChallengeResponse;
       setChallenge(body);
       setIsError(false);
-      setMessage("Enter the four-digit code sent to your email address.");
+      setMessage(`Enter the four-digit code sent to ${body.maskedDestination}.`);
     } catch {
       setIsError(true);
       setMessage("We could not reach SkillUp. Check your connection and try again.");
@@ -87,30 +80,30 @@ export function SignInForm({ returnTo }: SignInFormProps) {
     if (!challenge) return;
     setBusy(true);
     setMessage(null);
-
     try {
-      const response = await fetch("/api/v1/auth/email/verify", {
+      const response = await fetch("/api/v1/auth/otp/verify", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ challengeId: challenge.challengeId, code }),
+        body: JSON.stringify({
+          challengeId: challenge.challengeId,
+          channel: challenge.channel,
+          code,
+        }),
       });
-
       if (!response.ok) {
         setIsError(true);
         setMessage(await readError(response));
         return;
       }
-
       const body = (await response.json()) as VerifyResponse;
       const onboardingComplete = body.learner?.profile?.onboardingStatus === "completed";
       const destination = onboardingComplete ? returnTo : withReturnTo("/en/onboarding", returnTo);
-
       setIsError(false);
       setMessage(
         onboardingComplete
           ? "Signed in. Returning to your learning activity…"
-          : "Signed in. Preparing your SkillUp profile…",
+          : "Account verified. Preparing your SkillUp profile…",
       );
       window.location.assign(destination);
     } catch {
@@ -123,11 +116,11 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
   return (
     <div className={styles["card"]}>
-      <h2>{challenge ? "Check your email" : "Start with your email"}</h2>
+      <h2>{challenge ? "Enter your code" : "Sign in or create account"}</h2>
       <p className={styles["cardLead"]}>
         {challenge
-          ? `We sent a short-lived sign-in code to ${email}.`
-          : "No password to remember. We will send a short-lived verification code."}
+          ? `We sent a short-lived code to ${challenge.maskedDestination}.`
+          : "Use your email address or Pakistani mobile number. No password required."}
       </p>
 
       {challenge ? (
@@ -148,6 +141,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
                 value={code}
                 onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 4))}
                 required
+                autoFocus
               />
               <p className={styles["help"]}>
                 The code expires shortly and stops working after five unsuccessful attempts.
@@ -166,33 +160,39 @@ export function SignInForm({ returnTo }: SignInFormProps) {
                 setMessage(null);
               }}
             >
-              Use a different email
+              Change email or number
             </button>
           </div>
         </form>
       ) : (
         <form className={styles["form"]} onSubmit={start}>
           <div className={styles["field"]}>
-            <label className={styles["label"]} htmlFor={emailId}>
-              Email address
+            <label className={styles["label"]} htmlFor={identityId}>
+              Email or mobile number
             </label>
             <input
               className={styles["input"]}
-              id={emailId}
-              name="email"
-              type="email"
-              autoComplete="email"
+              id={identityId}
+              name="identity"
+              type="text"
+              autoComplete="username"
               inputMode="email"
               maxLength={254}
-              placeholder="you@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              placeholder="name@example.com or 0300 1234567"
+              value={identity}
+              onChange={(event) => setIdentity(event.target.value)}
               required
             />
-            <p className={styles["help"]}>Use an address you can access on this device.</p>
+            <p className={styles["help"]}>
+              Pakistani numbers can be entered as 03…, 92…, 0092… or +92….
+            </p>
           </div>
-          <button className={styles["action"]} type="submit" disabled={!hydrated || busy}>
-            {busy ? "Requesting code…" : "Send sign-in code"}
+          <button
+            className={styles["action"]}
+            type="submit"
+            disabled={!hydrated || busy || identity.trim().length < 3}
+          >
+            {busy ? "Sending code…" : "Continue"}
           </button>
         </form>
       )}
