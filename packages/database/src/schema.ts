@@ -13,7 +13,7 @@ import {
 const contentStatuses = ["draft", "in_review", "published", "archived"] as const;
 const locales = ["en", "ur"] as const;
 const userStatuses = ["active", "deletion_requested", "deleted"] as const;
-const authChallengePurposes = ["sign_in"] as const;
+const authChallengePurposes = ["sign_in", "identity_link"] as const;
 const ageBands = ["16_17", "18_24", "25_34", "35_plus", "unspecified"] as const;
 const onboardingStatuses = ["not_started", "in_progress", "completed"] as const;
 
@@ -229,7 +229,7 @@ export const userPhoneIdentities = pgTable(
       table.createdAt,
     ),
     check("auth_challenges_identity_type_allowed", sql`${table.identityType} in ('email', 'phone')`),
-    check("auth_challenges_purpose_allowed", sql`${table.purpose} in ('sign_in')`),
+    check("auth_challenges_purpose_allowed", sql`${table.purpose} in ('sign_in', 'identity_link')`),
     check("auth_challenges_attempts_range", sql`${table.attemptsRemaining} between 0 and 5`),
     check("auth_challenges_secret_digest_length", sql`char_length(${table.secretDigest}) = 64`),
     check(
