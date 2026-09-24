@@ -572,6 +572,8 @@ export function createAuthService(
           [input.challengeId],
         );
       }
+      // Preserve the failed-attempt decrement before the caller exits the verification transaction.
+      await client.query("commit");
       throw new AuthRequestError(400, "The sign-in code is invalid or expired.");
     }
 
