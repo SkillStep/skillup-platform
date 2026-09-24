@@ -14,7 +14,7 @@ type PageProps = Readonly<{
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description: "Securely sign in to SkillUp with a short-lived email verification code.",
+  description: "Securely sign in or create a SkillUp account with a short-lived email or SMS verification code.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
@@ -45,7 +45,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
             practice habit.
           </p>
           <ul className={styles["commitments"]} aria-label="Account commitments">
-            <li>No password stored</li>
+            <li>Email or mobile — no password stored</li>
             <li>Short-lived, single-use verification code</li>
             <li>Private progress is never indexed</li>
           </ul>
