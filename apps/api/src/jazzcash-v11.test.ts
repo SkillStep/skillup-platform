@@ -53,10 +53,10 @@ describe("JazzCash MWALLET recurring hashing", () => {
       requestId: "ReqId123",
     });
     expect(form.actionUrl).toContain("LinkWallet");
-    expect(form.fields.pp_MerchantID).toBe("MC990984");
-    expect(form.fields.pp_MSISDN).toBe("03123456789");
-    expect(form.fields.pp_RequestID).toBe("ReqId123");
-    expect(form.fields.pp_SecureHash).toMatch(/^[A-F0-9]{64}$/);
+    expect(form.fields["pp_MerchantID"]).toBe("MC990984");
+    expect(form.fields["pp_MSISDN"]).toBe("03123456789");
+    expect(form.fields["pp_RequestID"]).toBe("ReqId123");
+    expect(form.fields["pp_SecureHash"]).toMatch(/^[A-F0-9]{64}$/);
   });
 
   it("builds pay-via-token fields without MPIN/CNIC", () => {
@@ -70,23 +70,23 @@ describe("JazzCash MWALLET recurring hashing", () => {
       txnDateTime: "20260629170332",
       txnExpiryDateTime: "20260630170332",
     });
-    expect(fields.pp_PaymentToken).toBe("TOKEN-TEST");
-    expect(fields.pp_Amount).toBe("100");
-    expect(fields.pp_MobileNumber).toBeUndefined();
-    expect(fields.pp_MPIN).toBeUndefined();
-    expect(redactJazzCashV11Fields(fields).pp_PaymentToken).toBe("[redacted]");
+    expect(fields["pp_PaymentToken"]).toBe("TOKEN-TEST");
+    expect(fields["pp_Amount"]).toBe("100");
+    expect(fields["pp_MobileNumber"]).toBeUndefined();
+    expect(fields["pp_MPIN"]).toBeUndefined();
+    expect(redactJazzCashV11Fields(fields)["pp_PaymentToken"]).toBe("[redacted]");
   });
 
   it("posts token charge JSON to the v4 m-wallet URL", async () => {
     const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
       expect(String(url)).toContain("/api/v4/rest/payments/m-wallet");
       const body = JSON.parse(String(init?.body)) as Record<string, string>;
-      expect(body.pp_PaymentToken).toBe("TOKEN-TEST");
+      expect(body["pp_PaymentToken"]).toBe("TOKEN-TEST");
       return new Response(
         JSON.stringify({
           pp_ResponseCode: "000",
           pp_ResponseMessage: "Thank you for using JazzCash.",
-          pp_TxnRefNo: body.pp_TxnRefNo,
+          pp_TxnRefNo: body["pp_TxnRefNo"],
           pp_RetreivalReferenceNo: "RRN-1",
         }),
         { status: 200, headers: { "content-type": "application/json" } },
@@ -103,26 +103,26 @@ describe("JazzCash MWALLET recurring hashing", () => {
       txnDateTime: "20260629170332",
       txnExpiryDateTime: "20260630170332",
     });
-    expect(response.pp_ResponseCode).toBe("000");
-    expect(response.pp_RetreivalReferenceNo).toBe("RRN-1");
+    expect(response["pp_ResponseCode"]).toBe("000");
+    expect(response["pp_RetreivalReferenceNo"]).toBe("RRN-1");
   });
 
   it("posts the exact JazzCash Transaction Status Inquiry field set", async () => {
     const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-      expect(String(url)).toBe(v11Environment.JAZZCASH_V11_INQUIRY_URL);
+      expect(String(url)).toBe(v11Environment["JAZZCASH_V11_INQUIRY_URL"]);
       const body = JSON.parse(String(init?.body)) as Record<string, string>;
       expect(Object.keys(body).sort()).toEqual(
         ["pp_MerchantID", "pp_Password", "pp_SecureHash", "pp_TxnRefNo", "pp_Version"].sort(),
       );
-      expect(body.pp_MerchantID).toBe("MC990984");
-      expect(body.pp_Password).toBe("hr0g2b0w96");
-      expect(body.pp_TxnRefNo).toBe("Goo20260922120000A1");
-      expect(body.pp_Version).toBe("1.1");
-      expect(body.pp_SecureHash).toMatch(/^[A-F0-9]{64}$/);
+      expect(body["pp_MerchantID"]).toBe("MC990984");
+      expect(body["pp_Password"]).toBe("hr0g2b0w96");
+      expect(body["pp_TxnRefNo"]).toBe("Goo20260922120000A1");
+      expect(body["pp_Version"]).toBe("1.1");
+      expect(body["pp_SecureHash"]).toMatch(/^[A-F0-9]{64}$/);
 
       const unhashed = { ...body };
-      delete unhashed.pp_SecureHash;
-      expect(jazzCashV11SecureHash(unhashed, "72syo1nh67")).toBe(body.pp_SecureHash);
+      delete unhashed["pp_SecureHash"];
+      expect(jazzCashV11SecureHash(unhashed, "72syo1nh67")).toBe(body["pp_SecureHash"]);
 
       return new Response(
         JSON.stringify({
@@ -140,8 +140,8 @@ describe("JazzCash MWALLET recurring hashing", () => {
 
     const client = createJazzCashV11Client(readApiConfig(v11Environment), fetcher as typeof fetch);
     const response = await client.inquirePaymentStatus({ txnRefNo: "Goo20260922120000A1" });
-    expect(response.status).toBe("SUCCESS");
-    expect(response.rrn).toBe("RRN-INQUIRY-1");
+    expect(response["status"]).toBe("SUCCESS");
+    expect(response["rrn"]).toBe("RRN-INQUIRY-1");
   });
 });
 

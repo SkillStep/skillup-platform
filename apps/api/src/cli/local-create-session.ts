@@ -1,9 +1,9 @@
 import { createHmac, randomBytes } from "node:crypto";
 import pg from "pg";
 
-const databaseUrl = process.env.DATABASE_URL;
-const secret = process.env.SESSION_SECRET;
-const cookieName = process.env.SESSION_COOKIE_NAME ?? "skillup_session";
+const databaseUrl = process.env["DATABASE_URL"];
+const secret = process.env["SESSION_SECRET"];
+const cookieName = process.env["SESSION_COOKIE_NAME"] ?? "skillup_session";
 if (!databaseUrl || !secret) throw new Error("DATABASE_URL/SESSION_SECRET required");
 
 const client = new pg.Client({ connectionString: databaseUrl });

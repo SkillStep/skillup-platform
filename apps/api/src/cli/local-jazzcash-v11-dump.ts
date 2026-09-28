@@ -15,7 +15,7 @@ console.log(
     {
       ...form.fields,
       pp_Password: "[redacted]",
-      pp_SecureHash: form.fields.pp_SecureHash,
+      pp_SecureHash: form.fields["pp_SecureHash"],
     },
     null,
     2,

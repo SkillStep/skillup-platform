@@ -121,34 +121,35 @@ function signedSettlementFields(
     pp_ResponseCode: input.responseCode,
     pp_RetreivalReferenceNo: input.providerReference,
   };
-  fields.pp_SecureHash = jazzCashSecureHash(fields, input.integritySalt);
+  fields["pp_SecureHash"] = jazzCashSecureHash(fields, input.integritySalt);
   return fields;
 }
 
 function mapOrder(row: Record<string, unknown>): PaymentOrder {
   if (
-    typeof row.id !== "string" ||
-    typeof row.plan_code !== "string" ||
-    typeof row.plan_name !== "string" ||
-    typeof row.status !== "string" ||
-    typeof row.amount_minor !== "number" ||
-    typeof row.merchant_reference !== "string" ||
-    !(row.checkout_expires_at instanceof Date) ||
-    !(row.created_at instanceof Date)
+    typeof row["id"] !== "string" ||
+    typeof row["plan_code"] !== "string" ||
+    typeof row["plan_name"] !== "string" ||
+    typeof row["status"] !== "string" ||
+    typeof row["amount_minor"] !== "number" ||
+    typeof row["merchant_reference"] !== "string" ||
+    !(row["checkout_expires_at"] instanceof Date) ||
+    !(row["created_at"] instanceof Date)
   ) {
     throw new Error("The payment query returned an invalid order.");
   }
   return {
-    id: row.id,
-    planCode: row.plan_code,
-    planName: row.plan_name,
-    status: row.status as PaymentStatus,
-    amountMinor: row.amount_minor,
+    id: row["id"],
+    planCode: row["plan_code"],
+    planName: row["plan_name"],
+    status: row["status"] as PaymentStatus,
+    amountMinor: row["amount_minor"],
     currency: "PKR",
-    merchantReference: row.merchant_reference,
-    providerReference: typeof row.provider_reference === "string" ? row.provider_reference : null,
-    checkoutExpiresAt: row.checkout_expires_at.toISOString(),
-    createdAt: row.created_at.toISOString(),
+    merchantReference: row["merchant_reference"],
+    providerReference:
+      typeof row["provider_reference"] === "string" ? row["provider_reference"] : null,
+    checkoutExpiresAt: row["checkout_expires_at"].toISOString(),
+    createdAt: row["created_at"].toISOString(),
   };
 }
 
@@ -288,7 +289,7 @@ export function createJazzCashV11BillingService(
         if (existing.rows[0]) {
           orderRow = existing.rows[0];
           await connection.query("commit");
-          if (orderRow.status === "succeeded") {
+          if (orderRow["status"] === "succeeded") {
             return {
               order: mapOrder(orderRow),
               checkoutMode: "jazzcash_wallet_link" as const,
@@ -323,7 +324,7 @@ export function createJazzCashV11BillingService(
       await connection.query(
         `insert into commercial_events (user_id, event_name, plan_code, order_id, properties)
          values ($1, 'checkout_started', $2, $3, '{"provider":"jazzcash","checkoutMode":"jazzcash_wallet_link"}'::jsonb)`,
-        [input.userId, input.planCode, row.id],
+        [input.userId, input.planCode, row["id"]],
       );
       await connection.query("commit");
       orderRow = row;
@@ -334,8 +335,8 @@ export function createJazzCashV11BillingService(
       connection.release();
     }
 
-    const amountMinor = Number(orderRow.amount_minor);
-    const txnRefNo = String(orderRow.merchant_reference);
+    const amountMinor = Number(orderRow["amount_minor"]);
+    const txnRefNo = String(orderRow["merchant_reference"]);
     let providerFields: JazzCashV11Fields;
     try {
       providerFields = await client.chargeWithToken({
@@ -357,8 +358,8 @@ export function createJazzCashV11BillingService(
       throw error;
     }
 
-    const responseCode = providerFields.pp_ResponseCode?.trim() ?? null;
-    const responseMessage = providerFields.pp_ResponseMessage?.trim() ?? null;
+    const responseCode = providerFields["pp_ResponseCode"]?.trim() ?? null;
+    const responseMessage = providerFields["pp_ResponseMessage"]?.trim() ?? null;
     const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
     if (!integritySalt) {
       throw new JazzCashV11BillingError(503, "JazzCash wallet-link is not fully configured.");
@@ -366,7 +367,9 @@ export function createJazzCashV11BillingService(
 
     if (responseCode === "000") {
       const providerReference =
-        providerFields.pp_RetreivalReferenceNo || providerFields.pp_AuthCode || `v11-${txnRefNo}`;
+        providerFields["pp_RetreivalReferenceNo"] ||
+        providerFields["pp_AuthCode"] ||
+        `v11-${txnRefNo}`;
       const settled = await options.commercialService.handleJazzCashCallback(
         signedSettlementFields({
           integritySalt,
@@ -386,8 +389,8 @@ export function createJazzCashV11BillingService(
 
     const digest = payloadDigest(providerFields);
     const providerEventId =
-      providerFields.pp_RetreivalReferenceNo ||
-      providerFields.pp_AuthCode ||
+      providerFields["pp_RetreivalReferenceNo"] ||
+      providerFields["pp_AuthCode"] ||
       `v11:${txnRefNo}:${responseCode ?? "unknown"}:${digest.slice(0, 16)}`;
     const failConnection = await options.pool.connect();
     try {
@@ -398,17 +401,17 @@ export function createJazzCashV11BillingService(
          )
          values ($1, 'jazzcash', $2, 'checkout_return', $3, false, $4)
          on conflict (provider, provider_event_id) do nothing`,
-        [orderRow.id, providerEventId, responseCode ?? "unknown", digest],
+        [orderRow["id"], providerEventId, responseCode ?? "unknown", digest],
       );
       await failConnection.query(
         `update payment_orders
             set status = 'failed', updated_at = now()
           where id = $1 and status in ('created', 'pending')`,
-        [orderRow.id],
+        [orderRow["id"]],
       );
       const updated = await failConnection.query<Record<string, unknown>>(
         `${orderSelect} where o.id = $1`,
-        [orderRow.id],
+        [orderRow["id"]],
       );
       await failConnection.query("commit");
       const updatedRow = updated.rows[0];
@@ -490,11 +493,14 @@ export function createJazzCashV11BillingService(
         );
       }
 
-      const requestId = fields.pp_RequestID?.trim();
-      const responseCode = fields.pp_ResponseCode?.trim() ?? "";
-      const paymentToken = fields.pp_PaymentToken?.trim();
+      const requestId = fields["pp_RequestID"]?.trim();
+      const responseCode = fields["pp_ResponseCode"]?.trim() ?? "";
+      const paymentToken = fields["pp_PaymentToken"]?.trim();
       const msisdn =
-        fields.pp_MSISDN?.trim() || fields.pp_MobileNumber?.trim() || fields.ppmpf_1?.trim() || "";
+        fields["pp_MSISDN"]?.trim() ||
+        fields["pp_MobileNumber"]?.trim() ||
+        fields["ppmpf_1"]?.trim() ||
+        "";
 
       if (!requestId) {
         throw new JazzCashV11BillingError(400, "The JazzCash wallet-link response is incomplete.");
@@ -527,7 +533,7 @@ export function createJazzCashV11BillingService(
         );
         throw new JazzCashV11BillingError(
           402,
-          fields.pp_ResponseMessage?.trim() ||
+          fields["pp_ResponseMessage"]?.trim() ||
             "JazzCash wallet linking failed. No Premium entitlement was granted.",
         );
       }
@@ -597,7 +603,7 @@ export function createJazzCashV11BillingService(
       const normalizedStatus = rawStatus?.toUpperCase() ?? null;
       const inquirySucceeded = normalizedStatus === "000" || normalizedStatus === "SUCCESS";
       const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
-      if (inquirySucceeded && integritySalt && row.status !== "succeeded") {
+      if (inquirySucceeded && integritySalt && row["status"] !== "succeeded") {
         const providerReference =
           providerFields["pp_RetreivalReferenceNo"] ||
           providerFields["rrn"] ||
@@ -608,7 +614,7 @@ export function createJazzCashV11BillingService(
           signedSettlementFields({
             integritySalt,
             txnRefNo,
-            amountMinor: Number(row.amount_minor),
+            amountMinor: Number(row["amount_minor"]),
             responseCode: "000",
             providerReference,
           }),
