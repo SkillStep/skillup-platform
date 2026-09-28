@@ -110,7 +110,16 @@ export function createConfiguredAuthCodeDelivery(
 
   return {
     sendSignInCode: async (input) => {
-      await smtp.sendMail(signInMessage(from, input));
+      try {
+        await smtp.sendMail(signInMessage(from, input));
+      } catch (error) {
+        const failure = new Error("Sign-in email delivery is temporarily unavailable.");
+        Object.assign(failure, {
+          statusCode: 503,
+          cause: error instanceof Error ? error : undefined,
+        });
+        throw failure;
+      }
     },
   };
 }

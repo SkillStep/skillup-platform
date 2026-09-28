@@ -174,13 +174,14 @@ jobs:
           JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
           JAZZCASH_V11_RETURN_URL: ${{ secrets.JAZZCASH_V11_RETURN_URL }}
+          STAGING_BREVO_API_KEY: ${{ secrets.STAGING_BREVO_API_KEY }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL,STAGING_BREVO_API_KEY
           script: |
             set -euo pipefail
             mkdir -p /opt/skillup
@@ -235,6 +236,45 @@ jobs:
                 })
             else:
                 print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
+
+            # Passwordless email: repair incomplete SMTP using staging Brevo credentials.
+            current = {}
+            for line in path.read_text(encoding='utf-8').splitlines():
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    continue
+                key, value = line.split('=', 1)
+                current[key.strip()] = value
+            provider = (current.get('EMAIL_PROVIDER') or '').strip().lower()
+            smtp_host = (current.get('SMTP_HOST') or '').strip()
+            smtp_user = (current.get('SMTP_USERNAME') or '').strip()
+            smtp_password = (current.get('SMTP_PASSWORD') or '').strip()
+            email_from = (current.get('EMAIL_FROM') or '').strip()
+            brevo_key = (os.environ.get('STAGING_BREVO_API_KEY') or '').strip()
+            email_incomplete = (
+                provider != 'smtp'
+                or not smtp_host
+                or not smtp_user
+                or not smtp_password
+                or not email_from
+            )
+            if email_incomplete and brevo_key:
+                updates.update({
+                    'EMAIL_PROVIDER': 'smtp',
+                    'SMTP_HOST': smtp_host or 'smtp-relay.brevo.com',
+                    'SMTP_PORT': (current.get('SMTP_PORT') or '587').strip() or '587',
+                    'SMTP_SECURE': (current.get('SMTP_SECURE') or 'false').strip() or 'false',
+                    'SMTP_REQUIRE_TLS': (current.get('SMTP_REQUIRE_TLS') or 'true').strip() or 'true',
+                    'SMTP_USERNAME': smtp_user or 'no-reply@codistan.org',
+                    'SMTP_PASSWORD': smtp_password or brevo_key,
+                    'EMAIL_FROM': email_from or 'SkillUp Staging <no-reply@codistan.org>',
+                })
+                print('EMAIL SMTP staging config repaired from Brevo secret')
+            elif email_incomplete:
+                print('EMAIL SMTP incomplete and STAGING_BREVO_API_KEY missing; leaving email flags unchanged')
+            else:
+                print('EMAIL SMTP staging config present')
+
             lines = path.read_text(encoding='utf-8').splitlines()
             output = []
             written = set()
@@ -315,7 +355,90 @@ jobs:
               exit 1
             }
 
-            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
+            echo "Probing passwordless email delivery"
+            email_status="$(curl --silent --show-error --output /tmp/skillup-email-start.json --write-out '%{http_code}' \
+              --header 'Origin: https://skillupshop.codistan.org' \
+              --header 'Content-Type: application/json' \
+              --data '{"email":"skillup+email-probe@codistan.org"}' \
+              http://127.0.0.1:3020/api/v1/auth/email/start || true)"
+            echo "email_start_http=$email_status"
+            cat /tmp/skillup-email-start.json || true
+            echo
+            if [ "$email_status" != "200" ]; then
+              echo "Email start failed; dumping recent API mail errors and refreshing Brevo SMTP password"
+              docker compose -f docker-compose.staging.yml logs api --tail=120 \
+                | grep -E 'auth/email|SMTP|nodemailer|EAUTH|EENVELOPE|API request failed|sendSignIn' || true
+              if [ -z "${STAGING_BREVO_API_KEY:-}" ]; then
+                echo "::error::auth/email/start failed and STAGING_BREVO_API_KEY is empty" >&2
+                exit 1
+              fi
+              python3 - <<'PY'
+            import os
+            from pathlib import Path
+            path = Path('.env')
+            key = os.environ['STAGING_BREVO_API_KEY'].strip()
+            lines = path.read_text(encoding='utf-8').splitlines()
+            updates = {
+                'EMAIL_PROVIDER': 'smtp',
+                'SMTP_HOST': 'smtp-relay.brevo.com',
+                'SMTP_PORT': '587',
+                'SMTP_SECURE': 'false',
+                'SMTP_REQUIRE_TLS': 'true',
+                'SMTP_PASSWORD': key,
+            }
+            current = {}
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    continue
+                k, v = line.split('=', 1)
+                current[k.strip()] = v
+            if not (current.get('SMTP_USERNAME') or '').strip():
+                updates['SMTP_USERNAME'] = 'no-reply@codistan.org'
+            if not (current.get('EMAIL_FROM') or '').strip():
+                updates['EMAIL_FROM'] = 'SkillUp Staging <no-reply@codistan.org>'
+            written = set()
+            output = []
+            for line in lines:
+                stripped = line.strip()
+                if not stripped or stripped.startswith('#') or '=' not in line:
+                    output.append(line)
+                    continue
+                key_name = line.split('=', 1)[0].strip()
+                if key_name in updates:
+                    if key_name not in written:
+                        output.append(f'{key_name}={updates[key_name]}')
+                        written.add(key_name)
+                    continue
+                output.append(line)
+            for key_name, value in updates.items():
+                if key_name not in written:
+                    output.append(f'{key_name}={value}')
+            path.write_text('\n'.join(output) + '\n', encoding='utf-8')
+            print('refreshed SMTP settings from STAGING_BREVO_API_KEY')
+            PY
+              chmod 600 .env
+              docker compose -f docker-compose.staging.yml up -d --force-recreate --no-deps api
+              wait_for_local_url "API health after email repair" "http://127.0.0.1:4020/v1/health"
+              wait_for_local_url "Web health after email repair" "http://127.0.0.1:3020/api/health"
+              email_status="$(curl --silent --show-error --output /tmp/skillup-email-start.json --write-out '%{http_code}' \
+                --header 'Origin: https://skillupshop.codistan.org' \
+                --header 'Content-Type: application/json' \
+                --data '{"email":"skillup+email-probe@codistan.org"}' \
+                http://127.0.0.1:3020/api/v1/auth/email/start || true)"
+              echo "email_start_http_after_repair=$email_status"
+              cat /tmp/skillup-email-start.json || true
+              echo
+              if [ "$email_status" != "200" ]; then
+                docker compose -f docker-compose.staging.yml logs api --tail=120 \
+                  | grep -E 'auth/email|SMTP|nodemailer|EAUTH|EENVELOPE|API request failed|sendSignIn' || true
+                echo "::error::auth/email/start still failing after Brevo SMTP refresh" >&2
+                exit 1
+              fi
+            fi
+            echo "STAGING EMAIL START: PASS"
+
+            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json /tmp/skillup-email-start.json
             docker image prune -f
             echo "INTERNAL PHASE 1 GATES: PASS"
 
