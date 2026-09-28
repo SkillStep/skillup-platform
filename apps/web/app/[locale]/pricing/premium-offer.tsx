@@ -165,28 +165,31 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   }
 
   return (
-    <div className={styles.grid}>
+    <div className={styles["grid"]}>
       {plans.map((plan) => {
         const yearly = plan.billingPeriod === "year";
         const msisdnId = `jazzcash-msisdn-${plan.code}`;
         const consentId = `jazzcash-consent-${plan.code}`;
         return (
-          <article className={`${styles.card} ${yearly ? styles.featured : ""}`} key={plan.code}>
-            <span className={styles.badge}>{yearly ? "Best value" : "Flexible"}</span>
+          <article
+            className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
+            key={plan.code}
+          >
+            <span className={styles["badge"]}>{yearly ? "Best value" : "Flexible"}</span>
             <h2>{plan.name}</h2>
-            <p className={styles.price}>
+            <p className={styles["price"]}>
               <strong>{formatPrice(plan.amountMinor)}</strong>
               <span>/{plan.billingPeriod}</span>
             </p>
-            {yearly ? <p className={styles.saving}>Save PKR 2,189 versus monthly.</p> : null}
-            <ul className={styles.features}>
+            {yearly ? <p className={styles["saving"]}>Save PKR 2,189 versus monthly.</p> : null}
+            <ul className={styles["features"]}>
               {plan.capabilities.map((capability) => (
                 <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
               ))}
             </ul>
 
             {plan.checkoutAvailable ? (
-              <div className={styles.walletForm}>
+              <div className={styles["walletForm"]}>
                 <label htmlFor={msisdnId}>JazzCash mobile number</label>
                 <input
                   id={msisdnId}
@@ -199,7 +202,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
                   }
                   disabled={busyPlan !== null}
                 />
-                <label className={styles.consent} htmlFor={consentId}>
+                <label className={styles["consent"]} htmlFor={consentId}>
                   <input
                     id={consentId}
                     type="checkbox"
@@ -216,7 +219,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
             ) : null}
 
             <button
-              className={styles.action}
+              className={styles["action"]}
               type="button"
               disabled={!plan.checkoutAvailable || busyPlan !== null}
               onClick={() => void startCheckout(plan.code)}
@@ -229,13 +232,13 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
                     : "Pay with JazzCash"
                   : "Payment activation pending"}
             </button>
-            <p className={styles.note}>
+            <p className={styles["note"]}>
               {usesWalletLink
                 ? "You will enter your JazzCash MPIN on the JazzCash portal. SkillUp stores only the payment token and charges server-side after a verified link."
                 : "SkillUp charges through JazzCash and grants Premium only after a verified server-side response—not from the browser alone."}
             </p>
             {message && busyPlan === null ? (
-              <p className={styles.message} role="alert">
+              <p className={styles["message"]} role="alert">
                 {message}
               </p>
             ) : null}

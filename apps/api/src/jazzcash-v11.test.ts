@@ -4,9 +4,9 @@ import { readApiConfig } from "./config.js";
 import {
   buildJazzCashTokenChargeFields,
   buildJazzCashWalletLinkForm,
+  createJazzCashV11Client,
   jazzCashV11SecureHash,
   redactJazzCashV11Fields,
-  createJazzCashV11Client,
 } from "./jazzcash-v11.js";
 
 const v11Environment: NodeJS.ProcessEnv = {
@@ -109,20 +109,20 @@ describe("JazzCash MWALLET recurring hashing", () => {
 
   it("posts the exact JazzCash Transaction Status Inquiry field set", async () => {
     const fetcher = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
-      expect(String(url)).toBe("https://onlinepayments.example/inquiry");
+      expect(String(url)).toBe(v11Environment.JAZZCASH_V11_INQUIRY_URL);
       const body = JSON.parse(String(init?.body)) as Record<string, string>;
       expect(Object.keys(body).sort()).toEqual(
         ["pp_MerchantID", "pp_Password", "pp_SecureHash", "pp_TxnRefNo", "pp_Version"].sort(),
       );
-      expect(body["pp_MerchantID"]).toBe("MC990726");
-      expect(body["pp_Password"]).toBe("cx4r0z207a");
-      expect(body["pp_TxnRefNo"]).toBe("Goo20260922120000A1");
-      expect(body["pp_Version"]).toBe("1.1");
-      expect(body["pp_SecureHash"]).toMatch(/^[A-F0-9]{64}$/);
+      expect(body.pp_MerchantID).toBe("MC990984");
+      expect(body.pp_Password).toBe("hr0g2b0w96");
+      expect(body.pp_TxnRefNo).toBe("Goo20260922120000A1");
+      expect(body.pp_Version).toBe("1.1");
+      expect(body.pp_SecureHash).toMatch(/^[A-F0-9]{64}$/);
 
       const unhashed = { ...body };
-      delete unhashed["pp_SecureHash"];
-      expect(jazzCashV11SecureHash(unhashed, "jbw5a799l4")).toBe(body["pp_SecureHash"]);
+      delete unhashed.pp_SecureHash;
+      expect(jazzCashV11SecureHash(unhashed, "72syo1nh67")).toBe(body.pp_SecureHash);
 
       return new Response(
         JSON.stringify({
