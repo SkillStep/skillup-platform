@@ -22,7 +22,11 @@ function paymentFormOrigins(): readonly string[] {
   const origins = new Set<string>();
   // JazzCash hosted LinkWallet / pay-via-token always posts to this orchestrator origin.
   origins.add("https://onlinepayments.jazzcash.com.pk");
-  for (const key of ["JAZZCASH_PAYMENT_URL", "JAZZCASH_V11_LINK_URL", "JAZZCASH_V11_URL"] as const) {
+  for (const key of [
+    "JAZZCASH_PAYMENT_URL",
+    "JAZZCASH_V11_LINK_URL",
+    "JAZZCASH_V11_URL",
+  ] as const) {
     const value = process.env[key];
     if (!value) continue;
     try {
