@@ -356,89 +356,112 @@ jobs:
             }
 
             echo "Probing passwordless email delivery"
+            set -a
+            # shellcheck disable=SC1091
+            source .env
+            set +a
+            echo "Auth challenges columns:"
+            docker compose -f docker-compose.staging.yml exec -T postgres \
+              psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+              "select column_name, data_type from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
+
+            echo "Ensuring auth_challenges required columns"
+            cat >/tmp/skillup-auth-challenges-repair.sql <<'SQL'
+            DO $$
+            BEGIN
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges'
+              ) THEN
+                RAISE EXCEPTION 'auth_challenges table is missing';
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'email_normalized'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN email_normalized text;
+                UPDATE public.auth_challenges SET email_normalized = '' WHERE email_normalized IS NULL;
+                ALTER TABLE public.auth_challenges ALTER COLUMN email_normalized SET NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'request_fingerprint_digest'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN request_fingerprint_digest text;
+                UPDATE public.auth_challenges
+                   SET request_fingerprint_digest = repeat('0', 64)
+                 WHERE request_fingerprint_digest IS NULL;
+                ALTER TABLE public.auth_challenges ALTER COLUMN request_fingerprint_digest SET NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'secret_digest'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN secret_digest text;
+                UPDATE public.auth_challenges SET secret_digest = repeat('0', 64) WHERE secret_digest IS NULL;
+                ALTER TABLE public.auth_challenges ALTER COLUMN secret_digest SET NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'attempts_remaining'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN attempts_remaining integer DEFAULT 5 NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'expires_at'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN expires_at timestamptz;
+                UPDATE public.auth_challenges SET expires_at = now() + interval '10 minutes' WHERE expires_at IS NULL;
+                ALTER TABLE public.auth_challenges ALTER COLUMN expires_at SET NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'created_at'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN created_at timestamptz DEFAULT now() NOT NULL;
+              END IF;
+
+              IF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'purpose'
+              ) THEN
+                ALTER TABLE public.auth_challenges ADD COLUMN purpose text DEFAULT 'sign_in' NOT NULL;
+              END IF;
+            END
+            $$;
+            SQL
+            docker compose -f docker-compose.staging.yml exec -T postgres \
+              psql -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB" \
+              -f - </tmp/skillup-auth-challenges-repair.sql
+
             email_status="$(curl --silent --show-error --output /tmp/skillup-email-start.json --write-out '%{http_code}' \
               --header 'Origin: https://skillupshop.codistan.org' \
               --header 'Content-Type: application/json' \
-              --data '{"email":"skillup+email-probe@codistan.org"}' \
+              --data '{"email":"skillup.email.probe@codistan.org"}' \
               http://127.0.0.1:3020/api/v1/auth/email/start || true)"
             echo "email_start_http=$email_status"
             cat /tmp/skillup-email-start.json || true
             echo
-            if [ "$email_status" != "200" ]; then
-              echo "Email start failed; dumping recent API mail errors and refreshing Brevo SMTP password"
-              docker compose -f docker-compose.staging.yml logs api --tail=120 \
-                | grep -E 'auth/email|SMTP|nodemailer|EAUTH|EENVELOPE|API request failed|sendSignIn' || true
-              if [ -z "${STAGING_BREVO_API_KEY:-}" ]; then
-                echo "::error::auth/email/start failed and STAGING_BREVO_API_KEY is empty" >&2
-                exit 1
-              fi
-              python3 - <<'PY'
-            import os
-            from pathlib import Path
-            path = Path('.env')
-            key = os.environ['STAGING_BREVO_API_KEY'].strip()
-            lines = path.read_text(encoding='utf-8').splitlines()
-            updates = {
-                'EMAIL_PROVIDER': 'smtp',
-                'SMTP_HOST': 'smtp-relay.brevo.com',
-                'SMTP_PORT': '587',
-                'SMTP_SECURE': 'false',
-                'SMTP_REQUIRE_TLS': 'true',
-                'SMTP_PASSWORD': key,
-            }
-            current = {}
-            for line in lines:
-                stripped = line.strip()
-                if not stripped or stripped.startswith('#') or '=' not in line:
-                    continue
-                k, v = line.split('=', 1)
-                current[k.strip()] = v
-            if not (current.get('SMTP_USERNAME') or '').strip():
-                updates['SMTP_USERNAME'] = 'no-reply@codistan.org'
-            if not (current.get('EMAIL_FROM') or '').strip():
-                updates['EMAIL_FROM'] = 'SkillUp Staging <no-reply@codistan.org>'
-            written = set()
-            output = []
-            for line in lines:
-                stripped = line.strip()
-                if not stripped or stripped.startswith('#') or '=' not in line:
-                    output.append(line)
-                    continue
-                key_name = line.split('=', 1)[0].strip()
-                if key_name in updates:
-                    if key_name not in written:
-                        output.append(f'{key_name}={updates[key_name]}')
-                        written.add(key_name)
-                    continue
-                output.append(line)
-            for key_name, value in updates.items():
-                if key_name not in written:
-                    output.append(f'{key_name}={value}')
-            path.write_text('\n'.join(output) + '\n', encoding='utf-8')
-            print('refreshed SMTP settings from STAGING_BREVO_API_KEY')
-            PY
-              chmod 600 .env
-              docker compose -f docker-compose.staging.yml up -d --force-recreate --no-deps api
-              wait_for_local_url "API health after email repair" "http://127.0.0.1:4020/v1/health"
-              wait_for_local_url "Web health after email repair" "http://127.0.0.1:3020/api/health"
-              email_status="$(curl --silent --show-error --output /tmp/skillup-email-start.json --write-out '%{http_code}' \
-                --header 'Origin: https://skillupshop.codistan.org' \
-                --header 'Content-Type: application/json' \
-                --data '{"email":"skillup+email-probe@codistan.org"}' \
-                http://127.0.0.1:3020/api/v1/auth/email/start || true)"
-              echo "email_start_http_after_repair=$email_status"
-              cat /tmp/skillup-email-start.json || true
-              echo
-              if [ "$email_status" != "200" ]; then
-                docker compose -f docker-compose.staging.yml logs api --tail=120 \
-                  | grep -E 'auth/email|SMTP|nodemailer|EAUTH|EENVELOPE|API request failed|sendSignIn' || true
-                echo "::error::auth/email/start still failing after Brevo SMTP refresh" >&2
-                exit 1
-              fi
+            # Auth email/start returns 202 on success.
+            if [ "$email_status" != "202" ]; then
+              echo "Email start failed; dumping recent API errors and columns"
+              docker compose -f docker-compose.staging.yml logs api --tail=80 || true
+              docker compose -f docker-compose.staging.yml exec -T postgres \
+                psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c \
+                "select column_name from information_schema.columns where table_name='auth_challenges' order by ordinal_position;" || true
+              echo "::error::auth/email/start expected HTTP 202, received $email_status" >&2
+              exit 1
             fi
             echo "STAGING EMAIL START: PASS"
 
-            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json /tmp/skillup-email-start.json
+            rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json /tmp/skillup-email-start.json /tmp/skillup-auth-challenges-repair.sql
             docker image prune -f
             echo "INTERNAL PHASE 1 GATES: PASS"
 
