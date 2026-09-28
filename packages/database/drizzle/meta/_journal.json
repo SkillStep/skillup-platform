@@ -183,6 +183,13 @@
       "when": 1790500000000,
       "tag": "0025_jazzcash_wallet_links",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1790604000000,
+      "tag": "0026_auth_challenges_identity_compat",
+      "breakpoints": true
     }
   ]
 }

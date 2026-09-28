@@ -220,8 +220,9 @@ export function createAuthService(
       await options.delivery.sendSignInCode({ email, code, expiresAt });
       await options.pool.query(
         `insert into auth_challenges
-          (id, email_normalized, purpose, secret_digest, request_fingerprint_digest, attempts_remaining, expires_at, created_at)
-         values ($1, $2, 'sign_in', $3, $4, 5, $5, $6)`,
+          (id, email_normalized, purpose, secret_digest, request_fingerprint_digest, attempts_remaining, expires_at, created_at,
+           identity_type, identity_normalized, identity_display)
+         values ($1, $2, 'sign_in', $3, $4, 5, $5, $6, 'email', $2, $2)`,
         [challengeId, emailNormalized, secretDigest, fingerprintDigest, expiresAt, requestedAt],
       );
 
