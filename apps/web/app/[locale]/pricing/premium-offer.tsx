@@ -78,8 +78,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   const [msisdn, setMsisdn] = useState("");
   const [consent, setConsent] = useState(false);
   const usesWalletLink = plans.some(
-    (plan) =>
-      plan.checkoutMode === "jazzcash_wallet_link" || plan.checkoutMode === "jazzcash_v11",
+    (plan) => plan.checkoutMode === "jazzcash_wallet_link" || plan.checkoutMode === "jazzcash_v11",
   );
 
   useEffect(() => {
@@ -172,10 +171,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
         const msisdnId = `jazzcash-msisdn-${plan.code}`;
         const consentId = `jazzcash-consent-${plan.code}`;
         return (
-          <article
-            className={`${styles.card} ${yearly ? styles.featured : ""}`}
-            key={plan.code}
-          >
+          <article className={`${styles.card} ${yearly ? styles.featured : ""}`} key={plan.code}>
             <span className={styles.badge}>{yearly ? "Best value" : "Flexible"}</span>
             <h2>{plan.name}</h2>
             <p className={styles.price}>

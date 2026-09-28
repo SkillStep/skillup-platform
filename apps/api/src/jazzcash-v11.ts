@@ -53,8 +53,7 @@ export function jazzCashV11SecureHash(
 ): string {
   const values = Object.entries(fields)
     .filter(
-      ([key, value]) =>
-        key !== "pp_SecureHash" && key.startsWith("pp_") && value.trim().length > 0,
+      ([key, value]) => key !== "pp_SecureHash" && key.startsWith("pp_") && value.trim().length > 0,
     )
     .sort(([left], [right]) => (left < right ? -1 : left > right ? 1 : 0))
     .map(([, value]) => value.trim());

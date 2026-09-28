@@ -5,12 +5,12 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import type { AuthService } from "./auth.js";
-import { jazzCashSecureHash, type CommercialService } from "./commercial.js";
+import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
 import {
   createJazzCashV11Client,
-  JazzCashV11Error,
   type JazzCashV11Client,
+  JazzCashV11Error,
   type JazzCashV11Fields,
   verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
@@ -306,7 +306,10 @@ export function createJazzCashV11BillingService(
         merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
       }
       if (!inserted) {
-        throw new JazzCashV11BillingError(409, "Could not allocate a unique JazzCash txn reference.");
+        throw new JazzCashV11BillingError(
+          409,
+          "Could not allocate a unique JazzCash txn reference.",
+        );
       }
 
       const selectedOrder = await connection.query<Record<string, unknown>>(
@@ -363,9 +366,7 @@ export function createJazzCashV11BillingService(
 
     if (responseCode === "000") {
       const providerReference =
-        providerFields.pp_RetreivalReferenceNo ||
-        providerFields.pp_AuthCode ||
-        `v11-${txnRefNo}`;
+        providerFields.pp_RetreivalReferenceNo || providerFields.pp_AuthCode || `v11-${txnRefNo}`;
       const settled = await options.commercialService.handleJazzCashCallback(
         signedSettlementFields({
           integritySalt,
@@ -493,10 +494,7 @@ export function createJazzCashV11BillingService(
       const responseCode = fields.pp_ResponseCode?.trim() ?? "";
       const paymentToken = fields.pp_PaymentToken?.trim();
       const msisdn =
-        fields.pp_MSISDN?.trim() ||
-        fields.pp_MobileNumber?.trim() ||
-        fields.ppmpf_1?.trim() ||
-        "";
+        fields.pp_MSISDN?.trim() || fields.pp_MobileNumber?.trim() || fields.ppmpf_1?.trim() || "";
 
       if (!requestId) {
         throw new JazzCashV11BillingError(400, "The JazzCash wallet-link response is incomplete.");
