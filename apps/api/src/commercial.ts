@@ -49,7 +49,7 @@ type Plan = Readonly<{
   capabilities: readonly string[];
   termsVersion: string;
   checkoutAvailable: boolean;
-  checkoutMode: "jazzcash_v11" | null;
+  checkoutMode: "jazzcash_wallet_link" | null;
 }>;
 
 type PaymentOrder = Readonly<{
@@ -413,7 +413,7 @@ export function createCommercialService(
             options.config.JAZZCASH_MODE !== "disabled") ||
           isJazzCashV11CheckoutEnabled(options.config),
         checkoutMode: isJazzCashV11CheckoutEnabled(options.config)
-          ? ("jazzcash_v11" as const)
+          ? ("jazzcash_wallet_link" as const)
           : null,
       }));
     },

@@ -133,33 +133,35 @@ Record the order ID, merchant reference, provider reference, response code, enti
 
 A screenshot is not payment evidence. Use provider reference/status evidence and SkillUp database/audit records.
 
-## Payment-orchestrator MWALLET v1.1 (local / non-production)
+## Payment-orchestrator MWALLET recurring (wallet-link + pay-via-token)
 
-SkillUp can proxy a one-time MWALLET charge through JazzCash payment-orchestrator when `PREMIUM_JAZZCASH_V11_CHECKOUT=true` and `DEPLOYMENT_ENVIRONMENT` is not production. The browser never talks to JazzCash; the API posts signed JSON to the m-wallet charge URL and activates entitlement only on verified `pp_ResponseCode=000`.
+SkillUp follows the JazzCash **MWallet Recurring Payments (Linking & Payment) 2026** guide when `PREMIUM_JAZZCASH_V11_CHECKOUT=true` (non-production only):
 
-Local sandbox testing currently requires the merchant-approved return URL:
+1. Authenticated learner starts wallet link → SkillUp returns signed hosted-form fields.
+2. Browser POSTs to JazzCash `LinkWallet` portal; learner enters MPIN on JazzCash.
+3. JazzCash returns to the pre-registered `pp_ReturnURL` with `pp_PaymentToken`.
+4. SkillUp verifies the return hash, stores the token, then charges via **Pay via Token** (`/api/v4/rest/payments/m-wallet`).
+5. Entitlement activates only on verified `pp_ResponseCode=000`.
 
 ```text
 PREMIUM_JAZZCASH_V11_CHECKOUT=true
-DEPLOYMENT_ENVIRONMENT=local
-JAZZCASH_V11_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v1/rest/payments/m-wallet
+DEPLOYMENT_ENVIRONMENT=staging
+JAZZCASH_V11_LINK_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/WalletLinkingPortal/wallet/LinkWallet
+JAZZCASH_V11_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v4/rest/payments/m-wallet
+JAZZCASH_V11_TOKEN_INQUIRY_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/payment/api/v1/mobile-tokens/inquiry
+JAZZCASH_V11_TOKEN_DELETE_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/payment/api/v1/mobile-tokens/delete
 JAZZCASH_V11_INQUIRY_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v2/rest/payments/status/inquiry
 JAZZCASH_V11_MERCHANT_ID=<secret>
 JAZZCASH_V11_PASSWORD=<secret>
 JAZZCASH_V11_INTEGRITY_SALT=<secret>
-JAZZCASH_V11_RETURN_URL=https://maidanofficial.com/callback
-JAZZCASH_V11_TIMEOUT_MS=30000
-JAZZCASH_V11_CHECKOUT_MINUTES=15
+JAZZCASH_V11_RETURN_URL=https://skillupshop.com/callback
 ```
 
 Notes:
 
-- `pp_ReturnURL` must match a URL JazzCash has enabled for this merchant. Using a SkillUp localhost or unregistered webhook URL can yield provider `999` / insufficient merchant information even when the HMAC is correct.
-- Keep `https://maidanofficial.com/callback` for sandbox testing until SkillUp's own HTTPS payment-return URL is registered with JazzCash.
-- Before staging/production go-live, replace `JAZZCASH_V11_RETURN_URL` with SkillUp's owned callback and leave V11 disabled in production until that cutover is approved.
-- Local smoke: with API running, execute `apps/api/src/cli/local-jazzcash-v11-smoke.ts` (loads session, charge, inquiry, commercial account, capabilities). Direct field dump: `local-jazzcash-v11-dump.ts`.
-- Charge settlement uses `Goo…` merchant references and the V11 integrity salt; classic `FEATURE_JAZZCASH_ENABLED` may stay false while V11 checkout is under test.
-- Status inquiry against the orchestrator currently returns provider `110` (invalid SecureHash) with this merchant pack. Treat inquiry as blocked until JazzCash confirms the exact inquiry hash field set; successful MWALLET charge + SkillUp entitlement activation do not depend on inquiry.
+- Direct one-shot MPIN charge (`/api/v1/.../m-wallet`) is retired for this checkout mode.
+- Return URL must be pre-registered with JazzCash for the merchant account.
+- Token inquiry / delete APIs are available for lifecycle management; payment status inquiry remains used for reconciliation.
 
 ## Promotion sequence
 

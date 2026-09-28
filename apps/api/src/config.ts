@@ -70,10 +70,13 @@ const ApiConfigSchema = z
     JAZZCASH_PRODUCT_ID: z.string().trim().max(40).default(""),
     JAZZCASH_CHECKOUT_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
 
-    // JazzCash payment-orchestrator MWALLET v1 (non-production only).
+    // JazzCash payment-orchestrator MWALLET recurring (wallet-link + pay-via-token). Non-production only.
     PREMIUM_JAZZCASH_V11_CHECKOUT: EnvironmentBooleanSchema,
     DEPLOYMENT_ENVIRONMENT: z.string().trim().min(1).max(40).optional(),
     JAZZCASH_V11_URL: OptionalUrlSchema,
+    JAZZCASH_V11_LINK_URL: OptionalUrlSchema,
+    JAZZCASH_V11_TOKEN_INQUIRY_URL: OptionalUrlSchema,
+    JAZZCASH_V11_TOKEN_DELETE_URL: OptionalUrlSchema,
     JAZZCASH_V11_INQUIRY_URL: OptionalUrlSchema,
     JAZZCASH_V11_MERCHANT_ID: z.string().trim().min(1).max(100).optional(),
     JAZZCASH_V11_PASSWORD: z.string().min(1).max(500).optional(),
@@ -287,6 +290,9 @@ const ApiConfigSchema = z
       }
       for (const field of [
         "JAZZCASH_V11_URL",
+        "JAZZCASH_V11_LINK_URL",
+        "JAZZCASH_V11_TOKEN_INQUIRY_URL",
+        "JAZZCASH_V11_TOKEN_DELETE_URL",
         "JAZZCASH_V11_INQUIRY_URL",
         "JAZZCASH_V11_MERCHANT_ID",
         "JAZZCASH_V11_PASSWORD",
@@ -303,6 +309,9 @@ const ApiConfigSchema = z
       }
       for (const field of [
         "JAZZCASH_V11_URL",
+        "JAZZCASH_V11_LINK_URL",
+        "JAZZCASH_V11_TOKEN_INQUIRY_URL",
+        "JAZZCASH_V11_TOKEN_DELETE_URL",
         "JAZZCASH_V11_INQUIRY_URL",
         "JAZZCASH_V11_RETURN_URL",
       ] as const) {
@@ -334,6 +343,9 @@ type OptionalInjectedConfig =
   | "DEPLOYMENT_ENVIRONMENT"
   | "PREMIUM_JAZZCASH_V11_CHECKOUT"
   | "JAZZCASH_V11_URL"
+  | "JAZZCASH_V11_LINK_URL"
+  | "JAZZCASH_V11_TOKEN_INQUIRY_URL"
+  | "JAZZCASH_V11_TOKEN_DELETE_URL"
   | "JAZZCASH_V11_INQUIRY_URL"
   | "JAZZCASH_V11_MERCHANT_ID"
   | "JAZZCASH_V11_PASSWORD"
@@ -362,6 +374,9 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     DEPLOYMENT_ENVIRONMENT?: string | undefined;
     PREMIUM_JAZZCASH_V11_CHECKOUT?: boolean;
     JAZZCASH_V11_URL?: string | undefined;
+    JAZZCASH_V11_LINK_URL?: string | undefined;
+    JAZZCASH_V11_TOKEN_INQUIRY_URL?: string | undefined;
+    JAZZCASH_V11_TOKEN_DELETE_URL?: string | undefined;
     JAZZCASH_V11_INQUIRY_URL?: string | undefined;
     JAZZCASH_V11_MERCHANT_ID?: string | undefined;
     JAZZCASH_V11_PASSWORD?: string | undefined;
