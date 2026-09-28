@@ -18,22 +18,28 @@ const healthRouteHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
 ];
 
-function paymentFormOrigin(): string | null {
-  const value = process.env["JAZZCASH_PAYMENT_URL"];
-  if (!value) return null;
-  try {
-    const url = new URL(value);
-    return url.protocol === "https:" ? url.origin : null;
-  } catch {
-    return null;
+function paymentFormOrigins(): readonly string[] {
+  const origins = new Set<string>();
+  // JazzCash hosted LinkWallet / pay-via-token always posts to this orchestrator origin.
+  origins.add("https://onlinepayments.jazzcash.com.pk");
+  for (const key of ["JAZZCASH_PAYMENT_URL", "JAZZCASH_V11_LINK_URL", "JAZZCASH_V11_URL"] as const) {
+    const value = process.env[key];
+    if (!value) continue;
+    try {
+      const url = new URL(value);
+      if (url.protocol === "https:") origins.add(url.origin);
+    } catch {
+      // Ignore invalid payment URL env values; CSP stays on known JazzCash origin.
+    }
   }
+  return [...origins];
 }
 
 const scriptPolicy =
   process.env.NODE_ENV === "production"
     ? "script-src 'self' 'unsafe-inline'"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
-const formAction = ["form-action 'self'", paymentFormOrigin()].filter(Boolean).join(" ");
+const formAction = ["form-action 'self'", ...paymentFormOrigins()].join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   scriptPolicy,

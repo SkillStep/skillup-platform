@@ -60,6 +60,7 @@ function postHostedForm(actionUrl: string, fields: Readonly<Record<string, strin
   const form = document.createElement("form");
   form.method = "POST";
   form.action = actionUrl;
+  form.acceptCharset = "UTF-8";
   form.style.display = "none";
   for (const [name, value] of Object.entries(fields)) {
     const input = document.createElement("input");
@@ -69,6 +70,7 @@ function postHostedForm(actionUrl: string, fields: Readonly<Record<string, strin
     form.appendChild(input);
   }
   document.body.appendChild(form);
+  // Synchronous navigation handoff to JazzCash; do not remove or re-render before submit finishes.
   form.submit();
 }
 
@@ -105,6 +107,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
 
     setBusyPlan(planCode);
     setMessage(null);
+    let handedOffToProvider = false;
 
     try {
       if (usesWalletLink) {
@@ -134,6 +137,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
           return;
         }
         postHostedForm(link.actionUrl, link.fields);
+        handedOffToProvider = true;
         return;
       }
 
@@ -160,7 +164,9 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     } catch {
       setMessage("Payment could not be started. Check your connection and try again.");
     } finally {
-      setBusyPlan(null);
+      // Keep the busy state while the browser navigates to JazzCash so React does not
+      // re-render and detach the temporary hosted form mid-submit.
+      if (!handedOffToProvider) setBusyPlan(null);
     }
   }
 

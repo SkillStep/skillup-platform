@@ -32,5 +32,7 @@ describe("web production boundary", () => {
     expect(nextConfig).toContain('Cache-Control", value: "private, no-store"');
     expect(nextConfig).toContain("frame-ancestors 'none'");
     expect(nextConfig).toContain("object-src 'none'");
+    expect(nextConfig).toContain("https://onlinepayments.jazzcash.com.pk");
+    expect(nextConfig).toContain("form-action 'self'");
   });
 });
