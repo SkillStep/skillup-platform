@@ -226,4 +226,27 @@ describe("API runtime configuration", () => {
       }),
     ).toThrow("JAZZCASH_STATUS_URL must use HTTPS outside local/test environments");
   });
+
+  it("allows premium checkout bypass only outside production", () => {
+    const config = readApiConfig({
+      ...requiredEnvironment,
+      FEATURE_PREMIUM_ENABLED: "true",
+      PREMIUM_CHECKOUT_BYPASS: "true",
+      DEPLOYMENT_ENVIRONMENT: "staging",
+      APP_ENV: "staging",
+    });
+    expect(config.PREMIUM_CHECKOUT_BYPASS).toBe(true);
+  });
+
+  it("rejects premium checkout bypass in production", () => {
+    expect(() =>
+      readApiConfig({
+        ...requiredEnvironment,
+        FEATURE_PREMIUM_ENABLED: "true",
+        PREMIUM_CHECKOUT_BYPASS: "true",
+        DEPLOYMENT_ENVIRONMENT: "production",
+        APP_ENV: "production",
+      }),
+    ).toThrow("PREMIUM_CHECKOUT_BYPASS is only allowed for staging");
+  });
 });

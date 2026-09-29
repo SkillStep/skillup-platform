@@ -221,6 +221,7 @@ jobs:
                     'FEATURE_JAZZCASH_ENABLED': 'false',
                     'JAZZCASH_MODE': 'disabled',
                     'DEPLOYMENT_ENVIRONMENT': 'staging',
+                    'PREMIUM_CHECKOUT_BYPASS': 'true',
                     'PREMIUM_JAZZCASH_V11_CHECKOUT': 'true',
                     'JAZZCASH_V11_LINK_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/WalletLinkingPortal/wallet/LinkWallet',
                     'JAZZCASH_V11_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v4/rest/payments/m-wallet',
@@ -235,7 +236,16 @@ jobs:
                     'JAZZCASH_V11_CHECKOUT_MINUTES': '15',
                 })
             else:
-                print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
+                print('JazzCash V11 staging secrets incomplete; enabling premium bypass only')
+                updates.update({
+                    'FEATURE_PREMIUM_ENABLED': 'true',
+                    'FEATURE_PAYMENT_SERVICE_ENABLED': 'false',
+                    'FEATURE_JAZZCASH_ENABLED': 'false',
+                    'JAZZCASH_MODE': 'disabled',
+                    'DEPLOYMENT_ENVIRONMENT': 'staging',
+                    'PREMIUM_CHECKOUT_BYPASS': 'true',
+                    'PREMIUM_JAZZCASH_V11_CHECKOUT': 'false',
+                })
 
             # Passwordless email: repair incomplete SMTP using staging Brevo credentials.
             current = {}

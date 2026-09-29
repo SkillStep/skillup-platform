@@ -12,7 +12,7 @@ type Plan = Readonly<{
   billingPeriod: "month" | "year";
   capabilities: readonly string[];
   checkoutAvailable: boolean;
-  checkoutMode?: "jazzcash_wallet_link" | "jazzcash_v11" | null;
+  checkoutMode?: "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" | null;
 }>;
 
 type BillingError = Readonly<{
@@ -79,9 +79,13 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   const [message, setMessage] = useState<string | null>(null);
   const [msisdn, setMsisdn] = useState("");
   const [consent, setConsent] = useState(false);
-  const usesWalletLink = plans.some(
-    (plan) => plan.checkoutMode === "jazzcash_wallet_link" || plan.checkoutMode === "jazzcash_v11",
-  );
+  const usesBypass = plans.some((plan) => plan.checkoutMode === "premium_bypass");
+  const usesWalletLink =
+    !usesBypass &&
+    plans.some(
+      (plan) =>
+        plan.checkoutMode === "jazzcash_wallet_link" || plan.checkoutMode === "jazzcash_v11",
+    );
 
   useEffect(() => {
     const controller = new AbortController();
@@ -96,13 +100,18 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   }, []);
 
   async function startCheckout(planCode: Plan["code"]) {
-    if (!/^\d{11,15}$/.test(msisdn)) {
-      setMessage("Enter a valid JazzCash mobile number using 11–15 digits.");
-      return;
-    }
-    if (!consent) {
-      setMessage("Confirm payment authorization before continuing.");
-      return;
+    const plan = plans.find((entry) => entry.code === planCode);
+    const bypass = plan?.checkoutMode === "premium_bypass" || usesBypass;
+
+    if (!bypass) {
+      if (!/^\d{11,15}$/.test(msisdn)) {
+        setMessage("Enter a valid JazzCash mobile number using 11–15 digits.");
+        return;
+      }
+      if (!consent) {
+        setMessage("Confirm payment authorization before continuing.");
+        return;
+      }
     }
 
     setBusyPlan(planCode);
@@ -110,6 +119,26 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     let handedOffToProvider = false;
 
     try {
+      if (bypass) {
+        const response = await fetch("/api/v1/commercial/premium-bypass/activate", {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ planCode }),
+        });
+        if (response.status === 401) {
+          window.location.assign("/en/sign-in?returnTo=%2Fen%2Fpricing");
+          return;
+        }
+        if (!response.ok) {
+          const error = await errorBody(response);
+          setMessage(error.message ?? "Premium could not be activated for testing.");
+          return;
+        }
+        window.location.assign("/en/account?payment=succeeded");
+        return;
+      }
+
       if (usesWalletLink) {
         const response = await fetch("/api/v1/premium/billing/jazzcash-v11/link/start", {
           method: "POST",
@@ -176,6 +205,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
         const yearly = plan.billingPeriod === "year";
         const msisdnId = `jazzcash-msisdn-${plan.code}`;
         const consentId = `jazzcash-consent-${plan.code}`;
+        const bypass = plan.checkoutMode === "premium_bypass" || usesBypass;
         return (
           <article
             className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
@@ -194,7 +224,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
               ))}
             </ul>
 
-            {plan.checkoutAvailable ? (
+            {plan.checkoutAvailable && !bypass ? (
               <div className={styles["walletForm"]}>
                 <label htmlFor={msisdnId}>JazzCash mobile number</label>
                 <input
@@ -231,17 +261,23 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
               onClick={() => void startCheckout(plan.code)}
             >
               {busyPlan === plan.code
-                ? "Opening JazzCash…"
+                ? bypass
+                  ? "Activating Premium…"
+                  : "Opening JazzCash…"
                 : plan.checkoutAvailable
-                  ? usesWalletLink
-                    ? "Link JazzCash & Pay"
-                    : "Pay with JazzCash"
+                  ? bypass
+                    ? "Activate Premium (test)"
+                    : usesWalletLink
+                      ? "Link JazzCash & Pay"
+                      : "Pay with JazzCash"
                   : "Payment activation pending"}
             </button>
             <p className={styles["note"]}>
-              {usesWalletLink
-                ? "You will enter your JazzCash MPIN on the JazzCash portal. SkillUp stores only the payment token and charges server-side after a verified link."
-                : "SkillUp charges through JazzCash and grants Premium only after a verified server-side response—not from the browser alone."}
+              {bypass
+                ? "Temporary staging bypass: JazzCash payment is skipped so Premium features can be tested."
+                : usesWalletLink
+                  ? "You will enter your JazzCash MPIN on the JazzCash portal. SkillUp stores only the payment token and charges server-side after a verified link."
+                  : "SkillUp charges through JazzCash and grants Premium only after a verified server-side response—not from the browser alone."}
             </p>
             {message && busyPlan === null ? (
               <p className={styles["message"]} role="alert">

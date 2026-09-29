@@ -5,7 +5,11 @@ import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
 import type { AuthService } from "./auth.js";
-import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
+import {
+  type ApiConfig,
+  isJazzCashV11CheckoutEnabled,
+  isPremiumCheckoutBypassEnabled,
+} from "./config.js";
 import type { JazzCashCpsClient } from "./jazzcash-cps.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
@@ -29,6 +33,12 @@ const OfferEventSchema = z
   })
   .strict();
 
+const BypassActivateSchema = z
+  .object({
+    planCode: z.enum(["premium-monthly", "premium-yearly"]),
+  })
+  .strict();
+
 type PaymentStatus =
   | "created"
   | "pending"
@@ -49,7 +59,7 @@ type Plan = Readonly<{
   capabilities: readonly string[];
   termsVersion: string;
   checkoutAvailable: boolean;
-  checkoutMode: "jazzcash_wallet_link" | null;
+  checkoutMode: "jazzcash_wallet_link" | "premium_bypass" | null;
 }>;
 
 type PaymentOrder = Readonly<{
@@ -97,6 +107,10 @@ export type CommercialService = Readonly<{
   }) => Promise<Checkout>;
   getOrder: (userId: string, orderId: string) => Promise<PaymentOrder>;
   handleJazzCashCallback: (fields: Readonly<Record<string, string>>) => Promise<PaymentOrder>;
+  activatePremiumBypass: (input: {
+    userId: string;
+    planCode: "premium-monthly" | "premium-yearly";
+  }) => Promise<Readonly<{ entitlement: Entitlement }>>;
   recordOfferView: (input: {
     userId: string | null;
     planCode?: string | undefined;
@@ -397,25 +411,33 @@ export function createCommercialService(
           order by amount_minor`,
       );
 
-      return result.rows.map((row) => ({
-        code: row.code,
-        name: row.name,
-        planVersionId: row.plan_version_id,
-        version: row.version,
-        currency: row.currency,
-        amountMinor: row.amount_minor,
-        billingPeriod: row.billing_period,
-        capabilities: row.capabilities,
-        termsVersion: row.terms_version,
-        checkoutAvailable:
-          (options.config.FEATURE_PREMIUM_ENABLED &&
-            options.config.FEATURE_JAZZCASH_ENABLED &&
-            options.config.JAZZCASH_MODE !== "disabled") ||
-          isJazzCashV11CheckoutEnabled(options.config),
-        checkoutMode: isJazzCashV11CheckoutEnabled(options.config)
-          ? ("jazzcash_wallet_link" as const)
-          : null,
-      }));
+      return result.rows.map((row) => {
+        const bypass = isPremiumCheckoutBypassEnabled(options.config);
+        const jazzcash = isJazzCashV11CheckoutEnabled(options.config);
+        return {
+          code: row.code,
+          name: row.name,
+          planVersionId: row.plan_version_id,
+          version: row.version,
+          currency: row.currency,
+          amountMinor: row.amount_minor,
+          billingPeriod: row.billing_period,
+          capabilities: row.capabilities,
+          termsVersion: row.terms_version,
+          checkoutAvailable:
+            bypass ||
+            (options.config.FEATURE_PREMIUM_ENABLED &&
+              options.config.FEATURE_JAZZCASH_ENABLED &&
+              options.config.JAZZCASH_MODE !== "disabled") ||
+            jazzcash,
+          // Bypass wins while JazzCash UAT is blocked so learners can test Premium features.
+          checkoutMode: bypass
+            ? ("premium_bypass" as const)
+            : jazzcash
+              ? ("jazzcash_wallet_link" as const)
+              : null,
+        };
+      });
     },
 
     getAccount: async (userId) => {
@@ -949,6 +971,121 @@ export function createCommercialService(
       }
     },
 
+    activatePremiumBypass: async ({ userId, planCode }) => {
+      if (!isPremiumCheckoutBypassEnabled(options.config)) {
+        throw new CommercialRequestError(503, "Premium checkout bypass is not enabled.");
+      }
+
+      const plan = await options.pool.query<{
+        plan_version_id: string;
+        billing_period: "month" | "year";
+        capabilities: readonly string[];
+      }>(
+        `select plan_version_id, billing_period, capabilities
+           from active_commercial_plan_catalog
+          where code = $1`,
+        [planCode],
+      );
+      const selected = plan.rows[0];
+      if (!selected) {
+        throw new CommercialRequestError(404, "The selected Premium plan was not found.");
+      }
+
+      const startsAt = now();
+      const connection = await options.pool.connect();
+      try {
+        await connection.query("begin");
+        await connection.query(
+          `update entitlements
+              set status = 'cancelled',
+                  cancelled_at = coalesce(cancelled_at, $2),
+                  updated_at = $2
+            where user_id = $1
+              and status in ('active', 'grace')`,
+          [userId, startsAt],
+        );
+
+        const inserted = await connection.query<{
+          id: string;
+          status: string;
+          starts_at: Date;
+          ends_at: Date;
+          grace_ends_at: Date | null;
+        }>(
+          `insert into entitlements (
+             user_id,
+             plan_version_id,
+             source_order_id,
+             status,
+             starts_at,
+             ends_at,
+             created_at,
+             updated_at
+           )
+           values (
+             $1,
+             $2,
+             null,
+             'active',
+             $3::timestamptz,
+             case
+               when $4::text = 'month'
+                 then $3::timestamptz + interval '1 month'
+               else $3::timestamptz + interval '1 year'
+             end,
+             $3::timestamptz,
+             $3::timestamptz
+           )
+           returning id, status, starts_at, ends_at, grace_ends_at`,
+          [userId, selected.plan_version_id, startsAt, selected.billing_period],
+        );
+        const row = inserted.rows[0];
+        if (!row) throw new Error("The premium entitlement could not be created.");
+
+        await connection.query(
+          `insert into entitlement_events (
+             entitlement_id,
+             action,
+             actor_type,
+             reason,
+             previous_status,
+             next_status
+           )
+           values ($1, 'activate', 'system', $2, null, 'active')`,
+          [row.id, `Staging premium bypass (${planCode}) — JazzCash payment temporarily skipped`],
+        );
+        await connection.query(
+          `insert into commercial_events (
+             user_id,
+             event_name,
+             plan_code,
+             entitlement_id,
+             properties
+           )
+           values ($1, 'premium_activated', $2, $3, '{"provider":"bypass","checkoutMode":"premium_bypass"}'::jsonb)`,
+          [userId, planCode, row.id],
+        );
+        await connection.query("commit");
+
+        return {
+          entitlement: {
+            id: row.id,
+            planCode,
+            status: "active",
+            startsAt: row.starts_at.toISOString(),
+            endsAt: row.ends_at.toISOString(),
+            graceEndsAt: row.grace_ends_at ? row.grace_ends_at.toISOString() : null,
+            capabilities: selected.capabilities,
+          },
+        };
+      } catch (error) {
+        await connection.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        connection.release();
+      }
+    },
+
     recordOfferView: async ({ userId, planCode, surface }) => {
       await options.pool.query(
         `insert into commercial_events (user_id, event_name, plan_code, properties)
@@ -1000,6 +1137,22 @@ export function registerCommercialRoutes(
         planCode: body.planCode,
         idempotencyKey: body.idempotencyKey,
         ...(body.msisdn ? { msisdn: body.msisdn } : {}),
+      }),
+    );
+  });
+
+  app.post("/v1/commercial/premium-bypass/activate", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
+    const body = BypassActivateSchema.parse(request.body);
+    request.log.warn(
+      { userId: learner.id, planCode: body.planCode, checkoutMode: "premium_bypass" },
+      "Staging premium checkout bypass activated",
+    );
+    return reply.status(201).send(
+      await options.commercialService.activatePremiumBypass({
+        userId: learner.id,
+        planCode: body.planCode,
       }),
     );
   });

@@ -72,6 +72,8 @@ const ApiConfigSchema = z
 
     // JazzCash payment-orchestrator MWALLET recurring (wallet-link + pay-via-token). Non-production only.
     PREMIUM_JAZZCASH_V11_CHECKOUT: EnvironmentBooleanSchema,
+    /** Staging/local only: grant Premium without JazzCash for feature UAT. */
+    PREMIUM_CHECKOUT_BYPASS: EnvironmentBooleanSchema,
     DEPLOYMENT_ENVIRONMENT: z.string().trim().min(1).max(40).optional(),
     JAZZCASH_V11_URL: OptionalUrlSchema,
     JAZZCASH_V11_LINK_URL: OptionalUrlSchema,
@@ -271,6 +273,25 @@ const ApiConfigSchema = z
       }
     }
 
+    if (config.PREMIUM_CHECKOUT_BYPASS) {
+      if (!config.FEATURE_PREMIUM_ENABLED) {
+        context.addIssue({
+          code: "custom",
+          path: ["FEATURE_PREMIUM_ENABLED"],
+          message: "Premium must be enabled before PREMIUM_CHECKOUT_BYPASS can be enabled.",
+        });
+      }
+      const deployment = (config.DEPLOYMENT_ENVIRONMENT ?? config.APP_ENV).trim().toLowerCase();
+      if (!["staging", "development", "dev", "local", "test"].includes(deployment)) {
+        context.addIssue({
+          code: "custom",
+          path: ["PREMIUM_CHECKOUT_BYPASS"],
+          message:
+            "PREMIUM_CHECKOUT_BYPASS is only allowed for staging, development, local, or test.",
+        });
+      }
+    }
+
     if (config.PREMIUM_JAZZCASH_V11_CHECKOUT) {
       if (!config.FEATURE_PREMIUM_ENABLED) {
         context.addIssue({
@@ -342,6 +363,7 @@ type OptionalInjectedConfig =
   | "JAZZCASH_CPS_TIMEOUT_SECONDS"
   | "DEPLOYMENT_ENVIRONMENT"
   | "PREMIUM_JAZZCASH_V11_CHECKOUT"
+  | "PREMIUM_CHECKOUT_BYPASS"
   | "JAZZCASH_V11_URL"
   | "JAZZCASH_V11_LINK_URL"
   | "JAZZCASH_V11_TOKEN_INQUIRY_URL"
@@ -373,6 +395,7 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     JAZZCASH_CPS_TIMEOUT_SECONDS?: number;
     DEPLOYMENT_ENVIRONMENT?: string | undefined;
     PREMIUM_JAZZCASH_V11_CHECKOUT?: boolean;
+    PREMIUM_CHECKOUT_BYPASS?: boolean;
     JAZZCASH_V11_URL?: string | undefined;
     JAZZCASH_V11_LINK_URL?: string | undefined;
     JAZZCASH_V11_TOKEN_INQUIRY_URL?: string | undefined;
@@ -408,6 +431,14 @@ export function isJazzCashV11EnvironmentAllowed(
 export function isJazzCashV11CheckoutEnabled(config: ApiConfig): boolean {
   return (
     Boolean(config.PREMIUM_JAZZCASH_V11_CHECKOUT) &&
+    Boolean(config.FEATURE_PREMIUM_ENABLED) &&
+    isJazzCashV11EnvironmentAllowed(config)
+  );
+}
+
+export function isPremiumCheckoutBypassEnabled(config: ApiConfig): boolean {
+  return (
+    Boolean(config.PREMIUM_CHECKOUT_BYPASS) &&
     Boolean(config.FEATURE_PREMIUM_ENABLED) &&
     isJazzCashV11EnvironmentAllowed(config)
   );
