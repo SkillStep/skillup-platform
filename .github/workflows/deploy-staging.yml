@@ -351,6 +351,32 @@ jobs:
             wait_for_local_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
             wait_for_local_url "Web health" "http://127.0.0.1:3020/api/health"
 
+            echo "Verifying temporary Premium checkout bypass"
+            grep -E '^PREMIUM_CHECKOUT_BYPASS=' .env || {
+              echo "::error::PREMIUM_CHECKOUT_BYPASS missing from staging .env" >&2
+              exit 1
+            }
+            plans_json="$(curl --fail --silent --show-error --max-time 10 http://127.0.0.1:4020/v1/commercial/plans)"
+            printf '%s' "$plans_json" | node <<'NODE'
+            const fs = require("node:fs");
+            const body = JSON.parse(fs.readFileSync(0, "utf8"));
+            const plans = Array.isArray(body.plans) ? body.plans : [];
+            if (plans.length !== 2) {
+              throw new Error(`Expected 2 commercial plans, got ${plans.length}`);
+            }
+            for (const plan of plans) {
+              if (plan.checkoutAvailable !== true) {
+                throw new Error(`Plan ${plan.code} checkoutAvailable must be true during bypass`);
+              }
+              if (plan.checkoutMode !== "premium_bypass") {
+                throw new Error(
+                  `Plan ${plan.code} checkoutMode must be premium_bypass during bypass, got ${plan.checkoutMode}`,
+                );
+              }
+            }
+            console.log("Premium checkout bypass plans contract: PASS");
+            NODE
+
             legit_status="$(curl --silent --show-error --output /tmp/skillup-origin-legit.json --write-out '%{http_code}' --header 'Origin: https://skillupshop.codistan.org' --header 'Content-Type: application/json' --data '{"email":"not-an-email"}' http://127.0.0.1:3020/api/v1/auth/email/start)"
             test "$legit_status" = "400" || {
               echo "::error::Legitimate staging Origin expected HTTP 400 after schema validation, received $legit_status" >&2
