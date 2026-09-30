@@ -221,7 +221,7 @@ jobs:
                     'FEATURE_JAZZCASH_ENABLED': 'false',
                     'JAZZCASH_MODE': 'disabled',
                     'DEPLOYMENT_ENVIRONMENT': 'staging',
-                    'PREMIUM_CHECKOUT_BYPASS': 'true',
+                    'PREMIUM_CHECKOUT_BYPASS': 'false',
                     'PREMIUM_JAZZCASH_V11_CHECKOUT': 'true',
                     'JAZZCASH_V11_LINK_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/WalletLinkingPortal/wallet/LinkWallet',
                     'JAZZCASH_V11_URL': 'https://onlinepayments.jazzcash.com.pk/payment-orchestrator/api/v4/rest/payments/m-wallet',
@@ -236,14 +236,14 @@ jobs:
                     'JAZZCASH_V11_CHECKOUT_MINUTES': '15',
                 })
             else:
-                print('JazzCash V11 staging secrets incomplete; enabling premium bypass only')
+                print('JazzCash V11 staging secrets incomplete; premium payment stays disabled')
                 updates.update({
                     'FEATURE_PREMIUM_ENABLED': 'true',
                     'FEATURE_PAYMENT_SERVICE_ENABLED': 'false',
                     'FEATURE_JAZZCASH_ENABLED': 'false',
                     'JAZZCASH_MODE': 'disabled',
                     'DEPLOYMENT_ENVIRONMENT': 'staging',
-                    'PREMIUM_CHECKOUT_BYPASS': 'true',
+                    'PREMIUM_CHECKOUT_BYPASS': 'false',
                     'PREMIUM_JAZZCASH_V11_CHECKOUT': 'false',
                 })
 
@@ -351,9 +351,9 @@ jobs:
             wait_for_local_url "API database readiness" "http://127.0.0.1:4020/v1/ready"
             wait_for_local_url "Web health" "http://127.0.0.1:3020/api/health"
 
-            echo "Verifying temporary Premium checkout bypass"
-            grep -E '^PREMIUM_CHECKOUT_BYPASS=true$' .env || {
-              echo "::error::PREMIUM_CHECKOUT_BYPASS=true missing from staging .env" >&2
+            echo "Verifying JazzCash wallet-link checkout is enabled (bypass off)"
+            grep -E '^PREMIUM_CHECKOUT_BYPASS=false$' .env || {
+              echo "::error::PREMIUM_CHECKOUT_BYPASS=false missing from staging .env" >&2
               grep -E '^PREMIUM_CHECKOUT_BYPASS=' .env >&2 || true
               exit 1
             }
@@ -369,15 +369,15 @@ jobs:
             }
             for (const plan of plans) {
               if (plan.checkoutAvailable !== true) {
-                throw new Error(`Plan ${plan.code} checkoutAvailable must be true during bypass`);
+                throw new Error(`Plan ${plan.code} checkoutAvailable must be true when payment is enabled`);
               }
-              if (plan.checkoutMode !== "premium_bypass") {
+              if (plan.checkoutMode !== "jazzcash_wallet_link") {
                 throw new Error(
-                  `Plan ${plan.code} checkoutMode must be premium_bypass during bypass, got ${JSON.stringify(plan.checkoutMode)}`,
+                  `Plan ${plan.code} checkoutMode must be jazzcash_wallet_link, got ${JSON.stringify(plan.checkoutMode)}`,
                 );
               }
             }
-            console.log("Premium checkout bypass plans contract: PASS");
+            console.log("JazzCash wallet-link checkout plans contract: PASS");
             NODE
             rm -f /tmp/skillup-commercial-plans.json
 
