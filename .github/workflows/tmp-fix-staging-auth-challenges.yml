@@ -49,8 +49,10 @@ jobs:
           set +a
 
           psql_exec() {
+            # Redirect stdin from /dev/null so docker compose exec cannot consume the
+            # remainder of this bash -s script (which is itself arriving on stdin).
             docker compose -f docker-compose.staging.yml exec -T postgres \
-              psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 "$@"
+              psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 "$@" </dev/null
           }
 
           echo "=== schema before ==="
