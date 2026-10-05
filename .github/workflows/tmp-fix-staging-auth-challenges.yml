@@ -1,0 +1,136 @@
+name: Temporary Fix Staging Auth Challenges Schema
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fix:
+    name: Drop legacy email_normalized + verify OTP
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: Apply auth_challenges schema fix and probe email/start
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${STAGING_HOST:-}"
+          test -n "${STAGING_SSH_USER:-}"
+          test -n "${STAGING_SSH_KEY:-}"
+
+          key_file="$RUNNER_TEMP/staging-fix-key"
+          known_hosts_file="$RUNNER_TEMP/staging-fix-known-hosts"
+          printf '%s\n' "$STAGING_SSH_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -H -T 10 "$STAGING_HOST" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          ssh \
+            -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o "UserKnownHostsFile=$known_hosts_file" \
+            -o StrictHostKeyChecking=yes \
+            "$STAGING_SSH_USER@$STAGING_HOST" \
+            'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+          set -a
+          # shellcheck disable=SC1091
+          source .env
+          set +a
+
+          echo "=== schema before ==="
+          docker compose -f docker-compose.staging.yml exec -T postgres \
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\d+ auth_challenges" || true
+
+          echo "=== ensure identity columns + drop legacy email_normalized ==="
+          docker compose -f docker-compose.staging.yml exec -T postgres \
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
+          DO $$
+          BEGIN
+            IF NOT EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'identity_type'
+            ) THEN
+              ALTER TABLE public.auth_challenges ADD COLUMN identity_type text;
+              ALTER TABLE public.auth_challenges ADD COLUMN identity_normalized text;
+              ALTER TABLE public.auth_challenges ADD COLUMN identity_display text;
+            END IF;
+
+            IF EXISTS (
+              SELECT 1 FROM information_schema.columns
+              WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'email_normalized'
+            ) THEN
+              UPDATE public.auth_challenges
+                 SET identity_type = COALESCE(identity_type, 'email'),
+                     identity_normalized = COALESCE(NULLIF(identity_normalized, ''), email_normalized),
+                     identity_display = COALESCE(NULLIF(identity_display, ''), email_normalized)
+               WHERE email_normalized IS NOT NULL;
+
+              ALTER TABLE public.auth_challenges DROP COLUMN email_normalized;
+            END IF;
+
+            UPDATE public.auth_challenges
+               SET identity_type = 'email'
+             WHERE identity_type IS NULL;
+            UPDATE public.auth_challenges
+               SET identity_normalized = COALESCE(identity_normalized, identity_display, '')
+             WHERE identity_normalized IS NULL;
+            UPDATE public.auth_challenges
+               SET identity_display = COALESCE(identity_display, identity_normalized, '')
+             WHERE identity_display IS NULL;
+
+            ALTER TABLE public.auth_challenges ALTER COLUMN identity_type SET NOT NULL;
+            ALTER TABLE public.auth_challenges ALTER COLUMN identity_normalized SET NOT NULL;
+            ALTER TABLE public.auth_challenges ALTER COLUMN identity_display SET NOT NULL;
+          END $$;
+          SQL
+
+          echo "=== schema after ==="
+          docker compose -f docker-compose.staging.yml exec -T postgres \
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\d+ auth_challenges" || true
+
+          echo "=== JazzCash checkout flags (no secrets) ==="
+          grep -E '^(PREMIUM_JAZZCASH_V11_CHECKOUT|FEATURE_PREMIUM_ENABLED|PREMIUM_CHECKOUT_BYPASS|JAZZCASH_V11_RETURN_URL|JAZZCASH_V11_MERCHANT_ID)=' .env \
+            | sed -E 's/^(JAZZCASH_V11_MERCHANT_ID=).*/\1[set]/' || true
+
+          echo "=== localhost email/start ==="
+          code="$(curl -sS --max-time 30 -o /tmp/skillup-email-start.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H 'Origin: https://skillupshop.codistan.org' \
+            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            http://127.0.0.1:3020/api/v1/auth/email/start || true)"
+          echo "http=$code"
+          cat /tmp/skillup-email-start.json || true
+          echo
+
+          if [ "$code" != "202" ]; then
+            echo "email/start still not 202; recent api errors:"
+            docker compose -f docker-compose.staging.yml logs --tail=80 api 2>/dev/null \
+              | grep -E 'auth/email|API request failed|email_normalized|auth_challenges' || true
+            exit 1
+          fi
+          echo "OK: email/start returned 202"
+          REMOTE
+
+          rm -f "$key_file" "$known_hosts_file"
+
+          echo "=== public email/start ==="
+          pub="$(curl -sS --max-time 30 -o /tmp/pub-email-start.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H 'Origin: https://skillupshop.codistan.org' \
+            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            https://skillupshop.codistan.org/api/v1/auth/email/start || true)"
+          echo "http=$pub"
+          cat /tmp/pub-email-start.json || true
+          test "$pub" = "202"
