@@ -39,7 +39,7 @@ jobs:
             -o "UserKnownHostsFile=$known_hosts_file" \
             -o StrictHostKeyChecking=yes \
             "$STAGING_SSH_USER@$STAGING_HOST" \
-            'bash -s' <<'REMOTE'
+            "bash -s" <<'REMOTE'
           set -euo pipefail
           cd /opt/skillup
           set -a
@@ -47,13 +47,12 @@ jobs:
           source .env
           set +a
 
-          echo "=== schema before ==="
+          echo "=== schema before (email_normalized present?) ==="
           docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\d+ auth_challenges" || true
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
 
-          echo "=== ensure identity columns + drop legacy email_normalized ==="
-          docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" <<'SQL'
+          cat >/tmp/skillup-auth-challenges-fix.sql <<'SQL'
           DO $$
           BEGIN
             IF NOT EXISTS (
@@ -94,11 +93,26 @@ jobs:
           END $$;
           SQL
 
+          echo "=== applying SQL fix ==="
+          docker compose -f docker-compose.staging.yml exec -T postgres \
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \
+            -f - </tmp/skillup-auth-challenges-fix.sql
+
           echo "=== schema after ==="
           docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "\d+ auth_challenges" || true
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
 
-          echo "=== JazzCash checkout flags (no secrets) ==="
+          leftover="$(docker compose -f docker-compose.staging.yml exec -T postgres \
+            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
+            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' and column_name='email_normalized'" || true)"
+          if [ -n "${leftover}" ]; then
+            echo "email_normalized still present: ${leftover}" >&2
+            exit 1
+          fi
+          echo "email_normalized dropped OK"
+
+          echo "=== JazzCash checkout flags ==="
           grep -E '^(PREMIUM_JAZZCASH_V11_CHECKOUT|FEATURE_PREMIUM_ENABLED|PREMIUM_CHECKOUT_BYPASS|JAZZCASH_V11_RETURN_URL|JAZZCASH_V11_MERCHANT_ID)=' .env \
             | sed -E 's/^(JAZZCASH_V11_MERCHANT_ID=).*/\1[set]/' || true
 
@@ -107,19 +121,18 @@ jobs:
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
             -H 'Origin: https://skillupshop.codistan.org' \
-            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            --data '{"email":"skillup.email.probe@codistan.org"}' \
             http://127.0.0.1:3020/api/v1/auth/email/start || true)"
           echo "http=$code"
           cat /tmp/skillup-email-start.json || true
           echo
-
           if [ "$code" != "202" ]; then
             echo "email/start still not 202; recent api errors:"
-            docker compose -f docker-compose.staging.yml logs --tail=80 api 2>/dev/null \
+            docker compose -f docker-compose.staging.yml logs --tail=100 api 2>/dev/null \
               | grep -E 'auth/email|API request failed|email_normalized|auth_challenges' || true
             exit 1
           fi
-          echo "OK: email/start returned 202"
+          echo "OK: localhost email/start returned 202"
           REMOTE
 
           rm -f "$key_file" "$known_hosts_file"
@@ -129,8 +142,9 @@ jobs:
             -H 'Content-Type: application/json' \
             -H 'Accept: application/json' \
             -H 'Origin: https://skillupshop.codistan.org' \
-            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            --data '{"email":"skillup.email.probe@codistan.org"}' \
             https://skillupshop.codistan.org/api/v1/auth/email/start || true)"
           echo "http=$pub"
           cat /tmp/pub-email-start.json || true
           test "$pub" = "202"
+          echo "OK: public email/start returned 202"
