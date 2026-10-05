@@ -18,8 +18,7 @@ const healthRouteHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
 ];
 
-function paymentFormOrigin(): string | null {
-  const value = process.env["JAZZCASH_PAYMENT_URL"];
+function httpsOrigin(value: string | undefined): string | null {
   if (!value) return null;
   try {
     const url = new URL(value);
@@ -29,11 +28,21 @@ function paymentFormOrigin(): string | null {
   }
 }
 
+/** Origins allowed for top-level payment form POST (JazzCash LinkWallet / hosted checkout). */
+function paymentFormOrigins(): readonly string[] {
+  const origins = new Set<string>(["https://onlinepayments.jazzcash.com.pk"]);
+  for (const key of ["JAZZCASH_PAYMENT_URL", "JAZZCASH_V11_LINK_URL"] as const) {
+    const origin = httpsOrigin(process.env[key]);
+    if (origin) origins.add(origin);
+  }
+  return [...origins];
+}
+
 const scriptPolicy =
   process.env.NODE_ENV === "production"
     ? "script-src 'self' 'unsafe-inline'"
     : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
-const formAction = ["form-action 'self'", paymentFormOrigin()].filter(Boolean).join(" ");
+const formAction = ["form-action 'self'", ...paymentFormOrigins()].join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   scriptPolicy,
