@@ -12,9 +12,9 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
     expect(source).toContain('redirect: "manual"');
   });
 
-  it("redirects learners to account with payment status", () => {
-    expect(source).toContain('new URL("/en/account", appOrigin)');
-    expect(source).toContain('account.searchParams.set("payment", status)');
+  it("redirects learners to the home page with payment status", () => {
+    expect(source).toContain('new URL("/en", appOrigin)');
+    expect(source).toContain('home.searchParams.set("payment", status)');
     expect(source).toContain("origin: appOrigin");
   });
 

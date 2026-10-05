@@ -135,7 +135,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
           setMessage(error.message ?? "Premium could not be activated for testing.");
           return;
         }
-        window.location.assign("/en/account?payment=succeeded");
+        window.location.assign("/en?payment=succeeded");
         return;
       }
 
