@@ -14,7 +14,11 @@ import {
   type JazzCashV11Fields,
   verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
-import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
+import {
+  RequestAuthorizationError,
+  requireAuthenticatedLearner,
+  requireTrustedRequestOrigin,
+} from "./request-auth.js";
 
 const PlanCodeSchema = z.enum(["premium-monthly", "premium-yearly"]);
 
@@ -183,7 +187,7 @@ export type JazzCashV11BillingService = Readonly<{
     }>
   >;
   completeWalletLink: (input: {
-    userId: string;
+    userId?: string;
     fields: Readonly<Record<string, string>>;
   }) => Promise<
     Readonly<{
@@ -506,21 +510,31 @@ export function createJazzCashV11BillingService(
         throw new JazzCashV11BillingError(400, "The JazzCash wallet-link response is incomplete.");
       }
 
+      // Resolve the learner from the signed request id. JazzCash returns via cross-site POST,
+      // so the browser session cookie is often missing on the first callback hit.
       const intent = await options.pool.query<{
+        user_id: string;
         plan_code: "premium-monthly" | "premium-yearly";
         msisdn: string;
         status: string;
         idempotency_key: string;
       }>(
-        `select plan_code, msisdn, status, idempotency_key
+        `select user_id, plan_code, msisdn, status, idempotency_key
            from jazzcash_wallet_link_intents
-          where user_id = $1 and request_id = $2`,
-        [userId, requestId],
+          where request_id = $1`,
+        [requestId],
       );
       const selectedIntent = intent.rows[0];
       if (!selectedIntent) {
         throw new JazzCashV11BillingError(404, "The wallet-link request was not found.");
       }
+      if (userId && userId !== selectedIntent.user_id) {
+        throw new JazzCashV11BillingError(
+          403,
+          "This JazzCash wallet-link belongs to a different SkillUp account.",
+        );
+      }
+      const ownerId = selectedIntent.user_id;
       if (selectedIntent.status === "completed") {
         throw new JazzCashV11BillingError(409, "This wallet-link request already completed.");
       }
@@ -543,7 +557,7 @@ export function createJazzCashV11BillingService(
         `update jazzcash_wallet_links
             set status = 'revoked', revoked_at = now(), updated_at = now()
           where user_id = $1 and status = 'active'`,
-        [userId],
+        [ownerId],
       );
       await options.pool.query(
         `insert into jazzcash_wallet_links
@@ -554,7 +568,7 @@ export function createJazzCashV11BillingService(
                status = 'active',
                revoked_at = null,
                updated_at = now()`,
-        [userId, resolvedMsisdn, paymentToken, requestId, selectedIntent.plan_code],
+        [ownerId, resolvedMsisdn, paymentToken, requestId, selectedIntent.plan_code],
       );
       await options.pool.query(
         `update jazzcash_wallet_link_intents
@@ -564,7 +578,7 @@ export function createJazzCashV11BillingService(
       );
 
       return chargeTokenForPlan({
-        userId,
+        userId: ownerId,
         planCode: selectedIntent.plan_code,
         paymentToken,
         msisdn: resolvedMsisdn,
@@ -681,10 +695,26 @@ export function registerJazzCashV11BillingRoutes(
     if (origin !== publicOrigin && origin !== returnOrigin) {
       requireTrustedRequestOrigin(request, options.config);
     }
-    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
+
+    // Session is optional: JazzCash posts cross-site and often omits the SkillUp cookie.
+    // Ownership is proven by the signed pp_RequestID → wallet-link intent mapping.
+    let userId: string | undefined;
+    try {
+      const learner = await requireAuthenticatedLearner(
+        request,
+        options.config,
+        options.authService,
+      );
+      userId = learner.id;
+    } catch (error) {
+      if (!(error instanceof RequestAuthorizationError) || error.statusCode !== 401) {
+        throw error;
+      }
+    }
+
     const body = LinkCallbackBodySchema.parse(request.body);
     const result = await options.billingService.completeWalletLink({
-      userId: learner.id,
+      ...(userId ? { userId } : {}),
       fields: body.fields,
     });
     return reply.status(201).send(result);
