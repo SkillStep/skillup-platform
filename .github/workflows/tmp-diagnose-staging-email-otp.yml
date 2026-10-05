@@ -1,0 +1,101 @@
+name: Temporary Diagnose Staging Email OTP
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnose:
+    name: Probe email/start and host SMTP flags
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: staging
+    steps:
+      - name: Public email/start + otp/start probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="https://skillupshop.codistan.org"
+
+          echo "=== GET /api/health ==="
+          curl -sS --max-time 20 "$base/api/health" || true
+          echo
+
+          echo "=== POST /api/v1/auth/email/start ==="
+          code="$(curl -sS --max-time 30 -o /tmp/email-start.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H "Origin: $base" \
+            -H "Referer: $base/en/sign-in" \
+            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            "$base/api/v1/auth/email/start" || true)"
+          echo "http=$code"
+          cat /tmp/email-start.json || true
+          echo
+
+          echo "=== POST /api/v1/auth/otp/start ==="
+          code2="$(curl -sS --max-time 30 -o /tmp/otp-start.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H "Origin: $base" \
+            --data '{"identity":"m.abdullah73111@gmail.com"}' \
+            "$base/api/v1/auth/otp/start" || true)"
+          echo "http=$code2"
+          cat /tmp/otp-start.json || true
+          echo
+
+      - name: Host-side localhost probe + email flags + recent API errors
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${STAGING_HOST:-}"
+          test -n "${STAGING_SSH_USER:-}"
+          test -n "${STAGING_SSH_KEY:-}"
+
+          key_file="$RUNNER_TEMP/staging-diag-key"
+          known_hosts_file="$RUNNER_TEMP/staging-diag-known-hosts"
+          printf '%s\n' "$STAGING_SSH_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -H -T 10 "$STAGING_HOST" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          ssh \
+            -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o "UserKnownHostsFile=$known_hosts_file" \
+            -o StrictHostKeyChecking=yes \
+            "$STAGING_SSH_USER@$STAGING_HOST" \
+            'bash -s' <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+
+          echo "=== EMAIL/SMTP flags (redacted) ==="
+          grep -E '^(EMAIL_PROVIDER|EMAIL_FROM|SMTP_HOST|SMTP_PORT|SMTP_SECURE|SMTP_REQUIRE_TLS|SMTP_USERNAME)=' .env \
+            | sed -E 's/^(SMTP_USERNAME=).*/\1[redacted]/; s/^(EMAIL_FROM=).*/\1[redacted]/' || true
+          if grep -q '^SMTP_PASSWORD=.' .env; then echo "SMTP_PASSWORD=[set]"; else echo "SMTP_PASSWORD=[missing]"; fi
+
+          echo "=== localhost POST /api/v1/auth/email/start ==="
+          code="$(curl -sS --max-time 30 -o /tmp/skillup-email-start.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H 'Origin: https://skillupshop.codistan.org' \
+            --data '{"email":"m.abdullah73111@gmail.com"}' \
+            http://127.0.0.1:3020/api/v1/auth/email/start || true)"
+          echo "http=$code"
+          cat /tmp/skillup-email-start.json || true
+          echo
+
+          echo "=== recent api container errors (last 80 matching lines) ==="
+          docker compose -f docker-compose.staging.yml logs --tail=400 api 2>/dev/null \
+            | grep -E 'auth/email|email/start|API request failed|Sign-in email|SMTP|auth_challenges|error' \
+            | tail -n 80 || true
+          REMOTE
+
+          rm -f "$key_file" "$known_hosts_file"
