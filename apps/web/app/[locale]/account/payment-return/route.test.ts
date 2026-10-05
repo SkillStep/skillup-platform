@@ -13,8 +13,9 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
   });
 
   it("redirects learners to account with payment status", () => {
-    expect(source).toContain('new URL("/en/account", request.nextUrl.origin)');
+    expect(source).toContain('new URL("/en/account", publicAppOrigin(request))');
     expect(source).toContain('url.searchParams.set("payment", status)');
+    expect(source).toContain("origin: appOrigin");
   });
 
   it("does not use the retired commercial JazzCash callback for link completion", () => {
