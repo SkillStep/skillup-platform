@@ -1,5 +1,5 @@
 import { readApiConfig } from "../config.js";
-import { buildJazzCashV11ChargeFields } from "../jazzcash-v11.js";
+import { buildJazzCashTokenChargeFields } from "../jazzcash-v11.js";
 
 function pakistanStamp(date = new Date()): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
@@ -24,16 +24,15 @@ if (!url) throw new Error("JAZZCASH_V11_URL is missing");
 const now = new Date();
 const stamp = pakistanStamp(now);
 const expiry = pakistanStamp(new Date(now.getTime() + 15 * 60_000));
-const body = buildJazzCashV11ChargeFields(config, {
+const paymentToken = process.env["JAZZCASH_DUMP_PAYMENT_TOKEN"]?.trim() || "TEST-PAYMENT-TOKEN";
+const body = buildJazzCashTokenChargeFields(config, {
   amountMinor: 59_900,
   billReference: `B${stamp}`,
   description: "SkillUp premium membership",
+  paymentToken,
   txnRefNo: `Goo${stamp}Z1`,
   txnDateTime: stamp,
   txnExpiryDateTime: expiry,
-  msisdn: "03123456789",
-  mpin: "5555",
-  cnic: "345678",
 });
 
 console.log("=== METHOD / URL ===");
