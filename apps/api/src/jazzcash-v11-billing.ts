@@ -12,47 +12,36 @@ import {
   type JazzCashV11Client,
   JazzCashV11Error,
   type JazzCashV11Fields,
-  redactJazzCashV11Fields,
+  verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const PlanCodeSchema = z.enum(["premium-monthly", "premium-yearly"]);
 
-const ChargeBodySchema = z
+const StartLinkBodySchema = z
   .object({
-    planId: z.string().trim().min(1).max(80).optional(),
-    planCode: PlanCodeSchema.optional(),
+    planCode: PlanCodeSchema,
     msisdn: z
       .string()
       .trim()
       .regex(/^\d{11,15}$/, "Enter a JazzCash mobile number using 11–15 digits."),
-    mpin: z
-      .string()
-      .trim()
-      .regex(/^\d{4}$/, "Enter the 4-digit JazzCash MPIN."),
-    cnic: z
-      .string()
-      .trim()
-      .regex(/^\d{6}$/, "Enter the last 6 digits of the CNIC."),
+    consentToAutoPay: z.literal(true),
     idempotencyKey: z.string().trim().min(12).max(128).optional(),
   })
-  .strict()
-  .superRefine((body, context) => {
-    if (!body.planCode && !body.planId) {
-      context.addIssue({
-        code: "custom",
-        path: ["planCode"],
-        message: "planCode or planId is required.",
-      });
-    }
-  });
+  .strict();
+
+const LinkCallbackBodySchema = z
+  .object({
+    fields: z.record(z.string(), z.string()),
+  })
+  .strict();
 
 const InquiryBodySchema = z
   .object({
     txnRefNo: z
       .string()
       .trim()
-      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,2}$/, "txnRefNo must be a JazzCash v11 merchant reference."),
+      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,2}$/, "txnRefNo must be a JazzCash merchant reference."),
   })
   .strict();
 
@@ -88,16 +77,6 @@ class JazzCashV11BillingError extends Error {
   }
 }
 
-function resolvePlanCode(
-  body: z.infer<typeof ChargeBodySchema>,
-): "premium-monthly" | "premium-yearly" {
-  if (body.planCode) return body.planCode;
-  const planId = body.planId?.trim().toLowerCase() ?? "";
-  if (planId === "premium-monthly" || planId === "monthly") return "premium-monthly";
-  if (planId === "premium-yearly" || planId === "yearly") return "premium-yearly";
-  throw new JazzCashV11BillingError(400, "The selected premium plan is unavailable.");
-}
-
 function pakistanStamp(date: Date): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: "Asia/Karachi",
@@ -115,8 +94,15 @@ function pakistanStamp(date: Date): string {
 }
 
 function gooTxnRef(now: Date): string {
-  // JazzCash v11: Goo{yyyyMMddHHmmss} with optional 2-char uniqueness suffix (max 20).
   return `Goo${pakistanStamp(now)}${randomBytes(1).toString("hex").toUpperCase()}`;
+}
+
+function linkRequestId(): string {
+  return `ReqId${Date.now()}${randomBytes(2).toString("hex")}`;
+}
+
+function payloadDigest(fields: Readonly<Record<string, string>>): string {
+  return createHash("sha256").update(JSON.stringify(fields)).digest("hex");
 }
 
 function signedSettlementFields(
@@ -182,27 +168,27 @@ from payment_orders o
 join commercial_plan_versions v on v.id = o.plan_version_id
 join commercial_plans p on p.id = v.plan_id`;
 
-function payloadDigest(fields: Readonly<Record<string, string>>): string {
-  const normalized = Object.fromEntries(
-    Object.entries(redactJazzCashV11Fields(fields)).sort(([left], [right]) =>
-      left < right ? -1 : 1,
-    ),
-  );
-  return createHash("sha256").update(JSON.stringify(normalized)).digest("hex");
-}
-
 export type JazzCashV11BillingService = Readonly<{
-  charge: (input: {
+  startWalletLink: (input: {
     userId: string;
     planCode: "premium-monthly" | "premium-yearly";
     msisdn: string;
-    mpin: string;
-    cnic: string;
     idempotencyKey: string;
   }) => Promise<
     Readonly<{
+      checkoutMode: "jazzcash_wallet_link";
+      requestId: string;
+      actionUrl: string;
+      fields: Readonly<Record<string, string>>;
+    }>
+  >;
+  completeWalletLink: (input: {
+    userId: string;
+    fields: Readonly<Record<string, string>>;
+  }) => Promise<
+    Readonly<{
       order: PaymentOrder;
-      checkoutMode: "jazzcash_v11";
+      checkoutMode: "jazzcash_wallet_link";
       providerResponseCode: string | null;
       providerResponseMessage: string | null;
     }>
@@ -210,7 +196,7 @@ export type JazzCashV11BillingService = Readonly<{
   inquire: (input: { userId: string; txnRefNo: string }) => Promise<
     Readonly<{
       order: PaymentOrder;
-      checkoutMode: "jazzcash_v11";
+      checkoutMode: "jazzcash_wallet_link";
       providerResponseCode: string | null;
       providerResponseMessage: string | null;
     }>
@@ -226,250 +212,364 @@ export function createJazzCashV11BillingService(
     now?: () => Date;
   }>,
 ): JazzCashV11BillingService {
-  const now = options.now ?? (() => new Date());
   const client = options.client ?? createJazzCashV11Client(options.config);
+  const now = options.now ?? (() => new Date());
 
   async function requireEnabled(): Promise<void> {
     if (!isJazzCashV11CheckoutEnabled(options.config)) {
-      throw new JazzCashV11BillingError(503, "JazzCash v11 checkout is not enabled.");
+      throw new JazzCashV11BillingError(503, "JazzCash wallet-link checkout is not enabled.");
+    }
+  }
+
+  async function chargeTokenForPlan(input: {
+    userId: string;
+    planCode: "premium-monthly" | "premium-yearly";
+    paymentToken: string;
+    msisdn: string;
+    idempotencyKey: string;
+  }) {
+    const createdAt = now();
+    const checkoutMinutes = options.config.JAZZCASH_V11_CHECKOUT_MINUTES ?? 15;
+    const checkoutExpiresAt = new Date(createdAt.getTime() + checkoutMinutes * 60_000);
+    const txnExpiryDateTime = pakistanStamp(new Date(createdAt.getTime() + 24 * 60 * 60_000));
+    const stamp = pakistanStamp(createdAt);
+
+    const connection = await options.pool.connect();
+    let orderRow: Record<string, unknown>;
+    let inserted = false;
+    try {
+      await connection.query("begin");
+      const plan = await connection.query<{
+        plan_version_id: string;
+        amount_minor: number;
+        currency: "PKR";
+      }>(
+        `select plan_version_id, amount_minor, currency
+           from active_commercial_plan_catalog
+          where code = $1
+          for share`,
+        [input.planCode],
+      );
+      const selected = plan.rows[0];
+      if (!selected) {
+        throw new JazzCashV11BillingError(404, "The selected premium plan is unavailable.");
+      }
+
+      let merchantReference = gooTxnRef(createdAt);
+      for (let attempt = 0; attempt < 5; attempt += 1) {
+        const insert = await connection.query(
+          `insert into payment_orders (
+             user_id, plan_version_id, provider, status, amount_minor, currency,
+             idempotency_key, merchant_reference, checkout_expires_at, created_at, updated_at
+           )
+           values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
+           on conflict (user_id, idempotency_key) do nothing
+           returning id`,
+          [
+            input.userId,
+            selected.plan_version_id,
+            selected.amount_minor,
+            selected.currency,
+            input.idempotencyKey,
+            merchantReference,
+            checkoutExpiresAt,
+            createdAt,
+          ],
+        );
+        if ((insert.rowCount ?? 0) === 1) {
+          inserted = true;
+          break;
+        }
+        const existing = await connection.query<Record<string, unknown>>(
+          `${orderSelect}
+           where o.user_id = $1 and o.idempotency_key = $2
+           for update`,
+          [input.userId, input.idempotencyKey],
+        );
+        if (existing.rows[0]) {
+          orderRow = existing.rows[0];
+          await connection.query("commit");
+          if (orderRow["status"] === "succeeded") {
+            return {
+              order: mapOrder(orderRow),
+              checkoutMode: "jazzcash_wallet_link" as const,
+              providerResponseCode: "000",
+              providerResponseMessage: "Already settled.",
+            };
+          }
+          return {
+            order: mapOrder(orderRow),
+            checkoutMode: "jazzcash_wallet_link" as const,
+            providerResponseCode: null,
+            providerResponseMessage: "Checkout already started for this idempotency key.",
+          };
+        }
+        merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
+      }
+      if (!inserted) {
+        throw new JazzCashV11BillingError(
+          409,
+          "Could not allocate a unique JazzCash txn reference.",
+        );
+      }
+
+      const selectedOrder = await connection.query<Record<string, unknown>>(
+        `${orderSelect}
+         where o.user_id = $1 and o.idempotency_key = $2
+         for update`,
+        [input.userId, input.idempotencyKey],
+      );
+      const row = selectedOrder.rows[0];
+      if (!row) throw new Error("The payment order could not be loaded.");
+      await connection.query(
+        `insert into commercial_events (user_id, event_name, plan_code, order_id, properties)
+         values ($1, 'checkout_started', $2, $3, '{"provider":"jazzcash","checkoutMode":"jazzcash_wallet_link"}'::jsonb)`,
+        [input.userId, input.planCode, row["id"]],
+      );
+      await connection.query("commit");
+      orderRow = row;
+    } catch (error) {
+      await connection.query("rollback").catch(() => undefined);
+      throw error;
+    } finally {
+      connection.release();
+    }
+
+    const amountMinor = Number(orderRow["amount_minor"]);
+    const txnRefNo = String(orderRow["merchant_reference"]);
+    let providerFields: JazzCashV11Fields;
+    try {
+      providerFields = await client.chargeWithToken({
+        amountMinor,
+        billReference: `B${stamp}`,
+        description: "SkillUp premium membership",
+        paymentToken: input.paymentToken,
+        txnRefNo,
+        txnDateTime: stamp,
+        txnExpiryDateTime,
+      });
+    } catch (error) {
+      if (error instanceof JazzCashV11Error) {
+        throw new JazzCashV11BillingError(
+          502,
+          "JazzCash did not accept the payment request. No Premium entitlement was granted.",
+        );
+      }
+      throw error;
+    }
+
+    const responseCode = providerFields["pp_ResponseCode"]?.trim() ?? null;
+    const responseMessage = providerFields["pp_ResponseMessage"]?.trim() ?? null;
+    const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) {
+      throw new JazzCashV11BillingError(503, "JazzCash wallet-link is not fully configured.");
+    }
+
+    if (responseCode === "000") {
+      const providerReference =
+        providerFields["pp_RetreivalReferenceNo"] ||
+        providerFields["pp_AuthCode"] ||
+        `v11-${txnRefNo}`;
+      const settled = await options.commercialService.handleJazzCashCallback(
+        signedSettlementFields({
+          integritySalt,
+          txnRefNo,
+          amountMinor,
+          responseCode: "000",
+          providerReference,
+        }),
+      );
+      return {
+        order: settled,
+        checkoutMode: "jazzcash_wallet_link" as const,
+        providerResponseCode: responseCode,
+        providerResponseMessage: responseMessage,
+      };
+    }
+
+    const digest = payloadDigest(providerFields);
+    const providerEventId =
+      providerFields["pp_RetreivalReferenceNo"] ||
+      providerFields["pp_AuthCode"] ||
+      `v11:${txnRefNo}:${responseCode ?? "unknown"}:${digest.slice(0, 16)}`;
+    const failConnection = await options.pool.connect();
+    try {
+      await failConnection.query("begin");
+      await failConnection.query(
+        `insert into payment_events (
+           order_id, provider, provider_event_id, event_type, provider_status, signature_verified, payload_digest
+         )
+         values ($1, 'jazzcash', $2, 'checkout_return', $3, false, $4)
+         on conflict (provider, provider_event_id) do nothing`,
+        [orderRow["id"], providerEventId, responseCode ?? "unknown", digest],
+      );
+      await failConnection.query(
+        `update payment_orders
+            set status = 'failed', updated_at = now()
+          where id = $1 and status in ('created', 'pending')`,
+        [orderRow["id"]],
+      );
+      const updated = await failConnection.query<Record<string, unknown>>(
+        `${orderSelect} where o.id = $1`,
+        [orderRow["id"]],
+      );
+      await failConnection.query("commit");
+      const updatedRow = updated.rows[0];
+      if (!updatedRow) throw new Error("The updated payment order could not be loaded.");
+      return {
+        order: mapOrder(updatedRow),
+        checkoutMode: "jazzcash_wallet_link" as const,
+        providerResponseCode: responseCode,
+        providerResponseMessage: responseMessage,
+      };
+    } catch (error) {
+      await failConnection.query("rollback").catch(() => undefined);
+      throw error;
+    } finally {
+      failConnection.release();
     }
   }
 
   return {
-    charge: async ({ userId, planCode, msisdn, mpin, cnic, idempotencyKey }) => {
+    startWalletLink: async ({ userId, planCode, msisdn, idempotencyKey }) => {
       await requireEnabled();
       const createdAt = now();
-      const checkoutMinutes = options.config.JAZZCASH_V11_CHECKOUT_MINUTES ?? 15;
-      const checkoutExpiresAt = new Date(createdAt.getTime() + checkoutMinutes * 60_000);
-      const stamp = pakistanStamp(createdAt);
-      const expiryStamp = pakistanStamp(checkoutExpiresAt);
+      const expiresAt = new Date(
+        createdAt.getTime() + (options.config.JAZZCASH_V11_CHECKOUT_MINUTES ?? 15) * 60_000,
+      );
 
       const connection = await options.pool.connect();
-      let orderRow: Record<string, unknown>;
-      let inserted = false;
       try {
         await connection.query("begin");
-        const plan = await connection.query<{
-          plan_version_id: string;
-          amount_minor: number;
-          currency: "PKR";
+        const existing = await connection.query<{
+          request_id: string;
+          status: string;
+          msisdn: string;
         }>(
-          `select plan_version_id, amount_minor, currency
-             from active_commercial_plan_catalog
-            where code = $1
-            for share`,
-          [planCode],
-        );
-        const selected = plan.rows[0];
-        if (!selected) {
-          throw new JazzCashV11BillingError(404, "The selected premium plan is unavailable.");
-        }
-
-        let merchantReference = gooTxnRef(createdAt);
-        for (let attempt = 0; attempt < 5; attempt += 1) {
-          const insert = await connection.query<Record<string, unknown>>(
-            `insert into payment_orders (
-               user_id,
-               plan_version_id,
-               provider,
-               status,
-               amount_minor,
-               currency,
-               idempotency_key,
-               merchant_reference,
-               checkout_expires_at,
-               created_at,
-               updated_at
-             )
-             values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
-             on conflict do nothing
-             returning id`,
-            [
-              userId,
-              selected.plan_version_id,
-              selected.amount_minor,
-              selected.currency,
-              idempotencyKey,
-              merchantReference,
-              checkoutExpiresAt,
-              createdAt,
-            ],
-          );
-          if ((insert.rowCount ?? 0) === 1) {
-            inserted = true;
-            break;
-          }
-          const existing = await connection.query<Record<string, unknown>>(
-            `${orderSelect}
-             where o.user_id = $1 and o.idempotency_key = $2
-             for update`,
-            [userId, idempotencyKey],
-          );
-          if (existing.rows[0]) {
-            orderRow = existing.rows[0];
-            await connection.query("commit");
-            if (orderRow["status"] === "succeeded") {
-              return {
-                order: mapOrder(orderRow),
-                checkoutMode: "jazzcash_v11",
-                providerResponseCode: "000",
-                providerResponseMessage: "Already settled.",
-              };
-            }
-            if (orderRow["status"] !== "pending" && orderRow["status"] !== "created") {
-              return {
-                order: mapOrder(orderRow),
-                checkoutMode: "jazzcash_v11",
-                providerResponseCode: null,
-                providerResponseMessage: "This checkout request already reached a final state.",
-              };
-            }
-            // Idempotent replay of a pending charge: do not re-hit JazzCash with a new MPIN attempt
-            // unless this request created the order.
-            return {
-              order: mapOrder(orderRow),
-              checkoutMode: "jazzcash_v11",
-              providerResponseCode: null,
-              providerResponseMessage: "Checkout already started for this idempotency key.",
-            };
-          }
-          // Unique merchant_reference collision — retry with a fresh Goo ref.
-          merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
-        }
-        if (!inserted) {
-          throw new JazzCashV11BillingError(
-            409,
-            "Could not allocate a unique JazzCash txn reference.",
-          );
-        }
-
-        const selectedOrder = await connection.query<Record<string, unknown>>(
-          `${orderSelect}
-           where o.user_id = $1 and o.idempotency_key = $2
-           for update`,
+          `select request_id, status, msisdn
+             from jazzcash_wallet_link_intents
+            where user_id = $1 and idempotency_key = $2
+            for update`,
           [userId, idempotencyKey],
         );
-        const row = selectedOrder.rows[0];
-        if (!row) throw new Error("The payment order could not be loaded.");
-        await connection.query(
-          `insert into commercial_events (user_id, event_name, plan_code, order_id, properties)
-           values ($1, 'checkout_started', $2, $3, '{"provider":"jazzcash","checkoutMode":"jazzcash_v11"}'::jsonb)`,
-          [userId, planCode, row["id"]],
-        );
+        let requestId = existing.rows[0]?.request_id;
+        if (!requestId) {
+          requestId = linkRequestId();
+          await connection.query(
+            `insert into jazzcash_wallet_link_intents
+               (user_id, plan_code, msisdn, request_id, idempotency_key, status, expires_at, created_at, updated_at)
+             values ($1, $2, $3, $4, $5, 'pending', $6, $7, $7)`,
+            [userId, planCode, msisdn, requestId, idempotencyKey, expiresAt, createdAt],
+          );
+        } else if (existing.rows[0]?.status !== "pending") {
+          throw new JazzCashV11BillingError(409, "This wallet-link request already completed.");
+        }
         await connection.query("commit");
-        orderRow = row;
+        const form = client.buildWalletLinkForm({ msisdn, requestId });
+        return {
+          checkoutMode: "jazzcash_wallet_link" as const,
+          requestId,
+          actionUrl: form.actionUrl,
+          fields: form.fields,
+        };
       } catch (error) {
         await connection.query("rollback").catch(() => undefined);
         throw error;
       } finally {
         connection.release();
       }
+    },
 
-      const amountMinor = Number(orderRow["amount_minor"]);
-      const txnRefNo = String(orderRow["merchant_reference"]);
-      let providerFields: JazzCashV11Fields;
-      try {
-        providerFields = await client.charge({
-          amountMinor,
-          billReference: `B${stamp}`,
-          description: "SkillUp premium membership",
-          txnRefNo,
-          txnDateTime: stamp,
-          txnExpiryDateTime: expiryStamp,
-          msisdn,
-          mpin,
-          cnic,
-        });
-      } catch (error) {
-        if (error instanceof JazzCashV11Error) {
-          throw new JazzCashV11BillingError(
-            502,
-            "JazzCash did not accept the payment request. No Premium entitlement was granted.",
-          );
-        }
-        throw error;
-      }
-
-      const responseCode = providerFields["pp_ResponseCode"]?.trim() ?? null;
-      const responseMessage = providerFields["pp_ResponseMessage"]?.trim() ?? null;
+    completeWalletLink: async ({ userId, fields }) => {
+      await requireEnabled();
       const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
       if (!integritySalt) {
-        throw new JazzCashV11BillingError(503, "JazzCash v11 is not fully configured.");
+        throw new JazzCashV11BillingError(503, "JazzCash wallet-link is not fully configured.");
+      }
+      if (!verifyJazzCashV11SecureHash(fields, integritySalt)) {
+        throw new JazzCashV11BillingError(
+          400,
+          "The JazzCash wallet-link response signature is invalid.",
+        );
       }
 
-      if (responseCode === "000") {
-        const providerReference =
-          providerFields["pp_RetreivalReferenceNo"] ||
-          providerFields["pp_AuthCode"] ||
-          `v11-${txnRefNo}`;
-        const settled = await options.commercialService.handleJazzCashCallback(
-          signedSettlementFields({
-            integritySalt,
-            txnRefNo,
-            amountMinor,
-            responseCode: "000",
-            providerReference,
-          }),
-        );
-        return {
-          order: settled,
-          checkoutMode: "jazzcash_v11",
-          providerResponseCode: responseCode,
-          providerResponseMessage: responseMessage,
-        };
+      const requestId = fields["pp_RequestID"]?.trim();
+      const responseCode = fields["pp_ResponseCode"]?.trim() ?? "";
+      const paymentToken = fields["pp_PaymentToken"]?.trim();
+      const msisdn =
+        fields["pp_MSISDN"]?.trim() ||
+        fields["pp_MobileNumber"]?.trim() ||
+        fields["ppmpf_1"]?.trim() ||
+        "";
+
+      if (!requestId) {
+        throw new JazzCashV11BillingError(400, "The JazzCash wallet-link response is incomplete.");
       }
 
-      // Unsigned / failed orchestrator bodies: record failure without treating them as payment proof.
-      const digest = payloadDigest(providerFields);
-      const providerEventId =
-        providerFields["pp_RetreivalReferenceNo"] ||
-        providerFields["pp_AuthCode"] ||
-        `v11:${txnRefNo}:${responseCode ?? "unknown"}:${digest.slice(0, 16)}`;
-      const failConnection = await options.pool.connect();
-      try {
-        await failConnection.query("begin");
-        await failConnection.query(
-          `insert into payment_events (
-             order_id,
-             provider,
-             provider_event_id,
-             event_type,
-             provider_status,
-             signature_verified,
-             payload_digest
-           )
-           values ($1, 'jazzcash', $2, 'checkout_return', $3, false, $4)
-           on conflict (provider, provider_event_id) do nothing`,
-          [orderRow["id"], providerEventId, responseCode ?? "unknown", digest],
-        );
-        await failConnection.query(
-          `update payment_orders
-              set status = 'failed',
-                  updated_at = now()
-            where id = $1
-              and status in ('created', 'pending')`,
-          [orderRow["id"]],
-        );
-        const updated = await failConnection.query<Record<string, unknown>>(
-          `${orderSelect}
-           where o.id = $1`,
-          [orderRow["id"]],
-        );
-        await failConnection.query("commit");
-        const updatedRow = updated.rows[0];
-        if (!updatedRow) throw new Error("The updated payment order could not be loaded.");
-        return {
-          order: mapOrder(updatedRow),
-          checkoutMode: "jazzcash_v11",
-          providerResponseCode: responseCode,
-          providerResponseMessage: responseMessage,
-        };
-      } catch (error) {
-        await failConnection.query("rollback").catch(() => undefined);
-        throw error;
-      } finally {
-        failConnection.release();
+      const intent = await options.pool.query<{
+        plan_code: "premium-monthly" | "premium-yearly";
+        msisdn: string;
+        status: string;
+        idempotency_key: string;
+      }>(
+        `select plan_code, msisdn, status, idempotency_key
+           from jazzcash_wallet_link_intents
+          where user_id = $1 and request_id = $2`,
+        [userId, requestId],
+      );
+      const selectedIntent = intent.rows[0];
+      if (!selectedIntent) {
+        throw new JazzCashV11BillingError(404, "The wallet-link request was not found.");
       }
+      if (selectedIntent.status === "completed") {
+        throw new JazzCashV11BillingError(409, "This wallet-link request already completed.");
+      }
+      if (responseCode !== "000" || !paymentToken) {
+        await options.pool.query(
+          `update jazzcash_wallet_link_intents
+              set status = 'failed', updated_at = now()
+            where request_id = $1`,
+          [requestId],
+        );
+        throw new JazzCashV11BillingError(
+          402,
+          fields["pp_ResponseMessage"]?.trim() ||
+            "JazzCash wallet linking failed. No Premium entitlement was granted.",
+        );
+      }
+
+      const resolvedMsisdn = msisdn || selectedIntent.msisdn;
+      await options.pool.query(
+        `update jazzcash_wallet_links
+            set status = 'revoked', revoked_at = now(), updated_at = now()
+          where user_id = $1 and status = 'active'`,
+        [userId],
+      );
+      await options.pool.query(
+        `insert into jazzcash_wallet_links
+           (user_id, msisdn, payment_token, request_id, status, plan_code, linked_at, created_at, updated_at)
+         values ($1, $2, $3, $4, 'active', $5, now(), now(), now())
+         on conflict (request_id) do update
+           set payment_token = excluded.payment_token,
+               status = 'active',
+               revoked_at = null,
+               updated_at = now()`,
+        [userId, resolvedMsisdn, paymentToken, requestId, selectedIntent.plan_code],
+      );
+      await options.pool.query(
+        `update jazzcash_wallet_link_intents
+            set status = 'completed', updated_at = now()
+          where request_id = $1`,
+        [requestId],
+      );
+
+      return chargeTokenForPlan({
+        userId,
+        planCode: selectedIntent.plan_code,
+        paymentToken,
+        msisdn: resolvedMsisdn,
+        idempotencyKey: `link-charge-${selectedIntent.idempotency_key}`,
+      });
     },
 
     inquire: async ({ userId, txnRefNo }) => {
@@ -486,7 +586,7 @@ export function createJazzCashV11BillingService(
 
       let providerFields: JazzCashV11Fields;
       try {
-        providerFields = await client.inquire({ txnRefNo });
+        providerFields = await client.inquirePaymentStatus({ txnRefNo });
       } catch {
         throw new JazzCashV11BillingError(502, "JazzCash status inquiry failed.");
       }
@@ -503,7 +603,7 @@ export function createJazzCashV11BillingService(
       const normalizedStatus = rawStatus?.toUpperCase() ?? null;
       const inquirySucceeded = normalizedStatus === "000" || normalizedStatus === "SUCCESS";
       const integritySalt = options.config.JAZZCASH_V11_INTEGRITY_SALT;
-      if (inquirySucceeded && integritySalt) {
+      if (inquirySucceeded && integritySalt && row["status"] !== "succeeded") {
         const providerReference =
           providerFields["pp_RetreivalReferenceNo"] ||
           providerFields["rrn"] ||
@@ -521,7 +621,7 @@ export function createJazzCashV11BillingService(
         );
         return {
           order: settled,
-          checkoutMode: "jazzcash_v11",
+          checkoutMode: "jazzcash_wallet_link",
           providerResponseCode: rawStatus,
           providerResponseMessage: responseMessage,
         };
@@ -529,7 +629,7 @@ export function createJazzCashV11BillingService(
 
       return {
         order: mapOrder(row),
-        checkoutMode: "jazzcash_v11",
+        checkoutMode: "jazzcash_wallet_link",
         providerResponseCode: rawStatus,
         providerResponseMessage: responseMessage,
       };
@@ -545,40 +645,56 @@ export function registerJazzCashV11BillingRoutes(
     billingService: JazzCashV11BillingService;
   }>,
 ): void {
-  app.post("/v1/premium/billing/jazzcash-v11/charge", async (request, reply) => {
+  app.post("/v1/premium/billing/jazzcash-v11/link/start", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
     const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
-    const body = ChargeBodySchema.parse(request.body);
-    const planCode = resolvePlanCode(body);
+    const body = StartLinkBodySchema.parse(request.body);
     const idempotencyKey =
       body.idempotencyKey ??
-      `v11-${planCode}-${learner.id.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
+      `link-${body.planCode}-${learner.id.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
 
     request.log.info(
       {
-        checkoutMode: "jazzcash_v11",
-        planCode,
+        checkoutMode: "jazzcash_wallet_link",
+        planCode: body.planCode,
         msisdnSuffix: body.msisdn.slice(-4),
       },
-      "JazzCash v11 charge requested",
+      "JazzCash wallet-link start requested",
     );
 
-    try {
-      const result = await options.billingService.charge({
-        userId: learner.id,
-        planCode,
-        msisdn: body.msisdn,
-        mpin: body.mpin,
-        cnic: body.cnic,
-        idempotencyKey,
-      });
-      return reply.status(201).send(result);
-    } catch (error) {
-      if (error instanceof JazzCashV11BillingError) {
-        throw error;
-      }
-      throw error;
+    const result = await options.billingService.startWalletLink({
+      userId: learner.id,
+      planCode: body.planCode,
+      msisdn: body.msisdn,
+      idempotencyKey,
+    });
+    return reply.status(201).send(result);
+  });
+
+  app.post("/v1/premium/billing/jazzcash-v11/link/complete", async (request, reply) => {
+    // Return URL may be a JazzCash-registered host (e.g. skillupshop.codistan.org) that differs from PUBLIC_APP_URL.
+    const origin = request.headers.origin;
+    const publicOrigin = new URL(options.config.PUBLIC_APP_URL).origin;
+    const returnOrigin = options.config.JAZZCASH_V11_RETURN_URL
+      ? new URL(options.config.JAZZCASH_V11_RETURN_URL).origin
+      : null;
+    if (origin !== publicOrigin && origin !== returnOrigin) {
+      requireTrustedRequestOrigin(request, options.config);
     }
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
+    const body = LinkCallbackBodySchema.parse(request.body);
+    const result = await options.billingService.completeWalletLink({
+      userId: learner.id,
+      fields: body.fields,
+    });
+    return reply.status(201).send(result);
+  });
+
+  app.post("/v1/premium/billing/jazzcash-v11/charge", async () => {
+    throw new JazzCashV11BillingError(
+      410,
+      "Direct MPIN charge is retired. Use JazzCash wallet-link checkout.",
+    );
   });
 
   app.post("/v1/premium/billing/jazzcash-v11/inquiry", async (request) => {
@@ -592,7 +708,9 @@ export function registerJazzCashV11BillingRoutes(
   });
 
   app.get("/v1/premium/billing/jazzcash-v11/status", async () => ({
-    checkoutMode: isJazzCashV11CheckoutEnabled(options.config) ? "jazzcash_v11" : null,
+    checkoutMode: isJazzCashV11CheckoutEnabled(options.config) ? "jazzcash_wallet_link" : null,
     enabled: isJazzCashV11CheckoutEnabled(options.config),
   }));
 }
+
+export { JazzCashV11BillingError };

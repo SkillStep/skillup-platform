@@ -18,7 +18,7 @@ type Plan = Readonly<{
   billingPeriod: "month" | "year";
   capabilities: readonly string[];
   checkoutAvailable: boolean;
-  checkoutMode?: "jazzcash_v11" | null;
+  checkoutMode?: "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" | null;
 }>;
 
 type BillingPlan = Readonly<{
