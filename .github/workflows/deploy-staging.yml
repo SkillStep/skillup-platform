@@ -175,6 +175,7 @@ jobs:
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
           JAZZCASH_V11_RETURN_URL: ${{ secrets.JAZZCASH_V11_RETURN_URL }}
           STAGING_BREVO_API_KEY: ${{ secrets.STAGING_BREVO_API_KEY }}
+          STAGING_QA_PHONE: ${{ secrets.STAGING_QA_PHONE }}
         with:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
@@ -284,6 +285,20 @@ jobs:
                 print('EMAIL SMTP incomplete and STAGING_BREVO_API_KEY missing; leaving email flags unchanged')
             else:
                 print('EMAIL SMTP staging config present')
+
+            # Staging certification SMS OTP: keep the protected QA phone on the host when the secret is present.
+            qa_phone = (os.environ.get('STAGING_QA_PHONE') or '').strip()
+            compact_phone = ''.join(ch for ch in qa_phone if ch not in ' ()-')
+            if compact_phone.startswith('+923') and len(compact_phone) == 13 and compact_phone[1:].isdigit():
+                updates['STAGING_QA_PHONE'] = qa_phone
+                print('STAGING_QA_PHONE synced from staging secret')
+            elif compact_phone.startswith('03') and len(compact_phone) == 11 and compact_phone.isdigit():
+                updates['STAGING_QA_PHONE'] = qa_phone
+                print('STAGING_QA_PHONE synced from staging secret')
+            elif qa_phone:
+                print('STAGING_QA_PHONE secret present but not a valid PK mobile; leaving host value unchanged')
+            else:
+                print('STAGING_QA_PHONE secret absent; leaving host value unchanged')
 
             lines = path.read_text(encoding='utf-8').splitlines()
             output = []
@@ -416,7 +431,25 @@ jobs:
                 RAISE EXCEPTION 'auth_challenges table is missing';
               END IF;
 
-              IF NOT EXISTS (
+              -- Unified auth (migration 0025): prefer identity_* columns.
+              -- Do NOT recreate legacy email_normalized NOT NULL — current API omits it and OTP start 500s.
+              IF EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'identity_normalized'
+              ) AND EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'email_normalized'
+              ) THEN
+                UPDATE public.auth_challenges
+                   SET identity_type = COALESCE(identity_type, 'email'),
+                       identity_normalized = COALESCE(NULLIF(identity_normalized, ''), email_normalized),
+                       identity_display = COALESCE(NULLIF(identity_display, ''), email_normalized)
+                 WHERE email_normalized IS NOT NULL;
+                ALTER TABLE public.auth_challenges DROP COLUMN email_normalized;
+              ELSIF NOT EXISTS (
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'identity_normalized'
+              ) AND NOT EXISTS (
                 SELECT 1 FROM information_schema.columns
                 WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'email_normalized'
               ) THEN

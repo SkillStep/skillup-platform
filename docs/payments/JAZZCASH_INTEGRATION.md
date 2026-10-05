@@ -1,5 +1,9 @@
 # JazzCash CPS Integration and Activation
 
+For the **2026 MWallet Recurring (wallet-link + pay-via-token)** developer guide (all DOC APIs, SecureHash, return URL, status inquiry), see:
+
+- [JAZZCASH_MWALLET_RECURRING_INTEGRATION_GUIDE.md](./JAZZCASH_MWALLET_RECURRING_INTEGRATION_GUIDE.md)
+
 ## Current safety state
 
 The repository is production-built but JazzCash remains fail-closed by default:
@@ -154,7 +158,7 @@ JAZZCASH_V11_INQUIRY_URL=https://onlinepayments.jazzcash.com.pk/payment-orchestr
 JAZZCASH_V11_MERCHANT_ID=<secret>
 JAZZCASH_V11_PASSWORD=<secret>
 JAZZCASH_V11_INTEGRITY_SALT=<secret>
-JAZZCASH_V11_RETURN_URL=https://skillupshop.com/callback
+JAZZCASH_V11_RETURN_URL=https://skillupshop.codistan.org/callback
 ```
 
 Notes:

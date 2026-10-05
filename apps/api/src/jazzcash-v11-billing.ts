@@ -672,7 +672,7 @@ export function registerJazzCashV11BillingRoutes(
   });
 
   app.post("/v1/premium/billing/jazzcash-v11/link/complete", async (request, reply) => {
-    // Return URL may be a JazzCash-registered host (e.g. skillupshop.com) that differs from PUBLIC_APP_URL.
+    // Return URL may be a JazzCash-registered host (e.g. skillupshop.codistan.org) that differs from PUBLIC_APP_URL.
     const origin = request.headers.origin;
     const publicOrigin = new URL(options.config.PUBLIC_APP_URL).origin;
     const returnOrigin = options.config.JAZZCASH_V11_RETURN_URL

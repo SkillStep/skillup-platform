@@ -105,7 +105,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
 
     if (!bypass) {
       if (!/^\d{11,15}$/.test(msisdn)) {
-        setMessage("Enter a valid JazzCash mobile number using 11–15 digits.");
+        setMessage("Enter a valid JazzCash mobile number like 03XXXXXXXXX.");
         return;
       }
       if (!consent) {

@@ -180,15 +180,22 @@
     {
       "idx": 25,
       "version": "7",
-      "when": 1790500000000,
-      "tag": "0025_jazzcash_wallet_links",
+      "when": 1790242200000,
+      "tag": "0025_unified_auth_identities",
       "breakpoints": true
     },
     {
       "idx": 26,
       "version": "7",
-      "when": 1790604000000,
-      "tag": "0026_auth_challenges_identity_compat",
+      "when": 1790500000000,
+      "tag": "0026_jazzcash_wallet_links",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791195000000,
+      "tag": "0027_auth_challenges_drop_email_normalized",
       "breakpoints": true
     }
   ]

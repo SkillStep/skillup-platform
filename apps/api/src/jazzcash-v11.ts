@@ -272,14 +272,13 @@ export function createJazzCashV11Client(
     },
 
     inquirePaymentStatus: async ({ txnRefNo }) => {
-      // JazzCash Transaction Status Inquiry accepts exactly the merchant transaction
-      // reference, merchant credentials, API version and secure hash. Do not reuse
-      // charge-only fields here: extra fields change the HMAC input and produce 110.
+      // Orchestrator status inquiry (/api/v2/rest/payments/status/inquiry) accepts
+      // merchant credentials + txn ref + hash only. Including pp_Version changes the
+      // HMAC input and JazzCash returns 110 (invalid pp_SecureHash).
       const fields: Record<string, string> = {
         pp_MerchantID: provider.merchantId,
         pp_Password: provider.password,
         pp_TxnRefNo: txnRefNo,
-        pp_Version: "1.1",
       };
       fields["pp_SecureHash"] = jazzCashV11SecureHash(fields, provider.integritySalt);
       return postJson(fetcher, provider.statusInquiryUrl, fields, provider.timeoutMs);

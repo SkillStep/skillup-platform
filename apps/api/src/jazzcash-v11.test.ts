@@ -30,7 +30,7 @@ const v11Environment: NodeJS.ProcessEnv = {
   JAZZCASH_V11_MERCHANT_ID: "MC990984",
   JAZZCASH_V11_PASSWORD: "hr0g2b0w96",
   JAZZCASH_V11_INTEGRITY_SALT: "72syo1nh67",
-  JAZZCASH_V11_RETURN_URL: "https://skillupshop.com/callback",
+  JAZZCASH_V11_RETURN_URL: "https://skillupshop.codistan.org/callback",
 };
 
 describe("JazzCash MWALLET recurring hashing", () => {
@@ -40,7 +40,7 @@ describe("JazzCash MWALLET recurring hashing", () => {
       pp_Password: "hr0g2b0w96",
       pp_MSISDN: "03123456789",
       pp_RequestID: "ReqId123",
-      pp_ReturnURL: "https://skillupshop.com/callback",
+      pp_ReturnURL: "https://skillupshop.codistan.org/callback",
     };
     const hash = jazzCashV11SecureHash(fields, "72syo1nh67");
     expect(hash).toMatch(/^[A-F0-9]{64}$/);
@@ -112,12 +112,12 @@ describe("JazzCash MWALLET recurring hashing", () => {
       expect(String(url)).toBe(v11Environment["JAZZCASH_V11_INQUIRY_URL"]);
       const body = JSON.parse(String(init?.body)) as Record<string, string>;
       expect(Object.keys(body).sort()).toEqual(
-        ["pp_MerchantID", "pp_Password", "pp_SecureHash", "pp_TxnRefNo", "pp_Version"].sort(),
+        ["pp_MerchantID", "pp_Password", "pp_SecureHash", "pp_TxnRefNo"].sort(),
       );
       expect(body["pp_MerchantID"]).toBe("MC990984");
       expect(body["pp_Password"]).toBe("hr0g2b0w96");
       expect(body["pp_TxnRefNo"]).toBe("Goo20260922120000A1");
-      expect(body["pp_Version"]).toBe("1.1");
+      expect(body["pp_Version"]).toBeUndefined();
       expect(body["pp_SecureHash"]).toMatch(/^[A-F0-9]{64}$/);
 
       const unhashed = { ...body };
@@ -126,13 +126,10 @@ describe("JazzCash MWALLET recurring hashing", () => {
 
       return new Response(
         JSON.stringify({
-          status: "SUCCESS",
-          rrn: "RRN-INQUIRY-1",
-          settlementDate: "20260922",
-          settlementExpiryDate: "20260923120000",
-          authCode: "AUTH1",
-          bankID: "",
-          productID: "",
+          pp_ResponseCode: "000",
+          pp_Status: "Completed",
+          pp_RetrievalReferenceNo: "RRN-INQUIRY-1",
+          pp_AuthCode: "AUTH1",
         }),
         { status: 200, headers: { "content-type": "application/json" } },
       );
@@ -140,8 +137,9 @@ describe("JazzCash MWALLET recurring hashing", () => {
 
     const client = createJazzCashV11Client(readApiConfig(v11Environment), fetcher as typeof fetch);
     const response = await client.inquirePaymentStatus({ txnRefNo: "Goo20260922120000A1" });
-    expect(response["status"]).toBe("SUCCESS");
-    expect(response["rrn"]).toBe("RRN-INQUIRY-1");
+    expect(response["pp_ResponseCode"]).toBe("000");
+    expect(response["pp_Status"]).toBe("Completed");
+    expect(response["pp_RetrievalReferenceNo"]).toBe("RRN-INQUIRY-1");
   });
 });
 
