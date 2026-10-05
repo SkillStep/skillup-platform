@@ -87,7 +87,7 @@ jobs:
           if (Number(run.run_attempt) !== Number(process.env.RUN_ATTEMPT)) throw new Error("Source run attempt mismatch.");
           NODE
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_sha }}
           fetch-depth: 0
@@ -176,7 +176,7 @@ jobs:
       contents: read
       packages: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ inputs.release_sha }}
 
