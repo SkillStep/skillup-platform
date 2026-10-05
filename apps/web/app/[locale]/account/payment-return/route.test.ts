@@ -13,8 +13,8 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
   });
 
   it("redirects learners to account with payment status", () => {
-    expect(source).toContain('new URL("/en/account", publicAppOrigin(request))');
-    expect(source).toContain('url.searchParams.set("payment", status)');
+    expect(source).toContain('new URL("/en/account", appOrigin)');
+    expect(source).toContain('account.searchParams.set("payment", status)');
     expect(source).toContain("origin: appOrigin");
   });
 
@@ -22,14 +22,14 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
     expect(source).not.toContain('"/v1/commercial/jazzcash/callback"');
   });
 
-  it("answers empty GET probes without redirecting through account", () => {
+  it("keeps a plain-text ready probe for non-HTML smoke checks", () => {
     expect(source).toContain("JazzCash return handler ready");
-    expect(source).toContain('request.method === "GET"');
+    expect(source).toContain('accept.includes("text/html")');
   });
 
-  it("stashes JazzCash return fields when the session is missing", () => {
-    expect(source).toContain("skillup_jc_return");
-    expect(source).toContain("stashReturnFields");
-    expect(source).toContain("readStashedFields");
+  it("does not require a browser session to complete the JazzCash return", () => {
+    expect(source).not.toContain("stashReturnFields");
+    expect(source).not.toContain("skillup_jc_return");
+    expect(source).toContain("hasSessionCookie");
   });
 });

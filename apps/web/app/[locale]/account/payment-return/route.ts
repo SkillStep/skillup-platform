@@ -10,9 +10,10 @@ export const runtime = "nodejs";
  * JazzCash MWallet recurring return URL handler (DOC 2026).
  * Staging return URL: /en/account/payment-return
  * Collects pp_* from form POST or query, completes wallet-link + pay-via-token server-side.
+ *
+ * Session cookie is optional here: JazzCash returns via cross-site POST and often omits it.
+ * The API completes from the signed pp_RequestID → wallet-link intent mapping.
  */
-
-const RETURN_STASH_COOKIE = "skillup_jc_return";
 
 function apiBaseUrl(): URL {
   const value = process.env["API_BASE_URL"];
@@ -24,55 +25,24 @@ function apiBaseUrl(): URL {
   return url;
 }
 
+function hasSessionCookie(request: NextRequest): boolean {
+  const name = process.env["SESSION_COOKIE_NAME"]?.trim() || "skillup_session";
+  return Boolean(request.cookies.get(name)?.value);
+}
+
 function accountRedirect(request: NextRequest, status: string, orderId?: string): NextResponse {
-  const url = new URL("/en/account", publicAppOrigin(request));
-  url.searchParams.set("payment", status);
-  if (orderId) url.searchParams.set("orderId", orderId);
-  const response = NextResponse.redirect(url, 303);
-  clearReturnStash(response);
-  return response;
-}
+  const appOrigin = publicAppOrigin(request);
+  const account = new URL("/en/account", appOrigin);
+  account.searchParams.set("payment", status);
+  if (orderId) account.searchParams.set("orderId", orderId);
 
-function clearReturnStash(response: NextResponse): void {
-  response.cookies.set({
-    name: RETURN_STASH_COOKIE,
-    value: "",
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 0,
-  });
-}
-
-function stashReturnFields(response: NextResponse, fields: Readonly<Record<string, string>>): void {
-  response.cookies.set({
-    name: RETURN_STASH_COOKIE,
-    value: encodeURIComponent(JSON.stringify(fields)),
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    path: "/",
-    maxAge: 15 * 60,
-  });
-}
-
-function readStashedFields(request: NextRequest): Record<string, string> | null {
-  const raw = request.cookies.get(RETURN_STASH_COOKIE)?.value;
-  if (!raw) return null;
-  try {
-    const parsed = JSON.parse(decodeURIComponent(raw)) as unknown;
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
-    const fields: Record<string, string> = {};
-    for (const [key, value] of Object.entries(parsed)) {
-      if (key.startsWith("pp_") && typeof value === "string" && value.trim()) {
-        fields[key] = value;
-      }
-    }
-    return Object.keys(fields).length > 0 ? fields : null;
-  } catch {
-    return null;
+  if (!hasSessionCookie(request)) {
+    const signIn = new URL("/en/sign-in", appOrigin);
+    signIn.searchParams.set("returnTo", `${account.pathname}${account.search}`);
+    return NextResponse.redirect(signIn, 303);
   }
+
+  return NextResponse.redirect(account, 303);
 }
 
 async function collectFields(request: NextRequest): Promise<Record<string, string>> {
@@ -91,21 +61,23 @@ async function collectFields(request: NextRequest): Promise<Record<string, strin
   return fields;
 }
 
+function emptyGetResponse(request: NextRequest): NextResponse {
+  const accept = request.headers.get("accept") ?? "";
+  // Browser navigations should not sit on the smoke-check plain-text page.
+  if (accept.includes("text/html")) {
+    return accountRedirect(request, "error");
+  }
+  return new NextResponse("JazzCash return handler ready", {
+    status: 200,
+    headers: { "content-type": "text/plain; charset=utf-8" },
+  });
+}
+
 async function completeLink(request: NextRequest): Promise<NextResponse> {
   try {
-    let fields = await collectFields(request);
+    const fields = await collectFields(request);
     if (Object.keys(fields).length === 0) {
-      fields = readStashedFields(request) ?? {};
-    }
-
-    if (Object.keys(fields).length === 0) {
-      // Bare GET is used by staging edge smoke checks; JazzCash always posts/redirects with pp_*.
-      if (request.method === "GET") {
-        return new NextResponse("JazzCash return handler ready", {
-          status: 200,
-          headers: { "content-type": "text/plain; charset=utf-8" },
-        });
-      }
+      if (request.method === "GET") return emptyGetResponse(request);
       return accountRedirect(request, "error");
     }
 
@@ -127,13 +99,6 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
       },
     );
 
-    if (upstream.status === 401) {
-      const signIn = new URL("/en/sign-in", appOrigin);
-      signIn.searchParams.set("returnTo", "/en/account/payment-return");
-      const response = NextResponse.redirect(signIn, 303);
-      stashReturnFields(response, fields);
-      return response;
-    }
     if (!upstream.ok) return accountRedirect(request, "error");
 
     const payload = (await upstream.json()) as Readonly<{
