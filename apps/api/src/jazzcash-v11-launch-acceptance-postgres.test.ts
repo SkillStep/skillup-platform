@@ -7,9 +7,10 @@ import { createCommercialService, jazzCashSecureHash } from "./commercial.js";
 import { readApiConfig } from "./config.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import {
-  type JazzCashV11ChargeInput,
+  type JazzCashTokenChargeInput,
   type JazzCashV11Client,
   JazzCashV11Error,
+  jazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
 
 const databaseUrl = process.env["DATABASE_URL"];
@@ -37,6 +38,9 @@ function acceptanceConfig() {
     FEATURE_PREMIUM_ENABLED: "true",
     PREMIUM_JAZZCASH_V11_CHECKOUT: "true",
     JAZZCASH_V11_URL: "https://sandbox.example/m-wallet",
+    JAZZCASH_V11_LINK_URL: "https://sandbox.example/wallet/LinkWallet",
+    JAZZCASH_V11_TOKEN_INQUIRY_URL: "https://sandbox.example/mobile-tokens/inquiry",
+    JAZZCASH_V11_TOKEN_DELETE_URL: "https://sandbox.example/mobile-tokens/delete",
     JAZZCASH_V11_INQUIRY_URL: "https://sandbox.example/status/inquiry",
     JAZZCASH_V11_MERCHANT_ID: "ACCEPTANCE-MERCHANT",
     JAZZCASH_V11_PASSWORD: "acceptance-password",
@@ -58,7 +62,7 @@ async function createLearner(): Promise<string> {
 }
 
 function successfulProviderResponse(
-  input: JazzCashV11ChargeInput,
+  input: JazzCashTokenChargeInput,
   reference = `RRN-${randomUUID()}`,
 ): Readonly<Record<string, string>> {
   return {
@@ -71,6 +75,43 @@ function successfulProviderResponse(
   };
 }
 
+function mockClient(
+  chargeWithToken: JazzCashV11Client["chargeWithToken"],
+  inquirePaymentStatus?: JazzCashV11Client["inquirePaymentStatus"],
+): JazzCashV11Client {
+  return {
+    buildWalletLinkForm: ({ msisdn, requestId }) => ({
+      actionUrl: "https://sandbox.example/wallet/LinkWallet",
+      fields: {
+        pp_MSISDN: msisdn,
+        pp_RequestID: requestId,
+      },
+    }),
+    chargeWithToken,
+    inquireToken: async () => {
+      throw new Error("Token inquiry is not used in this acceptance case.");
+    },
+    deleteToken: async () => {
+      throw new Error("Token delete is not used in this acceptance case.");
+    },
+    inquirePaymentStatus:
+      inquirePaymentStatus ??
+      (async () => {
+        throw new Error("Payment status inquiry is not used in this acceptance case.");
+      }),
+  };
+}
+
+function signedWalletLinkReturn(
+  fields: Readonly<Record<string, string>>,
+  integritySalt: string,
+): Readonly<Record<string, string>> {
+  return {
+    ...fields,
+    pp_SecureHash: jazzCashV11SecureHash(fields, integritySalt),
+  };
+}
+
 function signedCallback(
   fields: Readonly<Record<string, string>>,
   integritySalt: string,
@@ -79,6 +120,42 @@ function signedCallback(
     ...fields,
     pp_SecureHash: jazzCashSecureHash(fields, integritySalt),
   };
+}
+
+async function linkAndCharge(options: {
+  billing: ReturnType<typeof createJazzCashV11BillingService>;
+  userId: string;
+  planCode: "premium-monthly" | "premium-yearly";
+  idempotencyKey: string;
+  integritySalt: string;
+  paymentToken?: string;
+  responseCode?: string;
+}) {
+  const started = await options.billing.startWalletLink({
+    userId: options.userId,
+    planCode: options.planCode,
+    msisdn: "03123456789",
+    idempotencyKey: options.idempotencyKey,
+  });
+
+  return options.billing.completeWalletLink({
+    userId: options.userId,
+    fields: signedWalletLinkReturn(
+      {
+        pp_ResponseCode: options.responseCode ?? "000",
+        pp_ResponseMessage:
+          options.responseCode && options.responseCode !== "000"
+            ? "Wallet linking failed"
+            : "Wallet linked",
+        pp_RequestID: started.requestId,
+        pp_MSISDN: "03123456789",
+        ...(options.responseCode === undefined || options.responseCode === "000"
+          ? { pp_PaymentToken: options.paymentToken ?? `TOKEN-${randomUUID()}` }
+          : {}),
+      },
+      options.integritySalt,
+    ),
+  });
 }
 
 async function entitlementEvidence(orderId: string, userId: string) {
@@ -118,35 +195,30 @@ describeWithPostgres("launch payment acceptance gate", () => {
     if (!database) throw new Error("DATABASE_URL is required.");
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
-    const charge = vi.fn(async (input: JazzCashV11ChargeInput) =>
+    const chargeWithToken = vi.fn(async (input: JazzCashTokenChargeInput) =>
       successfulProviderResponse(input),
     );
-    const client: JazzCashV11Client = {
-      charge,
-      inquire: async () => {
-        throw new Error("Inquiry is not used in monthly success.");
-      },
-    };
     const billing = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client,
+      client: mockClient(chargeWithToken),
     });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
 
-    const result = await billing.charge({
+    const result = await linkAndCharge({
+      billing,
       userId,
       planCode: "premium-monthly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
       idempotencyKey: `monthly-${randomUUID()}`,
+      integritySalt,
     });
 
     expect(result.order.status).toBe("succeeded");
     expect(result.order.amountMinor).toBe(59_900);
-    expect(charge).toHaveBeenCalledTimes(1);
+    expect(chargeWithToken).toHaveBeenCalledTimes(1);
 
     const evidence = await entitlementEvidence(result.order.id, userId);
     expect(evidence).toMatchObject({
@@ -162,27 +234,22 @@ describeWithPostgres("launch payment acceptance gate", () => {
     if (!database) throw new Error("DATABASE_URL is required.");
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
-    const client: JazzCashV11Client = {
-      charge: async (input) => successfulProviderResponse(input),
-      inquire: async () => {
-        throw new Error("Inquiry is not used in yearly success.");
-      },
-    };
     const billing = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client,
+      client: mockClient(async (input) => successfulProviderResponse(input)),
     });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
 
-    const result = await billing.charge({
+    const result = await linkAndCharge({
+      billing,
       userId,
       planCode: "premium-yearly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
       idempotencyKey: `yearly-${randomUUID()}`,
+      integritySalt,
     });
 
     expect(result.order.status).toBe("succeeded");
@@ -202,31 +269,26 @@ describeWithPostgres("launch payment acceptance gate", () => {
     if (!database) throw new Error("DATABASE_URL is required.");
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
-    const client: JazzCashV11Client = {
-      charge: async (input) => ({
-        pp_ResponseCode: "101",
-        pp_ResponseMessage: "Payment failed",
-        pp_TxnRefNo: input.txnRefNo,
-      }),
-      inquire: async () => {
-        throw new Error("Inquiry is not used in failed payment.");
-      },
-    };
     const billing = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client,
+      client: mockClient(async (input) => ({
+        pp_ResponseCode: "101",
+        pp_ResponseMessage: "Payment failed",
+        pp_TxnRefNo: input.txnRefNo,
+      })),
     });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
 
-    const result = await billing.charge({
+    const result = await linkAndCharge({
+      billing,
       userId,
       planCode: "premium-monthly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
       idempotencyKey: `failed-${randomUUID()}`,
+      integritySalt,
     });
 
     expect(result.order.status).toBe("failed");
@@ -244,44 +306,42 @@ describeWithPostgres("launch payment acceptance gate", () => {
     if (!database) throw new Error("DATABASE_URL is required.");
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
-    const charge = vi.fn(async (input: JazzCashV11ChargeInput) =>
+    const chargeWithToken = vi.fn(async (input: JazzCashTokenChargeInput) =>
       successfulProviderResponse(input, "RRN-IDEMPOTENT"),
     );
-    const client: JazzCashV11Client = {
-      charge,
-      inquire: async () => {
-        throw new Error("Inquiry is not used in duplicate acceptance.");
-      },
-    };
     const billing = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client,
+      client: mockClient(chargeWithToken),
     });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
     const idempotencyKey = `duplicate-${randomUUID()}`;
 
-    const first = await billing.charge({
+    const first = await linkAndCharge({
+      billing,
       userId,
       planCode: "premium-monthly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
       idempotencyKey,
-    });
-    const second = await billing.charge({
-      userId,
-      planCode: "premium-monthly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
-      idempotencyKey,
+      integritySalt,
+      paymentToken: "TOKEN-IDEMPOTENT",
     });
 
-    expect(second.order.id).toBe(first.order.id);
-    expect(second.order.status).toBe("succeeded");
-    expect(charge).toHaveBeenCalledTimes(1);
+    await expect(
+      linkAndCharge({
+        billing,
+        userId,
+        planCode: "premium-monthly",
+        idempotencyKey,
+        integritySalt,
+        paymentToken: "TOKEN-IDEMPOTENT",
+      }),
+    ).rejects.toMatchObject({ statusCode: 409 });
+
+    expect(first.order.status).toBe("succeeded");
+    expect(chargeWithToken).toHaveBeenCalledTimes(1);
 
     const evidence = await database.pool.query<{
       orders: number;
@@ -291,14 +351,15 @@ describeWithPostgres("launch payment acceptance gate", () => {
       `select
          (select count(*)::integer
             from payment_orders
-           where user_id = $1 and idempotency_key = $2) as orders,
+           where user_id = $1
+             and idempotency_key = $2) as orders,
          (select count(*)::integer
             from entitlements
            where source_order_id = $3) as entitlements,
          (select count(*)::integer
             from payment_events
            where order_id = $3 and provider = 'jazzcash') as provider_events`,
-      [userId, idempotencyKey, first.order.id],
+      [userId, `link-charge-${idempotencyKey}`, first.order.id],
     );
     expect(evidence.rows[0]).toMatchObject({
       orders: 1,
@@ -312,31 +373,26 @@ describeWithPostgres("launch payment acceptance gate", () => {
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
     const idempotencyKey = `inquiry-${randomUUID()}`;
 
-    const ambiguousClient: JazzCashV11Client = {
-      charge: async () => {
-        throw new JazzCashV11Error("Provider connection dropped after submission.");
-      },
-      inquire: async () => {
-        throw new Error("Inquiry is not used on the ambiguous client.");
-      },
-    };
     const ambiguousBilling = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client: ambiguousClient,
+      client: mockClient(async () => {
+        throw new JazzCashV11Error("Provider connection dropped after submission.");
+      }),
     });
 
     await expect(
-      ambiguousBilling.charge({
+      linkAndCharge({
+        billing: ambiguousBilling,
         userId,
         planCode: "premium-monthly",
-        msisdn: "03123456789",
-        mpin: "5555",
-        cnic: "345678",
         idempotencyKey,
+        integritySalt,
       }),
     ).rejects.toMatchObject({ statusCode: 502 });
 
@@ -348,28 +404,24 @@ describeWithPostgres("launch payment acceptance gate", () => {
       `select id, merchant_reference, status
          from payment_orders
         where user_id = $1 and idempotency_key = $2`,
-      [userId, idempotencyKey],
+      [userId, `link-charge-${idempotencyKey}`],
     );
     const order = pending.rows[0];
     expect(order?.status).toBe("pending");
     if (!order) throw new Error("Pending order was not preserved for reconciliation.");
 
-    const inquire = vi.fn(async () => ({
-      status: "SUCCESS",
-      rrn: "RRN-INQUIRY-RECOVERY",
-      authCode: "AUTH-RECOVERY",
+    const inquirePaymentStatus = vi.fn(async () => ({
+      pp_ResponseCode: "000",
+      pp_RetreivalReferenceNo: "RRN-INQUIRY-RECOVERY",
+      pp_AuthCode: "AUTH-RECOVERY",
     }));
-    const recoveryClient: JazzCashV11Client = {
-      charge: async () => {
-        throw new Error("Charge must not be retried during status reconciliation.");
-      },
-      inquire,
-    };
     const recoveryBilling = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client: recoveryClient,
+      client: mockClient(async () => {
+        throw new Error("Charge must not be retried during status reconciliation.");
+      }, inquirePaymentStatus),
     });
 
     const reconciled = await recoveryBilling.inquire({
@@ -377,10 +429,10 @@ describeWithPostgres("launch payment acceptance gate", () => {
       txnRefNo: order.merchant_reference,
     });
 
-    expect(inquire).toHaveBeenCalledTimes(1);
+    expect(inquirePaymentStatus).toHaveBeenCalledTimes(1);
     expect(reconciled.order.id).toBe(order.id);
     expect(reconciled.order.status).toBe("succeeded");
-    expect(reconciled.providerResponseCode).toBe("SUCCESS");
+    expect(reconciled.providerResponseCode).toBe("000");
 
     const evidence = await entitlementEvidence(order.id, userId);
     expect(evidence).toMatchObject({
@@ -395,32 +447,25 @@ describeWithPostgres("launch payment acceptance gate", () => {
     if (!database) throw new Error("DATABASE_URL is required.");
     const config = acceptanceConfig();
     const commercial = createCommercialService({ pool: database.pool, config });
-    const client: JazzCashV11Client = {
-      charge: async (input) => successfulProviderResponse(input, "RRN-REFUND-SOURCE"),
-      inquire: async () => {
-        throw new Error("Inquiry is not used in refund acceptance.");
-      },
-    };
     const billing = createJazzCashV11BillingService({
       pool: database.pool,
       config,
       commercialService: commercial,
-      client,
+      client: mockClient(async (input) => successfulProviderResponse(input, "RRN-REFUND-SOURCE")),
     });
     const userId = await createLearner();
+    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
+    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
 
-    const paid = await billing.charge({
+    const paid = await linkAndCharge({
+      billing,
       userId,
       planCode: "premium-monthly",
-      msisdn: "03123456789",
-      mpin: "5555",
-      cnic: "345678",
       idempotencyKey: `refund-${randomUUID()}`,
+      integritySalt,
     });
     expect(paid.order.status).toBe("succeeded");
 
-    const integritySalt = config.JAZZCASH_V11_INTEGRITY_SALT;
-    if (!integritySalt) throw new Error("Acceptance integrity salt is required.");
     const refunded = await commercial.handleJazzCashCallback(
       signedCallback(
         {
