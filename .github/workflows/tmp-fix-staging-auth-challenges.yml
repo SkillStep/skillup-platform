@@ -32,6 +32,7 @@ jobs:
           ssh-keyscan -H -T 10 "$STAGING_HOST" > "$known_hosts_file"
           chmod 600 "$known_hosts_file"
 
+          # Important: remote command must NOT use heredocs — script is fed on stdin via bash -s.
           ssh \
             -i "$key_file" \
             -o BatchMode=yes \
@@ -39,7 +40,7 @@ jobs:
             -o "UserKnownHostsFile=$known_hosts_file" \
             -o StrictHostKeyChecking=yes \
             "$STAGING_SSH_USER@$STAGING_HOST" \
-            "bash -s" <<'REMOTE'
+            'bash -s' <<'REMOTE'
           set -euo pipefail
           cd /opt/skillup
           set -a
@@ -47,67 +48,34 @@ jobs:
           source .env
           set +a
 
-          echo "=== schema before (email_normalized present?) ==="
-          docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
-            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
+          psql_exec() {
+            docker compose -f docker-compose.staging.yml exec -T postgres \
+              psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 "$@"
+          }
 
-          cat >/tmp/skillup-auth-challenges-fix.sql <<'SQL'
-          DO $$
-          BEGIN
-            IF NOT EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'identity_type'
-            ) THEN
-              ALTER TABLE public.auth_challenges ADD COLUMN identity_type text;
-              ALTER TABLE public.auth_challenges ADD COLUMN identity_normalized text;
-              ALTER TABLE public.auth_challenges ADD COLUMN identity_display text;
-            END IF;
+          echo "=== schema before ==="
+          psql_exec -Atc "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
 
-            IF EXISTS (
-              SELECT 1 FROM information_schema.columns
-              WHERE table_schema = 'public' AND table_name = 'auth_challenges' AND column_name = 'email_normalized'
-            ) THEN
-              UPDATE public.auth_challenges
-                 SET identity_type = COALESCE(identity_type, 'email'),
-                     identity_normalized = COALESCE(NULLIF(identity_normalized, ''), email_normalized),
-                     identity_display = COALESCE(NULLIF(identity_display, ''), email_normalized)
-               WHERE email_normalized IS NOT NULL;
+          echo "=== backfill identity_* from email_normalized (if both exist) ==="
+          psql_exec -c "UPDATE public.auth_challenges SET identity_type = COALESCE(identity_type, 'email'), identity_normalized = COALESCE(NULLIF(identity_normalized, ''), email_normalized), identity_display = COALESCE(NULLIF(identity_display, ''), email_normalized) WHERE EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='auth_challenges' AND column_name='email_normalized') AND email_normalized IS NOT NULL;"
 
-              ALTER TABLE public.auth_challenges DROP COLUMN email_normalized;
-            END IF;
+          echo "=== drop legacy email_normalized ==="
+          psql_exec -c "ALTER TABLE public.auth_challenges DROP COLUMN IF EXISTS email_normalized;"
 
-            UPDATE public.auth_challenges
-               SET identity_type = 'email'
-             WHERE identity_type IS NULL;
-            UPDATE public.auth_challenges
-               SET identity_normalized = COALESCE(identity_normalized, identity_display, '')
-             WHERE identity_normalized IS NULL;
-            UPDATE public.auth_challenges
-               SET identity_display = COALESCE(identity_display, identity_normalized, '')
-             WHERE identity_display IS NULL;
-
-            ALTER TABLE public.auth_challenges ALTER COLUMN identity_type SET NOT NULL;
-            ALTER TABLE public.auth_challenges ALTER COLUMN identity_normalized SET NOT NULL;
-            ALTER TABLE public.auth_challenges ALTER COLUMN identity_display SET NOT NULL;
-          END $$;
-          SQL
-
-          echo "=== applying SQL fix ==="
-          docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 \
-            -f - </tmp/skillup-auth-challenges-fix.sql
+          echo "=== enforce identity NOT NULL ==="
+          psql_exec -c "UPDATE public.auth_challenges SET identity_type = 'email' WHERE identity_type IS NULL;"
+          psql_exec -c "UPDATE public.auth_challenges SET identity_normalized = COALESCE(identity_normalized, identity_display, 'unknown') WHERE identity_normalized IS NULL;"
+          psql_exec -c "UPDATE public.auth_challenges SET identity_display = COALESCE(identity_display, identity_normalized, 'unknown') WHERE identity_display IS NULL;"
+          psql_exec -c "ALTER TABLE public.auth_challenges ALTER COLUMN identity_type SET NOT NULL;"
+          psql_exec -c "ALTER TABLE public.auth_challenges ALTER COLUMN identity_normalized SET NOT NULL;"
+          psql_exec -c "ALTER TABLE public.auth_challenges ALTER COLUMN identity_display SET NOT NULL;"
 
           echo "=== schema after ==="
-          docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
-            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
+          psql_exec -Atc "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' order by ordinal_position;"
 
-          leftover="$(docker compose -f docker-compose.staging.yml exec -T postgres \
-            psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -Atc \
-            "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' and column_name='email_normalized'" || true)"
+          leftover="$(psql_exec -Atc "select column_name from information_schema.columns where table_schema='public' and table_name='auth_challenges' and column_name='email_normalized'" || true)"
           if [ -n "${leftover}" ]; then
-            echo "email_normalized still present: ${leftover}" >&2
+            echo "email_normalized still present" >&2
             exit 1
           fi
           echo "email_normalized dropped OK"
