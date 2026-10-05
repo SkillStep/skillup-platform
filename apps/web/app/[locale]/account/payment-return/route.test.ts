@@ -20,4 +20,9 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
   it("does not use the retired commercial JazzCash callback for link completion", () => {
     expect(source).not.toContain('"/v1/commercial/jazzcash/callback"');
   });
+
+  it("answers empty GET probes without redirecting through account", () => {
+    expect(source).toContain("JazzCash return handler ready");
+    expect(source).toContain('request.method === "GET"');
+  });
 });

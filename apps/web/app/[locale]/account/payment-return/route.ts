@@ -47,6 +47,13 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
   try {
     const fields = await collectFields(request);
     if (Object.keys(fields).length === 0) {
+      // Bare GET is used by staging edge smoke checks; JazzCash always posts/redirects with pp_*.
+      if (request.method === "GET") {
+        return new NextResponse("JazzCash return handler ready", {
+          status: 200,
+          headers: { "content-type": "text/plain; charset=utf-8" },
+        });
+      }
       return accountRedirect(request, "error");
     }
 
