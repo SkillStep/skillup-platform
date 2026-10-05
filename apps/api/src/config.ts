@@ -40,15 +40,6 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
-    SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
-    TWILIO_ACCOUNT_SID: z.string().trim().min(1).max(100).optional(),
-    TWILIO_AUTH_TOKEN: z.string().min(1).max(500).optional(),
-    TWILIO_PHONE_NUMBER: z
-      .string()
-      .trim()
-      .regex(/^\+[1-9]\d{7,14}$/)
-      .optional(),
-    SMS_REQUEST_TIMEOUT_SECONDS: z.coerce.number().int().min(3).max(30).default(10),
     FEATURE_PREMIUM_ENABLED: EnvironmentBooleanSchema,
 
     // Preferred launch integration: browser -> SkillUp BFF -> external payment service -> JazzCash.
@@ -79,10 +70,15 @@ const ApiConfigSchema = z
     JAZZCASH_PRODUCT_ID: z.string().trim().max(40).default(""),
     JAZZCASH_CHECKOUT_MINUTES: z.coerce.number().int().min(5).max(60).default(15),
 
-    // JazzCash payment-orchestrator MWALLET v1 (non-production only).
+    // JazzCash payment-orchestrator MWALLET recurring (wallet-link + pay-via-token). Non-production only.
     PREMIUM_JAZZCASH_V11_CHECKOUT: EnvironmentBooleanSchema,
+    /** Staging/local only: grant Premium without JazzCash for feature UAT. */
+    PREMIUM_CHECKOUT_BYPASS: EnvironmentBooleanSchema,
     DEPLOYMENT_ENVIRONMENT: z.string().trim().min(1).max(40).optional(),
     JAZZCASH_V11_URL: OptionalUrlSchema,
+    JAZZCASH_V11_LINK_URL: OptionalUrlSchema,
+    JAZZCASH_V11_TOKEN_INQUIRY_URL: OptionalUrlSchema,
+    JAZZCASH_V11_TOKEN_DELETE_URL: OptionalUrlSchema,
     JAZZCASH_V11_INQUIRY_URL: OptionalUrlSchema,
     JAZZCASH_V11_MERCHANT_ID: z.string().trim().min(1).max(100).optional(),
     JAZZCASH_V11_PASSWORD: z.string().min(1).max(500).optional(),
@@ -124,22 +120,6 @@ const ApiConfigSchema = z
           path: ["SMTP_PORT"],
           message: "SMTP_SECURE=true requires the implicit TLS port 465.",
         });
-      }
-    }
-
-    if (config.SMS_PROVIDER === "twilio") {
-      for (const field of [
-        "TWILIO_ACCOUNT_SID",
-        "TWILIO_AUTH_TOKEN",
-        "TWILIO_PHONE_NUMBER",
-      ] as const) {
-        if (!config[field]) {
-          context.addIssue({
-            code: "custom",
-            path: [field],
-            message: `${field} is required when SMS_PROVIDER=twilio.`,
-          });
-        }
       }
     }
 
@@ -293,6 +273,25 @@ const ApiConfigSchema = z
       }
     }
 
+    if (config.PREMIUM_CHECKOUT_BYPASS) {
+      if (!config.FEATURE_PREMIUM_ENABLED) {
+        context.addIssue({
+          code: "custom",
+          path: ["FEATURE_PREMIUM_ENABLED"],
+          message: "Premium must be enabled before PREMIUM_CHECKOUT_BYPASS can be enabled.",
+        });
+      }
+      const deployment = (config.DEPLOYMENT_ENVIRONMENT ?? config.APP_ENV).trim().toLowerCase();
+      if (!["staging", "development", "dev", "local", "test"].includes(deployment)) {
+        context.addIssue({
+          code: "custom",
+          path: ["PREMIUM_CHECKOUT_BYPASS"],
+          message:
+            "PREMIUM_CHECKOUT_BYPASS is only allowed for staging, development, local, or test.",
+        });
+      }
+    }
+
     if (config.PREMIUM_JAZZCASH_V11_CHECKOUT) {
       if (!config.FEATURE_PREMIUM_ENABLED) {
         context.addIssue({
@@ -312,6 +311,9 @@ const ApiConfigSchema = z
       }
       for (const field of [
         "JAZZCASH_V11_URL",
+        "JAZZCASH_V11_LINK_URL",
+        "JAZZCASH_V11_TOKEN_INQUIRY_URL",
+        "JAZZCASH_V11_TOKEN_DELETE_URL",
         "JAZZCASH_V11_INQUIRY_URL",
         "JAZZCASH_V11_MERCHANT_ID",
         "JAZZCASH_V11_PASSWORD",
@@ -328,6 +330,9 @@ const ApiConfigSchema = z
       }
       for (const field of [
         "JAZZCASH_V11_URL",
+        "JAZZCASH_V11_LINK_URL",
+        "JAZZCASH_V11_TOKEN_INQUIRY_URL",
+        "JAZZCASH_V11_TOKEN_DELETE_URL",
         "JAZZCASH_V11_INQUIRY_URL",
         "JAZZCASH_V11_RETURN_URL",
       ] as const) {
@@ -340,24 +345,12 @@ const ApiConfigSchema = z
           });
         }
       }
-      if (
-        config.JAZZCASH_V11_RETURN_URL &&
-        new URL(config.JAZZCASH_V11_RETURN_URL).origin !== new URL(config.PUBLIC_APP_URL).origin
-      ) {
-        context.addIssue({
-          code: "custom",
-          path: ["JAZZCASH_V11_RETURN_URL"],
-          message: "The JazzCash v11 return URL must use the public SkillUp origin.",
-        });
-      }
     }
   });
 
 type ParsedApiConfig = z.infer<typeof ApiConfigSchema>;
 type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
-  | "SMS_PROVIDER"
-  | "SMS_REQUEST_TIMEOUT_SECONDS"
   | "FEATURE_PAYMENT_SERVICE_ENABLED"
   | "PAYMENT_SERVICE_BASE_URL"
   | "PAYMENT_SERVICE_API_KEY"
@@ -370,7 +363,11 @@ type OptionalInjectedConfig =
   | "JAZZCASH_CPS_TIMEOUT_SECONDS"
   | "DEPLOYMENT_ENVIRONMENT"
   | "PREMIUM_JAZZCASH_V11_CHECKOUT"
+  | "PREMIUM_CHECKOUT_BYPASS"
   | "JAZZCASH_V11_URL"
+  | "JAZZCASH_V11_LINK_URL"
+  | "JAZZCASH_V11_TOKEN_INQUIRY_URL"
+  | "JAZZCASH_V11_TOKEN_DELETE_URL"
   | "JAZZCASH_V11_INQUIRY_URL"
   | "JAZZCASH_V11_MERCHANT_ID"
   | "JAZZCASH_V11_PASSWORD"
@@ -386,8 +383,6 @@ type OptionalInjectedConfig =
 export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
   Readonly<{
     MAINTENANCE_INTERVAL_SECONDS?: number;
-    SMS_PROVIDER?: "disabled" | "twilio";
-    SMS_REQUEST_TIMEOUT_SECONDS?: number;
     FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
     PAYMENT_SERVICE_BASE_URL?: string | undefined;
     PAYMENT_SERVICE_API_KEY?: string | undefined;
@@ -400,7 +395,11 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     JAZZCASH_CPS_TIMEOUT_SECONDS?: number;
     DEPLOYMENT_ENVIRONMENT?: string | undefined;
     PREMIUM_JAZZCASH_V11_CHECKOUT?: boolean;
+    PREMIUM_CHECKOUT_BYPASS?: boolean;
     JAZZCASH_V11_URL?: string | undefined;
+    JAZZCASH_V11_LINK_URL?: string | undefined;
+    JAZZCASH_V11_TOKEN_INQUIRY_URL?: string | undefined;
+    JAZZCASH_V11_TOKEN_DELETE_URL?: string | undefined;
     JAZZCASH_V11_INQUIRY_URL?: string | undefined;
     JAZZCASH_V11_MERCHANT_ID?: string | undefined;
     JAZZCASH_V11_PASSWORD?: string | undefined;
@@ -432,6 +431,14 @@ export function isJazzCashV11EnvironmentAllowed(
 export function isJazzCashV11CheckoutEnabled(config: ApiConfig): boolean {
   return (
     Boolean(config.PREMIUM_JAZZCASH_V11_CHECKOUT) &&
+    Boolean(config.FEATURE_PREMIUM_ENABLED) &&
+    isJazzCashV11EnvironmentAllowed(config)
+  );
+}
+
+export function isPremiumCheckoutBypassEnabled(config: ApiConfig): boolean {
+  return (
+    Boolean(config.PREMIUM_CHECKOUT_BYPASS) &&
     Boolean(config.FEATURE_PREMIUM_ENABLED) &&
     isJazzCashV11EnvironmentAllowed(config)
   );

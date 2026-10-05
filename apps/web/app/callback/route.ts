@@ -4,15 +4,8 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/**
- * JazzCash MWallet recurring return URL handler (DOC 2026).
- * Staging return URL: /en/account/payment-return
- * Collects pp_* from form POST or query, completes wallet-link + pay-via-token server-side.
- */
-
 function apiBaseUrl(): URL {
-  const value = process.env["API_BASE_URL"];
-  if (!value) throw new Error("API_BASE_URL is required for the JazzCash return handler.");
+  const value = process.env["API_BASE_URL"] ?? "http://127.0.0.1:3001";
   const url = new URL(value);
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error("API_BASE_URL must use HTTP or HTTPS.");
@@ -69,7 +62,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
 
     if (upstream.status === 401) {
       const signIn = new URL("/en/sign-in", request.nextUrl.origin);
-      signIn.searchParams.set("returnTo", "/en/account/payment-return");
+      signIn.searchParams.set("returnTo", "/callback");
       return NextResponse.redirect(signIn, 303);
     }
     if (!upstream.ok) return accountRedirect(request, "error");
