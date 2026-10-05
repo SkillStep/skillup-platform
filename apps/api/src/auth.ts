@@ -858,11 +858,13 @@ function parseCookie(header: string | undefined, name: string): string | null {
 
 function sessionCookie(config: ApiConfig, token: string, expiresAt: Date): string {
   const secure = config.APP_ENV === "staging" || config.APP_ENV === "production";
+  // JazzCash wallet-link returns via cross-site POST; Lax would drop the session and lose the callback.
+  const sameSite = secure ? "SameSite=None" : "SameSite=Lax";
   const attributes = [
     `${config.SESSION_COOKIE_NAME}=${encodeURIComponent(token)}`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    sameSite,
     `Expires=${expiresAt.toUTCString()}`,
   ];
   if (secure) attributes.push("Secure");
@@ -871,11 +873,12 @@ function sessionCookie(config: ApiConfig, token: string, expiresAt: Date): strin
 
 function clearedSessionCookie(config: ApiConfig): string {
   const secure = config.APP_ENV === "staging" || config.APP_ENV === "production";
+  const sameSite = secure ? "SameSite=None" : "SameSite=Lax";
   const attributes = [
     `${config.SESSION_COOKIE_NAME}=`,
     "Path=/",
     "HttpOnly",
-    "SameSite=Lax",
+    sameSite,
     "Expires=Thu, 01 Jan 1970 00:00:00 GMT",
     "Max-Age=0",
   ];

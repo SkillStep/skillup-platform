@@ -26,4 +26,10 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
     expect(source).toContain("JazzCash return handler ready");
     expect(source).toContain('request.method === "GET"');
   });
+
+  it("stashes JazzCash return fields when the session is missing", () => {
+    expect(source).toContain("skillup_jc_return");
+    expect(source).toContain("stashReturnFields");
+    expect(source).toContain("readStashedFields");
+  });
 });
