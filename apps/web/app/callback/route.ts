@@ -1,6 +1,8 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import { publicAppOrigin } from "../../lib/public-app-origin";
+
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
@@ -14,7 +16,7 @@ function apiBaseUrl(): URL {
 }
 
 function accountRedirect(request: NextRequest, status: string, orderId?: string): NextResponse {
-  const url = new URL("/en/account", request.nextUrl.origin);
+  const url = new URL("/en/account", publicAppOrigin(request));
   url.searchParams.set("payment", status);
   if (orderId) url.searchParams.set("orderId", orderId);
   return NextResponse.redirect(url, 303);
@@ -43,6 +45,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
       return accountRedirect(request, "error");
     }
 
+    const appOrigin = publicAppOrigin(request);
     const cookie = request.headers.get("cookie") ?? "";
     const upstream = await fetch(
       new URL("/v1/premium/billing/jazzcash-v11/link/complete", apiBaseUrl()),
@@ -51,7 +54,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
         headers: {
           "content-type": "application/json",
           cookie,
-          origin: request.nextUrl.origin,
+          origin: appOrigin,
         },
         body: JSON.stringify({ fields }),
         cache: "no-store",
@@ -61,7 +64,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
     );
 
     if (upstream.status === 401) {
-      const signIn = new URL("/en/sign-in", request.nextUrl.origin);
+      const signIn = new URL("/en/sign-in", appOrigin);
       signIn.searchParams.set("returnTo", "/callback");
       return NextResponse.redirect(signIn, 303);
     }
