@@ -1,0 +1,112 @@
+# Temporary ops helper: inquire + delete JazzCash wallet token for staging merchant.
+name: Tmp Delete JazzCash Token
+
+on:
+  workflow_dispatch:
+    inputs:
+      msisdn:
+        description: JazzCash MSISDN (03XXXXXXXXX)
+        required: true
+        default: "03123456789"
+
+jobs:
+  delete-token:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Inquire and delete JazzCash token
+        env:
+          JAZZCASH_V11_MERCHANT_ID: ${{ secrets.JAZZCASH_V11_MERCHANT_ID }}
+          JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
+          JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
+          MSISDN: ${{ inputs.msisdn }}
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const { createHmac, randomBytes } = require("node:crypto");
+
+          function hash(fields, salt) {
+            const values = Object.entries(fields)
+              .filter(([k, v]) => k !== "pp_SecureHash" && k.startsWith("pp_") && String(v).trim())
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+              .map(([, v]) => String(v).trim());
+            return createHmac("sha256", salt)
+              .update([salt, ...values].join("&"), "utf8")
+              .digest("hex")
+              .toUpperCase();
+          }
+
+          async function post(url, fields) {
+            const body = { ...fields, pp_SecureHash: hash(fields, process.env.JAZZCASH_V11_INTEGRITY_SALT) };
+            const response = await fetch(url, {
+              method: "POST",
+              headers: { accept: "application/json", "content-type": "application/json" },
+              body: JSON.stringify(body),
+              redirect: "error",
+              signal: AbortSignal.timeout(30_000),
+            });
+            const text = await response.text();
+            let json;
+            try { json = JSON.parse(text); } catch { json = { raw: text }; }
+            return { status: response.status, json };
+          }
+
+          const merchantId = process.env.JAZZCASH_V11_MERCHANT_ID;
+          const password = process.env.JAZZCASH_V11_PASSWORD;
+          const msisdn = process.env.MSISDN.replace(/\D/g, "");
+          if (!merchantId || !password || !process.env.JAZZCASH_V11_INTEGRITY_SALT) {
+            throw new Error("JazzCash staging secrets are incomplete.");
+          }
+          if (!/^03\d{9}$/.test(msisdn) && !/^\d{11,15}$/.test(msisdn)) {
+            throw new Error(`Invalid MSISDN: ${msisdn}`);
+          }
+
+          const inquiryUrl =
+            "https://onlinepayments.jazzcash.com.pk/payment-orchestrator/payment/api/v1/mobile-tokens/inquiry";
+          const deleteUrl =
+            "https://onlinepayments.jazzcash.com.pk/payment-orchestrator/payment/api/v1/mobile-tokens/delete";
+
+          const inquireReq = `ReqId${Date.now()}${randomBytes(3).toString("hex")}`;
+          const inquiry = await post(inquiryUrl, {
+            pp_RequestID: inquireReq,
+            pp_MobileNumber: msisdn,
+            pp_MerchantID: merchantId,
+            pp_Password: password,
+          });
+          console.log("inquiry_http", inquiry.status);
+          console.log("inquiry_code", inquiry.json.pp_ResponseCode ?? inquiry.json.responseCode ?? null);
+          console.log("inquiry_message", inquiry.json.pp_ResponseMessage ?? inquiry.json.responseMessage ?? null);
+
+          const token =
+            inquiry.json.pp_PaymentToken ||
+            inquiry.json.paymentToken ||
+            inquiry.json.pp_Token ||
+            null;
+
+          if (!token) {
+            console.log("result", "no_active_token");
+            process.exit(0);
+          }
+
+          console.log("token_present", true);
+          const deleteReq = `ReqId${Date.now()}${randomBytes(3).toString("hex")}`;
+          const deleted = await post(deleteUrl, {
+            pp_RequestID: deleteReq,
+            pp_MerchantID: merchantId,
+            pp_Password: password,
+            pp_PaymentToken: token,
+          });
+          console.log("delete_http", deleted.status);
+          console.log("delete_code", deleted.json.pp_ResponseCode ?? deleted.json.responseCode ?? null);
+          console.log("delete_message", deleted.json.pp_ResponseMessage ?? deleted.json.responseMessage ?? null);
+
+          const confirmReq = `ReqId${Date.now()}${randomBytes(3).toString("hex")}`;
+          const confirm = await post(inquiryUrl, {
+            pp_RequestID: confirmReq,
+            pp_MobileNumber: msisdn,
+            pp_MerchantID: merchantId,
+            pp_Password: password,
+          });
+          console.log("confirm_code", confirm.json.pp_ResponseCode ?? confirm.json.responseCode ?? null);
+          console.log("result", "deleted");
+          NODE
