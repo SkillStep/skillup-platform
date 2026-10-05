@@ -239,7 +239,11 @@ jobs:
             merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
             password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
             integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip()
-            return_url = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip() or 'https://skillupshop.codistan.org/en/account/payment-return'
+            return_url = 'https://skillupshop.codistan.org/en/account/payment-return'
+            # Prefer secret only when it already targets this staging host's payment-return route.
+            secret_return = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip()
+            if secret_return.startswith('https://skillupshop.codistan.org/') and secret_return.rstrip('/').endswith('/account/payment-return'):
+                return_url = secret_return
             if merchant_id and password and integrity_salt and return_url:
                 updates.update({
                     'FEATURE_PREMIUM_ENABLED': 'true',

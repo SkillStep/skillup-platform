@@ -30,7 +30,7 @@ const v11Environment: NodeJS.ProcessEnv = {
   JAZZCASH_V11_MERCHANT_ID: "MC990984",
   JAZZCASH_V11_PASSWORD: "hr0g2b0w96",
   JAZZCASH_V11_INTEGRITY_SALT: "72syo1nh67",
-  JAZZCASH_V11_RETURN_URL: "https://skillupshop.codistan.org/callback",
+  JAZZCASH_V11_RETURN_URL: "https://skillupshop.codistan.org/en/account/payment-return",
 };
 
 describe("JazzCash MWALLET recurring hashing", () => {
@@ -40,7 +40,7 @@ describe("JazzCash MWALLET recurring hashing", () => {
       pp_Password: "hr0g2b0w96",
       pp_MSISDN: "03123456789",
       pp_RequestID: "ReqId123",
-      pp_ReturnURL: "https://skillupshop.codistan.org/callback",
+      pp_ReturnURL: "https://skillupshop.codistan.org/en/account/payment-return",
     };
     const hash = jazzCashV11SecureHash(fields, "72syo1nh67");
     expect(hash).toMatch(/^[A-F0-9]{64}$/);
