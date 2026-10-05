@@ -30,19 +30,23 @@ function hasSessionCookie(request: NextRequest): boolean {
   return Boolean(request.cookies.get(name)?.value);
 }
 
-function accountRedirect(request: NextRequest, status: string, orderId?: string): NextResponse {
+function paymentResultRedirect(
+  request: NextRequest,
+  status: string,
+  orderId?: string,
+): NextResponse {
   const appOrigin = publicAppOrigin(request);
-  const account = new URL("/en/account", appOrigin);
-  account.searchParams.set("payment", status);
-  if (orderId) account.searchParams.set("orderId", orderId);
+  const home = new URL("/en", appOrigin);
+  home.searchParams.set("payment", status);
+  if (orderId) home.searchParams.set("orderId", orderId);
 
   if (!hasSessionCookie(request)) {
     const signIn = new URL("/en/sign-in", appOrigin);
-    signIn.searchParams.set("returnTo", `${account.pathname}${account.search}`);
+    signIn.searchParams.set("returnTo", `${home.pathname}${home.search}`);
     return NextResponse.redirect(signIn, 303);
   }
 
-  return NextResponse.redirect(account, 303);
+  return NextResponse.redirect(home, 303);
 }
 
 async function collectFields(request: NextRequest): Promise<Record<string, string>> {
@@ -65,7 +69,7 @@ function emptyGetResponse(request: NextRequest): NextResponse {
   const accept = request.headers.get("accept") ?? "";
   // Browser navigations should not sit on the smoke-check plain-text page.
   if (accept.includes("text/html")) {
-    return accountRedirect(request, "error");
+    return paymentResultRedirect(request, "error");
   }
   return new NextResponse("JazzCash return handler ready", {
     status: 200,
@@ -78,7 +82,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
     const fields = await collectFields(request);
     if (Object.keys(fields).length === 0) {
       if (request.method === "GET") return emptyGetResponse(request);
-      return accountRedirect(request, "error");
+      return paymentResultRedirect(request, "error");
     }
 
     const appOrigin = publicAppOrigin(request);
@@ -99,7 +103,7 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
       },
     );
 
-    if (!upstream.ok) return accountRedirect(request, "error");
+    if (!upstream.ok) return paymentResultRedirect(request, "error");
 
     const payload = (await upstream.json()) as Readonly<{
       order?: Readonly<{ id?: string; status?: string }>;
@@ -114,9 +118,9 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
       status === "refunded"
         ? status
         : "error";
-    return accountRedirect(request, normalized, payload.order?.id);
+    return paymentResultRedirect(request, normalized, payload.order?.id);
   } catch {
-    return accountRedirect(request, "error");
+    return paymentResultRedirect(request, "error");
   }
 }
 

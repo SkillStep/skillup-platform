@@ -6,9 +6,11 @@ import { notFound } from "next/navigation";
 
 import { featuredPath, launchPaths } from "../../lib/home-content";
 import { PublicFooter, PublicHeader } from "./discovery-shell";
+import { HomePaymentBanner } from "./home-payment-banner";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
+  searchParams: Promise<{ payment?: string | string[]; orderId?: string | string[] }>;
 }>;
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
@@ -33,16 +35,28 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function EnglishHomePage({ params }: PageProps) {
-  const { locale } = await params;
+function firstQueryValue(value: string | string[] | undefined): string | null {
+  if (typeof value === "string" && value.trim()) return value.trim();
+  if (Array.isArray(value)) {
+    const first = value.find((entry) => typeof entry === "string" && entry.trim());
+    return first?.trim() ?? null;
+  }
+  return null;
+}
+
+export default async function EnglishHomePage({ params, searchParams }: PageProps) {
+  const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (locale !== "en") notFound();
 
   const pilot = featuredPath();
+  const payment = firstQueryValue(query.payment);
+  const orderId = firstQueryValue(query.orderId);
 
   return (
     <>
       <PublicHeader />
       <main>
+        <HomePaymentBanner payment={payment} orderId={orderId} />
         <section className="hero" aria-labelledby="hero-title">
           <div className="hero-copy">
             <p className="eyebrow">Practical learning for Pakistan</p>
