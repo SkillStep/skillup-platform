@@ -105,7 +105,11 @@ function Icon({ name }: { name: IconName }): ReactElement {
     ),
   };
 
-  return <svg {...common}>{paths[name]}</svg>;
+  return (
+    <svg {...common} aria-hidden="true">
+      {paths[name]}
+    </svg>
+  );
 }
 
 const courses = [
