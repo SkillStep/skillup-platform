@@ -7,8 +7,13 @@ describe("public launch policies", () => {
     expect(publicPolicies).not.toHaveLength(0);
     const terms = publicPolicies.find((policy) => policy.key === "terms");
     const refund = publicPolicies.find((policy) => policy.key === "refund");
-    expect(terms?.version).toBe("2026-09-07");
+    expect(terms?.version).toBe("2026-10-06");
+    expect(terms?.title).toBe("SkillUp Terms and Conditions");
     expect(refund?.version).toBe("2026-09-07");
+    expect(JSON.stringify(terms)).toContain("Rs. 599");
+    expect(JSON.stringify(terms)).toContain("Rs. 4,999");
+    expect(JSON.stringify(terms)).toContain("admin@codistan.org");
+    expect(JSON.stringify(terms)).toContain("laws of Pakistan");
     expect(
       publicPolicies
         .filter((policy) => policy.key !== "terms" && policy.key !== "refund")

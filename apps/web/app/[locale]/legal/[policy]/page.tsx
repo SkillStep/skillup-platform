@@ -3,9 +3,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { publicPolicies, publicPolicy } from "../../../../lib/public-policies";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
+import {
+  type PublicPolicySection,
+  publicPolicies,
+  publicPolicy,
+} from "../../../../lib/public-policies";
 import styles from "../../discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; policy: string }>;
@@ -41,6 +45,56 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+function sectionAnchor(heading: string): string {
+  return heading
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function PolicySection({ section }: Readonly<{ section: PublicPolicySection }>) {
+  const anchor = sectionAnchor(section.heading);
+  return (
+    <section className={styles["contentCard"]} id={anchor} aria-labelledby={`${anchor}-title`}>
+      <h2 id={`${anchor}-title`}>{section.heading}</h2>
+      {section.body.map((paragraph) => (
+        <p key={paragraph}>{paragraph}</p>
+      ))}
+      {section.list && section.list.length > 0 ? (
+        <ul>
+          {section.list.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      ) : null}
+      {section.table ? (
+        <div className={styles["policyTableWrap"]}>
+          <table className={styles["policyTable"]}>
+            <thead>
+              <tr>
+                {section.table.headers.map((header) => (
+                  <th key={header} scope="col">
+                    {header}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {section.table.rows.map((row) => (
+                <tr key={row.join("|")}>
+                  {row.map((cell) => (
+                    <td key={`${row[0]}-${cell}`}>{cell}</td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </section>
+  );
+}
+
 export default async function PolicyPage({ params }: PageProps) {
   const { locale, policy: slug } = await params;
   if (locale !== "en") notFound();
@@ -49,6 +103,7 @@ export default async function PolicyPage({ params }: PageProps) {
 
   const homeUrl = canonicalUrl(publicAppUrl, "en");
   const policyUrl = canonicalUrl(publicAppUrl, "en", `/legal/${policy.slug}`);
+  const documentLayout = policy.layout === "document";
 
   return (
     <>
@@ -57,32 +112,50 @@ export default async function PolicyPage({ params }: PageProps) {
         <Breadcrumbs
           items={[
             { label: "Home", href: "/en" },
-            { label: "Policies", href: "/en/account" },
+            { label: "Legal", href: "/en/legal/terms" },
             { label: policy.title },
           ]}
         />
-        <section className={styles["detailHero"]} aria-labelledby="policy-title">
-          <p className={styles["eyebrow"]}>Version {policy.version} · current launch policy</p>
+        <section
+          className={`${styles["detailHero"]} ${documentLayout ? styles["policyDocumentHero"] : ""}`}
+          aria-labelledby="policy-title"
+        >
+          <p className={styles["eyebrow"]}>
+            {documentLayout
+              ? `Last modified ${policy.version} · Practical learning through short, focused games`
+              : `Version ${policy.version} · current launch policy`}
+          </p>
           <h1 id="policy-title">{policy.title}</h1>
           <p className={styles["detailSummary"]}>{policy.summary}</p>
           <div className={styles["cardLinks"]}>
-            <Link className={styles["primaryLink"]} href="/en/account">
-              Manage account controls
-            </Link>
-            <Link className={styles["secondaryLink"]} href="/en/support">
+            <Link className={styles["primaryLink"]} href="/en/support">
               Contact support
+            </Link>
+            <Link className={styles["secondaryLink"]} href="/en/legal/privacy">
+              Privacy policy
+            </Link>
+            <Link className={styles["secondaryLink"]} href="/en/legal/refund">
+              Refund policy
             </Link>
           </div>
         </section>
 
-        <div className={styles["contentGrid"]}>
-          {policy.sections.map((section) => (
-            <section className={styles["contentCard"]} key={section.heading}>
-              <h2>{section.heading}</h2>
-              {section.body.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+        {documentLayout ? (
+          <nav className={styles["policyToc"]} aria-label="Terms sections">
+            <h2>On this page</h2>
+            <ol>
+              {policy.sections.map((section) => (
+                <li key={section.heading}>
+                  <a href={`#${sectionAnchor(section.heading)}`}>{section.heading}</a>
+                </li>
               ))}
-            </section>
+            </ol>
+          </nav>
+        ) : null}
+
+        <div className={documentLayout ? styles["policyDocument"] : styles["contentGrid"]}>
+          {policy.sections.map((section) => (
+            <PolicySection key={section.heading} section={section} />
           ))}
         </div>
 
