@@ -197,6 +197,13 @@
       "when": 1791195000000,
       "tag": "0027_auth_challenges_drop_email_normalized",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791300000000,
+      "tag": "0028_commercial_unsubscribe_events",
+      "breakpoints": true
     }
   ]
 }

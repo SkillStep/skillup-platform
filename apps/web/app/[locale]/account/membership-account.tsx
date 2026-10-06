@@ -327,7 +327,7 @@ export function MembershipAccount() {
       }
 
       setMessage("Unsubscribed. Premium features are locked immediately.");
-      await loadAccount();
+      window.location.assign("/en/pricing?unsubscribed=1");
     } catch {
       setError("Unsubscribe could not be completed. Check your connection and try again.");
     } finally {

@@ -1094,7 +1094,27 @@ export function createCommercialService(
       const connection = await options.pool.connect();
       try {
         await connection.query("begin");
-        const active = await connection.query<{
+        const locked = await connection.query<{ id: string; status: "active" | "grace" }>(
+          `select id, status
+             from entitlements
+            where id = (
+              select e.id
+                from entitlements e
+               where e.user_id = $1
+                 and e.status in ('active', 'grace')
+               order by e.updated_at desc
+               limit 1
+            )
+            for update`,
+          [userId],
+        );
+        const lockedRow = locked.rows[0];
+        if (!lockedRow) {
+          await connection.query("commit");
+          return { entitlement: null, cancelled: false };
+        }
+
+        const details = await connection.query<{
           id: string;
           status: "active" | "grace";
           plan_code: "premium-monthly" | "premium-yearly";
@@ -1107,20 +1127,22 @@ export function createCommercialService(
                   p.code as plan_code,
                   e.starts_at,
                   e.ends_at,
-                  v.capabilities
+                  coalesce(
+                    (
+                      select array_agg(value order by ordinality)
+                        from jsonb_array_elements_text(v.capabilities) with ordinality
+                    ),
+                    '{}'::text[]
+                  ) as capabilities
              from entitlements e
              join commercial_plan_versions v on v.id = e.plan_version_id
              join commercial_plans p on p.id = v.plan_id
-            where e.user_id = $1
-              and e.status in ('active', 'grace')
-            order by e.updated_at desc
-            limit 1
-            for update of e`,
-          [userId],
+            where e.id = $1`,
+          [lockedRow.id],
         );
-        const row = active.rows[0];
+        const row = details.rows[0];
         if (!row) {
-          await connection.query("commit");
+          await connection.query("rollback");
           return { entitlement: null, cancelled: false };
         }
 
@@ -1129,7 +1151,10 @@ export function createCommercialService(
               set status = 'cancelled',
                   cancelled_at = coalesce(cancelled_at, $2),
                   grace_ends_at = null,
-                  ends_at = least(ends_at, $2),
+                  ends_at = case
+                    when least(ends_at, $2) > starts_at then least(ends_at, $2)
+                    else starts_at + interval '1 second'
+                  end,
                   updated_at = $2
             where id = $1`,
           [row.id, cancelledAt],
@@ -1154,7 +1179,7 @@ export function createCommercialService(
              entitlement_id,
              properties
            )
-           values ($1, 'premium_unsubscribed', $2, $3, '{"immediateLock":true}'::jsonb)`,
+           values ($1, 'entitlement_cancelled', $2, $3, '{"immediateLock":true,"source":"learner_unsubscribe"}'::jsonb)`,
           [userId, row.plan_code, row.id],
         );
         await connection.query("commit");
