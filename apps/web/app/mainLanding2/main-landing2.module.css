@@ -274,12 +274,11 @@
   bottom: -10px;
   width: 54px;
   height: 54px;
-  background:
-    repeating-linear-gradient(
-      -45deg,
-      transparent 0 6px,
-      rgba(107, 70, 193, 0.35) 6px 10px
-    );
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    rgba(107, 70, 193, 0.35) 6px 10px
+  );
   opacity: 0.7;
   pointer-events: none;
 }

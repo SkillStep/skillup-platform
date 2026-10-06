@@ -11,7 +11,15 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: ["/", "/en", "/en/skills", "/en/categories", "/en/paths", "/mainLanding", "/mainLanding2"],
+        allow: [
+          "/",
+          "/en",
+          "/en/skills",
+          "/en/categories",
+          "/en/paths",
+          "/mainLanding",
+          "/mainLanding2",
+        ],
         disallow: [
           "/app",
           "/admin",

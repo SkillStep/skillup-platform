@@ -3,9 +3,7 @@
 import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
 import styles from "./scroll-reveal.module.css";
 
-export function ScrollReveal({
-  children,
-}: Readonly<{ children: ReactNode }>): ReactElement {
+export function ScrollReveal({ children }: Readonly<{ children: ReactNode }>): ReactElement {
   const ref = useRef<HTMLDivElement | null>(null);
   const [visible, setVisible] = useState(false);
 
@@ -36,10 +34,7 @@ export function ScrollReveal({
   }, []);
 
   return (
-    <div
-      ref={ref}
-      className={visible ? `${styles.reveal} ${styles.revealVisible}` : styles.reveal}
-    >
+    <div ref={ref} className={visible ? `${styles.reveal} ${styles.revealVisible}` : styles.reveal}>
       {children}
     </div>
   );

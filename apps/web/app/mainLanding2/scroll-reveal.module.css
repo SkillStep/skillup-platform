@@ -1,7 +1,9 @@
 .reveal {
   opacity: 0;
   transform: translateY(28px);
-  transition: opacity 520ms ease, transform 520ms ease;
+  transition:
+    opacity 520ms ease,
+    transform 520ms ease;
   will-change: opacity, transform;
 }
 

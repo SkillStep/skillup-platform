@@ -13,8 +13,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "SkillUp Premium — Learn AI Skills through Games",
-    description:
-      "Learn AI Skills through games for better earning. Subscribe with JazzCash.",
+    description: "Learn AI Skills through games for better earning. Subscribe with JazzCash.",
     url: "/mainLanding2",
     type: "website",
   },
@@ -197,8 +196,7 @@ export default function MainLanding2Page(): ReactElement {
                 ✓
               </span>
               <span>
-                I agree to Skillup{" "}
-                <Link href="/en/legal/terms">Terms and Conditions</Link>
+                I agree to Skillup <Link href="/en/legal/terms">Terms and Conditions</Link>
               </span>
             </label>
 
@@ -218,8 +216,8 @@ export default function MainLanding2Page(): ReactElement {
               <Icon name="megaphone" />
             </div>
             <p>
-              Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer
-              sirf aj k din k liye valid hai. Us k bad PKR 599/m lago hun gay.
+              Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k
+              liye valid hai. Us k bad PKR 599/m lago hun gay.
             </p>
             <span className={styles.noticeStripes} aria-hidden="true" />
           </div>
@@ -280,9 +278,8 @@ export default function MainLanding2Page(): ReactElement {
           </div>
 
           <p className={styles.privacy}>
-            Jari rakhne se aap Skillup ki{" "}
-            <Link href="/en/legal/terms">Terms and Conditions</Link> aur{" "}
-            <Link href="/en/legal/privacy">Privacy Policy</Link> se raazi hoon.
+            Jari rakhne se aap Skillup ki <Link href="/en/legal/terms">Terms and Conditions</Link>{" "}
+            aur <Link href="/en/legal/privacy">Privacy Policy</Link> se raazi hoon.
           </p>
         </section>
       </ScrollReveal>
