@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
-import type { Metadata, ReactElement, ReactNode } from "react";
+import type { Metadata } from "next";
+import type { ReactElement, ReactNode } from "react";
 import styles from "./main-landing2.module.css";
 import { ScrollReveal } from "./scroll-reveal";
 
@@ -118,37 +119,37 @@ const courses = [
     title: "Freelancing &",
     text: "Remote Work",
     sub: "Online kaam seekho aur earning shuru karo",
-    tone: styles.purple,
+    tone: styles["purple"],
   },
   {
     icon: "store" as const,
     title: "Business &",
     text: "Entrepreneurship",
     sub: "Apna business samjho aur grow karo",
-    tone: styles.green,
+    tone: styles["green"],
   },
   {
     icon: "megaphone" as const,
     title: "Marketing,",
     text: "Content & Growth",
     sub: "Apna brand banao aur audience tak pahuche",
-    tone: styles.orange,
+    tone: styles["orange"],
   },
   {
     icon: "user" as const,
     title: "Career &",
     text: "Employability",
     sub: "Naukri ke liye skills seekho aur ready ho jao",
-    tone: styles.blue,
+    tone: styles["blue"],
   },
 ];
 
 export default function MainLanding2Page(): ReactElement {
   return (
-    <main className={styles.page}>
-      <div className={styles.aboveFold}>
-        <section className={styles.hero} aria-labelledby="premium-hero-heading">
-          <h1 id="premium-hero-heading" className={styles.visuallyHidden}>
+    <main className={styles["page"]}>
+      <div className={styles["aboveFold"]}>
+        <section className={styles["hero"]} aria-labelledby="premium-hero-heading">
+          <h1 id="premium-hero-heading" className={styles["visuallyHidden"]}>
             Learn AI Skills through games for better earning
           </h1>
           <Image
@@ -156,32 +157,32 @@ export default function MainLanding2Page(): ReactElement {
             alt="SkillUp Premium: Learn AI Skills through games for better earning. Game khelo, Skill seekho, Zyada kamao. Trusted by learners across Pakistan."
             width={780}
             height={312}
-            className={styles.bannerImage}
+            className={styles["bannerImage"]}
             priority
             sizes="(max-width: 900px) 100vw, 900px"
           />
         </section>
 
-        <section className={styles.paymentCard} aria-labelledby="payment-heading">
-          <h2 id="payment-heading" className={styles.paymentTitle}>
-            <span className={styles.phoneIcon}>
+        <section className={styles["paymentCard"]} aria-labelledby="payment-heading">
+          <h2 id="payment-heading" className={styles["paymentTitle"]}>
+            <span className={styles["phoneIcon"]}>
               <Icon name="phone" />
             </span>
             Enter Your JazzCash Number
           </h2>
 
-          <form className={styles.paymentForm} action="/en/pricing" method="get">
-            <label className={styles.inputWrap} htmlFor="jazzcash-number">
-              <span className={styles.jazzcashLogo}>
+          <form className={styles["paymentForm"]} action="/en/pricing" method="get">
+            <label className={styles["inputWrap"]} htmlFor="jazzcash-number">
+              <span className={styles["jazzcashLogo"]}>
                 <Image
                   src="/landing/jazzcash-logo.png"
                   alt="JazzCash"
                   width={320}
                   height={320}
-                  className={styles.jazzcashLogoImg}
+                  className={styles["jazzcashLogoImg"]}
                 />
               </span>
-              <span className={styles.inputDivider} aria-hidden="true" />
+              <span className={styles["inputDivider"]} aria-hidden="true" />
               <input
                 id="jazzcash-number"
                 name="msisdn"
@@ -189,14 +190,14 @@ export default function MainLanding2Page(): ReactElement {
                 inputMode="numeric"
                 autoComplete="tel-national"
                 placeholder="03XX XXXXXXX"
-                className={styles.phoneInput}
+                className={styles["phoneInput"]}
                 aria-label="JazzCash mobile number"
               />
             </label>
 
-            <label className={styles.terms}>
+            <label className={styles["terms"]}>
               <input type="checkbox" name="agree" value="1" defaultChecked required />
-              <span className={styles.check} aria-hidden="true">
+              <span className={styles["check"]} aria-hidden="true">
                 ✓
               </span>
               <span>
@@ -204,41 +205,41 @@ export default function MainLanding2Page(): ReactElement {
               </span>
             </label>
 
-            <button type="submit" className={styles.pay}>
-              <span className={styles.payLock}>
+            <button type="submit" className={styles["pay"]}>
+              <span className={styles["payLock"]}>
                 <Icon name="lock" />
               </span>
               Subscribe Now
-              <span className={styles.payArrow}>
+              <span className={styles["payArrow"]}>
                 <Icon name="arrow" />
               </span>
             </button>
           </form>
 
-          <div className={styles.notice}>
-            <div className={styles.noticeIcon} aria-hidden="true">
+          <div className={styles["notice"]}>
+            <div className={styles["noticeIcon"]} aria-hidden="true">
               <Icon name="megaphone" />
             </div>
             <p>
               Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k
               liye valid hai. Us k bad PKR 599/m lago hun gay.
             </p>
-            <span className={styles.noticeStripes} aria-hidden="true" />
+            <span className={styles["noticeStripes"]} aria-hidden="true" />
           </div>
         </section>
       </div>
 
       <ScrollReveal>
-        <section className={styles.learning} aria-labelledby="learn-heading">
-          <div className={styles.sectionHeading}>
+        <section className={styles["learning"]} aria-labelledby="learn-heading">
+          <div className={styles["sectionHeading"]}>
             <span />
             <h2 id="learn-heading">What You Can Learn</h2>
             <span />
           </div>
-          <div className={styles.courseGrid}>
+          <div className={styles["courseGrid"]}>
             {courses.map((course) => (
-              <article className={styles.course} key={course.title}>
-                <div className={`${styles.courseIcon} ${course.tone}`}>
+              <article className={styles["course"]} key={course.title}>
+                <div className={`${styles["courseIcon"]} ${course.tone}`}>
                   <Icon name={course.icon} />
                 </div>
                 <h3>
@@ -251,13 +252,13 @@ export default function MainLanding2Page(): ReactElement {
             ))}
           </div>
 
-          <div className={`${styles.sectionHeading} ${styles.sectionHeadingSmall}`}>
+          <div className={`${styles["sectionHeading"]} ${styles["sectionHeadingSmall"]}`}>
             <span />
             <h2>... and much more</h2>
             <span />
           </div>
 
-          <div className={styles.trustRow}>
+          <div className={styles["trustRow"]}>
             <div>
               <Icon name="shield" />
               <span>
@@ -281,7 +282,7 @@ export default function MainLanding2Page(): ReactElement {
             </div>
           </div>
 
-          <p className={styles.privacy}>
+          <p className={styles["privacy"]}>
             Jari rakhne se aap Skillup ki <Link href="/en/legal/terms">Terms and Conditions</Link>{" "}
             aur <Link href="/en/legal/privacy">Privacy Policy</Link> se raazi hoon.
           </p>

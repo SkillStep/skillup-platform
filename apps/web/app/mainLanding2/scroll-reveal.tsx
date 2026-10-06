@@ -34,7 +34,10 @@ export function ScrollReveal({ children }: Readonly<{ children: ReactNode }>): R
   }, []);
 
   return (
-    <div ref={ref} className={visible ? `${styles.reveal} ${styles.revealVisible}` : styles.reveal}>
+    <div
+      ref={ref}
+      className={visible ? `${styles["reveal"]} ${styles["revealVisible"]}` : styles["reveal"]}
+    >
       {children}
     </div>
   );
