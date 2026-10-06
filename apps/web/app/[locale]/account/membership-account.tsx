@@ -282,6 +282,59 @@ export function MembershipAccount() {
     }
   }
 
+  async function unsubscribePremium(): Promise<void> {
+    setBusy(true);
+    setError(null);
+    try {
+      const openSubscription =
+        billing?.subscriptions.find(
+          (candidate) =>
+            OPEN_SUBSCRIPTION_STATUSES.includes(candidate.status) &&
+            candidate.status !== "initiated",
+        ) ?? null;
+
+      if (openSubscription) {
+        const cancelResponse = await fetch(
+          `/api/v1/billing/subscriptions/${encodeURIComponent(openSubscription.id)}/cancel`,
+          { method: "POST", credentials: "same-origin" },
+        );
+        if (!cancelResponse.ok && cancelResponse.status !== 404) {
+          const body = (await cancelResponse.json().catch(() => ({}))) as Readonly<{
+            message?: string;
+          }>;
+          setError(body.message ?? "The subscription could not be cancelled.");
+          return;
+        }
+      }
+
+      const entitlementResponse = await fetch("/api/v1/commercial/premium/unsubscribe", {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      if (!entitlementResponse.ok && entitlementResponse.status !== 409) {
+        const body = (await entitlementResponse.json().catch(() => ({}))) as Readonly<{
+          message?: string;
+        }>;
+        setError(body.message ?? "Premium could not be unsubscribed.");
+        return;
+      }
+
+      if (billing?.wallet.status === "linked" && !openSubscription) {
+        await fetch("/api/v1/billing/wallet/unlink", {
+          method: "POST",
+          credentials: "same-origin",
+        }).catch(() => undefined);
+      }
+
+      setMessage("Unsubscribed. Premium features are locked immediately.");
+      await loadAccount();
+    } catch {
+      setError("Unsubscribe could not be completed. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) {
     return <section className={styles["panel"]}>Loading your user profile…</section>;
   }
@@ -339,51 +392,25 @@ export function MembershipAccount() {
         <div className={styles["actions"]}>
           {premiumActive ? (
             <>
-              <span className={styles["button"]} aria-current="true">
+              <span className={`${styles["button"]} ${styles["secondary"]}`} aria-current="true">
                 Subscribed
               </span>
-              {subscription &&
-              !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
-                <button
-                  className={`${styles["button"]} ${styles["dangerButton"]}`}
-                  type="button"
-                  disabled={busy}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Unsubscribe from Premium? Premium features will be locked immediately.",
-                      )
-                    ) {
-                      void mutateBilling(
-                        `/api/v1/billing/subscriptions/${encodeURIComponent(subscription.id)}/cancel`,
-                        "Unsubscribed. Premium features are locked immediately.",
-                      );
-                    }
-                  }}
-                >
-                  Unsubscribe
-                </button>
-              ) : (
-                <button
-                  className={`${styles["button"]} ${styles["dangerButton"]}`}
-                  type="button"
-                  disabled={busy || billing?.wallet.status !== "linked"}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        "Unsubscribe from Premium? This unlinks JazzCash billing and locks Premium immediately.",
-                      )
-                    ) {
-                      void mutateBilling(
-                        "/api/v1/billing/wallet/unlink",
-                        "Unsubscribed. Premium features are locked immediately.",
-                      );
-                    }
-                  }}
-                >
-                  Unsubscribe
-                </button>
-              )}
+              <button
+                className={`${styles["button"]} ${styles["dangerButton"]}`}
+                type="button"
+                disabled={busy}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Unsubscribe from Premium? Premium features will be locked immediately.",
+                    )
+                  ) {
+                    void unsubscribePremium();
+                  }
+                }}
+              >
+                {busy ? "Unsubscribing…" : "Unsubscribe"}
+              </button>
             </>
           ) : (
             <Link className={styles["button"]} href="/en/pricing">
