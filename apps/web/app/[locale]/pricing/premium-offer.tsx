@@ -34,7 +34,7 @@ function formatPrice(amountMinor: number): string {
 }
 
 function packageIdForPlan(plan: Plan): string {
-  return plan.code === "premium-yearly" || plan.billingPeriod === "year" ? "2" : "1";
+  return plan.code === "premium-yearly" || plan.billingPeriod === "year" ? "2" : "default";
 }
 
 export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
