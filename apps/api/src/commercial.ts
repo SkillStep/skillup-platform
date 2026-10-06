@@ -111,6 +111,9 @@ export type CommercialService = Readonly<{
     userId: string;
     planCode: "premium-monthly" | "premium-yearly";
   }) => Promise<Readonly<{ entitlement: Entitlement }>>;
+  unsubscribePremium: (
+    userId: string,
+  ) => Promise<Readonly<{ entitlement: Entitlement | null; cancelled: boolean }>>;
   recordOfferView: (input: {
     userId: string | null;
     planCode?: string | undefined;
@@ -1086,6 +1089,96 @@ export function createCommercialService(
       }
     },
 
+    unsubscribePremium: async (userId) => {
+      const cancelledAt = now();
+      const connection = await options.pool.connect();
+      try {
+        await connection.query("begin");
+        const active = await connection.query<{
+          id: string;
+          status: "active" | "grace";
+          plan_code: "premium-monthly" | "premium-yearly";
+          starts_at: Date;
+          ends_at: Date;
+          capabilities: readonly string[];
+        }>(
+          `select e.id,
+                  e.status,
+                  p.code as plan_code,
+                  e.starts_at,
+                  e.ends_at,
+                  v.capabilities
+             from entitlements e
+             join commercial_plan_versions v on v.id = e.plan_version_id
+             join commercial_plans p on p.id = v.plan_id
+            where e.user_id = $1
+              and e.status in ('active', 'grace')
+            order by e.updated_at desc
+            limit 1
+            for update of e`,
+          [userId],
+        );
+        const row = active.rows[0];
+        if (!row) {
+          await connection.query("commit");
+          return { entitlement: null, cancelled: false };
+        }
+
+        await connection.query(
+          `update entitlements
+              set status = 'cancelled',
+                  cancelled_at = coalesce(cancelled_at, $2),
+                  grace_ends_at = null,
+                  ends_at = least(ends_at, $2),
+                  updated_at = $2
+            where id = $1`,
+          [row.id, cancelledAt],
+        );
+        await connection.query(
+          `insert into entitlement_events (
+             entitlement_id,
+             action,
+             actor_type,
+             reason,
+             previous_status,
+             next_status
+           )
+           values ($1, 'cancel', 'system', $2, $3, 'cancelled')`,
+          [row.id, "Learner unsubscribed from Premium; access locked immediately.", row.status],
+        );
+        await connection.query(
+          `insert into commercial_events (
+             user_id,
+             event_name,
+             plan_code,
+             entitlement_id,
+             properties
+           )
+           values ($1, 'premium_unsubscribed', $2, $3, '{"immediateLock":true}'::jsonb)`,
+          [userId, row.plan_code, row.id],
+        );
+        await connection.query("commit");
+
+        return {
+          cancelled: true,
+          entitlement: {
+            id: row.id,
+            planCode: row.plan_code,
+            status: "cancelled",
+            startsAt: row.starts_at.toISOString(),
+            endsAt: cancelledAt.toISOString(),
+            graceEndsAt: null,
+            capabilities: row.capabilities,
+          },
+        };
+      } catch (error) {
+        await connection.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        connection.release();
+      }
+    },
+
     recordOfferView: async ({ userId, planCode, surface }) => {
       await options.pool.query(
         `insert into commercial_events (user_id, event_name, plan_code, properties)
@@ -1155,6 +1248,19 @@ export function registerCommercialRoutes(
         planCode: body.planCode,
       }),
     );
+  });
+
+  app.post("/v1/commercial/premium/unsubscribe", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
+    const result = await options.commercialService.unsubscribePremium(learner.id);
+    if (!result.cancelled) {
+      return reply.status(409).send({
+        error: "not_subscribed",
+        message: "No active Premium subscription was found to unsubscribe.",
+      });
+    }
+    return result;
   });
 
   app.get("/v1/commercial/orders/:orderId", async (request) => {
