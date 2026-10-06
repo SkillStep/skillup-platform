@@ -96,8 +96,8 @@ export const publicPolicies: readonly PublicPolicy[] = [
       {
         heading: "Cancel subscription or unlink wallet",
         body: [
-          "Cancel subscription stops future renewal for that Premium subscription while leaving the JazzCash wallet linked. Unlink wallet removes the saved JazzCash authorization for SkillUp and stops future debits for all open SkillUp subscriptions associated with that wallet.",
-          "Cancellation or wallet unlinking does not erase an already-paid period. Premium access continues through the recorded current-period end unless a refund, reversal, fraud or security action requires an earlier entitlement adjustment.",
+          "Cancel subscription (Unsubscribe) stops renewal and locks Premium access immediately. Unlink wallet removes the saved JazzCash authorization for SkillUp and stops future debits for all open SkillUp subscriptions associated with that wallet.",
+          "Unsubscribing locks Premium features immediately. An approved refund, reversal, fraud or security action can also revoke Premium earlier than the recorded current-period end.",
         ],
       },
       {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactElement, type ReactNode } from "react";
+import { type ReactElement, type ReactNode, useEffect, useRef, useState } from "react";
 import styles from "./scroll-reveal.module.css";
 
 export function ScrollReveal({ children }: Readonly<{ children: ReactNode }>): ReactElement {

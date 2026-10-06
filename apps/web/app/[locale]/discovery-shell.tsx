@@ -21,7 +21,7 @@ export function PublicHeader(): ReactNode {
         <Link href="/en/skills">Browse skills</Link>
         <Link href="/en/pricing">Premium</Link>
         <Link href="/en/progress">Your progress</Link>
-        <Link href="/en/account">Membership</Link>
+        <Link href="/en/account">User Profile</Link>
         <Link className={styles["navAction"]} href="/en/sign-in">
           Sign in
         </Link>
@@ -33,7 +33,7 @@ export function PublicHeader(): ReactNode {
           <Link href="/en/skills">Browse skills</Link>
           <Link href="/en/pricing">Premium</Link>
           <Link href="/en/progress">Your progress</Link>
-          <Link href="/en/account">Membership</Link>
+          <Link href="/en/account">User Profile</Link>
           <Link href="/en/sign-in">Sign in</Link>
         </nav>
       </details>

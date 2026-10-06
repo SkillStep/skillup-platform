@@ -182,7 +182,7 @@ export function MembershipAccount() {
           return null;
         }
         if (!accountResponse.ok) {
-          setError("Your membership information is temporarily unavailable.");
+          setError("Your profile information is temporarily unavailable.");
           return null;
         }
         setAccount((await accountResponse.json()) as AccountResponse);
@@ -222,7 +222,7 @@ export function MembershipAccount() {
         return null;
       } catch (requestError) {
         if (!(requestError instanceof DOMException && requestError.name === "AbortError")) {
-          setError("Your membership information is temporarily unavailable.");
+          setError("Your profile information is temporarily unavailable.");
         }
         return null;
       } finally {
@@ -283,7 +283,7 @@ export function MembershipAccount() {
   }
 
   if (loading) {
-    return <section className={styles["panel"]}>Loading your private membership…</section>;
+    return <section className={styles["panel"]}>Loading your user profile…</section>;
   }
 
   const entitlement = account.entitlement ?? null;
@@ -294,6 +294,13 @@ export function MembershipAccount() {
     ) ??
     billing?.subscriptions[0] ??
     null;
+  const premiumActive =
+    Boolean(entitlement && ["active", "grace"].includes(entitlement.status)) ||
+    Boolean(
+      subscription &&
+        OPEN_SUBSCRIPTION_STATUSES.includes(subscription.status) &&
+        subscription.status !== "initiated",
+    );
 
   return (
     <>
@@ -304,20 +311,24 @@ export function MembershipAccount() {
         </p>
       ) : null}
 
-      <section className={styles["panel"]} aria-labelledby="membership-status-title">
-        <h2 id="membership-status-title">Membership status</h2>
-        <div className={`${styles["status"]} ${!entitlement ? styles["statusInactive"] : ""}`}>
+      <section className={styles["panel"]} aria-labelledby="premium-status-title">
+        <h2 id="premium-status-title">Premium status</h2>
+        <div className={`${styles["status"]} ${!premiumActive ? styles["statusInactive"] : ""}`}>
           <div>
-            <strong>{entitlement ? entitlement.planCode.replaceAll("-", " ") : "Free plan"}</strong>
+            <strong>Premium Status: {premiumActive ? "Active" : "Inactive"}</strong>
             <span>
-              {entitlement
-                ? `${entitlement.status} through ${dateLabel(entitlement.graceEndsAt ?? entitlement.endsAt)}`
-                : "Useful reviewed learning remains available without payment."}
+              {premiumActive
+                ? entitlement
+                  ? `${entitlement.planCode.replaceAll("-", " ")} through ${dateLabel(entitlement.graceEndsAt ?? entitlement.endsAt)}`
+                  : subscription
+                    ? `${displayPlan(subscription.plan_code)} · ${subscription.status}`
+                    : "Subscribed"
+                : "Premium features are locked. Subscribe to unlock SkillUp Premium."}
             </span>
           </div>
         </div>
 
-        {entitlement ? (
+        {entitlement && premiumActive ? (
           <ul className={styles["capabilities"]}>
             {entitlement.capabilities.map((capability) => (
               <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
@@ -326,9 +337,59 @@ export function MembershipAccount() {
         ) : null}
 
         <div className={styles["actions"]}>
-          <Link className={styles["button"]} href="/en/pricing">
-            {entitlement ? "Compare plans" : "View Premium plans"}
-          </Link>
+          {premiumActive ? (
+            <>
+              <span className={styles["button"]} aria-current="true">
+                Subscribed
+              </span>
+              {subscription &&
+              !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
+                <button
+                  className={`${styles["button"]} ${styles["dangerButton"]}`}
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Unsubscribe from Premium? Premium features will be locked immediately.",
+                      )
+                    ) {
+                      void mutateBilling(
+                        `/api/v1/billing/subscriptions/${encodeURIComponent(subscription.id)}/cancel`,
+                        "Unsubscribed. Premium features are locked immediately.",
+                      );
+                    }
+                  }}
+                >
+                  Unsubscribe
+                </button>
+              ) : (
+                <button
+                  className={`${styles["button"]} ${styles["dangerButton"]}`}
+                  type="button"
+                  disabled={busy || billing?.wallet.status !== "linked"}
+                  onClick={() => {
+                    if (
+                      window.confirm(
+                        "Unsubscribe from Premium? This unlinks JazzCash billing and locks Premium immediately.",
+                      )
+                    ) {
+                      void mutateBilling(
+                        "/api/v1/billing/wallet/unlink",
+                        "Unsubscribed. Premium features are locked immediately.",
+                      );
+                    }
+                  }}
+                >
+                  Unsubscribe
+                </button>
+              )}
+            </>
+          ) : (
+            <Link className={styles["button"]} href="/en/pricing">
+              Subscribe
+            </Link>
+          )}
           <Link className={`${styles["button"]} ${styles["secondary"]}`} href="/en/progress">
             View learning progress
           </Link>
@@ -383,34 +444,11 @@ export function MembershipAccount() {
           </div>
 
           <p className={styles["billingNote"]}>
-            Cancel subscription stops future renewal for this plan while keeping the wallet linked.
-            Unlink wallet removes the saved JazzCash authorization and stops all future debits for
-            SkillUp. Already-paid access remains available through the current paid period.
+            Unsubscribe from Premium status locks features immediately and stops renewal. Unlink
+            wallet removes the saved JazzCash authorization and stops all future SkillUp debits.
           </p>
 
           <div className={styles["actions"]}>
-            {subscription &&
-            !["canceled", "expired", "payment_failed"].includes(subscription.status) ? (
-              <button
-                className={`${styles["button"]} ${styles["secondary"]}`}
-                type="button"
-                disabled={busy}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Cancel this Premium subscription? Future renewal will stop, but your JazzCash wallet remains linked.",
-                    )
-                  ) {
-                    void mutateBilling(
-                      `/api/v1/billing/subscriptions/${encodeURIComponent(subscription.id)}/cancel`,
-                      "Subscription canceled. Paid-period access is retained through its recorded end date.",
-                    );
-                  }
-                }}
-              >
-                Cancel subscription
-              </button>
-            ) : null}
             {billing.wallet.status === "linked" ? (
               <button
                 className={`${styles["button"]} ${styles["dangerButton"]}`}

@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import type { Route } from "next";
+import Link from "next/link";
+import { useEffect } from "react";
 
+import { buildLandingPath, DEFAULT_LANDING_CAMPAIGN } from "../../../lib/landing-campaign";
 import styles from "./pricing.module.css";
 
 type Plan = Readonly<{
@@ -13,17 +16,6 @@ type Plan = Readonly<{
   capabilities: readonly string[];
   checkoutAvailable: boolean;
   checkoutMode?: "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" | null;
-}>;
-
-type BillingError = Readonly<{
-  error?: string;
-  message?: string;
-}>;
-
-type LinkStartResponse = Readonly<{
-  actionUrl?: string;
-  fields?: Readonly<Record<string, string>>;
-  checkoutMode?: string;
 }>;
 
 const capabilityLabels: Readonly<Record<string, string>> = {
@@ -41,51 +33,15 @@ function formatPrice(amountMinor: number): string {
   }).format(amountMinor / 100);
 }
 
-async function errorBody(response: Response): Promise<BillingError> {
-  try {
-    return (await response.json()) as BillingError;
-  } catch {
-    return {};
-  }
-}
-
-function newIdempotencyKey(planCode: string): string {
-  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
-    return `${planCode}-${crypto.randomUUID()}`;
-  }
-  return `${planCode}-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
-}
-
-function postHostedForm(actionUrl: string, fields: Readonly<Record<string, string>>): void {
-  const form = document.createElement("form");
-  form.method = "POST";
-  form.action = actionUrl;
-  form.acceptCharset = "UTF-8";
-  form.style.display = "none";
-  for (const [name, value] of Object.entries(fields)) {
-    const input = document.createElement("input");
-    input.type = "hidden";
-    input.name = name;
-    input.value = value;
-    form.appendChild(input);
-  }
-  document.body.appendChild(form);
-  // Synchronous navigation handoff to JazzCash; do not remove or re-render before submit finishes.
-  form.submit();
-}
-
 export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
-  const [busyPlan, setBusyPlan] = useState<string | null>(null);
-  const [message, setMessage] = useState<string | null>(null);
-  const [msisdn, setMsisdn] = useState("");
-  const [consent, setConsent] = useState(false);
-  const usesBypass = plans.some((plan) => plan.checkoutMode === "premium_bypass");
-  const usesWalletLink =
-    !usesBypass &&
-    plans.some(
-      (plan) =>
-        plan.checkoutMode === "jazzcash_wallet_link" || plan.checkoutMode === "jazzcash_v11",
-    );
+  const monthly =
+    plans.find((plan) => plan.code === "premium-monthly") ??
+    plans.find((plan) => plan.billingPeriod === "month") ??
+    null;
+  const landingHref = buildLandingPath({
+    ...DEFAULT_LANDING_CAMPAIGN,
+    package: "1",
+  });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -99,194 +55,37 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     return () => controller.abort();
   }, []);
 
-  async function startCheckout(planCode: Plan["code"]) {
-    const plan = plans.find((entry) => entry.code === planCode);
-    const bypass = plan?.checkoutMode === "premium_bypass" || usesBypass;
-
-    if (!bypass) {
-      if (!/^\d{11,15}$/.test(msisdn)) {
-        setMessage("Enter a valid JazzCash mobile number like 03XXXXXXXXX.");
-        return;
-      }
-      if (!consent) {
-        setMessage("Confirm payment authorization before continuing.");
-        return;
-      }
-    }
-
-    setBusyPlan(planCode);
-    setMessage(null);
-    let handedOffToProvider = false;
-
-    try {
-      if (bypass) {
-        const response = await fetch("/api/v1/commercial/premium-bypass/activate", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ planCode }),
-        });
-        if (response.status === 401) {
-          window.location.assign("/en/sign-in?returnTo=%2Fen%2Fpricing");
-          return;
-        }
-        if (!response.ok) {
-          const error = await errorBody(response);
-          setMessage(error.message ?? "Premium could not be activated for testing.");
-          return;
-        }
-        window.location.assign("/en?payment=succeeded");
-        return;
-      }
-
-      if (usesWalletLink) {
-        const response = await fetch("/api/v1/premium/billing/jazzcash-v11/link/start", {
-          method: "POST",
-          credentials: "same-origin",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            planCode,
-            msisdn,
-            consentToAutoPay: true,
-            idempotencyKey: newIdempotencyKey(planCode),
-          }),
-        });
-        if (response.status === 401) {
-          window.location.assign("/en/sign-in?returnTo=%2Fen%2Fpricing");
-          return;
-        }
-        if (!response.ok) {
-          const error = await errorBody(response);
-          setMessage(error.message ?? "JazzCash wallet linking could not be started.");
-          return;
-        }
-        const link = (await response.json()) as LinkStartResponse;
-        if (!link.actionUrl || !link.fields) {
-          setMessage("JazzCash wallet-link form was incomplete. Please try again.");
-          return;
-        }
-        postHostedForm(link.actionUrl, link.fields);
-        handedOffToProvider = true;
-        return;
-      }
-
-      const response = await fetch("/api/v1/commercial/orders", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          planCode,
-          idempotencyKey: newIdempotencyKey(planCode),
-          msisdn,
-        }),
-      });
-      if (response.status === 401) {
-        window.location.assign("/en/sign-in?returnTo=%2Fen%2Fpricing");
-        return;
-      }
-      if (!response.ok) {
-        const error = await errorBody(response);
-        setMessage(error.message ?? "JazzCash payment could not be started. Please try again.");
-        return;
-      }
-      setMessage("Checkout started. Complete payment and return to your account.");
-    } catch {
-      setMessage("Payment could not be started. Check your connection and try again.");
-    } finally {
-      // Keep the busy state while the browser navigates to JazzCash so React does not
-      // re-render and detach the temporary hosted form mid-submit.
-      if (!handedOffToProvider) setBusyPlan(null);
-    }
+  if (!monthly) {
+    return (
+      <p className={styles["message"]} role="alert">
+        The monthly Premium package is temporarily unavailable.
+      </p>
+    );
   }
 
   return (
-    <div className={styles["grid"]}>
-      {plans.map((plan) => {
-        const yearly = plan.billingPeriod === "year";
-        const msisdnId = `jazzcash-msisdn-${plan.code}`;
-        const consentId = `jazzcash-consent-${plan.code}`;
-        const bypass = plan.checkoutMode === "premium_bypass" || usesBypass;
-        return (
-          <article
-            className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
-            key={plan.code}
-          >
-            <span className={styles["badge"]}>{yearly ? "Best value" : "Flexible"}</span>
-            <h2>{plan.name}</h2>
-            <p className={styles["price"]}>
-              <strong>{formatPrice(plan.amountMinor)}</strong>
-              <span>/{plan.billingPeriod}</span>
-            </p>
-            {yearly ? <p className={styles["saving"]}>Save PKR 2,189 versus monthly.</p> : null}
-            <ul className={styles["features"]}>
-              {plan.capabilities.map((capability) => (
-                <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
-              ))}
-            </ul>
+    <div className={`${styles["grid"]} ${styles["gridSingle"]}`}>
+      <article className={styles["card"]} key={monthly.code}>
+        <span className={styles["badge"]}>Monthly</span>
+        <h2>{monthly.name}</h2>
+        <p className={styles["price"]}>
+          <strong>{formatPrice(monthly.amountMinor)}</strong>
+          <span>/{monthly.billingPeriod}</span>
+        </p>
+        <ul className={styles["features"]}>
+          {monthly.capabilities.map((capability) => (
+            <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
+          ))}
+        </ul>
 
-            {plan.checkoutAvailable && !bypass ? (
-              <div className={styles["walletForm"]}>
-                <label htmlFor={msisdnId}>JazzCash mobile number</label>
-                <input
-                  id={msisdnId}
-                  inputMode="numeric"
-                  autoComplete="tel"
-                  placeholder="03001234567"
-                  value={msisdn}
-                  onChange={(event) =>
-                    setMsisdn(event.target.value.replace(/\D/g, "").slice(0, 15))
-                  }
-                  disabled={busyPlan !== null}
-                />
-                <label className={styles["consent"]} htmlFor={consentId}>
-                  <input
-                    id={consentId}
-                    type="checkbox"
-                    checked={consent}
-                    onChange={(event) => setConsent(event.target.checked)}
-                    disabled={busyPlan !== null}
-                  />
-                  <span>
-                    I authorize SkillUp to link this JazzCash wallet and charge the selected Premium
-                    plan.
-                  </span>
-                </label>
-              </div>
-            ) : null}
-
-            <button
-              className={styles["action"]}
-              type="button"
-              disabled={!plan.checkoutAvailable || busyPlan !== null}
-              onClick={() => void startCheckout(plan.code)}
-            >
-              {busyPlan === plan.code
-                ? bypass
-                  ? "Activating Premium…"
-                  : "Opening JazzCash…"
-                : plan.checkoutAvailable
-                  ? bypass
-                    ? "Activate Premium (test)"
-                    : usesWalletLink
-                      ? "Link JazzCash & Pay"
-                      : "Pay with JazzCash"
-                  : "Payment activation pending"}
-            </button>
-            <p className={styles["note"]}>
-              {bypass
-                ? "Temporary staging bypass: JazzCash payment is skipped so Premium features can be tested."
-                : usesWalletLink
-                  ? "You will enter your JazzCash MPIN on the JazzCash portal. SkillUp stores only the payment token and charges server-side after a verified link."
-                  : "SkillUp charges through JazzCash and grants Premium only after a verified server-side response—not from the browser alone."}
-            </p>
-            {message && busyPlan === null ? (
-              <p className={styles["message"]} role="alert">
-                {message}
-              </p>
-            ) : null}
-          </article>
-        );
-      })}
+        <Link className={styles["action"]} href={landingHref as Route}>
+          Select Plan
+        </Link>
+        <p className={styles["note"]}>
+          Continue to enter your JazzCash number and complete Subscribe Now on the Premium landing
+          page. SkillUp grants Premium only after a verified JazzCash response.
+        </p>
+      </article>
     </div>
   );
 }

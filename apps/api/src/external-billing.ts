@@ -224,8 +224,8 @@ function accessForSubscription(
   ) {
     return { mode: "grace", endsAt: periodEnd, subscription };
   }
-  if (subscription.status === "canceled" && periodEnd && periodEnd > now) {
-    return { mode: "active", endsAt: periodEnd, subscription };
+  if (subscription.status === "canceled") {
+    return { mode: "none", endsAt: null, subscription };
   }
   return { mode: "none", endsAt: null, subscription };
 }
@@ -359,7 +359,10 @@ function terminalEntitlementState(
   if (status.status.last_payment_status === "refunded") {
     return { status: "refunded", action: "refund" } as const;
   }
-  if (subscription?.status === "expired" || subscription?.status === "canceled") {
+  if (subscription?.status === "canceled") {
+    return { status: "cancelled", action: "cancel" } as const;
+  }
+  if (subscription?.status === "expired") {
     return { status: "expired", action: "expire" } as const;
   }
   return { status: "revoked", action: "revoke" } as const;
@@ -552,7 +555,11 @@ export function createExternalBillingService(
         }
       } else if (
         existingEntitlement &&
-        !["refunded", "revoked", "expired"].includes(existingEntitlement.status)
+        !["refunded", "revoked"].includes(existingEntitlement.status) &&
+        !(
+          existingEntitlement.status === "expired" &&
+          status.status.last_payment_status !== "refunded"
+        )
       ) {
         const terminal = terminalEntitlementState(status, subscription);
         await connection.query(
