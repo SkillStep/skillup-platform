@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { buildLandingPath, DEFAULT_LANDING_CAMPAIGN } from "../../../lib/landing-campaign";
 import styles from "./pricing.module.css";
@@ -38,6 +38,8 @@ function packageIdForPlan(plan: Plan): string {
 }
 
 export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
+  const [unsubscribed, setUnsubscribed] = useState(false);
+
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/v1/commercial/events/offer", {
@@ -50,6 +52,15 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     return () => controller.abort();
   }, []);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("unsubscribed") !== "1") return;
+    setUnsubscribed(true);
+    params.delete("unsubscribed");
+    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
+    window.history.replaceState({}, "", next);
+  }, []);
+
   if (plans.length === 0) {
     return (
       <p className={styles["message"]} role="alert">
@@ -59,42 +70,50 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   }
 
   return (
-    <div className={styles["grid"]}>
-      {plans.map((plan) => {
-        const yearly = plan.billingPeriod === "year";
-        const landingHref = buildLandingPath({
-          ...DEFAULT_LANDING_CAMPAIGN,
-          package: packageIdForPlan(plan),
-        });
+    <>
+      {unsubscribed ? (
+        <p className={styles["message"]} role="status">
+          You unsubscribed successfully. Premium features are locked. Select a plan below to
+          subscribe again.
+        </p>
+      ) : null}
+      <div className={styles["grid"]}>
+        {plans.map((plan) => {
+          const yearly = plan.billingPeriod === "year";
+          const landingHref = buildLandingPath({
+            ...DEFAULT_LANDING_CAMPAIGN,
+            package: packageIdForPlan(plan),
+          });
 
-        return (
-          <article
-            className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
-            key={plan.code}
-          >
-            <span className={styles["badge"]}>{yearly ? "Best value" : "Flexible"}</span>
-            <h2>{plan.name}</h2>
-            <p className={styles["price"]}>
-              <strong>{formatPrice(plan.amountMinor)}</strong>
-              <span>/{plan.billingPeriod}</span>
-            </p>
-            {yearly ? <p className={styles["saving"]}>Save PKR 2,189 versus monthly.</p> : null}
-            <ul className={styles["features"]}>
-              {plan.capabilities.map((capability) => (
-                <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
-              ))}
-            </ul>
+          return (
+            <article
+              className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
+              key={plan.code}
+            >
+              <span className={styles["badge"]}>{yearly ? "Best value" : "Flexible"}</span>
+              <h2>{plan.name}</h2>
+              <p className={styles["price"]}>
+                <strong>{formatPrice(plan.amountMinor)}</strong>
+                <span>/{plan.billingPeriod}</span>
+              </p>
+              {yearly ? <p className={styles["saving"]}>Save PKR 2,189 versus monthly.</p> : null}
+              <ul className={styles["features"]}>
+                {plan.capabilities.map((capability) => (
+                  <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
+                ))}
+              </ul>
 
-            <Link className={styles["action"]} href={landingHref as Route}>
-              Select Plan
-            </Link>
-            <p className={styles["note"]}>
-              Continue to enter your JazzCash number and complete Subscribe Now on the Premium
-              landing page. SkillUp grants Premium only after a verified JazzCash response.
-            </p>
-          </article>
-        );
-      })}
-    </div>
+              <Link className={styles["action"]} href={landingHref as Route}>
+                Select Plan
+              </Link>
+              <p className={styles["note"]}>
+                Continue to enter your JazzCash number and complete Subscribe Now on the Premium
+                landing page. SkillUp grants Premium only after a verified JazzCash response.
+              </p>
+            </article>
+          );
+        })}
+      </div>
+    </>
   );
 }
