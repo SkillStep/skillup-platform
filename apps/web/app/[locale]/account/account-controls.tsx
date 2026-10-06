@@ -564,7 +564,7 @@ export function AccountControls() {
         </p>
         <div className={styles["policyGrid"]}>
           {[
-            ["terms", "Terms of Use"],
+            ["terms", "Terms and Conditions"],
             ["privacy", "Privacy Notice"],
             ["refund", "Refund and Cancellation"],
             ["ai-disclosure", "AI Use Disclosure"],
