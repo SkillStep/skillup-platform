@@ -100,6 +100,14 @@ const nextConfig: NextConfig = {
         headers: publicRouteHeaders,
       },
       {
+        source: "/mainLanding",
+        headers: publicRouteHeaders,
+      },
+      {
+        source: "/mainLanding2",
+        headers: publicRouteHeaders,
+      },
+      {
         source: "/offline",
         headers: publicRouteHeaders,
       },

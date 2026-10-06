@@ -19,6 +19,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 1,
     },
     {
+      url: new URL("/mainLanding", publicAppUrl).toString().replace(/\/$/, ""),
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
+      url: new URL("/mainLanding2", publicAppUrl).toString().replace(/\/$/, ""),
+      lastModified,
+      changeFrequency: "weekly",
+      priority: 0.95,
+    },
+    {
       url: canonicalUrl(publicAppUrl, "en", "/skills"),
       lastModified,
       changeFrequency: "weekly",
