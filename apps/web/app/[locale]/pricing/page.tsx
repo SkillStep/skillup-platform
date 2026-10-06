@@ -70,11 +70,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: "SkillUp Premium pricing",
     description:
-      "Compare SkillUp Premium monthly and yearly plans. The free learning experience remains useful, while premium expands levels and progress insights.",
+      "Select SkillUp Premium Monthly at PKR 599. Continue to the landing page to enter your JazzCash number and subscribe.",
     alternates: { canonical: canonicalUrl(publicAppUrl, "en", "pricing") },
     openGraph: {
       title: "SkillUp Premium pricing",
-      description: "Monthly PKR 599 or yearly PKR 4,999, with server-verified JazzCash billing.",
+      description: "Monthly PKR 599 with server-verified JazzCash billing.",
       type: "website",
       url: canonicalUrl(publicAppUrl, "en", "pricing"),
     },
@@ -142,11 +142,10 @@ export default async function PricingPage({ params }: PageProps) {
       <main className={styles["main"]}>
         <header className={styles["hero"]}>
           <p className="eyebrow">Clear, Pakistan-first pricing</p>
-          <h1>Learn free. Upgrade when Premium value is clear.</h1>
+          <h1>SkillUp Premium Monthly</h1>
           <p>
-            The free experience includes useful reviewed learning. Premium expands available levels,
-            progress insights and approved advanced challenges without erasing your history if a
-            plan expires.
+            Choose the monthly package to continue. You will enter your JazzCash number on the next
+            step, then complete verification on JazzCash.
           </p>
         </header>
 

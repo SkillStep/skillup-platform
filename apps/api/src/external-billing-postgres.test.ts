@@ -128,7 +128,7 @@ afterAll(async () => {
 });
 
 describeWithPostgres("external payment-service webhook entitlement lifecycle", () => {
-  it("verifies signature, dedupes, ignores stale events, keeps canceled paid access, and revokes on refund", async () => {
+  it("verifies signature, dedupes, ignores stale events, locks Premium on cancel, and revokes on refund", async () => {
     if (!database || !databaseUrl) {
       throw new Error("DATABASE_URL is required for the external billing test.");
     }
@@ -214,7 +214,7 @@ describeWithPostgres("external payment-service webhook entitlement lifecycle", (
         where s.user_id = $1`,
       [userId],
     );
-    expect(entitlement.rows[0]?.status).toBe("active");
+    expect(entitlement.rows[0]?.status).toBe("cancelled");
     expect(entitlement.rows[0]?.ends_at.toISOString()).toBe(periodEnd);
 
     authoritativeStatus = statusFor("expired", "failed");
@@ -232,7 +232,7 @@ describeWithPostgres("external payment-service webhook entitlement lifecycle", (
         where s.user_id = $1`,
       [userId],
     );
-    expect(staleEntitlement.rows[0]?.status).toBe("active");
+    expect(staleEntitlement.rows[0]?.status).toBe("cancelled");
 
     authoritativeStatus = statusFor("canceled", "refunded");
     const refunded = signedEvent(

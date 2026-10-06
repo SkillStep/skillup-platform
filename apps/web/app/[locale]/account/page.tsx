@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { PublicFooter, PublicHeader } from "../discovery-shell";
-import { AccountControls } from "./account-controls";
 import styles from "./account.module.css";
+import { AccountControls } from "./account-controls";
 import { MembershipAccount } from "./membership-account";
 
 type PageProps = Readonly<{
@@ -13,9 +13,9 @@ type PageProps = Readonly<{
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Your SkillUp account",
+  title: "User Profile",
   description:
-    "Manage your private SkillUp membership, sessions, privacy choices, export and account deletion.",
+    "Manage your SkillUp Premium status, subscription, privacy choices, export and account deletion.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
@@ -28,12 +28,11 @@ export default async function AccountPage({ params }: PageProps) {
       <PublicHeader />
       <main className={styles["main"]}>
         <header className={styles["header"]}>
-          <p className="eyebrow">Private account</p>
-          <h1>Your account, privacy and membership</h1>
+          <p className="eyebrow">User Profile</p>
+          <h1>Your Premium status and account</h1>
           <p>
-            Review server-authoritative access, payment references, devices, sharing choices, policy
-            evidence, export and deletion. This page is never indexed or placed in the public
-            offline cache.
+            Review Premium access, subscription controls, devices, privacy choices, export and
+            deletion. This page is never indexed or placed in the public offline cache.
           </p>
         </header>
         <MembershipAccount />
