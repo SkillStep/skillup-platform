@@ -33,16 +33,11 @@ function formatPrice(amountMinor: number): string {
   }).format(amountMinor / 100);
 }
 
-export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
-  const monthly =
-    plans.find((plan) => plan.code === "premium-monthly") ??
-    plans.find((plan) => plan.billingPeriod === "month") ??
-    null;
-  const landingHref = buildLandingPath({
-    ...DEFAULT_LANDING_CAMPAIGN,
-    package: "1",
-  });
+function packageIdForPlan(plan: Plan): string {
+  return plan.code === "premium-yearly" || plan.billingPeriod === "year" ? "2" : "1";
+}
 
+export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
   useEffect(() => {
     const controller = new AbortController();
     void fetch("/api/v1/commercial/events/offer", {
@@ -55,37 +50,51 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
     return () => controller.abort();
   }, []);
 
-  if (!monthly) {
+  if (plans.length === 0) {
     return (
       <p className={styles["message"]} role="alert">
-        The monthly Premium package is temporarily unavailable.
+        Premium plans are temporarily unavailable.
       </p>
     );
   }
 
   return (
-    <div className={`${styles["grid"]} ${styles["gridSingle"]}`}>
-      <article className={styles["card"]} key={monthly.code}>
-        <span className={styles["badge"]}>Monthly</span>
-        <h2>{monthly.name}</h2>
-        <p className={styles["price"]}>
-          <strong>{formatPrice(monthly.amountMinor)}</strong>
-          <span>/{monthly.billingPeriod}</span>
-        </p>
-        <ul className={styles["features"]}>
-          {monthly.capabilities.map((capability) => (
-            <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
-          ))}
-        </ul>
+    <div className={styles["grid"]}>
+      {plans.map((plan) => {
+        const yearly = plan.billingPeriod === "year";
+        const landingHref = buildLandingPath({
+          ...DEFAULT_LANDING_CAMPAIGN,
+          package: packageIdForPlan(plan),
+        });
 
-        <Link className={styles["action"]} href={landingHref as Route}>
-          Select Plan
-        </Link>
-        <p className={styles["note"]}>
-          Continue to enter your JazzCash number and complete Subscribe Now on the Premium landing
-          page. SkillUp grants Premium only after a verified JazzCash response.
-        </p>
-      </article>
+        return (
+          <article
+            className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
+            key={plan.code}
+          >
+            <span className={styles["badge"]}>{yearly ? "Best value" : "Flexible"}</span>
+            <h2>{plan.name}</h2>
+            <p className={styles["price"]}>
+              <strong>{formatPrice(plan.amountMinor)}</strong>
+              <span>/{plan.billingPeriod}</span>
+            </p>
+            {yearly ? <p className={styles["saving"]}>Save PKR 2,189 versus monthly.</p> : null}
+            <ul className={styles["features"]}>
+              {plan.capabilities.map((capability) => (
+                <li key={capability}>{capabilityLabels[capability] ?? capability}</li>
+              ))}
+            </ul>
+
+            <Link className={styles["action"]} href={landingHref as Route}>
+              Select Plan
+            </Link>
+            <p className={styles["note"]}>
+              Continue to enter your JazzCash number and complete Subscribe Now on the Premium
+              landing page. SkillUp grants Premium only after a verified JazzCash response.
+            </p>
+          </article>
+        );
+      })}
     </div>
   );
 }
