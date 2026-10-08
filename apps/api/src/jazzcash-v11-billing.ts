@@ -46,7 +46,7 @@ const InquiryBodySchema = z
     txnRefNo: z
       .string()
       .trim()
-      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,2}$/, "txnRefNo must be a JazzCash merchant reference."),
+      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,3}$/, "txnRefNo must be a JazzCash merchant reference."),
   })
   .strict();
 
@@ -99,7 +99,21 @@ function pakistanStamp(date: Date): string {
 }
 
 function gooTxnRef(now: Date): string {
-  return `Goo${pakistanStamp(now)}${randomBytes(1).toString("hex").toUpperCase()}`;
+  // JazzCash orchestrator expects pp_TxnRefNo ≤ 20 chars: Goo + yyyyMMddHHmmss (14) + suffix.
+  // Use 3 hex chars (~4096/sec) so parallel CI charges in the same second rarely collide.
+  return `Goo${pakistanStamp(now)}${randomBytes(2).toString("hex").toUpperCase().slice(0, 3)}`;
+}
+
+function isMerchantReferenceConflict(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as Readonly<{ code?: unknown }>).code === "23505" &&
+    "constraint" in error &&
+    (error as Readonly<{ constraint?: unknown }>).constraint ===
+      "payment_orders_merchant_reference_key"
+  );
 }
 
 function linkRequestId(): string {
@@ -261,29 +275,35 @@ export function createJazzCashV11BillingService(
       }
 
       let merchantReference = gooTxnRef(createdAt);
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        const insert = await connection.query(
-          `insert into payment_orders (
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        try {
+          const insert = await connection.query(
+            `insert into payment_orders (
              user_id, plan_version_id, provider, status, amount_minor, currency,
              idempotency_key, merchant_reference, checkout_expires_at, created_at, updated_at
            )
            values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
            on conflict (user_id, idempotency_key) do nothing
            returning id`,
-          [
-            input.userId,
-            selected.plan_version_id,
-            selected.amount_minor,
-            selected.currency,
-            input.idempotencyKey,
-            merchantReference,
-            checkoutExpiresAt,
-            createdAt,
-          ],
-        );
-        if ((insert.rowCount ?? 0) === 1) {
-          inserted = true;
-          break;
+            [
+              input.userId,
+              selected.plan_version_id,
+              selected.amount_minor,
+              selected.currency,
+              input.idempotencyKey,
+              merchantReference,
+              checkoutExpiresAt,
+              createdAt,
+            ],
+          );
+          if ((insert.rowCount ?? 0) === 1) {
+            inserted = true;
+            break;
+          }
+        } catch (error) {
+          if (!isMerchantReferenceConflict(error) || attempt === 7) throw error;
+          merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
+          continue;
         }
         const existing = await connection.query<Record<string, unknown>>(
           `${orderSelect}
