@@ -46,7 +46,7 @@ const InquiryBodySchema = z
     txnRefNo: z
       .string()
       .trim()
-      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,3}$/, "txnRefNo must be a JazzCash merchant reference."),
+      .regex(/^Goo[0-9]{14}[A-Z0-9]{0,2}$/, "txnRefNo must be a JazzCash merchant reference."),
   })
   .strict();
 
@@ -99,9 +99,9 @@ function pakistanStamp(date: Date): string {
 }
 
 function gooTxnRef(now: Date): string {
-  // JazzCash orchestrator expects pp_TxnRefNo ≤ 20 chars: Goo + yyyyMMddHHmmss (14) + suffix.
-  // Use 3 hex chars (~4096/sec) so parallel CI charges in the same second rarely collide.
-  return `Goo${pakistanStamp(now)}${randomBytes(2).toString("hex").toUpperCase().slice(0, 3)}`;
+  // Format locked by payment_orders_merchant_reference_format:
+  // Goo + yyyyMMddHHmmss (14) + 2 hex chars (≤ 20 total for JazzCash orchestrator).
+  return `Goo${pakistanStamp(now)}${randomBytes(1).toString("hex").toUpperCase()}`;
 }
 
 function isMerchantReferenceConflict(error: unknown): boolean {
@@ -277,6 +277,7 @@ export function createJazzCashV11BillingService(
       let merchantReference = gooTxnRef(createdAt);
       for (let attempt = 0; attempt < 8; attempt += 1) {
         try {
+          await connection.query("savepoint goo_txn_ref");
           const insert = await connection.query(
             `insert into payment_orders (
              user_id, plan_version_id, provider, status, amount_minor, currency,
@@ -296,11 +297,13 @@ export function createJazzCashV11BillingService(
               createdAt,
             ],
           );
+          await connection.query("release savepoint goo_txn_ref");
           if ((insert.rowCount ?? 0) === 1) {
             inserted = true;
             break;
           }
         } catch (error) {
+          await connection.query("rollback to savepoint goo_txn_ref").catch(() => undefined);
           if (!isMerchantReferenceConflict(error) || attempt === 7) throw error;
           merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
           continue;
