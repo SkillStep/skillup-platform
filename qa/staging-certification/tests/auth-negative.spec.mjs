@@ -18,7 +18,9 @@ test("invalid identity is rejected without advancing to an OTP challenge", async
   );
   await page.getByRole("button", { name: "Continue" }).click();
   expect((await rejected).status()).toBe(400);
-  await expect(page.getByText("Enter a valid Pakistani mobile number or email address.")).toBeVisible();
+  await expect(
+    page.getByText("Enter a valid Pakistani mobile number or email address."),
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in or create account" })).toBeVisible();
   await expect(page.getByLabel("Four-digit code")).toHaveCount(0);
 });
@@ -78,7 +80,9 @@ test("anonymous callers cannot access learner or Admin private APIs", async () =
 test("sign-in UI reports a bounded network failure", async ({ page }) => {
   await page.route("**/api/v1/auth/otp/start", (route) => route.abort("failed"));
   await page.goto("/en/sign-in");
-  await page.getByRole("textbox", { name: "Email or mobile number" }).fill(qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL"));
+  await page
+    .getByRole("textbox", { name: "Email or mobile number" })
+    .fill(qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL"));
   await page.getByRole("button", { name: "Continue" }).click();
   await expect(
     page.getByText("We could not reach SkillUp. Check your connection and try again."),
