@@ -13,8 +13,7 @@ test("invalid identity is rejected without advancing to an OTP challenge", async
   await page.getByRole("textbox", { name: "Email or mobile number" }).fill("not-an-email");
   const rejected = page.waitForResponse(
     (response) =>
-      response.url().endsWith("/api/v1/auth/otp/start") &&
-      response.request().method() === "POST",
+      response.url().endsWith("/api/v1/auth/otp/start") && response.request().method() === "POST",
   );
   await page.getByRole("button", { name: "Continue" }).click();
   expect((await rejected).status()).toBe(400);
