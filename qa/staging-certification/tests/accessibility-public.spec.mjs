@@ -25,6 +25,7 @@ test("passwordless sign-in is operable with keyboard focus and labelled controls
   await page.goto("/en/sign-in");
   const identity = page.getByRole("textbox", { name: "Email or mobile number" });
   await expect(identity).toBeVisible();
+  await identity.fill("qa-focus@example.invalid");
   await identity.focus();
   await expect(identity).toBeFocused();
   await page.keyboard.press("Tab");
