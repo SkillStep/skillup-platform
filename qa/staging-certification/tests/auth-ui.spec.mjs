@@ -8,11 +8,11 @@ test("passwordless sign-in delivers and verifies a real staging OTP", async ({ p
   const email = qaIdentity("STAGING_QA_LEARNER_EMAIL");
   await page.goto("/en/sign-in?returnTo=%2Fen%2Fprogress");
 
-  await page.getByLabel("Email address").fill(email);
+  await page.getByRole("textbox", { name: "Email or mobile number" }).fill(email);
   const startedAfter = new Date(Date.now() - 2_000).toISOString();
-  await page.getByRole("button", { name: "Send sign-in code" }).click();
+  await page.getByRole("button", { name: "Continue" }).click();
 
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
   const code = await retrieveOtpForUi(email, startedAfter);
   await page.getByLabel("Four-digit code").fill(code);
   await page.getByRole("button", { name: "Verify and continue" }).click();
