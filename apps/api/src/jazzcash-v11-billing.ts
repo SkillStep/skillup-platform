@@ -4,7 +4,7 @@ import type { DatabaseClient } from "@skillup/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import type { AuthService } from "./auth.js";
+import { AuthRequestError, type AuthService } from "./auth.js";
 import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
 import {
@@ -15,6 +15,7 @@ import {
   verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
 import {
+  optionalAuthenticatedLearner,
   RequestAuthorizationError,
   requireAuthenticatedLearner,
   requireTrustedRequestOrigin,
@@ -661,23 +662,48 @@ export function registerJazzCashV11BillingRoutes(
 ): void {
   app.post("/v1/premium/billing/jazzcash-v11/link/start", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
-    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     const body = StartLinkBodySchema.parse(request.body);
+
+    // Pay-first user flow: session optional. Signed-in learners keep their account;
+    // guests get (or reuse) a phone-bound learner for the JazzCash MSISDN with no session.
+    const sessionLearner = await optionalAuthenticatedLearner(
+      request,
+      options.config,
+      options.authService,
+    );
+    let userId: string;
+    if (sessionLearner) {
+      userId = sessionLearner.id;
+    } else {
+      try {
+        const checkoutLearner = await options.authService.resolveOrCreatePhoneLearnerForCheckout(
+          body.msisdn,
+        );
+        userId = checkoutLearner.userId;
+      } catch (error) {
+        if (error instanceof AuthRequestError) {
+          throw new JazzCashV11BillingError(error.statusCode, error.message);
+        }
+        throw error;
+      }
+    }
+
     const idempotencyKey =
       body.idempotencyKey ??
-      `link-${body.planCode}-${learner.id.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
+      `link-${body.planCode}-${userId.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
 
     request.log.info(
       {
         checkoutMode: "jazzcash_wallet_link",
         planCode: body.planCode,
         msisdnSuffix: body.msisdn.slice(-4),
+        authenticated: Boolean(sessionLearner),
       },
       "JazzCash wallet-link start requested",
     );
 
     const result = await options.billingService.startWalletLink({
-      userId: learner.id,
+      userId,
       planCode: body.planCode,
       msisdn: body.msisdn,
       idempotencyKey,

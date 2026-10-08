@@ -30,6 +30,10 @@ describe("JazzCash payment return route (wallet-link DOC 2026)", () => {
   it("does not require a browser session to complete the JazzCash return", () => {
     expect(source).not.toContain("stashReturnFields");
     expect(source).not.toContain("skillup_jc_return");
-    expect(source).toContain("hasSessionCookie");
+  });
+
+  it("always redirects to the homepage so the unlock popup can show without sign-in first", () => {
+    expect(source).not.toContain('new URL("/en/sign-in", appOrigin)');
+    expect(source).toContain("NextResponse.redirect(home, 303)");
   });
 });

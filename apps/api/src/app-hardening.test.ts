@@ -58,6 +58,9 @@ const authService: AuthService = {
     throw new Error("Not used by this test.");
   }),
   resolveSession: vi.fn(async () => null),
+  resolveOrCreatePhoneLearnerForCheckout: vi.fn(async () => ({
+    userId: "11111111-1111-4111-8111-111111111111",
+  })),
   revokeSession: vi.fn(async () => undefined),
   updateProfile: vi.fn(async () => {
     throw new Error("Not used by this test.");

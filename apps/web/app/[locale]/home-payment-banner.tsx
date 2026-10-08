@@ -1,6 +1,10 @@
 "use client";
 
+import type { Route } from "next";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+
+import { markPremiumUnlocked } from "../../lib/premium-unlock";
 
 type PaymentBannerProps = Readonly<{
   payment?: string | null;
@@ -11,13 +15,15 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
   tone: "success" | "pending" | "error";
   title: string;
   body: string;
+  showPremiumCta: boolean;
 }> | null {
   if (!payment) return null;
   if (payment === "succeeded") {
     return {
       tone: "success",
-      title: "Payment successful",
-      body: "Your Premium subscription is active. You can keep learning with full Premium access.",
+      title: "Premium Features Unlocked",
+      body: "Your JazzCash subscription is active. Open Premium Features — sign in with your JazzCash number if you are not logged in yet.",
+      showPremiumCta: true,
     };
   }
   if (payment === "pending") {
@@ -25,6 +31,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       tone: "pending",
       title: "Payment pending",
       body: "Your JazzCash payment is still being confirmed. Premium unlocks once verification finishes.",
+      showPremiumCta: false,
     };
   }
   if (payment === "failed" || payment === "error") {
@@ -32,6 +39,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       tone: "error",
       title: "Payment not completed",
       body: "No Premium access was granted. You can try again from Premium pricing.",
+      showPremiumCta: false,
     };
   }
   if (payment === "cancelled") {
@@ -39,6 +47,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       tone: "error",
       title: "Checkout cancelled",
       body: "No payment was recorded. Return to Premium pricing when you are ready.",
+      showPremiumCta: false,
     };
   }
   if (payment === "expired") {
@@ -46,6 +55,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       tone: "error",
       title: "Checkout expired",
       body: "Start a new checkout from Premium pricing when you are ready.",
+      showPremiumCta: false,
     };
   }
   if (payment === "refunded") {
@@ -53,6 +63,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       tone: "pending",
       title: "Payment refunded",
       body: "The payment was refunded and Premium access was updated.",
+      showPremiumCta: false,
     };
   }
   return null;
@@ -64,6 +75,7 @@ export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
 
   useEffect(() => {
     if (!copy) return;
+    if (copy.tone === "success") markPremiumUnlocked();
     const url = new URL(window.location.href);
     url.searchParams.delete("payment");
     url.searchParams.delete("orderId");
@@ -73,21 +85,40 @@ export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
   if (!copy || !visible) return null;
 
   return (
-    <div className={`home-payment-banner home-payment-banner-${copy.tone}`} role="status">
-      <div>
-        <p className="home-payment-banner-title">{copy.title}</p>
+    <div
+      className="home-payment-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="premium-unlock-title"
+    >
+      <div className={`home-payment-dialog home-payment-banner-${copy.tone}`}>
+        <p id="premium-unlock-title" className="home-payment-banner-title">
+          {copy.title}
+        </p>
         <p className="home-payment-banner-body">{copy.body}</p>
         {orderId && copy.tone === "success" ? (
           <p className="home-payment-banner-ref">Reference: {orderId}</p>
         ) : null}
+        <div className="home-payment-actions">
+          {copy.showPremiumCta ? (
+            <Link className="button button-primary" href={"/en/premium" as Route}>
+              Open Premium Features
+            </Link>
+          ) : null}
+          {copy.tone === "error" || copy.tone === "pending" ? (
+            <Link className="button button-secondary" href={"/en/pricing" as Route}>
+              Premium pricing
+            </Link>
+          ) : null}
+          <button
+            className="home-payment-banner-dismiss"
+            type="button"
+            onClick={() => setVisible(false)}
+          >
+            Dismiss
+          </button>
+        </div>
       </div>
-      <button
-        className="home-payment-banner-dismiss"
-        type="button"
-        onClick={() => setVisible(false)}
-      >
-        Dismiss
-      </button>
     </div>
   );
 }

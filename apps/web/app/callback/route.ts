@@ -19,27 +19,16 @@ function apiBaseUrl(): URL {
   return url;
 }
 
-function hasSessionCookie(request: NextRequest): boolean {
-  const name = process.env["SESSION_COOKIE_NAME"]?.trim() || "skillup_session";
-  return Boolean(request.cookies.get(name)?.value);
-}
-
 function paymentResultRedirect(
   request: NextRequest,
   status: string,
   orderId?: string,
 ): NextResponse {
+  // Homepage first (Premium Features Unlocked popup), even without a session cookie.
   const appOrigin = publicAppOrigin(request);
   const home = new URL("/en", appOrigin);
   home.searchParams.set("payment", status);
   if (orderId) home.searchParams.set("orderId", orderId);
-
-  if (!hasSessionCookie(request)) {
-    const signIn = new URL("/en/sign-in", appOrigin);
-    signIn.searchParams.set("returnTo", `${home.pathname}${home.search}`);
-    return NextResponse.redirect(signIn, 303);
-  }
-
   return NextResponse.redirect(home, 303);
 }
 

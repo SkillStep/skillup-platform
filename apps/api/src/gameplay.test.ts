@@ -116,6 +116,7 @@ function createAuthService(): AuthService {
       learner,
     })),
     resolveSession: vi.fn(async (token) => (token === "browser-session-token" ? learner : null)),
+    resolveOrCreatePhoneLearnerForCheckout: vi.fn(async () => ({ userId: learner.id })),
     revokeSession: vi.fn(async () => undefined),
     updateProfile: vi.fn(async () => learner),
   };
