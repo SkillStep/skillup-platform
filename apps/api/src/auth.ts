@@ -152,6 +152,11 @@ export type AuthService = Readonly<{
   ) => Promise<readonly AuthIdentityView[]>;
   resolveSession: (sessionToken: string) => Promise<AuthenticatedLearner | null>;
   revokeSession: (sessionToken: string) => Promise<void>;
+  /**
+   * Pay-first JazzCash checkout: bind Premium to a phone learner without creating a session.
+   * The learner signs in later (OTP) with the same JazzCash number to open Premium Features.
+   */
+  resolveOrCreatePhoneLearnerForCheckout: (msisdn: string) => Promise<Readonly<{ userId: string }>>;
   updateProfile: (
     userId: string,
     patch: z.infer<typeof UpdateProfileSchema>,
@@ -758,6 +763,50 @@ export function createAuthService(
         const identities = await identityViews(client, userId);
         await client.query("commit");
         return identities;
+      } catch (error) {
+        await client.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    resolveOrCreatePhoneLearnerForCheckout: async (msisdn) => {
+      const identity = normalizeAuthIdentity(msisdn);
+      if (identity.type !== "phone") {
+        throw new AuthRequestError(400, "Enter a valid JazzCash mobile number.");
+      }
+
+      const createdAt = now();
+      const client = await options.pool.connect();
+      try {
+        await client.query("begin");
+        await client.query("select pg_advisory_xact_lock(hashtextextended($1, 0))", [
+          `${identity.type}:${identity.normalized}`,
+        ]);
+
+        const owner = await identityOwner(client, identity);
+        if (owner) {
+          if (owner.status !== "active") {
+            throw new AuthRequestError(403, "This account is not available for checkout.");
+          }
+          await client.query("commit");
+          return { userId: owner.userId };
+        }
+
+        const user = await client.query<{ id: string }>(
+          "insert into users (status, created_at, updated_at) values ('active', $1, $1) returning id",
+          [createdAt],
+        );
+        const createdUserId = user.rows[0]?.id;
+        if (!createdUserId) throw new Error("The learner account could not be created.");
+        await insertIdentity(client, createdUserId, identity, createdAt, false);
+        await client.query(
+          "insert into learner_profiles (user_id, created_at, updated_at) values ($1, $2, $2)",
+          [createdUserId, createdAt],
+        );
+        await client.query("commit");
+        return { userId: createdUserId };
       } catch (error) {
         await client.query("rollback").catch(() => undefined);
         throw error;

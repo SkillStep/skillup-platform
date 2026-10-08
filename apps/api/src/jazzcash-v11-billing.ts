@@ -4,7 +4,7 @@ import type { DatabaseClient } from "@skillup/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import type { AuthService } from "./auth.js";
+import { AuthRequestError, type AuthService } from "./auth.js";
 import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
 import {
@@ -15,6 +15,7 @@ import {
   verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
 import {
+  optionalAuthenticatedLearner,
   RequestAuthorizationError,
   requireAuthenticatedLearner,
   requireTrustedRequestOrigin,
@@ -98,7 +99,21 @@ function pakistanStamp(date: Date): string {
 }
 
 function gooTxnRef(now: Date): string {
+  // Format locked by payment_orders_merchant_reference_format:
+  // Goo + yyyyMMddHHmmss (14) + 2 hex chars (≤ 20 total for JazzCash orchestrator).
   return `Goo${pakistanStamp(now)}${randomBytes(1).toString("hex").toUpperCase()}`;
+}
+
+function isMerchantReferenceConflict(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as Readonly<{ code?: unknown }>).code === "23505" &&
+    "constraint" in error &&
+    (error as Readonly<{ constraint?: unknown }>).constraint ===
+      "payment_orders_merchant_reference_key"
+  );
 }
 
 function linkRequestId(): string {
@@ -260,29 +275,38 @@ export function createJazzCashV11BillingService(
       }
 
       let merchantReference = gooTxnRef(createdAt);
-      for (let attempt = 0; attempt < 5; attempt += 1) {
-        const insert = await connection.query(
-          `insert into payment_orders (
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        try {
+          await connection.query("savepoint goo_txn_ref");
+          const insert = await connection.query(
+            `insert into payment_orders (
              user_id, plan_version_id, provider, status, amount_minor, currency,
              idempotency_key, merchant_reference, checkout_expires_at, created_at, updated_at
            )
            values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
            on conflict (user_id, idempotency_key) do nothing
            returning id`,
-          [
-            input.userId,
-            selected.plan_version_id,
-            selected.amount_minor,
-            selected.currency,
-            input.idempotencyKey,
-            merchantReference,
-            checkoutExpiresAt,
-            createdAt,
-          ],
-        );
-        if ((insert.rowCount ?? 0) === 1) {
-          inserted = true;
-          break;
+            [
+              input.userId,
+              selected.plan_version_id,
+              selected.amount_minor,
+              selected.currency,
+              input.idempotencyKey,
+              merchantReference,
+              checkoutExpiresAt,
+              createdAt,
+            ],
+          );
+          await connection.query("release savepoint goo_txn_ref");
+          if ((insert.rowCount ?? 0) === 1) {
+            inserted = true;
+            break;
+          }
+        } catch (error) {
+          await connection.query("rollback to savepoint goo_txn_ref").catch(() => undefined);
+          if (!isMerchantReferenceConflict(error) || attempt === 7) throw error;
+          merchantReference = gooTxnRef(new Date(createdAt.getTime() + attempt + 1));
+          continue;
         }
         const existing = await connection.query<Record<string, unknown>>(
           `${orderSelect}
@@ -661,23 +685,48 @@ export function registerJazzCashV11BillingRoutes(
 ): void {
   app.post("/v1/premium/billing/jazzcash-v11/link/start", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);
-    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
     const body = StartLinkBodySchema.parse(request.body);
+
+    // Pay-first user flow: session optional. Signed-in learners keep their account;
+    // guests get (or reuse) a phone-bound learner for the JazzCash MSISDN with no session.
+    const sessionLearner = await optionalAuthenticatedLearner(
+      request,
+      options.config,
+      options.authService,
+    );
+    let userId: string;
+    if (sessionLearner) {
+      userId = sessionLearner.id;
+    } else {
+      try {
+        const checkoutLearner = await options.authService.resolveOrCreatePhoneLearnerForCheckout(
+          body.msisdn,
+        );
+        userId = checkoutLearner.userId;
+      } catch (error) {
+        if (error instanceof AuthRequestError) {
+          throw new JazzCashV11BillingError(error.statusCode, error.message);
+        }
+        throw error;
+      }
+    }
+
     const idempotencyKey =
       body.idempotencyKey ??
-      `link-${body.planCode}-${learner.id.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
+      `link-${body.planCode}-${userId.slice(0, 8)}-${pakistanStamp(new Date())}-${randomBytes(4).toString("hex")}`;
 
     request.log.info(
       {
         checkoutMode: "jazzcash_wallet_link",
         planCode: body.planCode,
         msisdnSuffix: body.msisdn.slice(-4),
+        authenticated: Boolean(sessionLearner),
       },
       "JazzCash wallet-link start requested",
     );
 
     const result = await options.billingService.startWalletLink({
-      userId: learner.id,
+      userId,
       planCode: body.planCode,
       msisdn: body.msisdn,
       idempotencyKey,

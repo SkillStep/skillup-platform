@@ -1,6 +1,6 @@
 import type { FastifyRequest } from "fastify";
 
-import type { AuthService, AuthenticatedLearner } from "./auth.js";
+import type { AuthenticatedLearner, AuthService } from "./auth.js";
 import type { ApiConfig } from "./config.js";
 
 export class RequestAuthorizationError extends Error {
@@ -44,4 +44,14 @@ export async function requireAuthenticatedLearner(
     throw new RequestAuthorizationError(401, "The session is invalid or expired.");
   }
   return learner;
+}
+
+export async function optionalAuthenticatedLearner(
+  request: FastifyRequest,
+  config: ApiConfig,
+  authService: AuthService,
+): Promise<AuthenticatedLearner | null> {
+  const sessionToken = parseRequestCookie(request.headers.cookie, config.SESSION_COOKIE_NAME);
+  if (!sessionToken) return null;
+  return authService.resolveSession(sessionToken);
 }

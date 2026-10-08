@@ -25,27 +25,17 @@ function apiBaseUrl(): URL {
   return url;
 }
 
-function hasSessionCookie(request: NextRequest): boolean {
-  const name = process.env["SESSION_COOKIE_NAME"]?.trim() || "skillup_session";
-  return Boolean(request.cookies.get(name)?.value);
-}
-
 function paymentResultRedirect(
   request: NextRequest,
   status: string,
   orderId?: string,
 ): NextResponse {
+  // Always land on homepage first so the Premium Features Unlocked popup can show,
+  // even when JazzCash omitted the SkillUp session cookie (pay-first / cross-site return).
   const appOrigin = publicAppOrigin(request);
   const home = new URL("/en", appOrigin);
   home.searchParams.set("payment", status);
   if (orderId) home.searchParams.set("orderId", orderId);
-
-  if (!hasSessionCookie(request)) {
-    const signIn = new URL("/en/sign-in", appOrigin);
-    signIn.searchParams.set("returnTo", `${home.pathname}${home.search}`);
-    return NextResponse.redirect(signIn, 303);
-  }
-
   return NextResponse.redirect(home, 303);
 }
 

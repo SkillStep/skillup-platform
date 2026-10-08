@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import styles from "./discovery.module.css";
+import { PremiumNavLink } from "./premium-nav-link";
 
 export type BreadcrumbItem = Readonly<{
   label: string;
@@ -19,7 +20,7 @@ export function PublicHeader(): ReactNode {
 
       <nav className={styles["desktopNav"]} aria-label="Primary navigation">
         <Link href="/en/skills">Browse skills</Link>
-        <Link href="/en/pricing">Premium</Link>
+        <PremiumNavLink />
         <Link href="/en/progress">Your progress</Link>
         <Link href="/en/account">User Profile</Link>
         <Link className={styles["navAction"]} href="/en/sign-in">
@@ -31,7 +32,7 @@ export function PublicHeader(): ReactNode {
         <summary aria-label="Open navigation">Menu</summary>
         <nav aria-label="Mobile navigation">
           <Link href="/en/skills">Browse skills</Link>
-          <Link href="/en/pricing">Premium</Link>
+          <PremiumNavLink />
           <Link href="/en/progress">Your progress</Link>
           <Link href="/en/account">User Profile</Link>
           <Link href="/en/sign-in">Sign in</Link>

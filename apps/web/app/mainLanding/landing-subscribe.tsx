@@ -103,10 +103,7 @@ export function LandingSubscribeCard({
           idempotencyKey: newCheckoutIdempotencyKey(planCode),
         }),
       });
-      if (response.status === 401) {
-        window.location.assign(`/en/sign-in?returnTo=${encodeURIComponent(landingPath)}`);
-        return;
-      }
+      // Pay-first: guests may start JazzCash without signing in. Sign-in happens after unlock.
       if (!response.ok) {
         const error = await readBillingError(response);
         setMessage(error.message ?? "JazzCash wallet linking could not be started.");

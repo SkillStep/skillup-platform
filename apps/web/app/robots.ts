@@ -30,6 +30,8 @@ export default function robots(): MetadataRoute.Robots {
           "/en/onboarding",
           "/en/progress",
           "/en/learn",
+          "/en/premium",
+          "/en/account",
         ],
       },
     ],
