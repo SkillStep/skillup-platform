@@ -18,6 +18,7 @@ export default function robots(): MetadataRoute.Robots {
           "/en/categories",
           "/en/paths",
           "/landing",
+          "/landing2",
           "/mainLanding",
           "/mainLanding2",
         ],

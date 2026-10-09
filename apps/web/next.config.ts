@@ -112,6 +112,10 @@ const nextConfig: NextConfig = {
         headers: publicRouteHeaders,
       },
       {
+        source: "/landing2",
+        headers: publicRouteHeaders,
+      },
+      {
         source: "/offline",
         headers: publicRouteHeaders,
       },
