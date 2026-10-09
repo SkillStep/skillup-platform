@@ -1094,27 +1094,9 @@ export function createCommercialService(
       const connection = await options.pool.connect();
       try {
         await connection.query("begin");
-        const locked = await connection.query<{ id: string; status: "active" | "grace" }>(
-          `select id, status
-             from entitlements
-            where id = (
-              select e.id
-                from entitlements e
-               where e.user_id = $1
-                 and e.status in ('active', 'grace')
-               order by e.updated_at desc
-               limit 1
-            )
-            for update`,
-          [userId],
-        );
-        const lockedRow = locked.rows[0];
-        if (!lockedRow) {
-          await connection.query("commit");
-          return { entitlement: null, cancelled: false };
-        }
-
-        const details = await connection.query<{
+        // Cancel every active/grace entitlement. Leaving any one active keeps Premium
+        // visible on User Profile after Unsubscribe.
+        const locked = await connection.query<{
           id: string;
           status: "active" | "grace";
           plan_code: "premium-monthly" | "premium-yearly";
@@ -1137,63 +1119,85 @@ export function createCommercialService(
              from entitlements e
              join commercial_plan_versions v on v.id = e.plan_version_id
              join commercial_plans p on p.id = v.plan_id
-            where e.id = $1`,
-          [lockedRow.id],
+            where e.user_id = $1
+              and e.status in ('active', 'grace')
+            order by e.updated_at desc
+            for update of e`,
+          [userId],
         );
-        const row = details.rows[0];
-        if (!row) {
-          await connection.query("rollback");
+        if (locked.rows.length === 0) {
+          await connection.query(
+            `update jazzcash_wallet_links
+                set status = 'revoked', revoked_at = coalesce(revoked_at, $2), updated_at = $2
+              where user_id = $1 and status = 'active'`,
+            [userId, cancelledAt],
+          );
+          await connection.query("commit");
           return { entitlement: null, cancelled: false };
         }
 
+        for (const row of locked.rows) {
+          await connection.query(
+            `update entitlements
+                set status = 'cancelled',
+                    cancelled_at = coalesce(cancelled_at, $2),
+                    grace_ends_at = null,
+                    ends_at = case
+                      when least(ends_at, $2) > starts_at then least(ends_at, $2)
+                      else starts_at + interval '1 second'
+                    end,
+                    updated_at = $2
+              where id = $1`,
+            [row.id, cancelledAt],
+          );
+          await connection.query(
+            `insert into entitlement_events (
+               entitlement_id,
+               action,
+               actor_type,
+               reason,
+               previous_status,
+               next_status
+             )
+             values ($1, 'cancel', 'system', $2, $3, 'cancelled')`,
+            [row.id, "Learner unsubscribed from Premium; access locked immediately.", row.status],
+          );
+          await connection.query(
+            `insert into commercial_events (
+               user_id,
+               event_name,
+               plan_code,
+               entitlement_id,
+               properties
+             )
+             values ($1, 'entitlement_cancelled', $2, $3, '{"immediateLock":true,"source":"learner_unsubscribe"}'::jsonb)`,
+            [userId, row.plan_code, row.id],
+          );
+        }
+
         await connection.query(
-          `update entitlements
-              set status = 'cancelled',
-                  cancelled_at = coalesce(cancelled_at, $2),
-                  grace_ends_at = null,
-                  ends_at = case
-                    when least(ends_at, $2) > starts_at then least(ends_at, $2)
-                    else starts_at + interval '1 second'
-                  end,
-                  updated_at = $2
-            where id = $1`,
-          [row.id, cancelledAt],
+          `update jazzcash_wallet_links
+              set status = 'revoked', revoked_at = coalesce(revoked_at, $2), updated_at = $2
+            where user_id = $1 and status = 'active'`,
+          [userId, cancelledAt],
         );
-        await connection.query(
-          `insert into entitlement_events (
-             entitlement_id,
-             action,
-             actor_type,
-             reason,
-             previous_status,
-             next_status
-           )
-           values ($1, 'cancel', 'system', $2, $3, 'cancelled')`,
-          [row.id, "Learner unsubscribed from Premium; access locked immediately.", row.status],
-        );
-        await connection.query(
-          `insert into commercial_events (
-             user_id,
-             event_name,
-             plan_code,
-             entitlement_id,
-             properties
-           )
-           values ($1, 'entitlement_cancelled', $2, $3, '{"immediateLock":true,"source":"learner_unsubscribe"}'::jsonb)`,
-          [userId, row.plan_code, row.id],
-        );
+
         await connection.query("commit");
 
+        const primary = locked.rows[0];
+        if (!primary) {
+          return { entitlement: null, cancelled: false };
+        }
         return {
           cancelled: true,
           entitlement: {
-            id: row.id,
-            planCode: row.plan_code,
+            id: primary.id,
+            planCode: primary.plan_code,
             status: "cancelled",
-            startsAt: row.starts_at.toISOString(),
+            startsAt: primary.starts_at.toISOString(),
             endsAt: cancelledAt.toISOString(),
             graceEndsAt: null,
-            capabilities: row.capabilities,
+            capabilities: primary.capabilities,
           },
         };
       } catch (error) {

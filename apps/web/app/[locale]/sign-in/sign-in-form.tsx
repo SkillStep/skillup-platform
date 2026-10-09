@@ -35,9 +35,11 @@ async function readError(response: Response): Promise<string> {
 }
 
 export function SignInForm({ returnTo }: SignInFormProps) {
+  const fullNameId = useId();
   const identityId = useId();
   const codeId = useId();
   const [hydrated, setHydrated] = useState(false);
+  const [fullName, setFullName] = useState("");
   const [identity, setIdentity] = useState("");
   const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
   const [code, setCode] = useState("");
@@ -70,6 +72,12 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
   async function start(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const trimmedName = fullName.trim();
+    if (trimmedName.length < 2) {
+      setIsError(true);
+      setMessage("Enter your full name (at least 2 characters).");
+      return;
+    }
     setBusy(true);
     setMessage(null);
     try {
@@ -106,7 +114,11 @@ export function SignInForm({ returnTo }: SignInFormProps) {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ challengeId: challenge.challengeId, code }),
+        body: JSON.stringify({
+          challengeId: challenge.challengeId,
+          code,
+          displayName: fullName.trim(),
+        }),
       });
 
       if (!response.ok) {
@@ -140,7 +152,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
       <p className={styles["cardLead"]}>
         {challenge
           ? `We sent a short-lived code to ${challenge.maskedDestination}.`
-          : "Use your email or Pakistani mobile number. No password is required."}
+          : "Enter your full name with your email or Pakistani mobile number. No password is required."}
       </p>
 
       {challenge ? (
@@ -194,6 +206,24 @@ export function SignInForm({ returnTo }: SignInFormProps) {
       ) : (
         <form className={styles["form"]} onSubmit={start}>
           <div className={styles["field"]}>
+            <label className={styles["label"]} htmlFor={fullNameId}>
+              Full name
+            </label>
+            <input
+              className={styles["input"]}
+              id={fullNameId}
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              maxLength={60}
+              minLength={2}
+              placeholder="Your full name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              required
+            />
+          </div>
+          <div className={styles["field"]}>
             <label className={styles["label"]} htmlFor={identityId}>
               Email or mobile number
             </label>
@@ -216,7 +246,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
           <button
             className={styles["action"]}
             type="submit"
-            disabled={!hydrated || busy || identity.trim().length < 3}
+            disabled={!hydrated || busy || identity.trim().length < 3 || fullName.trim().length < 2}
           >
             {busy ? "Sending code…" : "Continue"}
           </button>

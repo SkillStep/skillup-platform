@@ -20,6 +20,7 @@ const StartEmailSignInSchema = z.object({
 const VerifyOtpSchema = z.object({
   challengeId: z.string().uuid(),
   code: z.string().regex(/^\d{4}$/),
+  displayName: z.string().trim().min(2).max(60).optional(),
 });
 
 const IdentityTypeParamsSchema = z.object({
@@ -132,7 +133,7 @@ export type AuthService = Readonly<{
     input: Readonly<{ identity: string; requestFingerprint: string }>,
   ) => Promise<ChallengeView>;
   verifySignIn: (
-    input: Readonly<{ challengeId: string; code: string }>,
+    input: Readonly<{ challengeId: string; code: string; displayName?: string }>,
   ) => Promise<VerifiedSession>;
   startEmailSignIn: (
     input: Readonly<{ email: string; requestFingerprint: string }>,
@@ -595,7 +596,7 @@ export function createAuthService(
         requestFingerprint,
       }),
 
-    verifySignIn: async ({ challengeId, code }) => {
+    verifySignIn: async ({ challengeId, code, displayName }) => {
       const verifiedAt = now();
       const client = await options.pool.connect();
 
@@ -618,6 +619,14 @@ export function createAuthService(
             throw new AuthRequestError(403, "This account is not available for sign-in.");
           }
           userId = owner.userId;
+          if (displayName) {
+            await client.query(
+              `update learner_profiles
+                  set display_name = $2, updated_at = $3
+                where user_id = $1`,
+              [userId, displayName, verifiedAt],
+            );
+          }
         } else {
           const user = await client.query<{ id: string }>(
             "insert into users (status, created_at, updated_at) values ('active', $1, $1) returning id",
@@ -628,8 +637,8 @@ export function createAuthService(
           userId = createdUserId;
           await insertIdentity(client, userId, identity, verifiedAt, false);
           await client.query(
-            "insert into learner_profiles (user_id, created_at, updated_at) values ($1, $2, $2)",
-            [userId, verifiedAt],
+            "insert into learner_profiles (user_id, display_name, created_at, updated_at) values ($1, $2, $3, $3)",
+            [userId, displayName ?? null, verifiedAt],
           );
         }
 
@@ -982,7 +991,12 @@ export function registerAuthRoutes(
 
   app.post("/v1/auth/otp/verify", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
-    const verified = await options.authService.verifySignIn(VerifyOtpSchema.parse(request.body));
+    const body = VerifyOtpSchema.parse(request.body);
+    const verified = await options.authService.verifySignIn({
+      challengeId: body.challengeId,
+      code: body.code,
+      ...(body.displayName ? { displayName: body.displayName } : {}),
+    });
     reply.header(
       "set-cookie",
       sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),

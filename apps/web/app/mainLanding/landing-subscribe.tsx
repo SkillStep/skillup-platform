@@ -22,19 +22,26 @@ import { Icon } from "./landing-icons";
 
 type CheckoutMode = "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" | null;
 
+const DEFAULT_OFFER_NOTICE =
+  "Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye valid hai. Us k bad PKR 599/m lago hun gay.";
+
 export function LandingSubscribeCard({
   campaign,
   checkoutMode,
+  offerNotice = DEFAULT_OFFER_NOTICE,
+  returnPath,
 }: Readonly<{
   campaign: LandingCampaign;
   checkoutMode: CheckoutMode;
+  offerNotice?: string;
+  returnPath?: string;
 }>): ReactElement {
   const [msisdn, setMsisdn] = useState("");
   const [agree, setAgree] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const planCode = planCodeForPackage(campaign.package);
-  const landingPath = buildLandingPath(campaign);
+  const landingPath = returnPath ?? buildLandingPath(campaign);
   const bypass = checkoutMode === "premium_bypass";
 
   useEffect(() => {
@@ -197,10 +204,7 @@ export function LandingSubscribeCard({
           <div className={styles["noticeIcon"]} aria-hidden="true">
             <Icon name="megaphone" />
           </div>
-          <p>
-            Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye
-            valid hai. Us k bad PKR 599/m lago hun gay.
-          </p>
+          <p>{offerNotice}</p>
           <span className={styles["noticeStripes"]} aria-hidden="true" />
         </div>
       )}
