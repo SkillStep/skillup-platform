@@ -311,22 +311,35 @@ export function MembershipAccount() {
         method: "POST",
         credentials: "same-origin",
       });
-      if (!entitlementResponse.ok && entitlementResponse.status !== 409) {
-        const body = (await entitlementResponse.json().catch(() => ({}))) as Readonly<{
-          message?: string;
-        }>;
-        setError(body.message ?? "Premium could not be unsubscribed.");
+      const entitlementBody = (await entitlementResponse.json().catch(() => ({}))) as Readonly<{
+        cancelled?: boolean;
+        message?: string;
+      }>;
+
+      // 409 previously redirected as "success" while Premium stayed Active on profile.
+      if (!entitlementResponse.ok) {
+        setError(
+          entitlementBody.message ??
+            (entitlementResponse.status === 409
+              ? "No active Premium subscription was found to unsubscribe. Refresh status and try again."
+              : "Premium could not be unsubscribed."),
+        );
+        await loadAccount();
+        return;
+      }
+      if (entitlementBody.cancelled !== true) {
+        setError("Premium was not cancelled. Refresh status and try again.");
+        await loadAccount();
         return;
       }
 
-      if (billing?.wallet.status === "linked" && !openSubscription) {
+      if (billing?.wallet.status === "linked") {
         await fetch("/api/v1/billing/wallet/unlink", {
           method: "POST",
           credentials: "same-origin",
         }).catch(() => undefined);
       }
 
-      setMessage("Unsubscribed. Premium features are locked immediately.");
       window.location.assign("/en/pricing?unsubscribed=1");
     } catch {
       setError("Unsubscribe could not be completed. Check your connection and try again.");
@@ -347,13 +360,9 @@ export function MembershipAccount() {
     ) ??
     billing?.subscriptions[0] ??
     null;
-  const premiumActive =
-    Boolean(entitlement && ["active", "grace"].includes(entitlement.status)) ||
-    Boolean(
-      subscription &&
-        OPEN_SUBSCRIPTION_STATUSES.includes(subscription.status) &&
-        subscription.status !== "initiated",
-    );
+  // SkillUp Premium access is entitlement-authoritative. Do not keep the profile
+  // "Active" from a stale external billing subscription after Unsubscribe.
+  const premiumActive = Boolean(entitlement && ["active", "grace"].includes(entitlement.status));
 
   return (
     <>
