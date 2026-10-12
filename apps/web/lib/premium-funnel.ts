@@ -5,13 +5,15 @@ import { attributionForBilling, type PremiumAttribution } from "./utm-attributio
 export type ClientFunnelEventName = "paywall_viewed" | "plan_selected" | "add_to_cart";
 
 /** Best-effort ops funnel POST. Never throws; does not block checkout. */
-export async function postPremiumFunnelEvent(input: Readonly<{
-  event: ClientFunnelEventName;
-  campaign: LandingCampaign;
-  landing: string;
-  landingPath?: string;
-  metadata?: Readonly<Record<string, string | number | boolean>>;
-}>): Promise<void> {
+export async function postPremiumFunnelEvent(
+  input: Readonly<{
+    event: ClientFunnelEventName;
+    campaign: LandingCampaign;
+    landing: string;
+    landingPath?: string;
+    metadata?: Readonly<Record<string, string | number | boolean>>;
+  }>,
+): Promise<void> {
   try {
     const attribution: PremiumAttribution = attributionForBilling(input.campaign, {
       landing: input.landing,

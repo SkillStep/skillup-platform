@@ -3,10 +3,7 @@
 import { useEffect } from "react";
 
 import type { LandingCampaign } from "../../lib/landing-campaign";
-import {
-  buildLandingAnalyticsContext,
-  trackLandingView,
-} from "../../lib/landing-analytics";
+import { buildLandingAnalyticsContext, trackLandingView } from "../../lib/landing-analytics";
 import { postPremiumFunnelEvent } from "../../lib/premium-funnel";
 
 export function LandingAnalyticsBoot({

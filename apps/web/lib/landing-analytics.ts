@@ -148,11 +148,13 @@ function markSentToken(transactionId: string): void {
  * Token-time conversion after JazzCash success.
  * Fires subscribe (monthly) or purchase (yearly) once per transaction_id.
  */
-export function trackPaymentConversion(options: Readonly<{
-  paymentStatus: string;
-  transactionId: string;
-  context?: LandingAnalyticsContext | null;
-}>): void {
+export function trackPaymentConversion(
+  options: Readonly<{
+    paymentStatus: string;
+    transactionId: string;
+    context?: LandingAnalyticsContext | null;
+  }>,
+): void {
   const context = options.context ?? readLandingAnalyticsContext();
   if (!context) return;
 

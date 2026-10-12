@@ -17,10 +17,7 @@ import {
   type LandingCampaign,
   planCodeForPackage,
 } from "../../lib/landing-campaign";
-import {
-  buildLandingAnalyticsContext,
-  trackAddToCart,
-} from "../../lib/landing-analytics";
+import { buildLandingAnalyticsContext, trackAddToCart } from "../../lib/landing-analytics";
 import { postPremiumFunnelEvent } from "../../lib/premium-funnel";
 import { attributionForBilling } from "../../lib/utm-attribution";
 import styles from "./landing.module.css";
