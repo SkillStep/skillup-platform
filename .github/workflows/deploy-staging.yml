@@ -219,6 +219,10 @@ jobs:
                 'API_RELEASE_IMAGE_DIGEST': os.environ['API_IMAGE_DIGEST'],
                 'AI_RELEASE_ARTIFACT_REF': os.environ['AI_ARTIFACT_REF'],
                 'AI_RELEASE_IMAGE_DIGEST': os.environ['AI_IMAGE_DIGEST'],
+                # GA4 marketing (Firebase web Measurement ID). Public client ID; not Subs source of truth.
+                # Read at request time via GaRuntimeConfig (NEXT_PUBLIC alone is build-time in the image).
+                'GA_MEASUREMENT_ID': 'G-GF9V7B4HSL',
+                'NEXT_PUBLIC_GA_MEASUREMENT_ID': 'G-GF9V7B4HSL',
             }
             # SMS OTP: enable Twilio only when the protected staging credentials are present.
             twilio_sid = (os.environ.get('TWILIO_ACCOUNT_SID') or '').strip()

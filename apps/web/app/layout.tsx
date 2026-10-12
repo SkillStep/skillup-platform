@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import "./globals.css";
 import "./components.css";
 import "./accessibility.css";
+import { GaRuntimeConfig } from "./ga-runtime-config";
 import { PwaStatus } from "./pwa-status";
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
@@ -52,6 +53,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
   return (
     <html lang="en">
       <body>
+        <GaRuntimeConfig />
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>

@@ -9,13 +9,17 @@ declare global {
   interface Window {
     dataLayer?: unknown[];
     gtag?: GtagFunction;
+    __SKILLUP_GA_MEASUREMENT_ID__?: string;
   }
 }
 
 const SCRIPT_ID = "skillup-ga4-gtag";
 
 function measurementId(): string | null {
-  const value = process.env["NEXT_PUBLIC_GA_MEASUREMENT_ID"]?.trim() ?? "";
+  const runtime =
+    typeof window !== "undefined" ? window.__SKILLUP_GA_MEASUREMENT_ID__?.trim() ?? "" : "";
+  const buildTime = process.env["NEXT_PUBLIC_GA_MEASUREMENT_ID"]?.trim() ?? "";
+  const value = runtime || buildTime;
   return /^G-[A-Z0-9]+$/i.test(value) ? value : null;
 }
 
