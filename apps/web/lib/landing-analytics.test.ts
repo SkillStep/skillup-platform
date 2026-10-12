@@ -74,6 +74,7 @@ describe("landing analytics session + events", () => {
     });
     vi.stubGlobal("document", {
       getElementById: () => ({ id: "skillup-ga4-gtag" }),
+      querySelector: () => null,
       createElement: () => ({ id: "", async: false, src: "" }),
       head: { appendChild: () => undefined },
     });

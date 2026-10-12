@@ -52,8 +52,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en">
-      <body>
+      <head>
         <GaRuntimeConfig />
+      </head>
+      <body>
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
