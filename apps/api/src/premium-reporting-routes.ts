@@ -8,6 +8,7 @@ import {
   ManualGrantInputSchema,
   type PremiumMembershipService,
 } from "./premium-membership-service.js";
+import { CampaignHygieneInputSchema } from "./premium-campaign-hygiene.js";
 import {
   PremiumExportInputSchema,
   PremiumLedgerQuerySchema,
@@ -131,6 +132,33 @@ export function registerPremiumReportingRoutes(
     return options.reportingService.reconciliation(
       PremiumReconciliationQuerySchema.parse(request.query),
     );
+  });
+
+  app.get("/v1/admin/reports/premium/campaign-attribution", async (request) => {
+    await requirePremiumAdmin(request, options, "report.read");
+    return options.reportingService.campaignAttribution(
+      PremiumReportQuerySchema.parse(request.query),
+    );
+  });
+
+  app.get("/v1/admin/reports/premium/campaign-attribution/orders", async (request) => {
+    await requirePremiumAdmin(request, options, "report.read");
+    const range = PremiumReportQuerySchema.parse(request.query);
+    const extras = z
+      .object({
+        omitted: z.enum(["true", "false", "all"]).default("all"),
+        limit: z.coerce.number().int().min(1).max(200).default(50),
+      })
+      .parse(request.query);
+    return options.reportingService.campaignHygiene.listOrders({ ...range, ...extras });
+  });
+
+  app.post("/v1/admin/reports/premium/campaign-attribution/hygiene", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requirePremiumAdmin(request, options, "report.export");
+    const body = CampaignHygieneInputSchema.parse(request.body);
+    const result = await options.reportingService.campaignHygiene.apply(admin, body, request.id);
+    return reply.status(200).send(result);
   });
 
   app.get("/v1/admin/reports/premium/plans", async (request) => {

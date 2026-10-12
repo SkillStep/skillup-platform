@@ -8,6 +8,7 @@ import {
   type LandingCampaign,
   normalizeLanding2Campaign,
 } from "../../lib/landing-campaign";
+import { LandingAnalyticsBoot } from "../mainLanding/landing-analytics-boot";
 import styles from "../mainLanding/landing.module.css";
 import { Icon } from "../mainLanding/landing-icons";
 import { LandingSubscribeCard } from "../mainLanding/landing-subscribe";
@@ -109,6 +110,7 @@ function Landing2Content({
 }>): ReactElement {
   return (
     <main className={styles["page"]}>
+      <LandingAnalyticsBoot campaign={campaign} landing="landing2" />
       <div className={styles["aboveFold"]}>
         <section className={styles["hero"]} aria-labelledby="premium-hero-heading">
           <h1 id="premium-hero-heading" className={styles["visuallyHidden"]}>
@@ -130,6 +132,7 @@ function Landing2Content({
           checkoutMode={checkoutMode}
           offerNotice={OFFER_NOTICE}
           returnPath={buildLanding2Path(campaign)}
+          landing="landing2"
         />
       </div>
 

@@ -17,6 +17,12 @@ import {
   type LandingCampaign,
   planCodeForPackage,
 } from "../../lib/landing-campaign";
+import {
+  buildLandingAnalyticsContext,
+  trackAddToCart,
+} from "../../lib/landing-analytics";
+import { postPremiumFunnelEvent } from "../../lib/premium-funnel";
+import { attributionForBilling } from "../../lib/utm-attribution";
 import styles from "./landing.module.css";
 import { Icon } from "./landing-icons";
 
@@ -30,11 +36,14 @@ export function LandingSubscribeCard({
   checkoutMode,
   offerNotice = DEFAULT_OFFER_NOTICE,
   returnPath,
+  landing = "mainLanding",
 }: Readonly<{
   campaign: LandingCampaign;
   checkoutMode: CheckoutMode;
   offerNotice?: string;
   returnPath?: string;
+  /** Landing slug stamped into attribution (`mainLanding` | `landing2`). */
+  landing?: string;
 }>): ReactElement {
   const [msisdn, setMsisdn] = useState("");
   const [agree, setAgree] = useState(true);
@@ -51,7 +60,8 @@ export function LandingSubscribeCard({
     } catch {
       // Ignore storage access failures.
     }
-  }, []);
+    attributionForBilling(campaign, { landing, landingPath });
+  }, [campaign, landing, landingPath]);
 
   async function onSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
@@ -79,12 +89,28 @@ export function LandingSubscribeCard({
         }
       }
 
+      const attribution = attributionForBilling(campaign, { landing, landingPath });
+      const analyticsContext = buildLandingAnalyticsContext(campaign, { landing });
+      trackAddToCart(analyticsContext);
+      void postPremiumFunnelEvent({
+        event: "plan_selected",
+        campaign,
+        landing,
+        landingPath,
+      });
+      void postPremiumFunnelEvent({
+        event: "add_to_cart",
+        campaign,
+        landing,
+        landingPath,
+      });
+
       if (bypass) {
         const response = await fetch("/api/v1/commercial/premium-bypass/activate", {
           method: "POST",
           credentials: "same-origin",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ planCode }),
+          body: JSON.stringify({ planCode, attribution }),
         });
         if (response.status === 401) {
           window.location.assign(`/en/sign-in?returnTo=${encodeURIComponent(landingPath)}`);
@@ -108,6 +134,7 @@ export function LandingSubscribeCard({
           msisdn: normalized,
           consentToAutoPay: true,
           idempotencyKey: newCheckoutIdempotencyKey(planCode),
+          attribution,
         }),
       });
       // Pay-first: guests may start JazzCash without signing in. Sign-in happens after unlock.

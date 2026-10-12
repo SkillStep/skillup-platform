@@ -15,6 +15,12 @@ import {
   verifyJazzCashV11SecureHash,
 } from "./jazzcash-v11.js";
 import {
+  type PremiumAttribution,
+  PremiumAttributionInputSchema,
+  premiumAttributionJson,
+  sanitizePremiumAttribution,
+} from "./premium-attribution.js";
+import {
   optionalAuthenticatedLearner,
   RequestAuthorizationError,
   requireAuthenticatedLearner,
@@ -32,6 +38,7 @@ const StartLinkBodySchema = z
       .regex(/^\d{11,15}$/, "Enter a JazzCash mobile number using 11–15 digits."),
     consentToAutoPay: z.literal(true),
     idempotencyKey: z.string().trim().min(12).max(128).optional(),
+    attribution: PremiumAttributionInputSchema.optional(),
   })
   .strict();
 
@@ -193,6 +200,7 @@ export type JazzCashV11BillingService = Readonly<{
     planCode: "premium-monthly" | "premium-yearly";
     msisdn: string;
     idempotencyKey: string;
+    attribution?: PremiumAttribution;
   }) => Promise<
     Readonly<{
       checkoutMode: "jazzcash_wallet_link";
@@ -246,7 +254,10 @@ export function createJazzCashV11BillingService(
     paymentToken: string;
     msisdn: string;
     idempotencyKey: string;
+    attribution?: PremiumAttribution;
   }) {
+    const attribution = sanitizePremiumAttribution(input.attribution);
+    const attributionJson = premiumAttributionJson(attribution);
     const createdAt = now();
     const checkoutMinutes = options.config.JAZZCASH_V11_CHECKOUT_MINUTES ?? 15;
     const checkoutExpiresAt = new Date(createdAt.getTime() + checkoutMinutes * 60_000);
@@ -281,9 +292,10 @@ export function createJazzCashV11BillingService(
           const insert = await connection.query(
             `insert into payment_orders (
              user_id, plan_version_id, provider, status, amount_minor, currency,
-             idempotency_key, merchant_reference, checkout_expires_at, created_at, updated_at
+             idempotency_key, merchant_reference, checkout_expires_at, attribution,
+             created_at, updated_at
            )
-           values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8, $8)
+           values ($1, $2, 'jazzcash', 'pending', $3, $4, $5, $6, $7, $8::jsonb, $9, $9)
            on conflict (user_id, idempotency_key) do nothing
            returning id`,
             [
@@ -294,6 +306,7 @@ export function createJazzCashV11BillingService(
               input.idempotencyKey,
               merchantReference,
               checkoutExpiresAt,
+              attributionJson,
               createdAt,
             ],
           );
@@ -351,8 +364,18 @@ export function createJazzCashV11BillingService(
       if (!row) throw new Error("The payment order could not be loaded.");
       await connection.query(
         `insert into commercial_events (user_id, event_name, plan_code, order_id, properties)
-         values ($1, 'checkout_started', $2, $3, '{"provider":"jazzcash","checkoutMode":"jazzcash_wallet_link"}'::jsonb)`,
-        [input.userId, input.planCode, row["id"]],
+         values (
+           $1,
+           'checkout_started',
+           $2,
+           $3,
+           jsonb_build_object(
+             'provider', 'jazzcash',
+             'checkoutMode', 'jazzcash_wallet_link',
+             'attribution', $4::jsonb
+           )
+         )`,
+        [input.userId, input.planCode, row["id"], attributionJson],
       );
       await connection.query("commit");
       orderRow = row;
@@ -459,12 +482,14 @@ export function createJazzCashV11BillingService(
   }
 
   return {
-    startWalletLink: async ({ userId, planCode, msisdn, idempotencyKey }) => {
+    startWalletLink: async ({ userId, planCode, msisdn, idempotencyKey, attribution }) => {
       await requireEnabled();
       const createdAt = now();
       const expiresAt = new Date(
         createdAt.getTime() + (options.config.JAZZCASH_V11_CHECKOUT_MINUTES ?? 15) * 60_000,
       );
+      const sanitized = sanitizePremiumAttribution(attribution);
+      const attributionJson = premiumAttributionJson(sanitized);
 
       const connection = await options.pool.connect();
       try {
@@ -485,13 +510,37 @@ export function createJazzCashV11BillingService(
           requestId = linkRequestId();
           await connection.query(
             `insert into jazzcash_wallet_link_intents
-               (user_id, plan_code, msisdn, request_id, idempotency_key, status, expires_at, created_at, updated_at)
-             values ($1, $2, $3, $4, $5, 'pending', $6, $7, $7)`,
-            [userId, planCode, msisdn, requestId, idempotencyKey, expiresAt, createdAt],
+               (user_id, plan_code, msisdn, request_id, idempotency_key, status, expires_at,
+                attribution, created_at, updated_at)
+             values ($1, $2, $3, $4, $5, 'pending', $6, $7::jsonb, $8, $8)`,
+            [
+              userId,
+              planCode,
+              msisdn,
+              requestId,
+              idempotencyKey,
+              expiresAt,
+              attributionJson,
+              createdAt,
+            ],
           );
         } else if (existing.rows[0]?.status !== "pending") {
           throw new JazzCashV11BillingError(409, "This wallet-link request already completed.");
+        } else {
+          // Last-touch: refresh attribution on an in-flight idempotent retry.
+          await connection.query(
+            `update jazzcash_wallet_link_intents
+                set attribution = $2::jsonb, updated_at = $3
+              where request_id = $1`,
+            [requestId, attributionJson, createdAt],
+          );
         }
+        await connection.query(
+          `update users
+              set premium_attribution = $2::jsonb, updated_at = $3
+            where id = $1`,
+          [userId, attributionJson, createdAt],
+        );
         await connection.query("commit");
         const form = client.buildWalletLinkForm({ msisdn, requestId });
         return {
@@ -542,8 +591,9 @@ export function createJazzCashV11BillingService(
         msisdn: string;
         status: string;
         idempotency_key: string;
+        attribution: unknown;
       }>(
-        `select user_id, plan_code, msisdn, status, idempotency_key
+        `select user_id, plan_code, msisdn, status, idempotency_key, attribution
            from jazzcash_wallet_link_intents
           where request_id = $1`,
         [requestId],
@@ -607,6 +657,7 @@ export function createJazzCashV11BillingService(
         paymentToken,
         msisdn: resolvedMsisdn,
         idempotencyKey: `link-charge-${selectedIntent.idempotency_key}`,
+        attribution: sanitizePremiumAttribution(selectedIntent.attribution),
       });
     },
 
@@ -730,6 +781,7 @@ export function registerJazzCashV11BillingRoutes(
       planCode: body.planCode,
       msisdn: body.msisdn,
       idempotencyKey,
+      attribution: sanitizePremiumAttribution(body.attribution),
     });
     return reply.status(201).send(result);
   });

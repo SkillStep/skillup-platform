@@ -1,6 +1,10 @@
 import type { DatabaseClient } from "@skillup/database";
 
 import type { AdminIdentity, AdminService } from "./admin.js";
+import {
+  createPremiumCampaignHygieneService,
+  type PremiumCampaignHygieneService,
+} from "./premium-campaign-hygiene.js";
 import { createPremiumExportService } from "./premium-export-service.js";
 import { createPremiumPlanService } from "./premium-plan-service.js";
 import type {
@@ -20,6 +24,8 @@ export type PremiumReportingService = Readonly<{
   memberships: (query: PremiumLedgerQuery) => Promise<PremiumReportResult>;
   recurringCustomers: (query: PremiumLedgerQuery) => Promise<PremiumReportResult>;
   reconciliation: (query: PremiumReconciliationQuery) => Promise<PremiumReportResult>;
+  campaignAttribution: (query: PremiumReportQuery) => Promise<PremiumReportResult>;
+  campaignHygiene: PremiumCampaignHygieneService;
   plans: () => Promise<PremiumReportResult>;
   createPlanVersion: (
     actor: AdminIdentity,
@@ -63,6 +69,7 @@ export function createPremiumReportingService(
     ...options,
     queryService,
   });
+  const campaignHygiene = createPremiumCampaignHygieneService(options);
 
   return {
     summary: queryService.summary,
@@ -70,6 +77,8 @@ export function createPremiumReportingService(
     memberships: queryService.memberships,
     recurringCustomers: queryService.recurringCustomers,
     reconciliation: queryService.reconciliation,
+    campaignAttribution: queryService.campaignAttribution,
+    campaignHygiene,
     plans: queryService.plans,
     createPlanVersion: planService.createVersion,
     activatePlanVersion: planService.activateVersion,

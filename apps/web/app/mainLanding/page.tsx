@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { type LandingCampaign, normalizeLandingCampaign } from "../../lib/landing-campaign";
+import { LandingAnalyticsBoot } from "./landing-analytics-boot";
 import styles from "./landing.module.css";
 import { Icon } from "./landing-icons";
 import { LandingSubscribeCard } from "./landing-subscribe";
@@ -105,6 +106,7 @@ function LandingContent({
 }>): ReactElement {
   return (
     <main className={styles["page"]}>
+      <LandingAnalyticsBoot campaign={campaign} landing="mainLanding" />
       <div className={styles["aboveFold"]}>
         <section className={styles["hero"]} aria-labelledby="premium-hero-heading">
           <h1 id="premium-hero-heading" className={styles["visuallyHidden"]}>

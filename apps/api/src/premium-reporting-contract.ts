@@ -110,6 +110,7 @@ export const PremiumExportInputSchema = z
       "memberships",
       "recurring_customers",
       "reconciliation",
+      "campaign_attribution",
     ]),
     filters: PremiumReportQuerySchema,
     reason: z.string().trim().min(3).max(500),

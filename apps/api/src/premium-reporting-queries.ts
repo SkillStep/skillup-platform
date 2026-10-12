@@ -1,5 +1,6 @@
 import type { DatabaseClient } from "@skillup/database";
 
+import { loadCampaignAttributionReport } from "./premium-campaign-attribution-report.js";
 import {
   PREMIUM_REPORT_SCHEMA_VERSION,
   PREMIUM_REPORT_TIMEZONE,
@@ -18,6 +19,7 @@ export type PremiumQueryService = Readonly<{
   memberships: (query: PremiumLedgerQuery) => Promise<PremiumQueryResult>;
   recurringCustomers: (query: PremiumLedgerQuery) => Promise<PremiumQueryResult>;
   reconciliation: (query: PremiumReconciliationQuery) => Promise<PremiumQueryResult>;
+  campaignAttribution: (query: PremiumReportQuery) => Promise<PremiumQueryResult>;
   plans: () => Promise<PremiumQueryResult>;
 }>;
 
@@ -696,6 +698,8 @@ export function createPremiumQueryService(pool: DatabaseClient["pool"]): Premium
         })),
       };
     },
+
+    campaignAttribution: async (query) => loadCampaignAttributionReport(pool, query),
 
     plans: async () => {
       const result = await pool.query<Record<string, unknown>>(

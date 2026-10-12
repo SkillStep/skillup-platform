@@ -4,6 +4,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
+import { trackPaymentConversion } from "../../lib/landing-analytics";
 import { markPremiumUnlocked } from "../../lib/premium-unlock";
 
 type PaymentBannerProps = Readonly<{
@@ -74,13 +75,19 @@ export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
   const [visible, setVisible] = useState(Boolean(copy));
 
   useEffect(() => {
-    if (!copy) return;
+    if (!copy || !payment) return;
     if (copy.tone === "success") markPremiumUnlocked();
+    if (orderId) {
+      trackPaymentConversion({
+        paymentStatus: payment,
+        transactionId: orderId,
+      });
+    }
     const url = new URL(window.location.href);
     url.searchParams.delete("payment");
     url.searchParams.delete("orderId");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  }, [copy]);
+  }, [copy, orderId, payment]);
 
   if (!copy || !visible) return null;
 

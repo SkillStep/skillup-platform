@@ -3,6 +3,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgTable,
   text,
   timestamp,
@@ -149,6 +150,10 @@ export const users = pgTable(
   {
     id: uuid("id").defaultRandom().primaryKey(),
     status: text("status").$type<UserStatus>().notNull().default("active"),
+    premiumAttribution: jsonb("premium_attribution")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     deletionRequestedAt: timestamp("deletion_requested_at", { withTimezone: true }),

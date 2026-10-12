@@ -6,6 +6,7 @@ import styles from "./premium.module.css";
 
 type Tab =
   | "summary"
+  | "campaign"
   | "payments"
   | "memberships"
   | "recurring"
@@ -53,6 +54,45 @@ type SummaryReport = Readonly<{
   planBreakdown: readonly Readonly<Record<string, string | number | null>>[];
 }>;
 
+type CampaignAttributionReport = Readonly<{
+  reportSchemaVersion: string;
+  timezone: string;
+  effectiveRange: Readonly<{ from: string; to: string; preset: string }>;
+  totals: Readonly<{ subscriptions: number; amountMinor: number }>;
+  basic: readonly Readonly<{
+    date: string;
+    platform: string;
+    package: string;
+    parameter: string;
+    subscriptions: number;
+    amountMinor: number;
+  }>[];
+  detailed: Readonly<{
+    platformByParameter: readonly Readonly<{
+      date: string;
+      platform: string;
+      parameter: string;
+      subscriptions: number;
+      amountMinor: number;
+    }>[];
+    packageByParameter: readonly Readonly<{
+      date: string;
+      package: string;
+      parameter: string;
+      subscriptions: number;
+      amountMinor: number;
+    }>[];
+  }>;
+  daily: readonly Readonly<{
+    date: string;
+    subscriptions: number;
+    amountMinor: number;
+    byPlatform: Readonly<Record<string, number>>;
+    byPackage: Readonly<Record<string, number>>;
+    byParameter: Readonly<Record<string, number>>;
+  }>[];
+}>;
+
 type LedgerResponse = Readonly<{
   timezone: string;
   effectiveRange: Readonly<{ from: string; to: string; preset: string }>;
@@ -86,6 +126,7 @@ const defaultFilters: Filters = {
 
 const tabs: readonly Readonly<{ id: Tab; label: string }>[] = [
   { id: "summary", label: "Summary" },
+  { id: "campaign", label: "Campaign attribution" },
   { id: "payments", label: "Payments" },
   { id: "memberships", label: "Memberships" },
   { id: "recurring", label: "Recurring customers" },
@@ -246,6 +287,7 @@ export function PremiumWorkspace() {
   const [offset, setOffset] = useState(initial.offset);
   const [access, setAccess] = useState<PremiumAccess | null>(null);
   const [summary, setSummary] = useState<SummaryReport | null>(null);
+  const [campaign, setCampaign] = useState<CampaignAttributionReport | null>(null);
   const [ledger, setLedger] = useState<LedgerResponse | null>(null);
   const [plans, setPlans] = useState<PlanResponse | null>(null);
   const [exports, setExports] = useState<ExportHistory | null>(null);
@@ -273,6 +315,26 @@ export function PremiumWorkspace() {
   });
   const [exportType, setExportType] = useState("summary");
   const [exportReason, setExportReason] = useState("");
+  const [campaignOrders, setCampaignOrders] = useState<Readonly<{
+    total: number;
+    items: readonly Readonly<{
+      id: string;
+      completedAt: string | null;
+      amountMinor: number;
+      planCode: string | null;
+      platform: string;
+      package: string;
+      parameter: string;
+      omitted: boolean;
+      merchantReference: string;
+    }>[];
+  }> | null>(null);
+  const [hygieneAction, setHygieneAction] = useState<"omit" | "restore">("omit");
+  const [hygieneReason, setHygieneReason] = useState("");
+  const [hygienePlatform, setHygienePlatform] = useState("");
+  const [hygienePackage, setHygienePackage] = useState("");
+  const [hygieneParameter, setHygieneParameter] = useState("");
+  const [hygieneOrderIds, setHygieneOrderIds] = useState("");
 
   useEffect(() => {
     const query = new URLSearchParams();
@@ -319,6 +381,19 @@ export function PremiumWorkspace() {
             { signal },
           );
           setSummary(report);
+        } else if (tab === "campaign") {
+          setCampaign(
+            await requestJson<CampaignAttributionReport>(
+              `/admin/reports/premium/campaign-attribution?${reportQuery(filters)}`,
+              { signal },
+            ),
+          );
+          setCampaignOrders(
+            await requestJson(
+              `/admin/reports/premium/campaign-attribution/orders?${reportQuery(filters)}&omitted=all&limit=50`,
+              { signal },
+            ),
+          );
         } else if (tab === "plans") {
           setPlans(await requestJson<PlanResponse>("/admin/reports/premium/plans", { signal }));
         } else if (tab === "exports") {
@@ -503,6 +578,63 @@ export function PremiumWorkspace() {
     );
   }
 
+  async function applyCampaignHygiene(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!hygieneReason.trim()) {
+      setError("Campaign hygiene requires a business reason.");
+      return;
+    }
+    const orderIds = hygieneOrderIds
+      .split(/[\s,]+/)
+      .map((value) => value.trim())
+      .filter(Boolean);
+    if (
+      orderIds.length === 0 &&
+      !hygienePlatform.trim() &&
+      !hygienePackage.trim() &&
+      !hygieneParameter.trim()
+    ) {
+      setError("Provide order IDs and/or platform / package / parameter match filters.");
+      return;
+    }
+    await runMutation(
+      "campaign-hygiene",
+      async () => {
+        const body: Record<string, unknown> = {
+          action: hygieneAction,
+          reason: hygieneReason.trim(),
+        };
+        if (orderIds.length > 0) body["orderIds"] = orderIds;
+        if (hygienePlatform.trim() || hygienePackage.trim() || hygieneParameter.trim()) {
+          const match: Record<string, unknown> = {
+            preset: filters.preset,
+            aggregation: filters.aggregation,
+          };
+          if (filters.preset === "custom") {
+            match["from"] = new Date(filters.from).toISOString();
+            match["to"] = new Date(filters.to).toISOString();
+          }
+          if (hygienePlatform.trim()) match["platform"] = hygienePlatform.trim();
+          if (hygienePackage.trim()) match["package"] = hygienePackage.trim();
+          if (hygieneParameter.trim()) match["parameter"] = hygieneParameter.trim();
+          body["match"] = match;
+        }
+        const result = await requestJson<Readonly<{ updatedCount: number }>>(
+          "/admin/reports/premium/campaign-attribution/hygiene",
+          {
+            method: "POST",
+            body: JSON.stringify(body),
+          },
+        );
+        setMessage(
+          `${hygieneAction === "omit" ? "Omitted" : "Restored"} ${result.updatedCount} payment(s) for the campaign report.`,
+        );
+      },
+      "Campaign report hygiene updated. Reload the campaign tables to confirm.",
+    );
+    await loadCurrent();
+  }
+
   function changeTab(next: Tab): void {
     setTab(next);
     setOffset(0);
@@ -679,16 +811,27 @@ export function PremiumWorkspace() {
         </form>
       ) : null}
 
-      {summary || ledger ? (
+      {summary || campaign || ledger ? (
         <p className={styles["range"]}>
           Reporting timezone:{" "}
-          <strong>{summary?.timezone ?? ledger?.timezone ?? "Asia/Karachi"}</strong>
-          {summary?.effectiveRange || ledger?.effectiveRange ? (
+          <strong>
+            {summary?.timezone ?? campaign?.timezone ?? ledger?.timezone ?? "Asia/Karachi"}
+          </strong>
+          {summary?.effectiveRange || campaign?.effectiveRange || ledger?.effectiveRange ? (
             <>
               {" "}
               · Effective range{" "}
-              {dateTime(summary?.effectiveRange.from ?? ledger?.effectiveRange.from)} to{" "}
-              {dateTime(summary?.effectiveRange.to ?? ledger?.effectiveRange.to)}
+              {dateTime(
+                summary?.effectiveRange.from ??
+                  campaign?.effectiveRange.from ??
+                  ledger?.effectiveRange.from,
+              )}{" "}
+              to{" "}
+              {dateTime(
+                summary?.effectiveRange.to ??
+                  campaign?.effectiveRange.to ??
+                  ledger?.effectiveRange.to,
+              )}
             </>
           ) : null}
         </p>
@@ -844,6 +987,264 @@ export function PremiumWorkspace() {
                       <td>{money(row["grossMinor"])}</td>
                       <td>{money(row["refundMinor"])}</td>
                       <td>{money(row["netMinor"])}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      ) : null}
+
+      {!loading && tab === "campaign" && campaign ? (
+        <div className={styles["sectionStack"]}>
+          <section aria-labelledby="campaign-totals">
+            <h2 id="campaign-totals">Campaign attribution (completed payments)</h2>
+            <p className={styles["hint"]}>
+              Official Subs count comes from succeeded payment orders with stored attribution. GA4
+              and ad pixels are not used here. Rows flagged{" "}
+              <code>omitFromCampaignReport</code> are excluded. Prefer omit over deleting payments.
+              Landing URL examples:{" "}
+              <code>docs/product/PREMIUM_CAMPAIGN_LANDING_URLS.md</code>.
+            </p>
+            <div className={styles["kpiGrid"]}>
+              <KpiCard label="Subscriptions" value={text(campaign.totals.subscriptions)} />
+              <KpiCard label="Gross amount" value={money(campaign.totals.amountMinor)} />
+            </div>
+          </section>
+
+          {access?.canExportReports ? (
+            <section aria-labelledby="campaign-hygiene">
+              <h2 id="campaign-hygiene">Campaign report hygiene</h2>
+              <p className={styles["hint"]}>
+                Hide staging/test succeeded payments from Daily / Basic / Detailed without deleting
+                billing history. Uses the selected date range when match filters are set.
+              </p>
+              <form className={styles["panelForm"]} onSubmit={(event) => void applyCampaignHygiene(event)}>
+                <label>
+                  <span>Action</span>
+                  <select
+                    value={hygieneAction}
+                    onChange={(event) =>
+                      setHygieneAction(event.target.value as "omit" | "restore")
+                    }
+                  >
+                    <option value="omit">Omit from report</option>
+                    <option value="restore">Restore to report</option>
+                  </select>
+                </label>
+                <label>
+                  <span>Platform match</span>
+                  <input
+                    value={hygienePlatform}
+                    onChange={(event) => setHygienePlatform(event.target.value)}
+                    placeholder="T / M / D"
+                  />
+                </label>
+                <label>
+                  <span>Package match</span>
+                  <input
+                    value={hygienePackage}
+                    onChange={(event) => setHygienePackage(event.target.value)}
+                    placeholder="default / 2"
+                  />
+                </label>
+                <label>
+                  <span>Parameter match</span>
+                  <input
+                    value={hygieneParameter}
+                    onChange={(event) => setHygieneParameter(event.target.value)}
+                    placeholder="20percentoff"
+                  />
+                </label>
+                <label className={styles["full"]}>
+                  <span>Order IDs (optional, comma or space separated)</span>
+                  <textarea
+                    value={hygieneOrderIds}
+                    onChange={(event) => setHygieneOrderIds(event.target.value)}
+                    placeholder="uuid …"
+                  />
+                </label>
+                <label className={styles["full"]}>
+                  <span>Business reason</span>
+                  <textarea
+                    value={hygieneReason}
+                    onChange={(event) => setHygieneReason(event.target.value)}
+                    required
+                  />
+                </label>
+                <button type="submit" disabled={busy !== null}>
+                  {hygieneAction === "omit" ? "Omit matching payments" : "Restore matching payments"}
+                </button>
+              </form>
+            </section>
+          ) : null}
+
+          {campaignOrders ? (
+            <section aria-labelledby="campaign-orders">
+              <h2 id="campaign-orders">Recent succeeded payments in range</h2>
+              <p className={styles["hint"]}>
+                Showing {campaignOrders.items.length} of {campaignOrders.total}. Omitted rows stay in
+                billing history but drop out of the campaign Subs grid.
+              </p>
+              <div className={styles["tableWrap"]}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Completed</th>
+                      <th>Platform</th>
+                      <th>Package</th>
+                      <th>Parameter</th>
+                      <th>Amount</th>
+                      <th>Omitted</th>
+                      <th>Order</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {campaignOrders.items.length === 0 ? (
+                      <tr>
+                        <td colSpan={7}>No succeeded payments in this range.</td>
+                      </tr>
+                    ) : null}
+                    {campaignOrders.items.map((row) => (
+                      <tr key={row.id}>
+                        <td>{dateTime(row.completedAt)}</td>
+                        <td>{row.platform}</td>
+                        <td>{row.package}</td>
+                        <td>{row.parameter}</td>
+                        <td>{money(row.amountMinor)}</td>
+                        <td>
+                          <span className={`${styles["status"]} ${statusClass(row.omitted ? "pending" : "succeeded")}`}>
+                            {row.omitted ? "omitted" : "counted"}
+                          </span>
+                        </td>
+                        <td>
+                          <code>{row.id.slice(0, 8)}…</code>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          ) : null}
+
+          <section aria-labelledby="campaign-basic">
+            <h2 id="campaign-basic">Basic — date × platform × package × parameter</h2>
+            <div className={styles["tableWrap"]}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Package</th>
+                    <th>Parameter</th>
+                    <th>Subs</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.basic.length === 0 ? (
+                    <tr>
+                      <td colSpan={6}>No completed campaign payments match this range.</td>
+                    </tr>
+                  ) : null}
+                  {campaign.basic.map((row) => (
+                    <tr
+                      key={`${row.date}:${row.platform}:${row.package}:${row.parameter}`}
+                    >
+                      <td>{row.date}</td>
+                      <td>{row.platform}</td>
+                      <td>{row.package}</td>
+                      <td>{row.parameter}</td>
+                      <td>{row.subscriptions}</td>
+                      <td>{money(row.amountMinor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section aria-labelledby="campaign-platform-parameter">
+            <h2 id="campaign-platform-parameter">Detailed — platform × parameter</h2>
+            <div className={styles["tableWrap"]}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Parameter</th>
+                    <th>Subs</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.detailed.platformByParameter.map((row) => (
+                    <tr key={`pp:${row.date}:${row.platform}:${row.parameter}`}>
+                      <td>{row.date}</td>
+                      <td>{row.platform}</td>
+                      <td>{row.parameter}</td>
+                      <td>{row.subscriptions}</td>
+                      <td>{money(row.amountMinor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section aria-labelledby="campaign-package-parameter">
+            <h2 id="campaign-package-parameter">Detailed — package × parameter</h2>
+            <div className={styles["tableWrap"]}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Package</th>
+                    <th>Parameter</th>
+                    <th>Subs</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.detailed.packageByParameter.map((row) => (
+                    <tr key={`pkg:${row.date}:${row.package}:${row.parameter}`}>
+                      <td>{row.date}</td>
+                      <td>{row.package}</td>
+                      <td>{row.parameter}</td>
+                      <td>{row.subscriptions}</td>
+                      <td>{money(row.amountMinor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section aria-labelledby="campaign-daily">
+            <h2 id="campaign-daily">Daily wide</h2>
+            <div className={styles["tableWrap"]}>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Subs</th>
+                    <th>Amount</th>
+                    <th>By platform</th>
+                    <th>By package</th>
+                    <th>By parameter</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.daily.map((row) => (
+                    <tr key={`daily:${row.date}`}>
+                      <td>{row.date}</td>
+                      <td>{row.subscriptions}</td>
+                      <td>{money(row.amountMinor)}</td>
+                      <td>{text(row.byPlatform)}</td>
+                      <td>{text(row.byPackage)}</td>
+                      <td>{text(row.byParameter)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1318,6 +1719,7 @@ export function PremiumWorkspace() {
               <span>Report type</span>
               <select value={exportType} onChange={(event) => setExportType(event.target.value)}>
                 <option value="summary">Summary and buckets</option>
+                <option value="campaign_attribution">Campaign attribution</option>
                 <option value="payments">Payment ledger</option>
                 <option value="memberships">Membership ledger</option>
                 <option value="recurring_customers">Recurring customers</option>

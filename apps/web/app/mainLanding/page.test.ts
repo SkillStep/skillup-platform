@@ -35,6 +35,7 @@ describe("mainLanding page", () => {
     expect(subscribeSource).toContain("/landing/jazzcash-logo.png");
     expect(subscribeSource).toContain("Subscribe Now");
     expect(subscribeSource).toContain("/api/v1/premium/billing/jazzcash-v11/link/start");
+    expect(subscribeSource).toContain("trackAddToCart");
   });
 
   it("keeps legal links on the landing surface", () => {

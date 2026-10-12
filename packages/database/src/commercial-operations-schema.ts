@@ -81,6 +81,7 @@ export const paymentOrders = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     failureCode: text("failure_code"),
     failureMessage: text("failure_message"),
+    attribution: jsonb("attribution").$type<Record<string, unknown>>().notNull().default({}),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

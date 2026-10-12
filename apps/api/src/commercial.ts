@@ -11,6 +11,12 @@ import {
   isPremiumCheckoutBypassEnabled,
 } from "./config.js";
 import type { JazzCashCpsClient } from "./jazzcash-cps.js";
+import {
+  type PremiumAttribution,
+  PremiumAttributionInputSchema,
+  premiumAttributionJson,
+  sanitizePremiumAttribution,
+} from "./premium-attribution.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const CreateOrderSchema = z
@@ -36,6 +42,7 @@ const OfferEventSchema = z
 const BypassActivateSchema = z
   .object({
     planCode: z.enum(["premium-monthly", "premium-yearly"]),
+    attribution: PremiumAttributionInputSchema.optional(),
   })
   .strict();
 
@@ -110,6 +117,7 @@ export type CommercialService = Readonly<{
   activatePremiumBypass: (input: {
     userId: string;
     planCode: "premium-monthly" | "premium-yearly";
+    attribution?: PremiumAttribution;
   }) => Promise<Readonly<{ entitlement: Entitlement }>>;
   unsubscribePremium: (
     userId: string,
@@ -729,6 +737,7 @@ export function createCommercialService(
              o.created_at,
              o.user_id,
              o.plan_version_id,
+             o.attribution,
              v.billing_period
            from payment_orders o
            join commercial_plan_versions v on v.id = o.plan_version_id
@@ -873,6 +882,13 @@ export function createCommercialService(
                values ($1, 'activate', 'system', 'Verified JazzCash payment', null, 'active')`,
               [entitlementId],
             );
+            const attribution = sanitizePremiumAttribution(row["attribution"]);
+            const commerceJson = JSON.stringify({
+              verified: true,
+              source: "jazzcash_callback",
+              client: "backend",
+              attribution,
+            });
             await connection.query(
               `insert into commercial_events (
                  user_id,
@@ -882,9 +898,12 @@ export function createCommercialService(
                  entitlement_id,
                  properties
                )
-               values ($1, 'payment_succeeded', $2, $3, $4, '{"verified":true}'::jsonb),
-                      ($1, 'entitlement_activated', $2, $3, $4, '{"verified":true}'::jsonb)`,
-              [row["user_id"], row["plan_code"], row["id"], entitlementId],
+               values
+                 ($1, 'payment_succeeded', $2, $3, $4, $5::jsonb),
+                 ($1, 'entitlement_activated', $2, $3, $4, $5::jsonb),
+                 ($1, 'subscribe', $2, $3, $4, $5::jsonb),
+                 ($1, 'purchase', $2, $3, $4, $5::jsonb)`,
+              [row["user_id"], row["plan_code"], row["id"], entitlementId, commerceJson],
             );
           }
         } else if (effectiveOutcome === "refunded") {
@@ -974,7 +993,8 @@ export function createCommercialService(
       }
     },
 
-    activatePremiumBypass: async ({ userId, planCode }) => {
+    activatePremiumBypass: async ({ userId, planCode, attribution }) => {
+      const attributionJson = premiumAttributionJson(sanitizePremiumAttribution(attribution));
       if (!isPremiumCheckoutBypassEnabled(options.config)) {
         throw new CommercialRequestError(503, "Premium checkout bypass is not enabled.");
       }
@@ -1058,6 +1078,12 @@ export function createCommercialService(
           [row.id, `Staging premium bypass (${planCode}) — JazzCash payment temporarily skipped`],
         );
         await connection.query(
+          `update users
+              set premium_attribution = $2::jsonb, updated_at = now()
+            where id = $1`,
+          [userId, attributionJson],
+        );
+        await connection.query(
           `insert into commercial_events (
              user_id,
              event_name,
@@ -1065,8 +1091,18 @@ export function createCommercialService(
              entitlement_id,
              properties
            )
-           values ($1, 'premium_activated', $2, $3, '{"provider":"bypass","checkoutMode":"premium_bypass"}'::jsonb)`,
-          [userId, planCode, row.id],
+           values (
+             $1,
+             'premium_activated',
+             $2,
+             $3,
+             jsonb_build_object(
+               'provider', 'bypass',
+               'checkoutMode', 'premium_bypass',
+               'attribution', $4::jsonb
+             )
+           )`,
+          [userId, planCode, row.id, attributionJson],
         );
         await connection.query("commit");
 
@@ -1275,6 +1311,7 @@ export function registerCommercialRoutes(
       await options.commercialService.activatePremiumBypass({
         userId: learner.id,
         planCode: body.planCode,
+        attribution: sanitizePremiumAttribution(body.attribution),
       }),
     );
   });

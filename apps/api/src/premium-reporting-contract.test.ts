@@ -90,3 +90,15 @@ describe("premium CSV exports", () => {
     expect(csv).toContain("'+SUM(A1:A2)");
   });
 });
+
+describe("campaign attribution export contract", () => {
+  it("accepts campaign_attribution as an export report type", async () => {
+    const { PremiumExportInputSchema } = await import("./premium-reporting-contract.js");
+    const parsed = PremiumExportInputSchema.parse({
+      reportType: "campaign_attribution",
+      filters: { preset: "last_7_days", aggregation: "daily" },
+      reason: "Campaign partner daily reconciliation",
+    });
+    expect(parsed.reportType).toBe("campaign_attribution");
+  });
+});

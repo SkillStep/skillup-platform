@@ -27,6 +27,7 @@ import {
   registerPaymentOperationsRoutes,
 } from "./payment-operations.js";
 import { createPremiumMembershipService } from "./premium-membership-service.js";
+import { registerPremiumFunnelEventRoutes } from "./premium-funnel-events.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
 import { createProgressService } from "./progress.js";
@@ -150,6 +151,11 @@ registerPremiumReportingRoutes(app, {
   adminService,
   reportingService: premiumReportingService,
   membershipService: premiumMembershipService,
+});
+registerPremiumFunnelEventRoutes(app, {
+  config,
+  authService,
+  pool: database.pool,
 });
 registerPaymentOperationsRoutes(app, {
   config,

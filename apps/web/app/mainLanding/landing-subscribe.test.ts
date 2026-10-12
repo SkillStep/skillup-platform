@@ -14,4 +14,24 @@ describe("landing Subscribe Now pay-first flow", () => {
     );
     expect(jazzCashBlock).not.toContain("response.status === 401");
   });
+
+  it("sends campaign attribution on JazzCash wallet-link start", () => {
+    expect(source).toContain('from "../../lib/utm-attribution"');
+    expect(source).toContain("attributionForBilling");
+    const jazzCashBlock = source.slice(
+      source.indexOf('fetch("/api/v1/premium/billing/jazzcash-v11/link/start"'),
+    );
+    expect(jazzCashBlock).toContain("attribution");
+  });
+
+  it("fires GA4 add_to_cart before JazzCash handoff", () => {
+    expect(source).toContain("trackAddToCart");
+    expect(source).toContain("buildLandingAnalyticsContext");
+  });
+
+  it("posts backend funnel events on Subscribe Now", () => {
+    expect(source).toContain("postPremiumFunnelEvent");
+    expect(source).toContain('"plan_selected"');
+    expect(source).toContain('"add_to_cart"');
+  });
 });

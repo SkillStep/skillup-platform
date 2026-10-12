@@ -89,6 +89,17 @@ async function rowsForExport(
     return [summaryRow, ...buckets.map((bucket) => ({ section: "bucket", ...bucket }))];
   }
 
+  if (input.reportType === "campaign_attribution") {
+    const report = await queryService.campaignAttribution(input.filters);
+    const rows = Array.isArray(report["exportRows"])
+      ? report["exportRows"].filter(
+          (item): item is Record<string, unknown> =>
+            typeof item === "object" && item !== null && !Array.isArray(item),
+        )
+      : [];
+    return rows;
+  }
+
   const ledgerQuery: PremiumLedgerQuery = {
     ...input.filters,
     limit: PREMIUM_EXPORT_MAX_ROWS,
@@ -208,7 +219,7 @@ export function createPremiumExportService(
                 substring(e.requested_by::text, 1, 8) || '…' || right(e.requested_by::text, 4) as "requestedBy"
            from admin_exports e
           where e.export_type in (
-            'summary','payments','memberships','recurring_customers','reconciliation'
+            'summary','payments','memberships','recurring_customers','reconciliation','campaign_attribution'
           )
           order by e.created_at desc
           limit $1`,
