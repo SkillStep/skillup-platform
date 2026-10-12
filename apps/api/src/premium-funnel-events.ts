@@ -10,17 +10,10 @@ import {
   premiumAttributionJson,
   sanitizePremiumAttribution,
 } from "./premium-attribution.js";
-import {
-  optionalAuthenticatedLearner,
-  requireTrustedRequestOrigin,
-} from "./request-auth.js";
+import { optionalAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 /** Client-allowed funnel events only (ops funnel — not Subs source of truth). */
-export const CLIENT_FUNNEL_EVENTS = [
-  "paywall_viewed",
-  "plan_selected",
-  "add_to_cart",
-] as const;
+export const CLIENT_FUNNEL_EVENTS = ["paywall_viewed", "plan_selected", "add_to_cart"] as const;
 
 export type ClientFunnelEvent = (typeof CLIENT_FUNNEL_EVENTS)[number];
 

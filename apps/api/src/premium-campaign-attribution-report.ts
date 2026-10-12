@@ -110,7 +110,13 @@ export function buildCampaignAttributionReport(
 
   const platformParameter = new Map<
     string,
-    { date: string; platform: string; parameter: string; subscriptions: number; amountMinor: number }
+    {
+      date: string;
+      platform: string;
+      parameter: string;
+      subscriptions: number;
+      amountMinor: number;
+    }
   >();
   const packageParameter = new Map<
     string,

@@ -1002,9 +1002,8 @@ export function PremiumWorkspace() {
             <h2 id="campaign-totals">Campaign attribution (completed payments)</h2>
             <p className={styles["hint"]}>
               Official Subs count comes from succeeded payment orders with stored attribution. GA4
-              and ad pixels are not used here. Rows flagged{" "}
-              <code>omitFromCampaignReport</code> are excluded. Prefer omit over deleting payments.
-              Landing URL examples:{" "}
+              and ad pixels are not used here. Rows flagged <code>omitFromCampaignReport</code> are
+              excluded. Prefer omit over deleting payments. Landing URL examples:{" "}
               <code>docs/product/PREMIUM_CAMPAIGN_LANDING_URLS.md</code>.
             </p>
             <div className={styles["kpiGrid"]}>
@@ -1020,14 +1019,15 @@ export function PremiumWorkspace() {
                 Hide staging/test succeeded payments from Daily / Basic / Detailed without deleting
                 billing history. Uses the selected date range when match filters are set.
               </p>
-              <form className={styles["panelForm"]} onSubmit={(event) => void applyCampaignHygiene(event)}>
+              <form
+                className={styles["panelForm"]}
+                onSubmit={(event) => void applyCampaignHygiene(event)}
+              >
                 <label>
                   <span>Action</span>
                   <select
                     value={hygieneAction}
-                    onChange={(event) =>
-                      setHygieneAction(event.target.value as "omit" | "restore")
-                    }
+                    onChange={(event) => setHygieneAction(event.target.value as "omit" | "restore")}
                   >
                     <option value="omit">Omit from report</option>
                     <option value="restore">Restore to report</option>
@@ -1074,7 +1074,9 @@ export function PremiumWorkspace() {
                   />
                 </label>
                 <button type="submit" disabled={busy !== null}>
-                  {hygieneAction === "omit" ? "Omit matching payments" : "Restore matching payments"}
+                  {hygieneAction === "omit"
+                    ? "Omit matching payments"
+                    : "Restore matching payments"}
                 </button>
               </form>
             </section>
@@ -1084,8 +1086,8 @@ export function PremiumWorkspace() {
             <section aria-labelledby="campaign-orders">
               <h2 id="campaign-orders">Recent succeeded payments in range</h2>
               <p className={styles["hint"]}>
-                Showing {campaignOrders.items.length} of {campaignOrders.total}. Omitted rows stay in
-                billing history but drop out of the campaign Subs grid.
+                Showing {campaignOrders.items.length} of {campaignOrders.total}. Omitted rows stay
+                in billing history but drop out of the campaign Subs grid.
               </p>
               <div className={styles["tableWrap"]}>
                 <table>
@@ -1114,7 +1116,9 @@ export function PremiumWorkspace() {
                         <td>{row.parameter}</td>
                         <td>{money(row.amountMinor)}</td>
                         <td>
-                          <span className={`${styles["status"]} ${statusClass(row.omitted ? "pending" : "succeeded")}`}>
+                          <span
+                            className={`${styles["status"]} ${statusClass(row.omitted ? "pending" : "succeeded")}`}
+                          >
                             {row.omitted ? "omitted" : "counted"}
                           </span>
                         </td>
@@ -1150,9 +1154,7 @@ export function PremiumWorkspace() {
                     </tr>
                   ) : null}
                   {campaign.basic.map((row) => (
-                    <tr
-                      key={`${row.date}:${row.platform}:${row.package}:${row.parameter}`}
-                    >
+                    <tr key={`${row.date}:${row.platform}:${row.package}:${row.parameter}`}>
                       <td>{row.date}</td>
                       <td>{row.platform}</td>
                       <td>{row.package}</td>
