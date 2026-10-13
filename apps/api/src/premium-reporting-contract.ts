@@ -74,6 +74,13 @@ function validateRangeFields(
 export const PremiumReportQuerySchema =
   PremiumReportQueryBaseSchema.strict().superRefine(validateRangeFields);
 
+export const CampaignAttributionOrdersQuerySchema = PremiumReportQueryBaseSchema.extend({
+  omitted: z.enum(["true", "false", "all"]).default("all"),
+  limit: z.coerce.number().int().min(1).max(200).default(50),
+})
+  .strict()
+  .superRefine(validateRangeFields);
+
 export const PremiumLedgerQuerySchema = PremiumReportQueryBaseSchema.extend({
   limit: z.coerce.number().int().min(1).max(200).default(50),
   offset: z.coerce.number().int().min(0).max(100_000).default(0),
@@ -141,6 +148,7 @@ export const PremiumPlanTransitionSchema = z
   .strict();
 
 export type PremiumReportQuery = z.infer<typeof PremiumReportQuerySchema>;
+export type CampaignAttributionOrdersQuery = z.infer<typeof CampaignAttributionOrdersQuerySchema>;
 export type PremiumLedgerQuery = z.infer<typeof PremiumLedgerQuerySchema>;
 export type PremiumReconciliationQuery = z.infer<typeof PremiumReconciliationQuerySchema>;
 export type PremiumExportInput = z.infer<typeof PremiumExportInputSchema>;

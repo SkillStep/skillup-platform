@@ -251,8 +251,20 @@ function dateTime(value: unknown): string {
 
 function text(value: unknown): string {
   if (value === null || value === undefined || value === "") return "—";
-  if (typeof value === "object") return JSON.stringify(value);
+  if (typeof value === "object" && !Array.isArray(value)) {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length === 0) return "—";
+    return entries
+      .map(([key, count]) => `${key}: ${typeof count === "number" ? count : String(count ?? 0)}`)
+      .join(", ");
+  }
   return String(value);
+}
+
+function attributionLabel(value: unknown): string {
+  const label = String(value ?? "").trim();
+  if (!label || label === "none" || label === "unknown") return "— (no UTM)";
+  return label;
 }
 
 function statusClass(value: unknown): string {
@@ -1002,8 +1014,9 @@ export function PremiumWorkspace() {
             <h2 id="campaign-totals">Campaign attribution (completed payments)</h2>
             <p className={styles["hint"]}>
               Official Subs count comes from succeeded payment orders with stored attribution. GA4
-              and ad pixels are not used here. Rows flagged <code>omitFromCampaignReport</code> are
-              excluded. Prefer omit over deleting payments. Landing URL examples:{" "}
+              and ad pixels are not used here. Platform / package / parameter come from checkout UTM
+              (empty → “— (no UTM)”). Rows flagged <code>omitFromCampaignReport</code> are excluded.
+              Prefer omit over deleting payments. Landing URL examples:{" "}
               <code>docs/product/PREMIUM_CAMPAIGN_LANDING_URLS.md</code>.
             </p>
             <div className={styles["kpiGrid"]}>
@@ -1111,9 +1124,9 @@ export function PremiumWorkspace() {
                     {campaignOrders.items.map((row) => (
                       <tr key={row.id}>
                         <td>{dateTime(row.completedAt)}</td>
-                        <td>{row.platform}</td>
-                        <td>{row.package}</td>
-                        <td>{row.parameter}</td>
+                        <td>{attributionLabel(row.platform)}</td>
+                        <td>{attributionLabel(row.package)}</td>
+                        <td>{attributionLabel(row.parameter)}</td>
                         <td>{money(row.amountMinor)}</td>
                         <td>
                           <span
@@ -1156,9 +1169,9 @@ export function PremiumWorkspace() {
                   {campaign.basic.map((row) => (
                     <tr key={`${row.date}:${row.platform}:${row.package}:${row.parameter}`}>
                       <td>{row.date}</td>
-                      <td>{row.platform}</td>
-                      <td>{row.package}</td>
-                      <td>{row.parameter}</td>
+                      <td>{attributionLabel(row.platform)}</td>
+                      <td>{attributionLabel(row.package)}</td>
+                      <td>{attributionLabel(row.parameter)}</td>
                       <td>{row.subscriptions}</td>
                       <td>{money(row.amountMinor)}</td>
                     </tr>
@@ -1185,8 +1198,8 @@ export function PremiumWorkspace() {
                   {campaign.detailed.platformByParameter.map((row) => (
                     <tr key={`pp:${row.date}:${row.platform}:${row.parameter}`}>
                       <td>{row.date}</td>
-                      <td>{row.platform}</td>
-                      <td>{row.parameter}</td>
+                      <td>{attributionLabel(row.platform)}</td>
+                      <td>{attributionLabel(row.parameter)}</td>
                       <td>{row.subscriptions}</td>
                       <td>{money(row.amountMinor)}</td>
                     </tr>
@@ -1213,8 +1226,8 @@ export function PremiumWorkspace() {
                   {campaign.detailed.packageByParameter.map((row) => (
                     <tr key={`pkg:${row.date}:${row.package}:${row.parameter}`}>
                       <td>{row.date}</td>
-                      <td>{row.package}</td>
-                      <td>{row.parameter}</td>
+                      <td>{attributionLabel(row.package)}</td>
+                      <td>{attributionLabel(row.parameter)}</td>
                       <td>{row.subscriptions}</td>
                       <td>{money(row.amountMinor)}</td>
                     </tr>

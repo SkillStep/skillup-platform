@@ -61,10 +61,11 @@ function asNumber(value: unknown): number {
   return 0;
 }
 
+/** Missing UTM dims show as "none" (payment succeeded without campaign attribution). */
 function dim(value: unknown): string {
-  if (typeof value !== "string") return "unknown";
+  if (typeof value !== "string") return "none";
   const trimmed = value.trim();
-  return trimmed || "unknown";
+  return trimmed || "none";
 }
 
 function mergeCount(
@@ -277,10 +278,10 @@ export async function loadCampaignAttributionFacts(
        coalesce(
          nullif(btrim(o.attribution->>'utm'), ''),
          nullif(btrim(o.attribution->>'utm_source'), ''),
-         'unknown'
+         'none'
        ) as platform,
-       coalesce(nullif(btrim(o.attribution->>'package'), ''), 'unknown') as package,
-       coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'unknown') as parameter,
+       coalesce(nullif(btrim(o.attribution->>'package'), ''), 'none') as package,
+       coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'none') as parameter,
        count(*)::integer as subscriptions,
        coalesce(sum(o.amount_minor), 0)::bigint as "amountMinor"
      from payment_orders o

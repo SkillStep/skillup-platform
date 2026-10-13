@@ -10,6 +10,7 @@ import {
 } from "./premium-membership-service.js";
 import { CampaignHygieneInputSchema } from "./premium-campaign-hygiene.js";
 import {
+  CampaignAttributionOrdersQuerySchema,
   PremiumExportInputSchema,
   PremiumLedgerQuerySchema,
   PremiumPlanTransitionSchema,
@@ -143,14 +144,9 @@ export function registerPremiumReportingRoutes(
 
   app.get("/v1/admin/reports/premium/campaign-attribution/orders", async (request) => {
     await requirePremiumAdmin(request, options, "report.read");
-    const range = PremiumReportQuerySchema.parse(request.query);
-    const extras = z
-      .object({
-        omitted: z.enum(["true", "false", "all"]).default("all"),
-        limit: z.coerce.number().int().min(1).max(200).default(50),
-      })
-      .parse(request.query);
-    return options.reportingService.campaignHygiene.listOrders({ ...range, ...extras });
+    return options.reportingService.campaignHygiene.listOrders(
+      CampaignAttributionOrdersQuerySchema.parse(request.query),
+    );
   });
 
   app.post("/v1/admin/reports/premium/campaign-attribution/hygiene", async (request, reply) => {

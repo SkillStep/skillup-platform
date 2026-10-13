@@ -6,6 +6,7 @@ import {
   CampaignHygieneInputSchema,
   isOmittedFromCampaignReport,
 } from "./premium-campaign-hygiene.js";
+import { CampaignAttributionOrdersQuerySchema } from "./premium-reporting-contract.js";
 
 describe("campaign hygiene helpers", () => {
   it("detects omitFromCampaignReport on attribution objects", () => {
@@ -48,5 +49,16 @@ describe("campaign hygiene route wiring", () => {
     const source = readFileSync(new URL("./premium-reporting-routes.ts", import.meta.url), "utf8");
     expect(source).toContain('"/v1/admin/reports/premium/campaign-attribution/hygiene"');
     expect(source).toContain('"/v1/admin/reports/premium/campaign-attribution/orders"');
+  });
+
+  it("accepts omitted and limit on campaign order list queries", () => {
+    const parsed = CampaignAttributionOrdersQuerySchema.parse({
+      preset: "last_30_days",
+      aggregation: "daily",
+      omitted: "all",
+      limit: "50",
+    });
+    expect(parsed.omitted).toBe("all");
+    expect(parsed.limit).toBe(50);
   });
 });

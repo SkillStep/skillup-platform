@@ -144,16 +144,16 @@ export function createPremiumCampaignHygieneService(
                 or coalesce(
                      nullif(btrim(o.attribution->>'utm'), ''),
                      nullif(btrim(o.attribution->>'utm_source'), ''),
-                     'unknown'
+                     'none'
                    ) = $3
               )
               and (
                 $4::text is null
-                or coalesce(nullif(btrim(o.attribution->>'package'), ''), 'unknown') = $4
+                or coalesce(nullif(btrim(o.attribution->>'package'), ''), 'none') = $4
               )
               and (
                 $5::text is null
-                or coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'unknown') = $5
+                or coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'none') = $5
               )
           returning o.id`,
           [
@@ -213,10 +213,10 @@ export function createPremiumCampaignHygieneService(
            coalesce(
              nullif(btrim(o.attribution->>'utm'), ''),
              nullif(btrim(o.attribution->>'utm_source'), ''),
-             'unknown'
+             'none'
            ) as platform,
-           coalesce(nullif(btrim(o.attribution->>'package'), ''), 'unknown') as package,
-           coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'unknown') as parameter,
+           coalesce(nullif(btrim(o.attribution->>'package'), ''), 'none') as package,
+           coalesce(nullif(btrim(o.attribution->>'parameter'), ''), 'none') as parameter,
            coalesce((o.attribution->>'omitFromCampaignReport')::boolean, false) as omitted
          from payment_orders o
          join commercial_plan_versions v on v.id = o.plan_version_id
@@ -262,9 +262,9 @@ export function createPremiumCampaignHygieneService(
                 : null,
           amountMinor: Number(row["amountMinor"] ?? 0),
           planCode: typeof row["planCode"] === "string" ? row["planCode"] : null,
-          platform: String(row["platform"] ?? "unknown"),
-          package: String(row["package"] ?? "unknown"),
-          parameter: String(row["parameter"] ?? "unknown"),
+          platform: String(row["platform"] ?? "none"),
+          package: String(row["package"] ?? "none"),
+          parameter: String(row["parameter"] ?? "none"),
           omitted: Boolean(row["omitted"]),
           merchantReference: String(row["merchantReference"] ?? ""),
         })),

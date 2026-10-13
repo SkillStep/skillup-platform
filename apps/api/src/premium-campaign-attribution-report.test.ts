@@ -84,14 +84,14 @@ describe("campaign attribution report", () => {
     expect(report.exportRows.some((row) => row["view"] === "basic")).toBe(true);
   });
 
-  it("keeps unknown dimensions and sorts basic rows", () => {
+  it("keeps none dimensions for payments without attribution and sorts basic rows", () => {
     const report = buildCampaignAttributionReport(
       [
         {
           date: "2026-10-12",
-          platform: "unknown",
-          package: "unknown",
-          parameter: "unknown",
+          platform: "none",
+          package: "none",
+          parameter: "none",
           subscriptions: 1,
           amountMinor: 100,
         },
@@ -108,7 +108,7 @@ describe("campaign attribution report", () => {
     );
 
     expect(report.basic[0]?.date).toBe("2026-10-11");
-    expect(report.basic[1]?.platform).toBe("unknown");
+    expect(report.basic[1]?.platform).toBe("none");
     expect(report.totals.subscriptions).toBe(3);
   });
 });
