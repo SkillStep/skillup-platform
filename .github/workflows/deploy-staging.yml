@@ -314,6 +314,8 @@ jobs:
               node node_modules/@skillup/database/dist/complete-launch-seed-v2.js
             docker compose -f docker-compose.staging.yml run --rm --no-deps api \
               node node_modules/@skillup/database/dist/cli/complete-launch-smoke.js
+            docker compose -f docker-compose.staging.yml run --rm --no-deps api \
+              node node_modules/@skillup/database/dist/cli/staging-fixed-admin-ensure.js
             echo "STAGING DATABASE MIGRATION + LAUNCH SEED: PASS"
 
             docker compose -f docker-compose.staging.yml up -d --remove-orphans

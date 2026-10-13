@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { AuthRequestError, normalizeAuthIdentity, normalizePakistanMobile } from "./auth.js";
+import {
+  AuthRequestError,
+  FIXED_DEV_ADMIN_OTP,
+  LOCAL_DEV_ADMIN_EMAIL,
+  STAGING_DEV_ADMIN_EMAIL,
+  normalizeAuthIdentity,
+  normalizePakistanMobile,
+  resolveFixedDevAdminOtp,
+} from "./auth.js";
 
 describe("unified authentication identity normalization", () => {
   it.each([
@@ -39,5 +47,31 @@ describe("unified authentication identity normalization", () => {
     "name@",
   ])("rejects invalid identity %s", (identity) => {
     expect(() => normalizeAuthIdentity(identity)).toThrow(AuthRequestError);
+  });
+});
+
+describe("fixed non-production admin OTP", () => {
+  it("returns the fixed OTP only for the local and staging operator emails", () => {
+    expect(
+      resolveFixedDevAdminOtp({ type: "email", normalized: LOCAL_DEV_ADMIN_EMAIL }, "local"),
+    ).toBe(FIXED_DEV_ADMIN_OTP);
+    expect(
+      resolveFixedDevAdminOtp({ type: "email", normalized: STAGING_DEV_ADMIN_EMAIL }, "staging"),
+    ).toBe(FIXED_DEV_ADMIN_OTP);
+  });
+
+  it("never enables the fixed OTP in production or for other identities", () => {
+    expect(
+      resolveFixedDevAdminOtp({ type: "email", normalized: STAGING_DEV_ADMIN_EMAIL }, "production"),
+    ).toBeNull();
+    expect(
+      resolveFixedDevAdminOtp({ type: "email", normalized: LOCAL_DEV_ADMIN_EMAIL }, "staging"),
+    ).toBeNull();
+    expect(
+      resolveFixedDevAdminOtp({ type: "email", normalized: "someone@codistan.org" }, "staging"),
+    ).toBeNull();
+    expect(
+      resolveFixedDevAdminOtp({ type: "phone", normalized: "+923001234567" }, "staging"),
+    ).toBeNull();
   });
 });

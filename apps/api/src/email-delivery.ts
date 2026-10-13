@@ -1,7 +1,14 @@
 import { createTransport, type Transporter } from "nodemailer";
 
-import type { AuthCodeDelivery } from "./auth.js";
+import { LOCAL_DEV_ADMIN_EMAIL, STAGING_DEV_ADMIN_EMAIL, type AuthCodeDelivery } from "./auth.js";
 import type { ApiConfig } from "./config.js";
+
+function isFixedDevAdminEmail(appEnv: string, destination: string): boolean {
+  const email = destination.trim().toLocaleLowerCase("en-US");
+  if (appEnv === "local" && email === LOCAL_DEV_ADMIN_EMAIL) return true;
+  if (appEnv === "staging" && email === STAGING_DEV_ADMIN_EMAIL) return true;
+  return false;
+}
 
 type SignInMessage = Readonly<{
   from: string;
@@ -158,7 +165,19 @@ export function createConfiguredAuthCodeDelivery(
   return {
     sendSignInCode: async (input) => {
       if (input.channel === "email") {
+        // Non-production fixed-OTP operator mailboxes are not real inboxes.
+        if (isFixedDevAdminEmail(config.APP_ENV, input.destination)) {
+          console.info(
+            `[${config.APP_ENV}-auth] fixed OTP for ${input.destination}: ${input.code}`,
+          );
+          return;
+        }
         if (!smtp) {
+          // Local-only: email is disabled, so print the OTP for developers.
+          if (config.APP_ENV === "local") {
+            console.info(`[local-auth] email OTP for ${input.destination}: ${input.code}`);
+            return;
+          }
           throw serviceUnavailable("Sign-in email delivery is temporarily unavailable.");
         }
         const from = requireSmtpCredential(config.EMAIL_FROM, "EMAIL_FROM");
@@ -173,6 +192,10 @@ export function createConfiguredAuthCodeDelivery(
       }
 
       if (!sms) {
+        if (config.APP_ENV === "local") {
+          console.info(`[local-auth] sms OTP for ${input.destination}: ${input.code}`);
+          return;
+        }
         throw serviceUnavailable("Sign-in SMS delivery is temporarily unavailable.");
       }
       await sms.send({

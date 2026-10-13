@@ -254,6 +254,33 @@ function generateCode(): string {
   return randomInt(0, 10_000).toString().padStart(4, "0");
 }
 
+/** Fixed OTP for designated non-production operator emails only. Never production. */
+export const FIXED_DEV_ADMIN_OTP = "1234";
+export const LOCAL_DEV_ADMIN_EMAIL = "local.admin@skillup.test";
+export const STAGING_DEV_ADMIN_EMAIL = "staging.admin@skillup.test";
+
+export function resolveFixedDevAdminOtp(
+  identity: Readonly<{ type: string; normalized: string }>,
+  appEnv: string | undefined,
+): string | null {
+  if (identity.type !== "email") return null;
+  if (appEnv === "local" && identity.normalized === LOCAL_DEV_ADMIN_EMAIL) {
+    return FIXED_DEV_ADMIN_OTP;
+  }
+  if (appEnv === "staging" && identity.normalized === STAGING_DEV_ADMIN_EMAIL) {
+    return FIXED_DEV_ADMIN_OTP;
+  }
+  return null;
+}
+
+function resolveChallengeCode(
+  identity: NormalizedIdentity,
+  appEnv: string | undefined,
+  createCode: () => string,
+): string {
+  return resolveFixedDevAdminOtp(identity, appEnv) ?? createCode();
+}
+
 function generateSessionToken(): string {
   return randomBytes(32).toString("base64url");
 }
@@ -461,6 +488,7 @@ export function createAuthService(
     sessionIdleMinutes: number;
     sessionAbsoluteHours: number;
     delivery: AuthCodeDelivery;
+    appEnv?: string;
     now?: () => Date;
     createCode?: () => string;
     createSessionToken?: () => string;
@@ -500,7 +528,7 @@ export function createAuthService(
     }
 
     const challengeId = randomUUID();
-    const code = createCode();
+    const code = resolveChallengeCode(input.identity, options.appEnv, createCode);
     const expiresAt = addMinutes(requestedAt, options.challengeMinutes);
     const secretDigest = digest(options.secret, `challenge:${challengeId}:${code}`);
 

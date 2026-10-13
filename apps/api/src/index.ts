@@ -46,6 +46,7 @@ const authService = createAuthService({
   sessionIdleMinutes: config.SESSION_IDLE_MINUTES,
   sessionAbsoluteHours: config.SESSION_ABSOLUTE_HOURS,
   delivery: createConfiguredAuthCodeDelivery(config),
+  appEnv: config.APP_ENV,
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
