@@ -32,9 +32,7 @@ describe("safeReturnTo", () => {
   });
 
   it("keeps admin destinations and supports an admin fallback", () => {
-    expect(safeReturnTo("/en/admin/premium?tab=campaign")).toBe(
-      "/en/admin/premium?tab=campaign",
-    );
+    expect(safeReturnTo("/en/admin/premium?tab=campaign")).toBe("/en/admin/premium?tab=campaign");
     expect(safeReturnTo(undefined, "/en/admin")).toBe("/en/admin");
   });
 });
