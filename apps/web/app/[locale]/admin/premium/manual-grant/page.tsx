@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { PublicFooter, PublicHeader } from "../../../discovery-shell";
+import { AdminHeader } from "../../admin-shell";
 import styles from "../premium.module.css";
 import { ManualGrantForm } from "./manual-grant-form";
 
@@ -23,7 +23,7 @@ export default async function ManualGrantPage({ params }: PageProps) {
 
   return (
     <>
-      <PublicHeader />
+      <AdminHeader />
       <main className={styles["main"]}>
         <header className={styles["header"]}>
           <p className="eyebrow">Private Premium operation</p>
@@ -35,7 +35,6 @@ export default async function ManualGrantPage({ params }: PageProps) {
         </header>
         <ManualGrantForm />
       </main>
-      <PublicFooter />
     </>
   );
 }

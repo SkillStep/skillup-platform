@@ -21,7 +21,7 @@ export function PremiumAuthBoundary({ children }: Props) {
       .then((response) => {
         if (response.status === 401) {
           const returnTo = `${window.location.pathname}${window.location.search}`;
-          window.location.replace(withReturnTo("/en/sign-in", returnTo));
+          window.location.replace(withReturnTo("/en/admin/sign-in", returnTo));
           return;
         }
         setChecked(true);

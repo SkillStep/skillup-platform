@@ -79,7 +79,8 @@
 .tabActive,
 .filters button,
 .panelForm button:not(.secondary),
-.actions button:not(.secondary) {
+.actions button:not(.secondary),
+.campaignCsvButton {
   border-color: #181b20;
   background: #181b20;
   color: #fff;
@@ -469,6 +470,100 @@ button:disabled {
   .pagination {
     align-items: stretch;
     flex-direction: column;
+  }
+}
+
+.campaignToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.85rem;
+}
+
+.campaignCsvButton {
+  min-height: 2.4rem;
+  border-radius: 0.45rem;
+  padding: 0.55rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.campaignBanner {
+  margin: 0;
+  padding: 0.65rem 0.9rem;
+  border-radius: 0.2rem 0.2rem 0 0;
+  background: #181b20;
+  color: #fff;
+  font-size: 0.98rem;
+  font-weight: 750;
+}
+
+.campaignReport {
+  overflow: hidden;
+  border: 1px solid #d9dde5;
+  border-radius: 0.35rem;
+  background: #fff;
+}
+
+.campaignTableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.campaignTable {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.campaignTable th,
+.campaignTable td {
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e0e3e9;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.campaignTable th {
+  background: #f5f6f8;
+  color: #4e5663;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.campaignTable td {
+  background: #fff;
+  color: #181b20;
+}
+
+.campaignTable .dateCell {
+  text-align: left;
+  white-space: nowrap;
+  font-weight: 650;
+}
+
+.campaignDetailedGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.campaignStructureHint {
+  margin: 0 0 0.75rem;
+  color: #5d6470;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+  .campaignDetailedGrid {
+    grid-template-columns: 1fr;
   }
 }
 

@@ -22,7 +22,11 @@ type VerifyResponse = Readonly<{
   }>;
 }>;
 
-type SignInFormProps = Readonly<{ returnTo: string }>;
+type SignInFormProps = Readonly<{
+  returnTo: string;
+  /** Admin login skips learner onboarding and uses operator-facing copy. */
+  mode?: "learner" | "admin";
+}>;
 
 async function readError(response: Response): Promise<string> {
   try {
@@ -34,7 +38,7 @@ async function readError(response: Response): Promise<string> {
   return "This step is not available right now. Please try again later.";
 }
 
-export function SignInForm({ returnTo }: SignInFormProps) {
+export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   const fullNameId = useId();
   const identityId = useId();
   const codeId = useId();
@@ -46,6 +50,7 @@ export function SignInForm({ returnTo }: SignInFormProps) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
+  const isAdmin = mode === "admin";
 
   useEffect(() => setHydrated(true), []);
 
@@ -129,13 +134,19 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
       const body = (await response.json()) as VerifyResponse;
       const onboardingComplete = body.learner?.profile?.onboardingStatus === "completed";
-      const destination = onboardingComplete ? returnTo : withReturnTo("/en/onboarding", returnTo);
+      const destination = isAdmin
+        ? returnTo
+        : onboardingComplete
+          ? returnTo
+          : withReturnTo("/en/onboarding", returnTo);
 
       setIsError(false);
       setMessage(
-        onboardingComplete
-          ? "Signed in. Returning to your learning activity…"
-          : "Signed in. Preparing your SkillUp profile…",
+        isAdmin
+          ? "Signed in. Opening the operations console…"
+          : onboardingComplete
+            ? "Signed in. Returning to your learning activity…"
+            : "Signed in. Preparing your SkillUp profile…",
       );
       window.location.assign(destination);
     } catch {
@@ -148,11 +159,15 @@ export function SignInForm({ returnTo }: SignInFormProps) {
 
   return (
     <div className={styles["card"]}>
-      <h2>{challenge ? "Enter your code" : "Sign in or create account"}</h2>
+      <h2>
+        {challenge ? "Enter your code" : isAdmin ? "Admin sign in" : "Sign in or create account"}
+      </h2>
       <p className={styles["cardLead"]}>
         {challenge
           ? `We sent a short-lived code to ${challenge.maskedDestination}.`
-          : "Enter your full name with your email or Pakistani mobile number. No password is required."}
+          : isAdmin
+            ? "Operator access uses the same passwordless code flow. After verification you return to the admin panel."
+            : "Enter your full name with your email or Pakistani mobile number. No password is required."}
       </p>
 
       {challenge ? (

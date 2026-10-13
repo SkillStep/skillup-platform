@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { PublicFooter, PublicHeader } from "../discovery-shell";
+import { AdminHeader } from "./admin-shell";
 import styles from "./admin.module.css";
 import { GovernanceConsole } from "./governance-console";
 import { OperationsConsole } from "./operations-console";
@@ -26,7 +26,7 @@ export default async function AdminPage({ params }: PageProps) {
 
   return (
     <>
-      <PublicHeader />
+      <AdminHeader />
       <main className={styles["main"]}>
         <header className={styles["header"]}>
           <p className="eyebrow">Private operations</p>
@@ -38,15 +38,12 @@ export default async function AdminPage({ params }: PageProps) {
             status.
           </p>
           <p>
-            <Link href="/en/admin/premium">
-              Open Premium subscriptions, finance reporting and recurring-customer operations
-            </Link>
+            <Link href="/en/admin/premium?tab=campaign">Open Campaign attribution reporting</Link>
           </p>
         </header>
         <OperationsConsole />
         <GovernanceConsole />
       </main>
-      <PublicFooter />
     </>
   );
 }

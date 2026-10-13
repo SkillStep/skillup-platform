@@ -28,6 +28,7 @@ export default function robots(): MetadataRoute.Robots {
           "/api",
           "/offline",
           "/en/sign-in",
+          "/en/admin/sign-in",
           "/en/onboarding",
           "/en/progress",
           "/en/learn",

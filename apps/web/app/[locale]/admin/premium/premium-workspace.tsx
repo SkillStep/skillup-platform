@@ -2,6 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
+import { downloadCampaignAttributionCsv } from "./campaign-attribution-csv";
 import styles from "./premium.module.css";
 
 type Tab =
@@ -267,6 +268,42 @@ function attributionLabel(value: unknown): string {
   return label;
 }
 
+function meaningfulDim(value: string): boolean {
+  const trimmed = value.trim();
+  return Boolean(trimmed) && trimmed !== "none" && trimmed !== "unknown";
+}
+
+function collectCampaignDims(campaign: CampaignAttributionReport): Readonly<{
+  platforms: readonly string[];
+  packages: readonly string[];
+  parameters: readonly string[];
+}> {
+  const platforms = new Set<string>();
+  const packages = new Set<string>();
+  const parameters = new Set<string>();
+  for (const row of campaign.basic) {
+    if (meaningfulDim(row.platform)) platforms.add(row.platform);
+    if (meaningfulDim(row.package)) packages.add(row.package);
+    if (meaningfulDim(row.parameter)) parameters.add(row.parameter);
+  }
+  for (const day of campaign.daily) {
+    for (const key of Object.keys(day.byPlatform)) {
+      if (meaningfulDim(key)) platforms.add(key);
+    }
+    for (const key of Object.keys(day.byPackage)) {
+      if (meaningfulDim(key)) packages.add(key);
+    }
+    for (const key of Object.keys(day.byParameter)) {
+      if (meaningfulDim(key)) parameters.add(key);
+    }
+  }
+  return {
+    platforms: [...platforms].sort((left, right) => left.localeCompare(right)),
+    packages: [...packages].sort((left, right) => left.localeCompare(right)),
+    parameters: [...parameters].sort((left, right) => left.localeCompare(right)),
+  };
+}
+
 function statusClass(value: unknown): string {
   const normalized = String(value ?? "").toLowerCase();
   if (["active", "succeeded", "completed", "resolved", "published"].includes(normalized)) {
@@ -276,6 +313,161 @@ function statusClass(value: unknown): string {
     return styles["statusWarn"] ?? "";
   }
   return styles["statusBad"] ?? "";
+}
+
+function CampaignDailyAndDetailedReports({
+  campaign,
+}: Readonly<{ campaign: CampaignAttributionReport }>) {
+  const dims = collectCampaignDims(campaign);
+  const platformKeys = dims.platforms.length > 0 ? dims.platforms : (["—"] as const);
+  const packageKeys = dims.packages.length > 0 ? dims.packages : (["—"] as const);
+  const parameterKeys = dims.parameters.length > 0 ? dims.parameters : (["—"] as const);
+  const hasPlatforms = dims.platforms.length > 0;
+  const hasPackages = dims.packages.length > 0;
+  const hasParameters = dims.parameters.length > 0;
+  const platformHeaderCols = platformKeys.length + 1;
+  const packageHeaderCols = packageKeys.length;
+  const parameterHeaderCols = parameterKeys.length;
+  const subsColSpan = platformHeaderCols + packageHeaderCols + parameterHeaderCols;
+  const rangeLabel = `${campaign.effectiveRange.from.slice(0, 10)} to ${campaign.effectiveRange.to.slice(0, 10)}`;
+
+  return (
+    <>
+      <section aria-labelledby="campaign-daily-report">
+        <p className={styles["campaignStructureHint"]}>
+          Daily report structure: Date → Subs (Platform / Plan IDs / Parameter-UTM). Columns are
+          live attribution values. Total Subs in range: {campaign.totals.subscriptions} —{" "}
+          {rangeLabel} — {campaign.timezone}
+        </p>
+        <div className={styles["campaignReport"]}>
+          <h2 className={styles["campaignBanner"]} id="campaign-daily-report">
+            Daily report
+          </h2>
+          <div className={styles["campaignTableWrap"]}>
+            <table className={styles["campaignTable"]}>
+              <thead>
+                <tr>
+                  <th rowSpan={3}>Date</th>
+                  <th colSpan={subsColSpan}>Subs</th>
+                </tr>
+                <tr>
+                  <th colSpan={platformHeaderCols}>Platform</th>
+                  <th colSpan={packageHeaderCols}>Plan IDs</th>
+                  <th colSpan={parameterHeaderCols}>Parameter/UTM</th>
+                </tr>
+                <tr>
+                  {platformKeys.map((platform) => (
+                    <th key={`p-${platform}`}>{platform}</th>
+                  ))}
+                  <th>Total Sub</th>
+                  {packageKeys.map((pkg) => (
+                    <th key={`pkg-${pkg}`}>{pkg}</th>
+                  ))}
+                  {parameterKeys.map((parameter) => (
+                    <th key={`param-${parameter}`}>{parameter}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {campaign.daily.length === 0 ? (
+                  <tr>
+                    <td colSpan={1 + subsColSpan}>
+                      No completed campaign payments match this range.
+                    </td>
+                  </tr>
+                ) : null}
+                {campaign.daily.map((row) => (
+                  <tr key={`daily-report:${row.date}`}>
+                    <td className={styles["dateCell"]}>{row.date}</td>
+                    {platformKeys.map((platform) => (
+                      <td key={`${row.date}:plat:${platform}`}>
+                        {hasPlatforms ? (row.byPlatform[platform] ?? 0) : 0}
+                      </td>
+                    ))}
+                    <td>{row.subscriptions}</td>
+                    {packageKeys.map((pkg) => (
+                      <td key={`${row.date}:pkg:${pkg}`}>
+                        {hasPackages ? (row.byPackage[pkg] ?? 0) : 0}
+                      </td>
+                    ))}
+                    {parameterKeys.map((parameter) => (
+                      <td key={`${row.date}:param:${parameter}`}>
+                        {hasParameters ? (row.byParameter[parameter] ?? 0) : 0}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="campaign-detailed-view">
+        <div className={styles["campaignReport"]}>
+          <h2 className={styles["campaignBanner"]} id="campaign-detailed-view">
+            Detailed View
+          </h2>
+          <div className={styles["campaignDetailedGrid"]}>
+            <div className={styles["campaignTableWrap"]}>
+              <table className={styles["campaignTable"]}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Platform</th>
+                    <th>Parameter</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.detailed.platformByParameter.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>No platform × parameter rows.</td>
+                    </tr>
+                  ) : null}
+                  {campaign.detailed.platformByParameter.map((row) => (
+                    <tr key={`pp:${row.date}:${row.platform}:${row.parameter}`}>
+                      <td className={styles["dateCell"]}>{row.date}</td>
+                      <td>{attributionLabel(row.platform)}</td>
+                      <td>{attributionLabel(row.parameter)}</td>
+                      <td>{row.subscriptions}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className={styles["campaignTableWrap"]}>
+              <table className={styles["campaignTable"]}>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Plan ID</th>
+                    <th>Parameter</th>
+                    <th>Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {campaign.detailed.packageByParameter.length === 0 ? (
+                    <tr>
+                      <td colSpan={4}>No package × parameter rows.</td>
+                    </tr>
+                  ) : null}
+                  {campaign.detailed.packageByParameter.map((row) => (
+                    <tr key={`pkg:${row.date}:${row.package}:${row.parameter}`}>
+                      <td className={styles["dateCell"]}>{row.date}</td>
+                      <td>{attributionLabel(row.package)}</td>
+                      <td>{attributionLabel(row.parameter)}</td>
+                      <td>{row.subscriptions}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+    </>
+  );
 }
 
 function KpiCard({
@@ -1011,7 +1203,21 @@ export function PremiumWorkspace() {
       {!loading && tab === "campaign" && campaign ? (
         <div className={styles["sectionStack"]}>
           <section aria-labelledby="campaign-totals">
-            <h2 id="campaign-totals">Campaign attribution (completed payments)</h2>
+            <div className={styles["campaignToolbar"]}>
+              <h2 id="campaign-totals">Campaign attribution (completed payments)</h2>
+              <button
+                type="button"
+                className={styles["campaignCsvButton"]}
+                onClick={() =>
+                  downloadCampaignAttributionCsv(
+                    campaign,
+                    `premium-campaign-attribution-${campaign.effectiveRange.preset}.csv`,
+                  )
+                }
+              >
+                Download CSV
+              </button>
+            </div>
             <p className={styles["hint"]}>
               Official Subs count comes from succeeded payment orders with stored attribution. GA4
               and ad pixels are not used here. Platform / package / parameter come from checkout UTM
@@ -1146,126 +1352,7 @@ export function PremiumWorkspace() {
             </section>
           ) : null}
 
-          <section aria-labelledby="campaign-basic">
-            <h2 id="campaign-basic">Basic — date × platform × package × parameter</h2>
-            <div className={styles["tableWrap"]}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Platform</th>
-                    <th>Package</th>
-                    <th>Parameter</th>
-                    <th>Subs</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaign.basic.length === 0 ? (
-                    <tr>
-                      <td colSpan={6}>No completed campaign payments match this range.</td>
-                    </tr>
-                  ) : null}
-                  {campaign.basic.map((row) => (
-                    <tr key={`${row.date}:${row.platform}:${row.package}:${row.parameter}`}>
-                      <td>{row.date}</td>
-                      <td>{attributionLabel(row.platform)}</td>
-                      <td>{attributionLabel(row.package)}</td>
-                      <td>{attributionLabel(row.parameter)}</td>
-                      <td>{row.subscriptions}</td>
-                      <td>{money(row.amountMinor)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section aria-labelledby="campaign-platform-parameter">
-            <h2 id="campaign-platform-parameter">Detailed — platform × parameter</h2>
-            <div className={styles["tableWrap"]}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Platform</th>
-                    <th>Parameter</th>
-                    <th>Subs</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaign.detailed.platformByParameter.map((row) => (
-                    <tr key={`pp:${row.date}:${row.platform}:${row.parameter}`}>
-                      <td>{row.date}</td>
-                      <td>{attributionLabel(row.platform)}</td>
-                      <td>{attributionLabel(row.parameter)}</td>
-                      <td>{row.subscriptions}</td>
-                      <td>{money(row.amountMinor)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section aria-labelledby="campaign-package-parameter">
-            <h2 id="campaign-package-parameter">Detailed — package × parameter</h2>
-            <div className={styles["tableWrap"]}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Package</th>
-                    <th>Parameter</th>
-                    <th>Subs</th>
-                    <th>Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaign.detailed.packageByParameter.map((row) => (
-                    <tr key={`pkg:${row.date}:${row.package}:${row.parameter}`}>
-                      <td>{row.date}</td>
-                      <td>{attributionLabel(row.package)}</td>
-                      <td>{attributionLabel(row.parameter)}</td>
-                      <td>{row.subscriptions}</td>
-                      <td>{money(row.amountMinor)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section aria-labelledby="campaign-daily">
-            <h2 id="campaign-daily">Daily wide</h2>
-            <div className={styles["tableWrap"]}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Subs</th>
-                    <th>Amount</th>
-                    <th>By platform</th>
-                    <th>By package</th>
-                    <th>By parameter</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {campaign.daily.map((row) => (
-                    <tr key={`daily:${row.date}`}>
-                      <td>{row.date}</td>
-                      <td>{row.subscriptions}</td>
-                      <td>{money(row.amountMinor)}</td>
-                      <td>{text(row.byPlatform)}</td>
-                      <td>{text(row.byPackage)}</td>
-                      <td>{text(row.byParameter)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
+          <CampaignDailyAndDetailedReports campaign={campaign} />
         </div>
       ) : null}
 

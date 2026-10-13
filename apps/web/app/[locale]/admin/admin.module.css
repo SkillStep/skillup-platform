@@ -1,3 +1,20 @@
+.adminNav {
+  gap: 0.35rem;
+}
+
+.adminNavLink {
+  background: var(--brand-700);
+  color: white;
+  display: inline-flex;
+  align-items: center;
+  padding-inline: 1rem;
+}
+
+.adminNavLink:hover,
+.adminNavLink:focus-visible {
+  color: white;
+}
+
 .main {
   margin: 0 auto;
   max-width: 1180px;

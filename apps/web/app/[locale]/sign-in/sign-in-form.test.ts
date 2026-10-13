@@ -11,4 +11,9 @@ describe("sign-in form full name", () => {
     expect(source).toContain("displayName: fullName.trim()");
     expect(source).toContain("/api/v1/auth/otp/verify");
   });
+
+  it("supports admin mode that skips learner onboarding", () => {
+    expect(source).toContain('mode?: "learner" | "admin"');
+    expect(source).toContain("Opening the operations console");
+  });
 });

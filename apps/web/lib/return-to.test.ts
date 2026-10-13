@@ -23,10 +23,19 @@ describe("safeReturnTo", () => {
     "/ur/learn/level-id",
     "/en/sign-in",
     "/en/sign-in/again",
+    "/en/admin/sign-in",
+    "/en/admin/sign-in/again",
     "/en/onboarding",
     "/en/onboarding/again",
   ])("falls back for unsafe or looping destination %s", (candidate) => {
     expect(safeReturnTo(candidate)).toBe("/en");
+  });
+
+  it("keeps admin destinations and supports an admin fallback", () => {
+    expect(safeReturnTo("/en/admin/premium?tab=campaign")).toBe(
+      "/en/admin/premium?tab=campaign",
+    );
+    expect(safeReturnTo(undefined, "/en/admin")).toBe("/en/admin");
   });
 });
 

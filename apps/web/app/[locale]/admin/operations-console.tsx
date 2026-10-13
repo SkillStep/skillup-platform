@@ -99,7 +99,9 @@ export function OperationsConsole() {
         signal,
       });
       if (sessionResponse.status === 401) {
-        window.location.replace(withReturnTo("/en/sign-in", "/en/admin"));
+        window.location.replace(
+          withReturnTo("/en/admin/sign-in", "/en/admin/premium?tab=campaign"),
+        );
         return;
       }
       if (sessionResponse.status === 403) {
