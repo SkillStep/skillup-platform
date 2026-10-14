@@ -146,7 +146,15 @@ describe("resolveCampaignDailyReportRecipient", () => {
 
 describe("createCampaignDailyReportEmailTask", () => {
   it("skips before send hour and when already sent; sends once after 06:00 PKT", async () => {
-    const sendMail = vi.fn(async () => ({ messageId: "1" }));
+    type MailPayload = Readonly<{
+      to: string;
+      subject: string;
+    }>;
+    const sent: MailPayload[] = [];
+    const sendMail = vi.fn(async (message: MailPayload) => {
+      sent.push(message);
+      return { messageId: "1" };
+    });
     const queries: unknown[][] = [];
     const pool = {
       query: vi.fn(async (sql: string, params?: unknown[]) => {
@@ -194,8 +202,8 @@ describe("createCampaignDailyReportEmailTask", () => {
     });
     expect(await afterSix()).toEqual({ status: "sent", reportDate: "2026-10-14" });
     expect(sendMail).toHaveBeenCalledOnce();
-    expect(sendMail.mock.calls[0]?.[0].to).toBe("m.abdullah73111@gmail.com");
-    expect(sendMail.mock.calls[0]?.[0].subject).toContain("2026-10-14");
+    expect(sent[0]?.to).toBe("m.abdullah73111@gmail.com");
+    expect(sent[0]?.subject).toContain("2026-10-14");
 
     expect(await afterSix()).toEqual({
       status: "skipped_already_sent",
