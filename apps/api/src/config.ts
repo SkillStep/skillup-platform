@@ -40,6 +40,10 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
+    /** Recipient for the Asia/Karachi 06:00 campaign daily detailed report email. */
+    CAMPAIGN_DAILY_REPORT_TO: z.string().trim().email().optional(),
+    /** Local hour in Asia/Karachi at/after which the campaign daily report may send once per day. */
+    CAMPAIGN_DAILY_REPORT_HOUR_PKT: z.coerce.number().int().min(0).max(23).default(6),
     SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
     TWILIO_ACCOUNT_SID: z.string().trim().min(1).max(100).optional(),
     TWILIO_AUTH_TOKEN: z.string().min(1).max(500).optional(),
@@ -378,6 +382,8 @@ type OptionalInjectedConfig =
   | "MAINTENANCE_INTERVAL_SECONDS"
   | "SMS_PROVIDER"
   | "SMS_REQUEST_TIMEOUT_SECONDS"
+  | "CAMPAIGN_DAILY_REPORT_TO"
+  | "CAMPAIGN_DAILY_REPORT_HOUR_PKT"
   | "FEATURE_PAYMENT_SERVICE_ENABLED"
   | "PAYMENT_SERVICE_BASE_URL"
   | "PAYMENT_SERVICE_API_KEY"
@@ -412,6 +418,8 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     MAINTENANCE_INTERVAL_SECONDS?: number;
     SMS_PROVIDER?: "disabled" | "twilio";
     SMS_REQUEST_TIMEOUT_SECONDS?: number;
+    CAMPAIGN_DAILY_REPORT_TO?: string | undefined;
+    CAMPAIGN_DAILY_REPORT_HOUR_PKT?: number;
     FEATURE_PAYMENT_SERVICE_ENABLED?: boolean;
     PAYMENT_SERVICE_BASE_URL?: string | undefined;
     PAYMENT_SERVICE_API_KEY?: string | undefined;

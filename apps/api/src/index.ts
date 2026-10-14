@@ -15,6 +15,7 @@ import {
   registerContentOperationsRoutes,
 } from "./content-operations.js";
 import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
+import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
@@ -203,6 +204,13 @@ const maintenance = createMaintenanceRunner({
     {
       name: "account-deletion",
       run: () => accountLifecycleService.processDueDeletions(25),
+    },
+    {
+      name: "campaign-daily-report-email",
+      run: createCampaignDailyReportEmailTask({
+        pool: database.pool,
+        config,
+      }),
     },
   ],
 });

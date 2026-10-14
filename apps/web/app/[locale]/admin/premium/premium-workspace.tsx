@@ -1231,6 +1231,8 @@ export function PremiumWorkspace() {
             </div>
           </section>
 
+          <CampaignDailyAndDetailedReports campaign={campaign} />
+
           {access?.canExportReports ? (
             <section aria-labelledby="campaign-hygiene">
               <h2 id="campaign-hygiene">Campaign report hygiene</h2>
@@ -1351,8 +1353,6 @@ export function PremiumWorkspace() {
               </div>
             </section>
           ) : null}
-
-          <CampaignDailyAndDetailedReports campaign={campaign} />
         </div>
       ) : null}
 
