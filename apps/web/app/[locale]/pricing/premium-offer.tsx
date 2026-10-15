@@ -31,6 +31,7 @@ const capabilityLabels: Readonly<Record<string, string>> = {
 };
 
 function formatPrice(amountMinor: number): string {
+  // Fixed locale avoids Node vs browser Intl hydration mismatches.
   return new Intl.NumberFormat("en-PK", {
     style: "currency",
     currency: "PKR",
@@ -47,11 +48,18 @@ function isCurrentPlan(plan: Plan, entitlement: Entitlement | null): boolean {
   return entitlement.planCode === plan.code;
 }
 
+function badgeLabel(plan: Plan, current: boolean): string {
+  if (current) return "Current Plan";
+  return plan.billingPeriod === "year" ? "Coming soon" : "Flexible";
+}
+
 export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
+  const [ready, setReady] = useState(false);
   const [unsubscribed, setUnsubscribed] = useState(false);
   const [entitlement, setEntitlement] = useState<Entitlement | null>(null);
 
   useEffect(() => {
+    setReady(true);
     const controller = new AbortController();
     void fetch("/api/v1/commercial/events/offer", {
       method: "POST",
@@ -59,11 +67,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ surface: "public_pricing" }),
     }).catch(() => undefined);
-    return () => controller.abort();
-  }, []);
 
-  useEffect(() => {
-    const controller = new AbortController();
     void fetch("/api/v1/commercial/account", {
       credentials: "same-origin",
       cache: "no-store",
@@ -75,16 +79,16 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
         setEntitlement(body.entitlement ?? null);
       })
       .catch(() => undefined);
-    return () => controller.abort();
-  }, []);
 
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("unsubscribed") !== "1") return;
-    setUnsubscribed(true);
-    params.delete("unsubscribed");
-    const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
-    window.history.replaceState({}, "", next);
+    if (params.get("unsubscribed") === "1") {
+      setUnsubscribed(true);
+      params.delete("unsubscribed");
+      const next = `${window.location.pathname}${params.toString() ? `?${params}` : ""}${window.location.hash}`;
+      window.history.replaceState({}, "", next);
+    }
+
+    return () => controller.abort();
   }, []);
 
   if (plans.length === 0) {
@@ -97,7 +101,7 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
 
   return (
     <>
-      {unsubscribed ? (
+      {ready && unsubscribed ? (
         <p className={styles["message"]} role="status">
           You unsubscribed successfully. Premium features are locked. Select a plan below to
           subscribe again.
@@ -106,7 +110,8 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
       <div className={styles["grid"]}>
         {plans.map((plan) => {
           const yearly = plan.billingPeriod === "year";
-          const current = isCurrentPlan(plan, entitlement);
+          // Entitlement is client-fetched; keep SSR and first client paint identical.
+          const current = ready ? isCurrentPlan(plan, entitlement) : false;
           const landingHref = buildLandingPath({
             ...DEFAULT_LANDING_CAMPAIGN,
             package: packageIdForPlan(plan),
@@ -117,13 +122,11 @@ export function PremiumOffer({ plans }: Readonly<{ plans: readonly Plan[] }>) {
               className={`${styles["card"]} ${yearly ? styles["featured"] : ""}`}
               key={plan.code}
             >
-              {current ? (
-                <span className={`${styles["badge"]} ${styles["currentPlanBadge"]}`}>
-                  Current Plan
-                </span>
-              ) : (
-                <span className={styles["badge"]}>{yearly ? "Coming soon" : "Flexible"}</span>
-              )}
+              <span
+                className={`${styles["badge"]} ${current ? styles["currentPlanBadge"] : ""}`.trim()}
+              >
+                {badgeLabel(plan, current)}
+              </span>
               <h2>{plan.name}</h2>
               <p className={styles["price"]}>
                 <strong>{formatPrice(plan.amountMinor)}</strong>
