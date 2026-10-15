@@ -43,9 +43,19 @@ function packageIdForPlan(plan: Plan): string {
   return plan.code === "premium-yearly" || plan.billingPeriod === "year" ? "2" : "default";
 }
 
+function normalizePlanCode(code: string): string {
+  return code.trim().toLowerCase().replaceAll("_", "-");
+}
+
 function isCurrentPlan(plan: Plan, entitlement: Entitlement | null): boolean {
   if (!entitlement || !["active", "grace"].includes(entitlement.status)) return false;
-  return entitlement.planCode === plan.code;
+  const entitled = normalizePlanCode(entitlement.planCode);
+  const candidate = normalizePlanCode(plan.code);
+  if (entitled === candidate) return true;
+  // Fallback when older rows only stored billing period wording.
+  if (entitled.includes("year") && plan.billingPeriod === "year") return true;
+  if (entitled.includes("month") && plan.billingPeriod === "month") return true;
+  return false;
 }
 
 function badgeLabel(plan: Plan, current: boolean): string {

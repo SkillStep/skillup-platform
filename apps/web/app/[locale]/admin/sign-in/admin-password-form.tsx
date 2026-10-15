@@ -21,7 +21,7 @@ async function readError(response: Response): Promise<string> {
 export function AdminPasswordForm({ returnTo }: Props) {
   const emailId = useId();
   const passwordId = useId();
-  const [email, setEmail] = useState("staging.admin@skillup.test");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -44,6 +44,7 @@ export function AdminPasswordForm({ returnTo }: Props) {
         setMessage(await readError(response));
         return;
       }
+      setIsError(false);
       setMessage("Signed in. Opening the operations console…");
       window.location.assign(returnTo);
     } catch {
@@ -60,43 +61,57 @@ export function AdminPasswordForm({ returnTo }: Props) {
       <p className={styles["cardLead"]}>
         Operator access uses email and password. After success you return to the admin panel.
       </p>
-      <form onSubmit={(event) => void onSubmit(event)}>
-        <label htmlFor={emailId}>
-          <span>Email</span>
+      <form className={styles["form"]} onSubmit={(event) => void onSubmit(event)}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={emailId}>
+            Email
+          </label>
           <input
+            className={styles["input"]}
             id={emailId}
             name="email"
             type="email"
             autoComplete="username"
             required
+            placeholder="you@example.com"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             disabled={busy}
           />
-        </label>
-        <label htmlFor={passwordId}>
-          <span>Password</span>
+        </div>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={passwordId}>
+            Password
+          </label>
           <input
+            className={styles["input"]}
             id={passwordId}
             name="password"
             type="password"
             autoComplete="current-password"
             required
             minLength={8}
+            placeholder="Enter your password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             disabled={busy}
           />
-        </label>
-        <button type="submit" disabled={busy}>
+        </div>
+        <button
+          className={styles["action"]}
+          type="submit"
+          disabled={busy || email.trim().length < 3}
+        >
           {busy ? "Signing in…" : "Sign in"}
         </button>
       </form>
-      {message ? (
-        <p className={styles["message"]} role={isError ? "alert" : "status"}>
-          {message}
-        </p>
-      ) : null}
+      <div aria-live="polite" aria-atomic="true">
+        {message ? (
+          <p className={`${styles["message"]} ${isError ? styles["error"] : styles["success"]}`}>
+            {message}
+          </p>
+        ) : null}
+      </div>
     </div>
   );
 }
