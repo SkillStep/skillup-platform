@@ -17,6 +17,7 @@ const STRING_KEYS = [
   "ref",
   "landing",
   "landingPath",
+  "he",
 ] as const;
 
 export type PremiumAttribution = Readonly<{
@@ -31,6 +32,7 @@ export type PremiumAttribution = Readonly<{
   ref?: string;
   landing?: string;
   landingPath?: string;
+  he?: string;
 }>;
 
 type StoredAttribution = Readonly<{
@@ -65,15 +67,32 @@ export function buildPremiumAttribution(
   return out;
 }
 
+/** Normalize Jazz HE query values (`he=1` / `he=0` / `he=nonhe`). */
+export function normalizeHeQueryValue(raw: string | null | undefined): string | undefined {
+  if (typeof raw !== "string") return undefined;
+  const value = raw.trim().toLocaleLowerCase("en-US");
+  if (!value) return undefined;
+  if (value === "1" || value === "true" || value === "he" || value === "yes") return "1";
+  if (value === "0" || value === "false" || value === "nonhe" || value === "non-he" || value === "no") {
+    return "0";
+  }
+  return undefined;
+}
+
 export function attributionFromLandingCampaign(
   campaign: LandingCampaign,
-  options: Readonly<{ landing: string; landingPath?: string }>,
+  options: Readonly<{ landing: string; landingPath?: string; he?: string | null }>,
 ): PremiumAttribution {
   const path =
     options.landingPath ??
     (typeof window !== "undefined"
       ? `${window.location.pathname}${window.location.search}`
       : `/${options.landing}`);
+  const heFromUrl =
+    options.he ??
+    (typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("he")
+      : null);
   return buildPremiumAttribution({
     utm: campaign.utm,
     package: campaign.package,
@@ -81,6 +100,7 @@ export function attributionFromLandingCampaign(
     payment: campaign.payment,
     landing: options.landing,
     landingPath: path,
+    he: normalizeHeQueryValue(heFromUrl),
   });
 }
 

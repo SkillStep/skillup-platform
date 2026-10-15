@@ -2,6 +2,7 @@
 
 import { type FormEvent, useEffect, useId, useState } from "react";
 
+import { LANDING_MSISDN_STORAGE_KEY } from "../../../lib/jazzcash-checkout";
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
@@ -52,7 +53,18 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   const [isError, setIsError] = useState(false);
   const isAdmin = mode === "admin";
 
-  useEffect(() => setHydrated(true), []);
+  useEffect(() => {
+    setHydrated(true);
+    if (isAdmin) return;
+    try {
+      const saved = window.sessionStorage.getItem(LANDING_MSISDN_STORAGE_KEY);
+      if (saved && /^\d{11,15}$/.test(saved)) {
+        setIdentity(saved);
+      }
+    } catch {
+      // Ignore storage access failures.
+    }
+  }, [isAdmin]);
 
   async function requestCode(): Promise<void> {
     const response = await fetch("/api/v1/auth/otp/start", {
