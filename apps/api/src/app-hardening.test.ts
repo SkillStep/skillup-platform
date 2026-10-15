@@ -58,6 +58,10 @@ const authService: AuthService = {
     throw new Error("Not used by this test.");
   }),
   resolveSession: vi.fn(async () => null),
+  signInAdminPassword: vi.fn(async () => {
+    throw new Error("not implemented in test mock");
+  }),
+  mergePhoneCheckoutAccountIfNeeded: vi.fn(async () => ({ merged: false })),
   resolveOrCreatePhoneLearnerForCheckout: vi.fn(async () => ({
     userId: "11111111-1111-4111-8111-111111111111",
   })),

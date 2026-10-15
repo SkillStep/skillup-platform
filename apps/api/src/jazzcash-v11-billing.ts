@@ -81,12 +81,31 @@ type PaymentOrder = Readonly<{
 
 class JazzCashV11BillingError extends Error {
   readonly statusCode: number;
+  readonly errorCode: string;
 
-  constructor(statusCode: number, message: string) {
+  constructor(statusCode: number, message: string, errorCode = "jazzcash_billing_error") {
     super(message);
     this.name = "JazzCashV11BillingError";
     this.statusCode = statusCode;
+    this.errorCode = errorCode;
   }
+}
+
+export function isJazzCashWalletNotRegisteredFailure(
+  responseCode: string,
+  responseMessage: string,
+): boolean {
+  const code = responseCode.trim();
+  const message = responseMessage.trim().toLocaleLowerCase("en-US");
+  if (["157", "199", "210", "999"].includes(code) && message.includes("wallet")) return true;
+  return (
+    message.includes("wallet not") ||
+    message.includes("not registered") ||
+    message.includes("no wallet") ||
+    message.includes("wallet does not exist") ||
+    message.includes("invalid wallet") ||
+    message.includes("account not found")
+  );
 }
 
 function pakistanStamp(date: Date): string {
@@ -619,10 +638,16 @@ export function createJazzCashV11BillingService(
             where request_id = $1`,
           [requestId],
         );
+        const responseMessage =
+          fields["pp_ResponseMessage"]?.trim() ||
+          "JazzCash wallet linking failed. No Premium entitlement was granted.";
+        const walletMissing = isJazzCashWalletNotRegisteredFailure(responseCode, responseMessage);
         throw new JazzCashV11BillingError(
           402,
-          fields["pp_ResponseMessage"]?.trim() ||
-            "JazzCash wallet linking failed. No Premium entitlement was granted.",
+          walletMissing
+            ? "This mobile number is not linked to a JazzCash wallet. Open the JazzCash app and create an account, then try again."
+            : responseMessage,
+          walletMissing ? "jazzcash_wallet_not_found" : "jazzcash_wallet_link_failed",
         );
       }
 

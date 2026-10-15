@@ -2,7 +2,7 @@
 
 import { type FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
-import { downloadCampaignAttributionCsv } from "./campaign-attribution-csv";
+import { downloadCampaignAttributionSpreadsheet } from "./campaign-attribution-xlsx";
 import styles from "./premium.module.css";
 
 type Tab =
@@ -1209,13 +1209,13 @@ export function PremiumWorkspace() {
                 type="button"
                 className={styles["campaignCsvButton"]}
                 onClick={() =>
-                  downloadCampaignAttributionCsv(
+                  downloadCampaignAttributionSpreadsheet(
                     campaign,
-                    `premium-campaign-attribution-${campaign.effectiveRange.preset}.csv`,
+                    `premium-campaign-attribution-${campaign.effectiveRange.preset}.xls`,
                   )
                 }
               >
-                Download CSV
+                Download spreadsheet
               </button>
             </div>
             <p className={styles["hint"]}>

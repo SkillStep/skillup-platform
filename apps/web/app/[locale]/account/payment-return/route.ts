@@ -93,7 +93,20 @@ async function completeLink(request: NextRequest): Promise<NextResponse> {
       },
     );
 
-    if (!upstream.ok) return paymentResultRedirect(request, "error");
+    if (!upstream.ok) {
+      const failure = (await upstream.json().catch(() => ({}))) as Readonly<{
+        error?: string;
+        message?: string;
+      }>;
+      if (
+        failure.error === "jazzcash_wallet_not_found" ||
+        (typeof failure.message === "string" &&
+          failure.message.toLocaleLowerCase("en-US").includes("not linked to a jazzcash"))
+      ) {
+        return paymentResultRedirect(request, "wallet_not_found");
+      }
+      return paymentResultRedirect(request, "error");
+    }
 
     const payload = (await upstream.json()) as Readonly<{
       order?: Readonly<{ id?: string; status?: string }>;
