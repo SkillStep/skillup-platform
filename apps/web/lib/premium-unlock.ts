@@ -16,3 +16,11 @@ export function hasPremiumUnlockedFlag(): boolean {
     return false;
   }
 }
+
+export function clearPremiumUnlockedFlag(): void {
+  try {
+    sessionStorage.removeItem(PREMIUM_UNLOCKED_STORAGE_KEY);
+  } catch {
+    // Ignore storage access failures.
+  }
+}

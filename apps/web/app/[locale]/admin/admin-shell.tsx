@@ -4,6 +4,7 @@ import { BrandMark } from "@skillup/ui";
 import Link from "next/link";
 import { type ReactNode, useState } from "react";
 
+import { clearPremiumUnlockedFlag } from "../../../lib/premium-unlock";
 import discoveryStyles from "../discovery.module.css";
 import styles from "./admin.module.css";
 
@@ -35,6 +36,7 @@ export function AdminHeader(): ReactNode {
     } catch {
       // Still clear the local view even if the network call fails.
     } finally {
+      clearPremiumUnlockedFlag();
       window.location.assign("/en/admin/sign-in");
     }
   }

@@ -3,6 +3,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AuthNavAction } from "./auth-nav-action";
 import styles from "./discovery.module.css";
 import { PremiumNavLink } from "./premium-nav-link";
 
@@ -23,9 +24,7 @@ export function PublicHeader(): ReactNode {
         <PremiumNavLink />
         <Link href="/en/progress">Your progress</Link>
         <Link href="/en/account">User Profile</Link>
-        <Link className={styles["navAction"]} href="/en/sign-in">
-          Sign in
-        </Link>
+        <AuthNavAction variant="desktop" />
       </nav>
 
       <details className={styles["mobileMenu"]}>
@@ -35,7 +34,7 @@ export function PublicHeader(): ReactNode {
           <PremiumNavLink />
           <Link href="/en/progress">Your progress</Link>
           <Link href="/en/account">User Profile</Link>
-          <Link href="/en/sign-in">Sign in</Link>
+          <AuthNavAction variant="mobile" />
         </nav>
       </details>
     </header>

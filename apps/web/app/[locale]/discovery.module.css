@@ -32,9 +32,39 @@
 .desktopNav .navAction {
   align-items: center;
   background: var(--brand-700);
+  border: 0;
+  border-radius: 0.65rem;
   color: white;
+  cursor: pointer;
   display: inline-flex;
+  font-size: 0.92rem;
+  font-weight: 700;
+  min-height: 44px;
   padding-inline: 1rem;
+  text-decoration: none;
+}
+
+.desktopNav button.navAction:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.mobileMenu button {
+  background: transparent;
+  border: 0;
+  border-radius: 0.65rem;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.92rem;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 0.65rem 0.5rem;
+  text-align: left;
+}
+
+.mobileMenu button:disabled {
+  cursor: wait;
+  opacity: 0.75;
 }
 
 .mobileMenu {
