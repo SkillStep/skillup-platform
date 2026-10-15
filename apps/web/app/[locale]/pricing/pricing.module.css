@@ -161,9 +161,16 @@
   text-decoration: none;
 }
 
-.action:disabled {
+.action:disabled,
+.actionDisabled {
   cursor: not-allowed;
   opacity: 0.58;
+  pointer-events: none;
+}
+
+.currentPlanBadge {
+  background: #dcfce7;
+  color: #166534;
 }
 
 .note,

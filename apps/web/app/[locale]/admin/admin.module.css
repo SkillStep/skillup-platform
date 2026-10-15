@@ -1,18 +1,40 @@
 .adminNav {
-  gap: 0.35rem;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  justify-content: flex-end;
+  max-width: min(820px, 72vw);
+}
+
+.adminNavTextLink {
+  color: var(--ink-900);
+  font-size: 0.85rem !important;
+  font-weight: 700;
+  min-height: 40px;
+  padding: 0.45rem 0.4rem !important;
 }
 
 .adminNavLink {
   background: var(--brand-700);
+  border: 0;
+  border-radius: 0.65rem;
   color: white;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  padding-inline: 1rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  min-height: 40px;
+  padding-inline: 0.85rem;
 }
 
 .adminNavLink:hover,
 .adminNavLink:focus-visible {
   color: white;
+}
+
+.adminNavLink:disabled {
+  cursor: wait;
+  opacity: 0.75;
 }
 
 .main {

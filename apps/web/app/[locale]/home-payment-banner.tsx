@@ -35,6 +35,14 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
       showPricingLink: false,
     };
   }
+  if (payment === "wallet_not_found") {
+    return {
+      tone: "error",
+      title: "JazzCash account required",
+      body: "This mobile number is not linked to a JazzCash wallet. Open the JazzCash app, create an account with the same number, then return here to subscribe.",
+      showPricingLink: true,
+    };
+  }
   if (payment === "failed" || payment === "error") {
     return {
       tone: "error",

@@ -105,6 +105,10 @@ function createAuthService(): AuthService {
     ]),
     resolveSession: vi.fn(async (token) => (token === "test-session-token" ? learner : null)),
     resolveOrCreatePhoneLearnerForCheckout: vi.fn(async () => ({ userId: learner.id })),
+    signInAdminPassword: vi.fn(async () => {
+      throw new Error("not implemented in test mock");
+    }),
+    mergePhoneCheckoutAccountIfNeeded: vi.fn(async () => ({ merged: false })),
     revokeSession: vi.fn(async () => undefined),
     updateProfile: vi.fn(async (_userId, patch) => ({
       ...learner,

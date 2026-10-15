@@ -5,7 +5,7 @@ import { notFound } from "next/navigation";
 
 import { safeReturnTo } from "../../../../lib/return-to";
 import styles from "../../account-flow.module.css";
-import { SignInForm } from "../../sign-in/sign-in-form";
+import { AdminPasswordForm } from "./admin-password-form";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -45,13 +45,13 @@ export default async function AdminSignInPage({ params, searchParams }: PageProp
             signing in here does not grant Premium access or publish authority by itself.
           </p>
           <ul className={styles["commitments"]} aria-label="Admin access commitments">
-            <li>Passwordless email or mobile verification</li>
+            <li>Email and password for operators only</li>
             <li>Roles checked again on every admin API request</li>
             <li>After success you land on Campaign attribution, not the learner home</li>
           </ul>
         </section>
 
-        <SignInForm returnTo={destination} mode="admin" />
+        <AdminPasswordForm returnTo={destination} />
       </div>
     </main>
   );

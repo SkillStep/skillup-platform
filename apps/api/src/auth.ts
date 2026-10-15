@@ -5,6 +5,11 @@ import type { FastifyInstance, FastifyRequest } from "fastify";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 
+import {
+  loadAdminPasswordCredential,
+  normalizeAdminEmail,
+  verifyAdminPassword,
+} from "./admin-password.js";
 import type { ApiConfig } from "./config.js";
 
 export type AuthIdentityType = "email" | "phone";
@@ -21,6 +26,11 @@ const VerifyOtpSchema = z.object({
   challengeId: z.string().uuid(),
   code: z.string().regex(/^\d{4}$/),
   displayName: z.string().trim().min(2).max(60).optional(),
+});
+
+const AdminPasswordSignInSchema = z.object({
+  email: z.string().trim().email().max(254),
+  password: z.string().min(8).max(128),
 });
 
 const IdentityTypeParamsSchema = z.object({
@@ -158,6 +168,19 @@ export type AuthService = Readonly<{
    * The learner signs in later (OTP) with the same JazzCash number to open Premium Features.
    */
   resolveOrCreatePhoneLearnerForCheckout: (msisdn: string) => Promise<Readonly<{ userId: string }>>;
+  /**
+   * Admin-only email + password sign-in. Requires an active admin principal and stored credential.
+   */
+  signInAdminPassword: (
+    input: Readonly<{ email: string; password: string }>,
+  ) => Promise<VerifiedSession>;
+  /**
+   * Merge a phone-only checkout account into the signed-in learner when they verify that phone.
+   * Transfers wallet links, payment orders attribution ownership stays on orders.user_id transfers.
+   */
+  mergePhoneCheckoutAccountIfNeeded: (
+    input: Readonly<{ targetUserId: string; phoneNormalized: string }>,
+  ) => Promise<Readonly<{ merged: boolean; sourceUserId?: string }>>;
   updateProfile: (
     userId: string,
     patch: z.infer<typeof UpdateProfileSchema>,
@@ -713,14 +736,15 @@ export function createAuthService(
     startIdentityLink: async ({ userId, identity, requestFingerprint }) => {
       const normalized = normalizeAuthIdentity(identity);
       const owner = await identityOwner(options.pool, normalized);
-      if (owner && owner.userId !== userId) {
-        throw new AuthRequestError(409, "That sign-in identity cannot be linked to this account.");
-      }
       if (owner?.userId === userId) {
         throw new AuthRequestError(
           409,
           "That sign-in identity is already verified on this account.",
         );
+      }
+      // Phone checkout accounts may be merged after OTP verify; email conflicts stay blocked.
+      if (owner && owner.userId !== userId && normalized.type !== "phone") {
+        throw new AuthRequestError(409, "That sign-in identity cannot be linked to this account.");
       }
 
       return createChallenge({
@@ -749,10 +773,23 @@ export function createAuthService(
 
         const owner = await identityOwner(client, identity);
         if (owner && owner.userId !== userId) {
-          throw new AuthRequestError(
-            409,
-            "That sign-in identity cannot be linked to this account.",
+          if (identity.type !== "phone") {
+            throw new AuthRequestError(
+              409,
+              "That sign-in identity cannot be linked to this account.",
+            );
+          }
+          // Finish this transaction before the dedicated merge path takes its own locks.
+          await client.query(
+            "update auth_challenges set consumed_at = $2, attempts_remaining = 0 where id = $1",
+            [challengeId, verifiedAt],
           );
+          await client.query("commit");
+          await service.mergePhoneCheckoutAccountIfNeeded({
+            targetUserId: userId,
+            phoneNormalized: identity.normalized,
+          });
+          return identityViews(options.pool, userId);
         }
 
         await insertIdentity(client, userId, identity, verifiedAt, true);
@@ -894,6 +931,109 @@ export function createAuthService(
         "update auth_sessions set revoked_at = coalesce(revoked_at, $2) where token_digest = $1",
         [tokenDigest, now()],
       );
+    },
+
+    signInAdminPassword: async ({ email, password }) => {
+      const emailNormalized = normalizeAdminEmail(email);
+      const credential = await loadAdminPasswordCredential(options.pool, emailNormalized);
+      if (!credential || !(await verifyAdminPassword(password, credential))) {
+        throw new AuthRequestError(401, "Invalid admin email or password.");
+      }
+
+      const verifiedAt = now();
+      const client = await options.pool.connect();
+      try {
+        await client.query("begin");
+        const sessionToken = createToken();
+        const sessionTokenDigest = digest(options.secret, `session:${sessionToken}`);
+        const sessionExpiresAt = addHours(verifiedAt, options.sessionAbsoluteHours);
+        const idleExpiresAt = addMinutes(verifiedAt, options.sessionIdleMinutes);
+        await client.query(
+          `insert into auth_sessions
+            (user_id, token_digest, expires_at, idle_expires_at, last_seen_at, created_at)
+           values ($1, $2, $3::timestamptz, least($4::timestamptz, $3::timestamptz), $5::timestamptz, $5::timestamptz)`,
+          [credential.userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
+        );
+        const learner = await loadLearner(client, credential.userId);
+        await client.query("commit");
+        return { sessionToken, sessionExpiresAt, learner };
+      } catch (error) {
+        await client.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
+    mergePhoneCheckoutAccountIfNeeded: async ({ targetUserId, phoneNormalized }) => {
+      const identity = normalizeAuthIdentity(phoneNormalized);
+      if (identity.type !== "phone") {
+        throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
+      }
+
+      const client = await options.pool.connect();
+      try {
+        await client.query("begin");
+        await client.query("select pg_advisory_xact_lock(hashtextextended($1, 0))", [
+          `${identity.type}:${identity.normalized}`,
+        ]);
+
+        const owner = await identityOwner(client, identity);
+        if (!owner) {
+          await insertIdentity(client, targetUserId, identity, now(), false);
+          await client.query("commit");
+          return { merged: false };
+        }
+        if (owner.userId === targetUserId) {
+          await client.query("commit");
+          return { merged: false };
+        }
+
+        const emailOnSource = await client.query<{ count: string }>(
+          `select count(*)::text as count from user_email_identities where user_id = $1`,
+          [owner.userId],
+        );
+        if (Number(emailOnSource.rows[0]?.count ?? 0) > 0) {
+          throw new AuthRequestError(
+            409,
+            "That mobile number already belongs to another SkillUp account.",
+          );
+        }
+
+        const sourceUserId = owner.userId;
+        // Move phone identity and commercial ownership onto the signed-in account.
+        await client.query(`delete from user_phone_identities where user_id = $1`, [sourceUserId]);
+        await insertIdentity(client, targetUserId, identity, now(), false);
+        await client.query(`update jazzcash_wallet_links set user_id = $2 where user_id = $1`, [
+          sourceUserId,
+          targetUserId,
+        ]);
+        await client.query(
+          `update jazzcash_wallet_link_intents set user_id = $2 where user_id = $1`,
+          [sourceUserId, targetUserId],
+        );
+        await client.query(`update payment_orders set user_id = $2 where user_id = $1`, [
+          sourceUserId,
+          targetUserId,
+        ]);
+        await client.query(`update entitlements set user_id = $2 where user_id = $1`, [
+          sourceUserId,
+          targetUserId,
+        ]);
+        await client.query(
+          `update users
+              set status = 'deleted', deleted_at = coalesce(deleted_at, now()), updated_at = now()
+            where id = $1`,
+          [sourceUserId],
+        );
+        await client.query("commit");
+        return { merged: true, sourceUserId };
+      } catch (error) {
+        await client.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        client.release();
+      }
     },
 
     updateProfile: async (userId, patch) => {
@@ -1052,6 +1192,17 @@ export function registerAuthRoutes(
     const verified = await options.authService.verifyEmailSignIn(
       VerifyOtpSchema.parse(request.body),
     );
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
+    return reply.status(200).send({ learner: verified.learner });
+  });
+
+  app.post("/v1/auth/admin/password/login", async (request, reply) => {
+    requireTrustedOrigin(request, options.config);
+    const body = AdminPasswordSignInSchema.parse(request.body);
+    const verified = await options.authService.signInAdminPassword(body);
     reply.header(
       "set-cookie",
       sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),

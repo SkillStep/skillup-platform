@@ -1,13 +1,17 @@
-import { randomUUID } from "node:crypto";
+import { randomBytes, randomUUID, scrypt as scryptCallback } from "node:crypto";
+import { promisify } from "node:util";
 
 import { createDatabaseClient, requireDatabaseUrl } from "../index.js";
 
+const scrypt = promisify(scryptCallback);
+
 /**
- * Idempotently ensures the staging fixed-OTP operator account exists with admin roles.
+ * Idempotently ensures the staging operator account exists with admin roles + password.
  * Safe only for APP_ENV=staging. Never run against production.
  */
 const STAGING_FIXED_ADMIN_EMAIL = "staging.admin@skillup.test";
 const STAGING_FIXED_ADMIN_DISPLAY_NAME = "Staging Admin";
+const STAGING_FIXED_ADMIN_PASSWORD = "Abc@12345";
 
 const allAdminRoles = [
   "content_editor",
@@ -113,6 +117,19 @@ try {
       [userId, role, "Staging fixed-OTP operator account"],
     );
   }
+
+  const salt = randomBytes(16);
+  const hash = (await scrypt(STAGING_FIXED_ADMIN_PASSWORD, salt, 64)) as Buffer;
+  await connection.query(
+    `insert into admin_password_credentials (user_id, password_hash, password_salt, algorithm, created_at, updated_at)
+     values ($1, $2, $3, 'scrypt', now(), now())
+     on conflict (user_id) do update
+       set password_hash = excluded.password_hash,
+           password_salt = excluded.password_salt,
+           algorithm = excluded.algorithm,
+           updated_at = now()`,
+    [userId, hash.toString("base64url"), salt.toString("base64url")],
+  );
 
   await connection.query(
     `insert into privileged_audit_events (
