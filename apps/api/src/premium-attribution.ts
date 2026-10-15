@@ -12,6 +12,8 @@ const ATTRIBUTION_STRING_KEYS = [
   "ref",
   "landing",
   "landingPath",
+  /** Jazz HE vs NON-HE tag from landing URL (`he=1` / `he=0`). */
+  "he",
 ] as const;
 
 export type PremiumAttribution = Readonly<
@@ -41,6 +43,7 @@ export const PremiumAttributionInputSchema = z
     ref: OptionalAttributionString,
     landing: OptionalAttributionString,
     landingPath: OptionalAttributionString,
+    he: OptionalAttributionString,
   })
   .strict();
 
