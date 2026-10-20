@@ -96,7 +96,9 @@ export function attributionFromLandingCampaign(
       : `/${options.landing}`);
   const heFromUrl =
     options.he ??
-    (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("he") : null);
+    (typeof window !== "undefined" && window.location
+      ? new URLSearchParams(window.location.search ?? "").get("he")
+      : null);
   return buildPremiumAttribution({
     utm: campaign.utm,
     package: campaign.package,
