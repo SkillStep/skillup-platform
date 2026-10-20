@@ -272,6 +272,12 @@ jobs:
                     'JAZZCASH_V11_TIMEOUT_MS': '30000',
                     'JAZZCASH_V11_CHECKOUT_MINUTES': '15',
                 })
+                # Optional payment-portal Refund URL (enables admin Full Refund for V11 orders).
+                refund_url = (os.environ.get('JAZZCASH_V11_REFUND_URL') or os.environ.get('JAZZCASH_REFUND_URL') or '').strip()
+                if refund_url.startswith('https://'):
+                    updates['JAZZCASH_V11_REFUND_URL'] = refund_url
+                else:
+                    print('JazzCash V11 refund URL not supplied; Status Inquiry remains available, Full Refund stays queued-disabled until configured')
             else:
                 print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
             lines = path.read_text(encoding='utf-8').splitlines()

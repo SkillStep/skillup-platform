@@ -7,28 +7,28 @@ import { createAiJobStatusService, registerAiJobStatusRoutes } from "./ai-job-st
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
+import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
-import { createCommercialAutomationService } from "./commercial-automation.js";
 import { createCommercialService } from "./commercial.js";
+import { createCommercialAutomationService } from "./commercial-automation.js";
+import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
 import {
   createContentOperationsService,
   registerContentOperationsRoutes,
 } from "./content-operations.js";
-import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
-import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
-import { createJazzCashCpsClient } from "./jazzcash-cps.js";
+import { resolveJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import { createMaintenanceRunner } from "./maintenance.js";
 import {
   createPaymentOperationsService,
   registerPaymentOperationsRoutes,
 } from "./payment-operations.js";
-import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumFunnelEventRoutes } from "./premium-funnel-events.js";
+import { createPremiumMembershipService } from "./premium-membership-service.js";
 import { registerPremiumReportingRoutes } from "./premium-reporting-routes.js";
 import { createPremiumReportingService } from "./premium-reporting-service.js";
 import { createProgressService } from "./progress.js";
@@ -51,7 +51,7 @@ const authService = createAuthService({
 });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
-const jazzCashCps = config.FEATURE_JAZZCASH_ENABLED ? createJazzCashCpsClient(config) : undefined;
+const jazzCashCps = resolveJazzCashCpsClient(config);
 const commercialService = createCommercialService({
   pool: database.pool,
   config,
