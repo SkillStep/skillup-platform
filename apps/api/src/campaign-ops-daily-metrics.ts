@@ -29,7 +29,13 @@ function normalizeHeTag(raw: unknown): "he" | "nonhe" | "untagged" {
   if (typeof raw !== "string") return "untagged";
   const value = raw.trim().toLocaleLowerCase("en-US");
   if (value === "1" || value === "true" || value === "he" || value === "yes") return "he";
-  if (value === "0" || value === "false" || value === "nonhe" || value === "non-he" || value === "no") {
+  if (
+    value === "0" ||
+    value === "false" ||
+    value === "nonhe" ||
+    value === "non-he" ||
+    value === "no"
+  ) {
     return "nonhe";
   }
   return "untagged";

@@ -4,15 +4,15 @@ import type { DatabaseClient } from "@skillup/database";
 import type { Transporter } from "nodemailer";
 
 import {
+  type CampaignOpsDailyMetrics,
   emptyCampaignOpsDailyMetrics,
   loadCampaignOpsDailyMetrics,
-  type CampaignOpsDailyMetrics,
 } from "./campaign-ops-daily-metrics.js";
 import type { ApiConfig } from "./config.js";
 import { createSmtpTransport } from "./email-delivery.js";
 import {
-  loadCampaignAttributionReport,
   type CampaignAttributionReport,
+  loadCampaignAttributionReport,
 } from "./premium-campaign-attribution-report.js";
 import { PREMIUM_REPORT_TIMEZONE, PremiumReportQuerySchema } from "./premium-reporting-contract.js";
 
@@ -241,10 +241,7 @@ export function buildCampaignDailyReportEmail(
     ops.failureReasons.length === 0
       ? "<tr><td colspan='2'>(none)</td></tr>"
       : ops.failureReasons
-          .map(
-            (row) =>
-              `<tr><td>${escapeHtml(row.reason)}</td><td>${row.count}</td></tr>`,
-          )
+          .map((row) => `<tr><td>${escapeHtml(row.reason)}</td><td>${row.count}</td></tr>`)
           .join("");
 
   const html = [
@@ -381,10 +378,7 @@ export function createCampaignDailyReportEmailTask(
       aggregation: "daily",
     });
     const report = await loadCampaignAttributionReport(options.pool, query, instant);
-    const opsDate =
-      report.daily[0]?.date ??
-      report.effectiveRange.from.slice(0, 10) ??
-      reportDate;
+    const opsDate = report.daily[0]?.date ?? report.effectiveRange.from.slice(0, 10) ?? reportDate;
     const ops = await loadCampaignOpsDailyMetrics(options.pool, {
       fromIso: report.effectiveRange.from,
       toIso: report.effectiveRange.to,

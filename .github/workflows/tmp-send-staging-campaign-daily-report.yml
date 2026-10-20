@@ -67,6 +67,7 @@ jobs:
             CAMPAIGN_DAILY_REPORT_EMAIL_ACTION,
             karachiCalendarDate,
           } from "./dist/campaign-daily-report-email.js";
+          import { loadCampaignOpsDailyMetrics } from "./dist/campaign-ops-daily-metrics.js";
           import { readApiConfig } from "./dist/config.js";
           import { createSmtpTransport } from "./dist/email-delivery.js";
           import { loadCampaignAttributionReport } from "./dist/premium-campaign-attribution-report.js";
@@ -101,7 +102,16 @@ jobs:
               aggregation: "daily",
             });
             const report = await loadCampaignAttributionReport(database.pool, query, now);
-            const message = buildCampaignDailyReportEmail(report, reportDate);
+            const opsDate =
+              report.daily[0]?.date ??
+              report.effectiveRange.from.slice(0, 10) ??
+              reportDate;
+            const ops = await loadCampaignOpsDailyMetrics(database.pool, {
+              fromIso: report.effectiveRange.from,
+              toIso: report.effectiveRange.to,
+              reportDate: opsDate,
+            });
+            const message = buildCampaignDailyReportEmail(report, reportDate, ops);
             const transport = createSmtpTransport(config);
             const info = await transport.sendMail({
               from: config.EMAIL_FROM,
