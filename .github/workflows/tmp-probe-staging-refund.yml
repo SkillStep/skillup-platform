@@ -1,0 +1,137 @@
+name: Temporary Probe Staging JazzCash Refund
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: Confirm refund URL + attempt Full Refund
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: SSH probe refund URL, orders, and Full Refund
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          ADMIN_EMAIL: staging.admin@skillup.test
+          ADMIN_PASSWORD: Abc@12345
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${STAGING_HOST:-}"
+          test -n "${STAGING_SSH_USER:-}"
+          test -n "${STAGING_SSH_KEY:-}"
+
+          key_file="$RUNNER_TEMP/staging-refund-probe-key"
+          known_hosts_file="$RUNNER_TEMP/staging-refund-probe-known-hosts"
+          printf '%s\n' "$STAGING_SSH_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -H -T 10 "$STAGING_HOST" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          ssh \
+            -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o "UserKnownHostsFile=$known_hosts_file" \
+            -o StrictHostKeyChecking=yes \
+            "$STAGING_SSH_USER@$STAGING_HOST" \
+            "ADMIN_EMAIL=$(printf %q "$ADMIN_EMAIL") ADMIN_PASSWORD=$(printf %q "$ADMIN_PASSWORD") bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+          set -a
+          # shellcheck disable=SC1091
+          source .env
+          set +a
+
+          psql_exec() {
+            docker compose -f docker-compose.staging.yml exec -T postgres \
+              psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1 "$@" </dev/null
+          }
+
+          echo "=== JAZZCASH_V11_REFUND_URL (host/path only) ==="
+          refund_url="${JAZZCASH_V11_REFUND_URL:-}"
+          if [ -z "$refund_url" ]; then
+            echo "MISSING: JAZZCASH_V11_REFUND_URL not set in host .env"
+            exit 1
+          fi
+          echo "$refund_url" | sed -E 's#^(https?://)[^/]+#\1[host]#' 
+
+          echo "=== API container env (redacted) ==="
+          api_refund="$(docker compose -f docker-compose.staging.yml exec -T api \
+            printenv JAZZCASH_V11_REFUND_URL </dev/null | tr -d '\r' || true)"
+          if [ -z "$api_refund" ]; then
+            echo "MISSING in api container"
+            exit 1
+          fi
+          echo "$api_refund" | sed -E 's#^(https?://)[^/]+#\1[host]#'
+
+          echo "=== Sandbox refund endpoint reachability (expect non-empty HTTP status) ==="
+          code="$(curl -sS --max-time 20 -o /tmp/jc-refund-probe.txt -w '%{http_code}' \
+            -X POST "$refund_url" \
+            -H 'Content-Type: application/json' \
+            --data '{}' || true)"
+          echo "http=$code"
+          head -c 400 /tmp/jc-refund-probe.txt || true
+          echo
+
+          echo "=== Recent succeeded payment orders ==="
+          psql_exec -c "select id, status, merchant_reference, provider_reference, amount_minor, currency, completed_at from payment_orders where status = 'succeeded' order by completed_at desc nulls last limit 5;"
+
+          order_id="$(psql_exec -Atc "select id::text from payment_orders where status = 'succeeded' order by completed_at desc nulls last limit 1;" | tr -d '\r')"
+          if [ -z "$order_id" ]; then
+            echo "No succeeded payment_orders found; refund URL verified only."
+            exit 0
+          fi
+          echo "Using order_id=$order_id"
+
+          origin="https://skillupshop.codistan.org"
+          api="http://127.0.0.1:3020/api"
+
+          echo "=== Admin password login ==="
+          login_code="$(curl -sS --max-time 30 -c /tmp/skillup-admin.jar -o /tmp/admin-login.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H "Origin: $origin" \
+            -H "Referer: $origin/en/admin/sign-in" \
+            --data "{\"email\":\"$ADMIN_EMAIL\",\"password\":\"$ADMIN_PASSWORD\"}" \
+            "$api/v1/auth/admin/password/login" || true)"
+          echo "login_http=$login_code"
+          cat /tmp/admin-login.json || true
+          echo
+          if [ "$login_code" != "200" ]; then
+            echo "Admin login failed; cannot queue Full Refund"
+            exit 1
+          fi
+
+          echo "=== Queue Full Refund ==="
+          refund_code="$(curl -sS --max-time 30 -b /tmp/skillup-admin.jar -o /tmp/admin-refund.json -w '%{http_code}' \
+            -H 'Content-Type: application/json' \
+            -H 'Accept: application/json' \
+            -H "Origin: $origin" \
+            -H "Referer: $origin/en/admin/premium" \
+            --data '{"reason":"Staging sandbox refund URL probe after JAZZCASH_V11_REFUND_URL deploy"}' \
+            "$api/v1/admin/reports/premium/payments/$order_id/refunds" || true)"
+          echo "refund_queue_http=$refund_code"
+          cat /tmp/admin-refund.json || true
+          echo
+
+          echo "=== Provider refund jobs for order ==="
+          psql_exec -c "select id, job_type, status, attempt_count, left(coalesce(last_error,''), 240) as last_error, created_at, updated_at from commercial_jobs where order_id = '$order_id'::uuid and job_type = 'provider_refund' order by created_at desc limit 5;"
+
+          echo "=== Wait briefly for worker ==="
+          sleep 12
+          psql_exec -c "select id, job_type, status, attempt_count, left(coalesce(last_error,''), 240) as last_error, updated_at from commercial_jobs where order_id = '$order_id'::uuid and job_type = 'provider_refund' order by created_at desc limit 5;"
+          psql_exec -c "select id, status, updated_at from payment_orders where id = '$order_id'::uuid;"
+
+          if [ "$refund_code" != "202" ]; then
+            echo "Refund queue did not return 202"
+            exit 1
+          fi
+          echo "Refund probe complete"
+          REMOTE
