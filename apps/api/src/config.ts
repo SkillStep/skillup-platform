@@ -40,8 +40,25 @@ const ApiConfigSchema = z
       .transform((value) => value === "true"),
     SMTP_USERNAME: z.string().min(1).optional(),
     SMTP_PASSWORD: z.string().min(1).optional(),
-    /** Recipient for the Asia/Karachi 06:00 campaign daily detailed report email. */
-    CAMPAIGN_DAILY_REPORT_TO: z.string().trim().email().optional(),
+    /**
+     * Recipient(s) for the Asia/Karachi 06:00 campaign daily report + Logs emails.
+     * Accepts one email or a comma-separated list.
+     */
+    CAMPAIGN_DAILY_REPORT_TO: z
+      .string()
+      .trim()
+      .optional()
+      .refine(
+        (value) => {
+          if (!value) return true;
+          return value
+            .split(",")
+            .map((part) => part.trim())
+            .filter(Boolean)
+            .every((part) => z.string().email().safeParse(part).success);
+        },
+        { message: "CAMPAIGN_DAILY_REPORT_TO must be one email or a comma-separated email list." },
+      ),
     /** Local hour in Asia/Karachi at/after which the campaign daily report may send once per day. */
     CAMPAIGN_DAILY_REPORT_HOUR_PKT: z.coerce.number().int().min(0).max(23).default(6),
     SMS_PROVIDER: z.enum(["disabled", "twilio"]).default("disabled"),
