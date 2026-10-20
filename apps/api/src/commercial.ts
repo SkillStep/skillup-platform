@@ -11,6 +11,7 @@ import {
   isPremiumCheckoutBypassEnabled,
 } from "./config.js";
 import type { JazzCashCpsClient } from "./jazzcash-cps.js";
+import { verifyJazzCashV11SecureHash } from "./jazzcash-v11.js";
 import {
   type PremiumAttribution,
   PremiumAttributionInputSchema,
@@ -212,6 +213,18 @@ export function verifyJazzCashSecureHash(
   if (!/^[a-f0-9]{64}$/.test(presented)) return false;
   const expected = jazzCashSecureHash(fields, integritySalt);
   return timingSafeEqual(Buffer.from(expected, "hex"), Buffer.from(presented, "hex"));
+}
+
+/**
+ * Accept classic lowercase SecureHash or JazzCash orchestrator (V11) uppercase SecureHash.
+ * Used for Return URL, IPN, and internal settlement callbacks.
+ */
+export function verifyJazzCashIncomingSecureHash(
+  fields: Readonly<Record<string, string>>,
+  integritySalt: string,
+): boolean {
+  if (verifyJazzCashSecureHash(fields, integritySalt)) return true;
+  return verifyJazzCashV11SecureHash(fields, integritySalt);
 }
 
 function payloadDigest(fields: Readonly<Record<string, string>>): string {
@@ -709,7 +722,7 @@ export function createCommercialService(
       if (!integritySalt) {
         throw new CommercialRequestError(503, "JazzCash callbacks are disabled.");
       }
-      if (!verifyJazzCashSecureHash(fields, integritySalt)) {
+      if (!verifyJazzCashIncomingSecureHash(fields, integritySalt)) {
         throw new CommercialRequestError(400, "The JazzCash response signature is invalid.");
       }
 
@@ -1362,4 +1375,31 @@ export function registerCommercialRoutes(
   app.post("/v1/commercial/jazzcash/callback", async (request) => ({
     order: await options.commercialService.handleJazzCashCallback(bodyAsStringRecord(request.body)),
   }));
+
+  /**
+   * JazzCash Instant Payment Notification (IPN).
+   * Server-to-server from JazzCash — no browser Origin requirement.
+   * Verifies SecureHash, updates order/entitlement idempotently, ACKs with HTTP 200.
+   */
+  app.post("/v1/commercial/jazzcash/ipn", async (request, reply) => {
+    const fields = bodyAsStringRecord(request.body);
+    try {
+      const order = await options.commercialService.handleJazzCashCallback(fields);
+      return reply.status(200).send({
+        received: true,
+        merchantReference: order.merchantReference,
+        status: order.status,
+      });
+    } catch (error) {
+      if (error instanceof CommercialRequestError && error.statusCode === 404) {
+        // Acknowledge unknown refs so JazzCash does not retry forever; record via request log.
+        request.log.warn(
+          { merchantReference: fields["pp_TxnRefNo"] ?? null },
+          "JazzCash IPN for unknown merchant reference acknowledged",
+        );
+        return reply.status(200).send({ received: true, status: "ignored_unknown" });
+      }
+      throw error;
+    }
+  });
 }

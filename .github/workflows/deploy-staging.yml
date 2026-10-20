@@ -174,6 +174,7 @@ jobs:
           JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
           JAZZCASH_V11_RETURN_URL: ${{ secrets.JAZZCASH_V11_RETURN_URL }}
+          JAZZCASH_V11_REFUND_URL: ${{ secrets.JAZZCASH_V11_REFUND_URL }}
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
           TWILIO_PHONE_NUMBER: ${{ secrets.TWILIO_PHONE_NUMBER }}
@@ -183,7 +184,7 @@ jobs:
           key: ${{ secrets.STAGING_SSH_KEY }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_PHONE_NUMBER
+          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL,JAZZCASH_V11_REFUND_URL,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_PHONE_NUMBER
           script: |
             set -euo pipefail
 
@@ -272,6 +273,12 @@ jobs:
                     'JAZZCASH_V11_TIMEOUT_MS': '30000',
                     'JAZZCASH_V11_CHECKOUT_MINUTES': '15',
                 })
+                # Optional payment-portal Refund URL (enables admin Full Refund for V11 orders).
+                refund_url = (os.environ.get('JAZZCASH_V11_REFUND_URL') or os.environ.get('JAZZCASH_REFUND_URL') or '').strip()
+                if refund_url.startswith('https://'):
+                    updates['JAZZCASH_V11_REFUND_URL'] = refund_url
+                else:
+                    print('JazzCash V11 refund URL not supplied; Status Inquiry remains available, Full Refund stays queued-disabled until configured')
             else:
                 print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
             lines = path.read_text(encoding='utf-8').splitlines()

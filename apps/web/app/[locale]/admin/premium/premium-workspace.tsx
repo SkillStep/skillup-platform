@@ -539,6 +539,7 @@ export function PremiumWorkspace() {
   const [hygienePackage, setHygienePackage] = useState("");
   const [hygieneParameter, setHygieneParameter] = useState("");
   const [hygieneOrderIds, setHygieneOrderIds] = useState("");
+  const [paymentActionReasons, setPaymentActionReasons] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const query = new URLSearchParams();
@@ -678,6 +679,34 @@ export function PremiumWorkspace() {
         });
       },
       "The reconciliation case was updated with preserved evidence.",
+    );
+  }
+
+  async function queueProviderPaymentAction(
+    orderId: string,
+    action: "status-inquiries" | "refunds",
+  ) {
+    const reason = paymentActionReasons[orderId]?.trim();
+    if (!reason || reason.length < 3) {
+      setError("Enter an evidence reason before queuing the JazzCash action.");
+      return;
+    }
+    await runMutation(
+      `${action}:${orderId}`,
+      async () => {
+        await requestJson(`/admin/reports/premium/payments/${orderId}/${action}`, {
+          method: "POST",
+          body: JSON.stringify({ reason }),
+        });
+        setPaymentActionReasons((current) => {
+          const next = { ...current };
+          delete next[orderId];
+          return next;
+        });
+      },
+      action === "refunds"
+        ? "Full JazzCash refund queued. Amount comes from the settled order only."
+        : "JazzCash status inquiry queued for this payment.",
     );
   }
 
@@ -1360,7 +1389,8 @@ export function PremiumWorkspace() {
         <section aria-labelledby="payment-ledger">
           <h2 id="payment-ledger">Authoritative payment ledger</h2>
           <p className={styles["hint"]}>
-            Provider payloads and secure hashes are intentionally excluded.
+            Provider payloads and secure hashes are intentionally excluded. Payment operators can
+            queue JazzCash Status Inquiry or a full provider Refund (server supplies amount).
           </p>
           <div className={styles["tableWrap"]}>
             <table>
@@ -1375,30 +1405,69 @@ export function PremiumWorkspace() {
                   <th>Initiated</th>
                   <th>Completed/refunded</th>
                   <th>Reconciliation</th>
+                  {access?.canReconcilePayments ? <th>JazzCash actions</th> : null}
                 </tr>
               </thead>
               <tbody>
-                {ledger.items.map((item) => (
-                  <tr key={String(item["id"])}>
-                    <td>{text(item["learnerReference"])}</td>
-                    <td>
-                      {text(item["planName"])} v{text(item["planVersion"])}
-                    </td>
-                    <td>{text(item["purpose"])}</td>
-                    <td>{money(item["amountMinor"])}</td>
-                    <td>
-                      <span
-                        className={`${styles["status"]} ${statusClass(item["internalStatus"])}`}
-                      >
-                        {text(item["internalStatus"])}
-                      </span>
-                    </td>
-                    <td>{text(item["providerStatus"])}</td>
-                    <td>{dateTime(item["initiatedAt"])}</td>
-                    <td>{dateTime(item["refundedAt"] ?? item["completedAt"])}</td>
-                    <td>{text(item["reconciliationState"])}</td>
-                  </tr>
-                ))}
+                {ledger.items.map((item) => {
+                  const orderId = String(item["id"]);
+                  const internalStatus = text(item["internalStatus"]);
+                  return (
+                    <tr key={orderId}>
+                      <td>{text(item["learnerReference"])}</td>
+                      <td>
+                        {text(item["planName"])} v{text(item["planVersion"])}
+                      </td>
+                      <td>{text(item["purpose"])}</td>
+                      <td>{money(item["amountMinor"])}</td>
+                      <td>
+                        <span className={`${styles["status"]} ${statusClass(internalStatus)}`}>
+                          {internalStatus}
+                        </span>
+                      </td>
+                      <td>{text(item["providerStatus"])}</td>
+                      <td>{dateTime(item["initiatedAt"])}</td>
+                      <td>{dateTime(item["refundedAt"] ?? item["completedAt"])}</td>
+                      <td>{text(item["reconciliationState"])}</td>
+                      {access?.canReconcilePayments ? (
+                        <td>
+                          <div className={styles["actions"]}>
+                            <input
+                              aria-label={`Reason for JazzCash action on ${orderId}`}
+                              placeholder="Reason (required)"
+                              value={paymentActionReasons[orderId] ?? ""}
+                              onChange={(event) =>
+                                setPaymentActionReasons((current) => ({
+                                  ...current,
+                                  [orderId]: event.target.value,
+                                }))
+                              }
+                            />
+                            <button
+                              type="button"
+                              className={styles["secondary"]}
+                              disabled={busy !== null}
+                              onClick={() =>
+                                void queueProviderPaymentAction(orderId, "status-inquiries")
+                              }
+                            >
+                              Status Inquiry
+                            </button>
+                            {internalStatus === "succeeded" ? (
+                              <button
+                                type="button"
+                                disabled={busy !== null}
+                                onClick={() => void queueProviderPaymentAction(orderId, "refunds")}
+                              >
+                                Full Refund
+                              </button>
+                            ) : null}
+                          </div>
+                        </td>
+                      ) : null}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
