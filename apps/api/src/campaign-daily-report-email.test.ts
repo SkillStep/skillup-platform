@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   buildCampaignDailyReportEmail,
+  createCampaignDailyReportEmailTask,
   karachiCalendarDate,
   resolveCampaignDailyReportRecipient,
   shouldSendCampaignDailyReport,
-  createCampaignDailyReportEmailTask,
 } from "./campaign-daily-report-email.js";
 import type { ApiConfig } from "./config.js";
 import type { CampaignAttributionReport } from "./premium-campaign-attribution-report.js";
@@ -122,6 +122,8 @@ describe("campaign daily report email content", () => {
     expect(message.subject).toContain("2026-10-15");
     expect(message.text).toContain("Detailed view — Platform × Parameter");
     expect(message.text).toContain("T | 20percentoff | 2");
+    expect(message.text).toContain("Traffic on landing page");
+    expect(message.html).toContain("Ops funnel");
     expect(message.html).toContain("Daily report");
     expect(message.csv).toContain("platform_parameter");
     expect(message.csv).toContain("2026-10-14,platform_parameter,T,20percentoff,,2");

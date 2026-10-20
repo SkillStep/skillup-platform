@@ -5,6 +5,7 @@ import {
   FIXED_DEV_ADMIN_OTP,
   LOCAL_DEV_ADMIN_EMAIL,
   STAGING_DEV_ADMIN_EMAIL,
+  STAGING_FIXED_OTP_PHONE,
   normalizeAuthIdentity,
   normalizePakistanMobile,
   resolveFixedDevAdminOtp,
@@ -51,13 +52,20 @@ describe("unified authentication identity normalization", () => {
 });
 
 describe("fixed non-production admin OTP", () => {
-  it("returns the fixed OTP only for the local and staging operator emails", () => {
+  it("returns the fixed OTP for local/staging operator emails and the staging QA phone", () => {
     expect(
       resolveFixedDevAdminOtp({ type: "email", normalized: LOCAL_DEV_ADMIN_EMAIL }, "local"),
     ).toBe(FIXED_DEV_ADMIN_OTP);
     expect(
       resolveFixedDevAdminOtp({ type: "email", normalized: STAGING_DEV_ADMIN_EMAIL }, "staging"),
     ).toBe(FIXED_DEV_ADMIN_OTP);
+    expect(
+      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "staging"),
+    ).toBe(FIXED_DEV_ADMIN_OTP);
+    expect(
+      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "local"),
+    ).toBe(FIXED_DEV_ADMIN_OTP);
+    expect(normalizePakistanMobile("03123456789")).toBe(STAGING_FIXED_OTP_PHONE);
   });
 
   it("never enables the fixed OTP in production or for other identities", () => {
@@ -72,6 +80,9 @@ describe("fixed non-production admin OTP", () => {
     ).toBeNull();
     expect(
       resolveFixedDevAdminOtp({ type: "phone", normalized: "+923001234567" }, "staging"),
+    ).toBeNull();
+    expect(
+      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "production"),
     ).toBeNull();
   });
 });

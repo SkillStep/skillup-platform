@@ -3,11 +3,16 @@ import { randomUUID } from "node:crypto";
 import type { DatabaseClient } from "@skillup/database";
 import type { Transporter } from "nodemailer";
 
+import {
+  type CampaignOpsDailyMetrics,
+  emptyCampaignOpsDailyMetrics,
+  loadCampaignOpsDailyMetrics,
+} from "./campaign-ops-daily-metrics.js";
 import type { ApiConfig } from "./config.js";
 import { createSmtpTransport } from "./email-delivery.js";
 import {
-  loadCampaignAttributionReport,
   type CampaignAttributionReport,
+  loadCampaignAttributionReport,
 } from "./premium-campaign-attribution-report.js";
 import { PREMIUM_REPORT_TIMEZONE, PremiumReportQuerySchema } from "./premium-reporting-contract.js";
 
@@ -137,9 +142,15 @@ export function buildCampaignDailyReportCsv(report: CampaignAttributionReport): 
   return `${lines.join("\n")}\n`;
 }
 
+function formatOpsFailureReasons(ops: CampaignOpsDailyMetrics): string {
+  if (ops.failureReasons.length === 0) return "(none)";
+  return ops.failureReasons.map((row) => `${row.reason} (${row.count})`).join("; ");
+}
+
 export function buildCampaignDailyReportEmail(
   report: CampaignAttributionReport,
   reportDate: string,
+  ops: CampaignOpsDailyMetrics = emptyCampaignOpsDailyMetrics(reportDate),
 ): Readonly<{ subject: string; text: string; html: string; csv: string }> {
   const rangeLabel = `${report.effectiveRange.from.slice(0, 10)} → ${report.effectiveRange.to.slice(0, 10)}`;
   const subject = `SkillUp campaign daily report — ${reportDate} (PKT)`;
@@ -165,11 +176,27 @@ export function buildCampaignDailyReportEmail(
     (row) => `${row.date} | ${label(row.package)} | ${label(row.parameter)} | ${row.subscriptions}`,
   );
 
+  const opsLines = [
+    `Date: ${ops.date}`,
+    `Traffic on landing page: ${ops.landingTraffic}`,
+    `HE traffic: ${ops.heTraffic}`,
+    `NON HE traffic: ${ops.nonHeTraffic}`,
+    `Untagged network traffic: ${ops.untaggedNetworkTraffic}`,
+    `Traffic on JazzCash paywall: ${ops.jazzcashPaywallTraffic}`,
+    `MPIN count: ${ops.mpinCount}`,
+    `Success count: ${ops.successCount}`,
+    `Failure count: ${ops.failureCount}`,
+    `Failure reasons: ${formatOpsFailureReasons(ops)}`,
+  ];
+
   const text = [
     `SkillUp campaign daily detailed report (${PREMIUM_REPORT_TIMEZONE})`,
     `Send day (PKT): ${reportDate}`,
     `Range: ${rangeLabel}`,
     `Total subscriptions: ${report.totals.subscriptions}`,
+    "",
+    "Ops funnel (landing → JazzCash → payment)",
+    ...opsLines,
     "",
     "Daily report",
     ...(dailyLines.length > 0 ? dailyLines : ["(no rows)"]),
@@ -210,10 +237,32 @@ export function buildCampaignDailyReportEmail(
           )
           .join("");
 
+  const failureRowsHtml =
+    ops.failureReasons.length === 0
+      ? "<tr><td colspan='2'>(none)</td></tr>"
+      : ops.failureReasons
+          .map((row) => `<tr><td>${escapeHtml(row.reason)}</td><td>${row.count}</td></tr>`)
+          .join("");
+
   const html = [
     '<div style="font-family:Arial,sans-serif;color:#0f172a;max-width:720px">',
     `<h1 style="font-size:20px">SkillUp campaign daily report</h1>`,
     `<p>Send day (PKT): <strong>${escapeHtml(reportDate)}</strong><br/>Range: ${escapeHtml(rangeLabel)}<br/>Total subscriptions: <strong>${report.totals.subscriptions}</strong></p>`,
+    '<h2 style="font-size:16px">Ops funnel</h2>',
+    "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;width:100%'><tbody>",
+    `<tr><th align='left'>Date</th><td>${escapeHtml(ops.date)}</td></tr>`,
+    `<tr><th align='left'>Traffic on landing page</th><td>${ops.landingTraffic}</td></tr>`,
+    `<tr><th align='left'>HE traffic</th><td>${ops.heTraffic}</td></tr>`,
+    `<tr><th align='left'>NON HE traffic</th><td>${ops.nonHeTraffic}</td></tr>`,
+    `<tr><th align='left'>Untagged network traffic</th><td>${ops.untaggedNetworkTraffic}</td></tr>`,
+    `<tr><th align='left'>Traffic on JazzCash paywall</th><td>${ops.jazzcashPaywallTraffic}</td></tr>`,
+    `<tr><th align='left'>MPIN count</th><td>${ops.mpinCount}</td></tr>`,
+    `<tr><th align='left'>Success count</th><td>${ops.successCount}</td></tr>`,
+    `<tr><th align='left'>Failure count</th><td>${ops.failureCount}</td></tr>`,
+    "</tbody></table>",
+    '<h3 style="font-size:14px">Failure reasons</h3>',
+    "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;width:100%'><thead><tr><th>Reason</th><th>Count</th></tr></thead>",
+    `<tbody>${failureRowsHtml}</tbody></table>`,
     '<h2 style="font-size:16px">Daily report</h2>',
     "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;width:100%'><thead><tr><th>Date</th><th>Subs</th></tr></thead>",
     `<tbody>${dailyRowsHtml}</tbody></table>`,
@@ -223,7 +272,7 @@ export function buildCampaignDailyReportEmail(
     '<h2 style="font-size:16px">Detailed view — Plan × Parameter</h2>',
     "<table border='1' cellpadding='6' cellspacing='0' style='border-collapse:collapse;width:100%'><thead><tr><th>Date</th><th>Plan ID</th><th>Parameter</th><th>Total</th></tr></thead>",
     `<tbody>${packageRowsHtml}</tbody></table>`,
-    "<p style='color:#64748b;font-size:12px'>CSV attached. Source of truth: succeeded payment attribution (not GA4).</p>",
+    "<p style='color:#64748b;font-size:12px'>CSV attached. Subs source of truth: succeeded payment attribution. Ops funnel uses commercial_events + wallet-link intents + payment_orders. HE/NON-HE requires <code>he</code> on landing URLs.</p>",
     "</div>",
   ].join("");
 
@@ -329,7 +378,13 @@ export function createCampaignDailyReportEmailTask(
       aggregation: "daily",
     });
     const report = await loadCampaignAttributionReport(options.pool, query, instant);
-    const message = buildCampaignDailyReportEmail(report, reportDate);
+    const opsDate = report.daily[0]?.date ?? report.effectiveRange.from.slice(0, 10) ?? reportDate;
+    const ops = await loadCampaignOpsDailyMetrics(options.pool, {
+      fromIso: report.effectiveRange.from,
+      toIso: report.effectiveRange.to,
+      reportDate: opsDate,
+    });
+    const message = buildCampaignDailyReportEmail(report, reportDate, ops);
     const from = options.config.EMAIL_FROM;
     if (!from) {
       throw new Error("EMAIL_FROM is required to send the campaign daily report.");
