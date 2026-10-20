@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
-
-import type { ApiConfig } from "./config.js";
 import { jazzCashSecureHash, verifyJazzCashSecureHash } from "./commercial.js";
+import type { ApiConfig } from "./config.js";
+import { isJazzCashV11CheckoutEnabled } from "./config.js";
 
 type FetchLike = typeof fetch;
 
@@ -157,11 +157,18 @@ function requireCpsConfig(config: ApiConfig): Readonly<{
   };
 }
 
-export function createJazzCashCpsClient(
+function buildJazzCashCpsClient(
   config: ApiConfig,
-  fetcher: FetchLike = fetch,
+  provider: Readonly<{
+    merchantId: string;
+    password: string;
+    integritySalt: string;
+    paymentUrl: string;
+    statusUrl: string;
+    refundUrl: string;
+  }>,
+  fetcher: FetchLike,
 ): JazzCashCpsClient {
-  const provider = requireCpsConfig(config);
   const timeoutSeconds = config.JAZZCASH_CPS_TIMEOUT_SECONDS ?? 15;
 
   return {
@@ -244,4 +251,58 @@ export function createJazzCashCpsClient(
       };
     },
   };
+}
+
+export function createJazzCashCpsClient(
+  config: ApiConfig,
+  fetcher: FetchLike = fetch,
+): JazzCashCpsClient {
+  return buildJazzCashCpsClient(config, requireCpsConfig(config), fetcher);
+}
+
+/**
+ * When classic JazzCash CPS is off but V11 recurring checkout is on, still enable
+ * Status Inquiry + Refund using V11 merchant credentials and configured refund URL.
+ */
+export function resolveJazzCashCpsClient(
+  config: ApiConfig,
+  fetcher: FetchLike = fetch,
+): JazzCashCpsClient | undefined {
+  if (
+    config.FEATURE_JAZZCASH_ENABLED &&
+    config.JAZZCASH_MODE !== "disabled" &&
+    config.JAZZCASH_MERCHANT_ID &&
+    config.JAZZCASH_PASSWORD &&
+    config.JAZZCASH_INTEGRITY_SALT &&
+    config.JAZZCASH_PAYMENT_URL &&
+    config.JAZZCASH_STATUS_URL &&
+    config.JAZZCASH_REFUND_URL
+  ) {
+    return createJazzCashCpsClient(config, fetcher);
+  }
+
+  if (
+    isJazzCashV11CheckoutEnabled(config) &&
+    config.JAZZCASH_V11_MERCHANT_ID &&
+    config.JAZZCASH_V11_PASSWORD &&
+    config.JAZZCASH_V11_INTEGRITY_SALT &&
+    config.JAZZCASH_V11_URL &&
+    config.JAZZCASH_V11_INQUIRY_URL &&
+    config.JAZZCASH_V11_REFUND_URL
+  ) {
+    return buildJazzCashCpsClient(
+      config,
+      {
+        merchantId: config.JAZZCASH_V11_MERCHANT_ID,
+        password: config.JAZZCASH_V11_PASSWORD,
+        integritySalt: config.JAZZCASH_V11_INTEGRITY_SALT,
+        paymentUrl: config.JAZZCASH_V11_URL,
+        statusUrl: config.JAZZCASH_V11_INQUIRY_URL,
+        refundUrl: config.JAZZCASH_V11_REFUND_URL,
+      },
+      fetcher,
+    );
+  }
+
+  return undefined;
 }

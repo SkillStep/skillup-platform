@@ -93,6 +93,8 @@ const ApiConfigSchema = z
     JAZZCASH_V11_TOKEN_INQUIRY_URL: OptionalUrlSchema,
     JAZZCASH_V11_TOKEN_DELETE_URL: OptionalUrlSchema,
     JAZZCASH_V11_INQUIRY_URL: OptionalUrlSchema,
+    /** Payment-portal Refund API URL for V11 merchant (full provider refund). */
+    JAZZCASH_V11_REFUND_URL: OptionalUrlSchema,
     JAZZCASH_V11_MERCHANT_ID: z.string().trim().min(1).max(100).optional(),
     JAZZCASH_V11_PASSWORD: z.string().min(1).max(500).optional(),
     JAZZCASH_V11_INTEGRITY_SALT: z.string().min(8).max(500).optional(),
@@ -402,6 +404,7 @@ type OptionalInjectedConfig =
   | "JAZZCASH_V11_TOKEN_INQUIRY_URL"
   | "JAZZCASH_V11_TOKEN_DELETE_URL"
   | "JAZZCASH_V11_INQUIRY_URL"
+  | "JAZZCASH_V11_REFUND_URL"
   | "JAZZCASH_V11_MERCHANT_ID"
   | "JAZZCASH_V11_PASSWORD"
   | "JAZZCASH_V11_INTEGRITY_SALT"
@@ -438,6 +441,7 @@ export type ApiConfig = Omit<ParsedApiConfig, OptionalInjectedConfig> &
     JAZZCASH_V11_TOKEN_INQUIRY_URL?: string | undefined;
     JAZZCASH_V11_TOKEN_DELETE_URL?: string | undefined;
     JAZZCASH_V11_INQUIRY_URL?: string | undefined;
+    JAZZCASH_V11_REFUND_URL?: string | undefined;
     JAZZCASH_V11_MERCHANT_ID?: string | undefined;
     JAZZCASH_V11_PASSWORD?: string | undefined;
     JAZZCASH_V11_INTEGRITY_SALT?: string | undefined;
