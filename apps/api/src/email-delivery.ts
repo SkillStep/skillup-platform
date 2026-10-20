@@ -1,6 +1,6 @@
 import { createTransport, type Transporter } from "nodemailer";
 
-import { resolveFixedDevAdminOtp, type AuthCodeDelivery } from "./auth.js";
+import { type AuthCodeDelivery, resolveFixedDevAdminOtp } from "./auth.js";
 import type { ApiConfig } from "./config.js";
 
 function isFixedNonProductionOtpDestination(
@@ -12,7 +12,8 @@ function isFixedNonProductionOtpDestination(
     resolveFixedDevAdminOtp(
       {
         type: channel,
-        normalized: channel === "email" ? destination.trim().toLocaleLowerCase("en-US") : destination,
+        normalized:
+          channel === "email" ? destination.trim().toLocaleLowerCase("en-US") : destination,
       },
       appEnv,
     ) !== null

@@ -73,7 +73,13 @@ export function normalizeHeQueryValue(raw: string | null | undefined): string | 
   const value = raw.trim().toLocaleLowerCase("en-US");
   if (!value) return undefined;
   if (value === "1" || value === "true" || value === "he" || value === "yes") return "1";
-  if (value === "0" || value === "false" || value === "nonhe" || value === "non-he" || value === "no") {
+  if (
+    value === "0" ||
+    value === "false" ||
+    value === "nonhe" ||
+    value === "non-he" ||
+    value === "no"
+  ) {
     return "0";
   }
   return undefined;
@@ -90,9 +96,7 @@ export function attributionFromLandingCampaign(
       : `/${options.landing}`);
   const heFromUrl =
     options.he ??
-    (typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("he")
-      : null);
+    (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("he") : null);
   return buildPremiumAttribution({
     utm: campaign.utm,
     package: campaign.package,
