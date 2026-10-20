@@ -7,6 +7,7 @@ import { createAiJobStatusService, registerAiJobStatusRoutes } from "./ai-job-st
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
+import { createCampaignDailyLogsEmailTask } from "./campaign-daily-logs-email.js";
 import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
 import { createCommercialService } from "./commercial.js";
@@ -208,6 +209,13 @@ const maintenance = createMaintenanceRunner({
     {
       name: "campaign-daily-report-email",
       run: createCampaignDailyReportEmailTask({
+        pool: database.pool,
+        config,
+      }),
+    },
+    {
+      name: "campaign-daily-logs-email",
+      run: createCampaignDailyLogsEmailTask({
         pool: database.pool,
         config,
       }),
