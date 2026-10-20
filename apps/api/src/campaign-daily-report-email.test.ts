@@ -117,13 +117,14 @@ describe("campaign daily report schedule (Asia/Karachi)", () => {
 });
 
 describe("campaign daily report email content", () => {
-  it("builds subject, tables and CSV for Daily + Detailed views", () => {
+  it("builds subject, tables and CSV for Daily + Detailed views only", () => {
     const message = buildCampaignDailyReportEmail(sampleReport, "2026-10-15");
     expect(message.subject).toContain("2026-10-15");
+    expect(message.subject).not.toMatch(/Logs/i);
     expect(message.text).toContain("Detailed view — Platform × Parameter");
     expect(message.text).toContain("T | 20percentoff | 2");
-    expect(message.text).toContain("Traffic on landing page");
-    expect(message.html).toContain("Ops funnel");
+    expect(message.text).not.toContain("Traffic on landing page");
+    expect(message.html).not.toContain("Ops funnel");
     expect(message.html).toContain("Daily report");
     expect(message.csv).toContain("platform_parameter");
     expect(message.csv).toContain("2026-10-14,platform_parameter,T,20percentoff,,2");

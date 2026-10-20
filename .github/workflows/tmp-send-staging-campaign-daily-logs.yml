@@ -1,0 +1,174 @@
+name: Temporary Send Staging Campaign Daily Logs
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipient:
+        description: Email recipient for the campaign daily Logs report
+        required: true
+        default: m.abdullah73111@gmail.com
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  send:
+    name: Force-send campaign daily Logs on staging
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: SSH to staging and send Logs now
+        env:
+          STAGING_HOST: ${{ secrets.STAGING_HOST }}
+          STAGING_SSH_USER: ${{ secrets.STAGING_SSH_USER }}
+          STAGING_SSH_KEY: ${{ secrets.STAGING_SSH_KEY }}
+          REPORT_TO: ${{ inputs.recipient }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${STAGING_HOST:-}"
+          test -n "${STAGING_SSH_USER:-}"
+          test -n "${STAGING_SSH_KEY:-}"
+          test -n "${REPORT_TO:-}"
+
+          key_file="$RUNNER_TEMP/staging-campaign-logs-key"
+          known_hosts_file="$RUNNER_TEMP/staging-campaign-logs-known-hosts"
+          printf '%s\n' "$STAGING_SSH_KEY" > "$key_file"
+          chmod 600 "$key_file"
+          ssh-keyscan -H -T 10 "$STAGING_HOST" > "$known_hosts_file"
+          chmod 600 "$known_hosts_file"
+
+          ssh \
+            -i "$key_file" \
+            -o BatchMode=yes \
+            -o ConnectTimeout=15 \
+            -o "UserKnownHostsFile=$known_hosts_file" \
+            -o StrictHostKeyChecking=yes \
+            "$STAGING_SSH_USER@$STAGING_HOST" \
+            "REPORT_TO=$(printf %q "$REPORT_TO") bash -s" <<'REMOTE'
+          set -euo pipefail
+          cd /opt/skillup
+
+          echo "=== SMTP flags (redacted) ==="
+          grep -E '^(EMAIL_PROVIDER|EMAIL_FROM|SMTP_HOST|SMTP_PORT|SMTP_SECURE|SMTP_REQUIRE_TLS|SMTP_USERNAME|CAMPAIGN_DAILY_REPORT_)=' .env \
+            | sed -E 's/^(SMTP_USERNAME=).*/\1[redacted]/; s/^(EMAIL_FROM=).*/\1[redacted]/' || true
+          if grep -q '^SMTP_PASSWORD=.' .env; then echo "SMTP_PASSWORD=[set]"; else echo "SMTP_PASSWORD=[missing]"; fi
+
+          docker compose -f docker-compose.staging.yml exec -T \
+            -e CAMPAIGN_DAILY_LOGS_FORCE_SEND=I_UNDERSTAND_SEND_NOW \
+            -e CAMPAIGN_DAILY_REPORT_TO="$REPORT_TO" \
+            api node --input-type=module <<'NODE'
+          import { randomUUID } from "node:crypto";
+          import { createDatabaseClient } from "@skillup/database";
+          import {
+            buildCampaignDailyLogsEmail,
+            CAMPAIGN_DAILY_LOGS_EMAIL_ACTION,
+          } from "./dist/campaign-daily-logs-email.js";
+          import { karachiCalendarDate } from "./dist/campaign-daily-report-email.js";
+          import { loadCampaignOpsDailyMetrics } from "./dist/campaign-ops-daily-metrics.js";
+          import { readApiConfig } from "./dist/config.js";
+          import { createSmtpTransport } from "./dist/email-delivery.js";
+          import {
+            PremiumReportQuerySchema,
+            resolvePremiumReportRange,
+          } from "./dist/premium-reporting-contract.js";
+
+          if (process.env.CAMPAIGN_DAILY_LOGS_FORCE_SEND !== "I_UNDERSTAND_SEND_NOW") {
+            throw new Error("Force-send confirmation missing.");
+          }
+          if (process.env.APP_ENV !== "staging") {
+            throw new Error("Force-send is staging-only.");
+          }
+
+          const config = readApiConfig(process.env);
+          const recipient = (process.env.CAMPAIGN_DAILY_REPORT_TO || "").trim().toLowerCase();
+          if (!recipient) throw new Error("CAMPAIGN_DAILY_REPORT_TO is required.");
+          if (config.EMAIL_PROVIDER !== "smtp") {
+            throw new Error("EMAIL_PROVIDER must be smtp on staging to send Logs.");
+          }
+          if (!config.EMAIL_FROM) throw new Error("EMAIL_FROM is required.");
+
+          const database = createDatabaseClient({
+            connectionString: config.DATABASE_URL,
+            maxConnections: 1,
+            applicationName: "skillup-campaign-daily-logs-force",
+          });
+
+          try {
+            const now = new Date();
+            const reportDate = karachiCalendarDate(now);
+            const query = PremiumReportQuerySchema.parse({
+              preset: "yesterday",
+              aggregation: "daily",
+            });
+            const range = resolvePremiumReportRange(query, now);
+            const metricsDate = karachiCalendarDate(range.from);
+            const ops = await loadCampaignOpsDailyMetrics(database.pool, {
+              fromIso: range.from.toISOString(),
+              toIso: range.to.toISOString(),
+              reportDate: metricsDate,
+            });
+            const message = buildCampaignDailyLogsEmail(ops, reportDate);
+            const transport = createSmtpTransport(config);
+            const info = await transport.sendMail({
+              from: config.EMAIL_FROM,
+              to: recipient,
+              subject: `[FORCE] ${message.subject}`,
+              text: message.text,
+              html: message.html,
+              attachments: [
+                {
+                  filename: `skillup-daily-logs-${metricsDate}.doc`,
+                  content: message.wordDocument,
+                  contentType: "application/msword; charset=utf-8",
+                },
+              ],
+            });
+
+            await database.pool.query(
+              `insert into privileged_audit_events (
+                 actor_user_id, actor_role, action, target_type, target_id, result,
+                 reason, correlation_id, release_sha, metadata
+               ) values (
+                 null, 'ops_force_send', $1, 'campaign_logs', $2, 'succeeded',
+                 $3, $4, $5, $6::jsonb
+               )`,
+              [
+                CAMPAIGN_DAILY_LOGS_EMAIL_ACTION,
+                `${reportDate}-force`,
+                "Manual force-send of campaign daily Logs",
+                randomUUID(),
+                config.RELEASE_SHA,
+                JSON.stringify({
+                  reportDate,
+                  recipient,
+                  landingTraffic: ops.landingTraffic,
+                  successCount: ops.successCount,
+                  failureCount: ops.failureCount,
+                  force: true,
+                  messageId: info?.messageId ?? null,
+                }),
+              ],
+            );
+
+            console.log(
+              JSON.stringify({
+                status: "sent",
+                reportDate,
+                recipient,
+                subject: message.subject,
+                landingTraffic: ops.landingTraffic,
+                messageId: info?.messageId ?? null,
+              }),
+            );
+          } finally {
+            await database.close();
+          }
+          NODE
+
+          echo "FORCE LOGS SEND COMPLETE"
+          REMOTE
+
+          rm -f "$key_file" "$known_hosts_file"
