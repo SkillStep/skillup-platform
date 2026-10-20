@@ -13,6 +13,7 @@ describe("JazzCash IPN public edge", () => {
     expect(source).toContain("/v1/commercial/jazzcash/ipn");
     expect(source).toContain("collectFields");
     expect(source).toContain("export async function POST");
+    expect(alias).toContain("../../../jazzcash/ipn/route");
     expect(alias).toContain("rootPost");
   });
 });
