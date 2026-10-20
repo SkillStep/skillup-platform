@@ -12,7 +12,21 @@ import {
 import { PREMIUM_REPORT_TIMEZONE, PremiumReportQuerySchema } from "./premium-reporting-contract.js";
 
 export const CAMPAIGN_DAILY_REPORT_EMAIL_ACTION = "campaign.daily_report_email";
-const DEFAULT_RECIPIENT = "m.abdullah73111@gmail.com";
+const DEFAULT_RECIPIENTS = ["m.abdullah73111@gmail.com", "moizkhalid2000@gmail.com"] as const;
+
+/** Parse one email or a comma-separated list into normalized unique addresses. */
+export function parseCampaignDailyReportRecipients(raw: string | undefined | null): string[] {
+  if (!raw?.trim()) return [];
+  const seen = new Set<string>();
+  const recipients: string[] = [];
+  for (const part of raw.split(",")) {
+    const email = part.trim().toLocaleLowerCase("en-US");
+    if (!email || seen.has(email)) continue;
+    seen.add(email);
+    recipients.push(email);
+  }
+  return recipients;
+}
 
 export type CampaignDailyReportMailer = Readonly<{
   sendMail: (
@@ -285,11 +299,12 @@ async function recordSend(
   );
 }
 
+/** Comma-joined recipient list for nodemailer `to`, or null when none apply. */
 export function resolveCampaignDailyReportRecipient(config: ApiConfig): string | null {
-  const configured = config.CAMPAIGN_DAILY_REPORT_TO?.trim();
-  if (configured) return configured.toLocaleLowerCase("en-US");
+  const configured = parseCampaignDailyReportRecipients(config.CAMPAIGN_DAILY_REPORT_TO);
+  if (configured.length > 0) return configured.join(", ");
   if (config.APP_ENV === "staging" || config.APP_ENV === "production") {
-    return DEFAULT_RECIPIENT;
+    return [...DEFAULT_RECIPIENTS].join(", ");
   }
   return null;
 }

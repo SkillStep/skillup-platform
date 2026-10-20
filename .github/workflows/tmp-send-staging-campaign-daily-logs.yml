@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       recipient:
-        description: Email recipient for the campaign daily Logs report
+        description: Email recipient(s) for the campaign daily Logs report (comma-separated OK)
         required: true
-        default: m.abdullah73111@gmail.com
+        default: m.abdullah73111@gmail.com,moizkhalid2000@gmail.com
         type: string
 
 permissions:

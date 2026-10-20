@@ -132,13 +132,20 @@ describe("campaign daily report email content", () => {
 });
 
 describe("resolveCampaignDailyReportRecipient", () => {
-  it("uses configured recipient and defaults on staging/production", () => {
+  it("uses configured recipient(s) and defaults on staging/production", () => {
     expect(resolveCampaignDailyReportRecipient(baseConfig())).toBe("m.abdullah73111@gmail.com");
+    expect(
+      resolveCampaignDailyReportRecipient(
+        baseConfig({
+          CAMPAIGN_DAILY_REPORT_TO: "m.abdullah73111@gmail.com, moizkhalid2000@gmail.com",
+        }),
+      ),
+    ).toBe("m.abdullah73111@gmail.com, moizkhalid2000@gmail.com");
     expect(
       resolveCampaignDailyReportRecipient(
         baseConfig({ CAMPAIGN_DAILY_REPORT_TO: undefined, APP_ENV: "staging" }),
       ),
-    ).toBe("m.abdullah73111@gmail.com");
+    ).toBe("m.abdullah73111@gmail.com, moizkhalid2000@gmail.com");
     expect(
       resolveCampaignDailyReportRecipient(
         baseConfig({ CAMPAIGN_DAILY_REPORT_TO: undefined, APP_ENV: "local" }),
