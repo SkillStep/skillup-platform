@@ -130,26 +130,32 @@ describe("configured authentication code delivery", () => {
     });
   });
 
-  it("skips SMS for the staging fixed-OTP QA phone", async () => {
-    const staging = readApiConfig({
-      APP_ENV: "staging",
-      PUBLIC_APP_URL: "https://skillupshop.codistan.org",
-      DATABASE_URL: "postgresql://skillup_test:test-only@127.0.0.1:5432/skillup_test",
-      SESSION_SECRET: "test-only-session-secret-at-least-32-bytes",
-      EMAIL_PROVIDER: "disabled",
-      SMS_PROVIDER: "disabled",
-    });
-    const delivery = createConfiguredAuthCodeDelivery(staging);
-    await expect(
-      delivery.sendSignInCode({
-        channel: "phone",
-        destination: "+923123456789",
-        display: "03123456789",
-        code: "1234",
-        expiresAt: new Date("2026-07-30T12:10:00.000Z"),
-      }),
-    ).resolves.toBeUndefined();
-  });
+  it.each([
+    ["email", "staging.admin@skillup.test"],
+    ["phone", "+923123456789"],
+  ] as const)(
+    "never bypasses disabled staging delivery for %s identity %s",
+    async (channel, destination) => {
+      const staging = readApiConfig({
+        APP_ENV: "staging",
+        PUBLIC_APP_URL: "https://skillupshop.codistan.org",
+        DATABASE_URL: "postgresql://skillup_test:test-only@127.0.0.1:5432/skillup_test",
+        SESSION_SECRET: "test-only-session-secret-at-least-32-bytes",
+        EMAIL_PROVIDER: "disabled",
+        SMS_PROVIDER: "disabled",
+      });
+      const delivery = createConfiguredAuthCodeDelivery(staging);
+      await expect(
+        delivery.sendSignInCode({
+          channel,
+          destination,
+          display: destination,
+          code: "7392",
+          expiresAt: new Date("2026-07-30T12:10:00.000Z"),
+        }),
+      ).rejects.toMatchObject({ statusCode: 503 });
+    },
+  );
 
   it("fails safely when the requested channel is disabled", async () => {
     const disabled = readApiConfig({

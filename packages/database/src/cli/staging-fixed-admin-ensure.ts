@@ -107,12 +107,14 @@ try {
     );
   }
 
+  // A fixed staging operator has no administrative access without a protected password secret.
+  const operatorStatus = adminPassword ? "active" : "suspended";
   await connection.query(
-    `insert into admin_principals (user_id, status, created_at)
-     values ($1, 'active', now())
+    `insert into admin_principals (user_id, status, suspended_at, created_at)
+     values ($1, $2, case when $2 = 'suspended' then now() else null end, now())
      on conflict (user_id) do update
-       set status = 'active', suspended_at = null`,
-    [userId],
+       set status = excluded.status, suspended_at = excluded.suspended_at`,
+    [userId, operatorStatus],
   );
 
   for (const role of allAdminRoles) {
@@ -166,13 +168,14 @@ try {
         roles: allAdminRoles,
         passwordMode: adminPassword ? "secret-managed" : "disabled",
         sessionsRevoked: true,
+        operatorStatus,
       }),
     ],
   );
 
   await connection.query("commit");
   console.log(
-    `Staging fixed admin ready: ${STAGING_FIXED_ADMIN_EMAIL} (${userId}) roles=${allAdminRoles.join(",")} password=${adminPassword ? "secret-managed" : "disabled"} sessions=revoked`,
+    `Staging fixed admin ready: ${STAGING_FIXED_ADMIN_EMAIL} (${userId}) roles=${allAdminRoles.join(",")} password=${adminPassword ? "secret-managed" : "disabled"} status=${operatorStatus} sessions=revoked`,
   );
 } catch (error) {
   await connection.query("rollback").catch(() => undefined);

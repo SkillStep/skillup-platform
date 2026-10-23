@@ -97,3 +97,13 @@ The staging bootstrap must not contain a reusable password in source control.
 - The bootstrap revokes existing sessions for that operator, so previously compromised sessions do not survive deployment.
 - Audit administrator actions following rotation and use named, least-privilege operator accounts for ongoing access.
 - This operation is staging-only. Production deployment and payment activation remain separately authorized.
+
+## No shared OTP on public staging
+
+No email address or telephone number is allowed a fixed sign-in code on staging, including the staging administrator and payment QA number. OTPs are generated per challenge and use the configured SMTP/Twilio delivery path; if a delivery provider is unavailable, the request must fail closed. Local developers can obtain generated codes from local-only logs while delivery is disabled.
+
+The staging admin bootstrap revokes existing sessions on a successful deployment. If a previous fixed OTP was exposed, review privileged audit events and verify the affected administrator cannot sign in using the old code. Do not enable real-money transactions or approve production while staging authentication is uncertified.
+
+## Staging database containment before image download
+
+Because EC2 GHCR token requests have timed out, the staging-only deploy workflow suspends the previously exposed staging operator and revokes its sessions **before** attempting registry login. The SQL runs against the existing staging PostgreSQL container; it does not touch production and does not modify payment or learner entitlements. This containment remains effective even if a subsequent image pull fails. When the protected operator password is absent, the bootstrap keeps the operator suspended, rather than silently reactivating the account.

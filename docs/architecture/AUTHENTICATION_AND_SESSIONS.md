@@ -63,7 +63,7 @@ Rejected because immediate revocation, device/session management, token theft co
 
 ### Shared or bypass OTP
 
-Rejected because a static code defeats verification and was a critical weakness in the legacy platform.
+Rejected because a static code defeats verification and was a critical weakness in the legacy platform. No fixed OTP is permitted in local, staging or production; local-only development obtains randomly generated codes from local logs when external delivery is disabled. Staging requires working authenticated delivery.
 
 ### Password authentication at launch
 
