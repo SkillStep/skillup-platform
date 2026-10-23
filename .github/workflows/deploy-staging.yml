@@ -304,6 +304,33 @@ jobs:
             chmod 600 .env
 
             docker compose -f docker-compose.staging.yml config --quiet
+
+            # Security containment cannot wait for GHCR egress to recover.
+            # The existing staging-only PostgreSQL container is already running.
+            docker exec -i skillup-postgres-staging-container sh -c \
+              'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'CONTAINMENT_SQL'
+            begin;
+            update admin_principals
+               set status = 'suspended', suspended_at = coalesce(suspended_at, now())
+             where user_id in (
+               select user_id from user_email_identities
+                where email_normalized = 'staging.admin@skillup.test'
+             );
+            update auth_sessions
+               set revoked_at = coalesce(revoked_at, now())
+             where user_id in (
+               select user_id from user_email_identities
+                where email_normalized = 'staging.admin@skillup.test'
+             );
+            delete from admin_password_credentials
+             where user_id in (
+               select user_id from user_email_identities
+                where email_normalized = 'staging.admin@skillup.test'
+             );
+            commit;
+            CONTAINMENT_SQL
+            echo "Staging operator suspension and session containment completed before registry access."
+
             # Registry token reachability on EC2 can intermittently time out. Retry only
             # the immutable image acquisition; never skip digest or public-release checks.
             retry_registry() {
