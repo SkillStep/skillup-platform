@@ -37,6 +37,10 @@ const signatures = [
   { name: "Google API key", pattern: /\bAIza[0-9A-Za-z_-]{35}\b/ },
   { name: "OpenAI-style secret", pattern: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/ },
   { name: "Slack token", pattern: /\bxox[baprs]-[0-9A-Za-z-]{20,}\b/ },
+  {
+    name: "hardcoded staging administrator password",
+    pattern: /\b(?:const|let)\s+STAGING_FIXED_ADMIN_PASSWORD\s*=\s*["'`]/,
+  },
 ];
 
 function files(directory) {

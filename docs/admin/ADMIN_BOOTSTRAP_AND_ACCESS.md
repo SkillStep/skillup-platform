@@ -87,3 +87,13 @@ For suspected administrative compromise:
 5. Review content publications, entitlement corrections and reconciliation decisions made by the account.
 6. Roll back affected publication or access through append-only corrective actions.
 7. Re-enable access only after security approval.
+
+## Staging operator authentication hardening
+
+The staging bootstrap must not contain a reusable password in source control.
+
+- A unique password of at least 20 characters may be provisioned through the staging server's protected environment configuration (`STAGING_FIXED_ADMIN_PASSWORD`). Keep it outside GitHub source and logs.
+- When the configured value is missing or too short, the bootstrap disables password-based access for the staging operator and deletes any previous password record.
+- The bootstrap revokes existing sessions for that operator, so previously compromised sessions do not survive deployment.
+- Audit administrator actions following rotation and use named, least-privilege operator accounts for ongoing access.
+- This operation is staging-only. Production deployment and payment activation remain separately authorized.

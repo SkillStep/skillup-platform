@@ -10,6 +10,7 @@ function baseUrl() {
 
 test("invalid identity is rejected without advancing to an OTP challenge", async ({ page }) => {
   await page.goto("/en/sign-in");
+  await page.getByRole("textbox", { name: "Full name" }).fill("QA Negative");
   await page.getByRole("textbox", { name: "Email or mobile number" }).fill("not-an-email");
   const rejected = page.waitForResponse(
     (response) =>
@@ -79,6 +80,7 @@ test("anonymous callers cannot access learner or Admin private APIs", async () =
 test("sign-in UI reports a bounded network failure", async ({ page }) => {
   await page.route("**/api/v1/auth/otp/start", (route) => route.abort("failed"));
   await page.goto("/en/sign-in");
+  await page.getByRole("textbox", { name: "Full name" }).fill("QA Network");
   await page
     .getByRole("textbox", { name: "Email or mobile number" })
     .fill(qaIdentity("STAGING_QA_AUTH_NEGATIVE_EMAIL"));

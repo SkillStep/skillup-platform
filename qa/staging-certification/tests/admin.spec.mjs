@@ -22,7 +22,7 @@ test("Admin operations shell and Premium workspace render", async ({ page }) => 
   ).toBeVisible();
   await expect(
     page.getByRole("link", {
-      name: /Open Premium subscriptions, finance reporting and recurring-customer operations/,
+      name: "Open Campaign attribution reporting",
     }),
   ).toBeVisible();
 

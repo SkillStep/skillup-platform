@@ -7,6 +7,7 @@ const api = "/api/v1";
 test("passwordless sign-in delivers and verifies a real staging OTP", async ({ page }) => {
   const email = qaIdentity("STAGING_QA_LEARNER_EMAIL");
   await page.goto("/en/sign-in?returnTo=%2Fen%2Fprogress");
+  await page.getByRole("textbox", { name: "Full name" }).fill("Staging QA Learner");
 
   await page.getByRole("textbox", { name: "Email or mobile number" }).fill(email);
   const startedAfter = new Date(Date.now() - 2_000).toISOString();
@@ -70,9 +71,23 @@ test("protected Admin APIs reject unauthenticated access", async ({ request }) =
   }
 });
 
-test("private browser routes redirect unauthenticated visitors to sign-in", async ({ page }) => {
-  for (const route of ["/en/progress", "/en/account", "/en/admin", "/en/admin/premium"]) {
+test("private browser routes redirect unauthenticated visitors to the correct sign-in", async ({
+  page,
+}) => {
+  for (const route of ["/en/progress", "/en/account"]) {
     await page.goto(route);
     await page.waitForURL(/\/en\/sign-in(?:\?|$)/);
   }
+
+  for (const route of ["/en/admin", "/en/admin/premium"]) {
+    await page.goto(route);
+    await page.waitForURL(/\/en\/admin\/sign-in(?:\?|$)/);
+  }
+});
+
+test("dedicated Admin sign-in renders protected operator credentials form", async ({ page }) => {
+  await page.goto("/en/admin/sign-in");
+  await expect(page.getByRole("heading", { name: "Admin sign in" })).toBeVisible();
+  await expect(page.getByRole("textbox", { name: "Email" })).toBeVisible();
+  await expect(page.getByLabel("Password")).toBeVisible();
 });
