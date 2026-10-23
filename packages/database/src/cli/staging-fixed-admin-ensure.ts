@@ -2,16 +2,17 @@ import { randomBytes, randomUUID, scrypt as scryptCallback } from "node:crypto";
 import { promisify } from "node:util";
 
 import { createDatabaseClient, requireDatabaseUrl } from "../index.js";
+import { resolveStagingOperatorPassword } from "../staging-admin-password.js";
 
 const scrypt = promisify(scryptCallback);
 
 /**
- * Idempotently ensures the staging operator account exists with admin roles + password.
+ * Idempotently ensures the staging operator account exists with admin roles.
+ * A password is optional and must come from an external protected secret.
  * Safe only for APP_ENV=staging. Never run against production.
  */
 const STAGING_FIXED_ADMIN_EMAIL = "staging.admin@skillup.test";
 const STAGING_FIXED_ADMIN_DISPLAY_NAME = "Staging Admin";
-const STAGING_FIXED_ADMIN_PASSWORD = "Abc@12345";
 
 const allAdminRoles = [
   "content_editor",
@@ -34,6 +35,11 @@ if (required("APP_ENV") !== "staging") {
 }
 
 const releaseSha = process.env["RELEASE_SHA"]?.trim() || "staging-fixed-admin-ensure";
+const suppliedPassword = process.env["STAGING_FIXED_ADMIN_PASSWORD"];
+const adminPassword = resolveStagingOperatorPassword(suppliedPassword);
+if (suppliedPassword?.trim() && !adminPassword) {
+  console.warn("Staging admin password secret is too short; password login will be disabled.");
+}
 const client = createDatabaseClient({
   connectionString: requireDatabaseUrl(),
   applicationName: "skillup-staging-fixed-admin-ensure",
@@ -118,17 +124,28 @@ try {
     );
   }
 
-  const salt = randomBytes(16);
-  const hash = (await scrypt(STAGING_FIXED_ADMIN_PASSWORD, salt, 64)) as Buffer;
+  if (adminPassword) {
+    const salt = randomBytes(16);
+    const hash = (await scrypt(adminPassword, salt, 64)) as Buffer;
+    await connection.query(
+      `insert into admin_password_credentials (user_id, password_hash, password_salt, algorithm, created_at, updated_at)
+       values ($1, $2, $3, 'scrypt', now(), now())
+       on conflict (user_id) do update
+         set password_hash = excluded.password_hash,
+             password_salt = excluded.password_salt,
+             algorithm = excluded.algorithm,
+             updated_at = now()`,
+      [userId, hash.toString("base64url"), salt.toString("base64url")],
+    );
+  } else {
+    // Never keep a historically provisioned credential when the protected secret is missing.
+    await connection.query("delete from admin_password_credentials where user_id = $1", [userId]);
+  }
+
+  // Invalidate sessions created before credential rotation (or before password login was disabled).
   await connection.query(
-    `insert into admin_password_credentials (user_id, password_hash, password_salt, algorithm, created_at, updated_at)
-     values ($1, $2, $3, 'scrypt', now(), now())
-     on conflict (user_id) do update
-       set password_hash = excluded.password_hash,
-           password_salt = excluded.password_salt,
-           algorithm = excluded.algorithm,
-           updated_at = now()`,
-    [userId, hash.toString("base64url"), salt.toString("base64url")],
+    "update auth_sessions set revoked_at = coalesce(revoked_at, now()) where user_id = $1 and revoked_at is null",
+    [userId],
   );
 
   await connection.query(
@@ -144,13 +161,18 @@ try {
       "Ensure staging.admin@skillup.test fixed-OTP operator with admin roles",
       randomUUID(),
       releaseSha,
-      JSON.stringify({ email: STAGING_FIXED_ADMIN_EMAIL, roles: allAdminRoles }),
+      JSON.stringify({
+        email: STAGING_FIXED_ADMIN_EMAIL,
+        roles: allAdminRoles,
+        passwordMode: adminPassword ? "secret-managed" : "disabled",
+        sessionsRevoked: true,
+      }),
     ],
   );
 
   await connection.query("commit");
   console.log(
-    `Staging fixed admin ready: ${STAGING_FIXED_ADMIN_EMAIL} (${userId}) roles=${allAdminRoles.join(",")}`,
+    `Staging fixed admin ready: ${STAGING_FIXED_ADMIN_EMAIL} (${userId}) roles=${allAdminRoles.join(",")} password=${adminPassword ? "secret-managed" : "disabled"} sessions=revoked`,
   );
 } catch (error) {
   await connection.query("rollback").catch(() => undefined);
