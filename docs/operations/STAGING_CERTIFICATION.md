@@ -258,3 +258,13 @@ The orchestrator emits exactly one release decision:
 ## Permanent regression rule
 
 Every new feature must add the appropriate unit/API/Playwright happy-path, negative, authorization, Admin/Premium/payment and responsive coverage. Every defect found in QA or UAT becomes a permanent regression test before the defect is considered closed.
+
+## Registry-independent exact staging image transport (October 2026)
+
+When EC2 outbound HTTPS access to GHCR fails, the canonical `Staging Deploy` workflow retrieves Web/API/AI-worker images on a GitHub Actions runner **by their immutable GHCR manifest digests**, checks their Docker image IDs, and sends a single compressed Docker save archive and image-ID manifest over the existing staging SSH connection.
+
+The deployment runner passes the archive and manifest SHA-256 checksums as protected workflow outputs. Before switching application containers, EC2 verifies both checksums, loads the archive without contacting GHCR, and compares all three local Docker image IDs with the runner-produced manifest. The normal database migration, internal health checks, public HTTPS Web/API release SHA, pipeline identity, image digest, and staging certification gates remain required.
+
+The staging operator containment SQL runs *before* archive validation and image loading. If the archive transfer or validation fails, no image switch occurs and the account remains suspended. The workflow retains no transferred archive after a successful internal deployment.
+
+Use the optional `STAGING_SSH_HOST_FINGERPRINT` staging environment secret to pin the trusted EC2 SSH server identity for both transfer and deployment. Keep production isolated; do not use this transport for production promotion. GHCR network problems on EC2 should still be fixed at the infrastructure layer when practical.
