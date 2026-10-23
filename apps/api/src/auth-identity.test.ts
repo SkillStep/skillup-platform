@@ -47,33 +47,33 @@ describe("unified authentication identity normalization", () => {
   });
 });
 
-
 describe("non-production OTP safety", () => {
   it.each([
     ["local", "local.admin@skillup.test"],
     ["staging", "staging.admin@skillup.test"],
     ["staging", "03123456789"],
-  ])("uses generated OTP for %s identity %s rather than a shared code", async (appEnv, identity) => {
-    const query = vi.fn(async () => ({
-      rows: [{ identity_count: "0", fingerprint_count: "0" }],
-    }));
-    const sendSignInCode = vi.fn(async () => undefined);
-    const auth = createAuthService({
-      pool: { query } as unknown as Parameters<typeof createAuthService>[0]["pool"],
-      secret: "non-production-test-secret-at-least-32-characters",
-      challengeMinutes: 10,
-      sessionIdleMinutes: 30,
-      sessionAbsoluteHours: 24,
-      delivery: { sendSignInCode },
-      appEnv,
-      createCode: () => "7392",
-    });
+  ])(
+    "uses generated OTP for %s identity %s rather than a shared code",
+    async (appEnv, identity) => {
+      const query = vi.fn(async () => ({
+        rows: [{ identity_count: "0", fingerprint_count: "0" }],
+      }));
+      const sendSignInCode = vi.fn(async () => undefined);
+      const auth = createAuthService({
+        pool: { query } as unknown as Parameters<typeof createAuthService>[0]["pool"],
+        secret: "non-production-test-secret-at-least-32-characters",
+        challengeMinutes: 10,
+        sessionIdleMinutes: 30,
+        sessionAbsoluteHours: 24,
+        delivery: { sendSignInCode },
+        appEnv,
+        createCode: () => "7392",
+      });
 
-    await auth.startSignIn({ identity, requestFingerprint: "qa-fixture-test" });
+      await auth.startSignIn({ identity, requestFingerprint: "qa-fixture-test" });
 
-    expect(sendSignInCode).toHaveBeenCalledOnce();
-    expect(sendSignInCode).toHaveBeenCalledWith(
-      expect.objectContaining({ code: "7392" }),
-    );
-  });
+      expect(sendSignInCode).toHaveBeenCalledOnce();
+      expect(sendSignInCode).toHaveBeenCalledWith(expect.objectContaining({ code: "7392" }));
+    },
+  );
 });
