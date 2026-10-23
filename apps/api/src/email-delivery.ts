@@ -1,24 +1,7 @@
 import { createTransport, type Transporter } from "nodemailer";
 
-import { type AuthCodeDelivery, resolveFixedDevAdminOtp } from "./auth.js";
+import type { AuthCodeDelivery } from "./auth.js";
 import type { ApiConfig } from "./config.js";
-
-function isFixedNonProductionOtpDestination(
-  appEnv: string,
-  channel: "email" | "phone",
-  destination: string,
-): boolean {
-  return (
-    resolveFixedDevAdminOtp(
-      {
-        type: channel,
-        normalized:
-          channel === "email" ? destination.trim().toLocaleLowerCase("en-US") : destination,
-      },
-      appEnv,
-    ) !== null
-  );
-}
 
 type SignInMessage = Readonly<{
   from: string;
@@ -174,12 +157,6 @@ export function createConfiguredAuthCodeDelivery(
 
   return {
     sendSignInCode: async (input) => {
-      // Fixed non-production OTPs skip mailbox/SMS (Twilio may be unset on staging).
-      if (isFixedNonProductionOtpDestination(config.APP_ENV, input.channel, input.destination)) {
-        console.info(`[${config.APP_ENV}-auth] fixed OTP for ${input.destination}: ${input.code}`);
-        return;
-      }
-
       if (input.channel === "email") {
         if (!smtp) {
           // Local-only: email is disabled, so print the OTP for developers.

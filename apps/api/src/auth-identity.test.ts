@@ -1,14 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   AuthRequestError,
-  FIXED_DEV_ADMIN_OTP,
-  LOCAL_DEV_ADMIN_EMAIL,
-  STAGING_DEV_ADMIN_EMAIL,
-  STAGING_FIXED_OTP_PHONE,
+  createAuthService,
   normalizeAuthIdentity,
   normalizePakistanMobile,
-  resolveFixedDevAdminOtp,
 } from "./auth.js";
 
 describe("unified authentication identity normalization", () => {
@@ -51,38 +47,33 @@ describe("unified authentication identity normalization", () => {
   });
 });
 
-describe("fixed non-production admin OTP", () => {
-  it("returns the fixed OTP for local/staging operator emails and the staging QA phone", () => {
-    expect(
-      resolveFixedDevAdminOtp({ type: "email", normalized: LOCAL_DEV_ADMIN_EMAIL }, "local"),
-    ).toBe(FIXED_DEV_ADMIN_OTP);
-    expect(
-      resolveFixedDevAdminOtp({ type: "email", normalized: STAGING_DEV_ADMIN_EMAIL }, "staging"),
-    ).toBe(FIXED_DEV_ADMIN_OTP);
-    expect(
-      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "staging"),
-    ).toBe(FIXED_DEV_ADMIN_OTP);
-    expect(
-      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "local"),
-    ).toBe(FIXED_DEV_ADMIN_OTP);
-    expect(normalizePakistanMobile("03123456789")).toBe(STAGING_FIXED_OTP_PHONE);
-  });
 
-  it("never enables the fixed OTP in production or for other identities", () => {
-    expect(
-      resolveFixedDevAdminOtp({ type: "email", normalized: STAGING_DEV_ADMIN_EMAIL }, "production"),
-    ).toBeNull();
-    expect(
-      resolveFixedDevAdminOtp({ type: "email", normalized: LOCAL_DEV_ADMIN_EMAIL }, "staging"),
-    ).toBeNull();
-    expect(
-      resolveFixedDevAdminOtp({ type: "email", normalized: "someone@codistan.org" }, "staging"),
-    ).toBeNull();
-    expect(
-      resolveFixedDevAdminOtp({ type: "phone", normalized: "+923001234567" }, "staging"),
-    ).toBeNull();
-    expect(
-      resolveFixedDevAdminOtp({ type: "phone", normalized: STAGING_FIXED_OTP_PHONE }, "production"),
-    ).toBeNull();
+describe("non-production OTP safety", () => {
+  it.each([
+    ["local", "local.admin@skillup.test"],
+    ["staging", "staging.admin@skillup.test"],
+    ["staging", "03123456789"],
+  ])("uses generated OTP for %s identity %s rather than a shared code", async (appEnv, identity) => {
+    const query = vi.fn(async () => ({
+      rows: [{ identity_count: "0", fingerprint_count: "0" }],
+    }));
+    const sendSignInCode = vi.fn(async () => undefined);
+    const auth = createAuthService({
+      pool: { query } as unknown as Parameters<typeof createAuthService>[0]["pool"],
+      secret: "non-production-test-secret-at-least-32-characters",
+      challengeMinutes: 10,
+      sessionIdleMinutes: 30,
+      sessionAbsoluteHours: 24,
+      delivery: { sendSignInCode },
+      appEnv,
+      createCode: () => "7392",
+    });
+
+    await auth.startSignIn({ identity, requestFingerprint: "qa-fixture-test" });
+
+    expect(sendSignInCode).toHaveBeenCalledOnce();
+    expect(sendSignInCode).toHaveBeenCalledWith(
+      expect.objectContaining({ code: "7392" }),
+    );
   });
 });

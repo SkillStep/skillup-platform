@@ -304,8 +304,32 @@ jobs:
             chmod 600 .env
 
             docker compose -f docker-compose.staging.yml config --quiet
-            echo "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null
-            docker compose -f docker-compose.staging.yml pull
+            # Registry token reachability on EC2 can intermittently time out. Retry only
+            # the immutable image acquisition; never skip digest or public-release checks.
+            retry_registry() {
+              local operation="$1"
+              local attempt=1
+              local delay
+              while [ "$attempt" -le 5 ]; do
+                if [ "$operation" = "login" ]; then
+                  if printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null; then
+                    return 0
+                  fi
+                elif docker compose -f docker-compose.staging.yml pull; then
+                  return 0
+                fi
+                if [ "$attempt" -eq 5 ]; then
+                  echo "::error::GHCR $operation failed after 5 attempts. Check EC2 outbound HTTPS, DNS, and ghcr.io/token connectivity." >&2
+                  return 1
+                fi
+                delay=$((attempt * 10))
+                echo "GHCR $operation retry in ${delay}s (attempt $attempt/5); no release was switched."
+                sleep "$delay"
+                attempt=$((attempt + 1))
+              done
+            }
+            retry_registry login
+            retry_registry pull
             docker compose -f docker-compose.staging.yml up -d postgres
             for attempt in $(seq 1 45); do
               if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then

@@ -130,7 +130,10 @@ describe("configured authentication code delivery", () => {
     });
   });
 
-  it("skips SMS for the staging fixed-OTP QA phone", async () => {
+  it.each([
+    ["email", "staging.admin@skillup.test"],
+    ["phone", "+923123456789"],
+  ] as const)("never bypasses disabled staging delivery for %s identity %s", async (channel, destination) => {
     const staging = readApiConfig({
       APP_ENV: "staging",
       PUBLIC_APP_URL: "https://skillupshop.codistan.org",
@@ -142,13 +145,13 @@ describe("configured authentication code delivery", () => {
     const delivery = createConfiguredAuthCodeDelivery(staging);
     await expect(
       delivery.sendSignInCode({
-        channel: "phone",
-        destination: "+923123456789",
-        display: "03123456789",
-        code: "1234",
+        channel,
+        destination,
+        display: destination,
+        code: "7392",
         expiresAt: new Date("2026-07-30T12:10:00.000Z"),
       }),
-    ).resolves.toBeUndefined();
+    ).rejects.toMatchObject({ statusCode: 503 });
   });
 
   it("fails safely when the requested channel is disabled", async () => {
