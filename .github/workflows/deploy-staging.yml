@@ -135,8 +135,85 @@ jobs:
           )"
           echo "previous_release_ref=$previous_ref" >> "$GITHUB_OUTPUT"
 
+  transfer-images:
+    name: Stage digest-verified images over SSH (no EC2 registry egress)
+    needs: [prep, resolve-images]
+    runs-on: ubuntu-latest
+    environment: staging
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      archive_sha: ${{ steps.bundle.outputs.archive_sha }}
+      manifest_sha: ${{ steps.bundle.outputs.manifest_sha }}
+    steps:
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch exact image digests and create checksum-protected offline bundle
+        id: bundle
+        shell: bash
+        env:
+          IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
+          IMAGE_TAG: ${{ github.sha }}
+          WEB_DIGEST: ${{ needs.resolve-images.outputs.web_image_digest }}
+          API_DIGEST: ${{ needs.resolve-images.outputs.api_image_digest }}
+          AI_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
+        run: |
+          set -euo pipefail
+          mkdir -p offline
+          : > offline/image-ids.tsv
+
+          fetch_exact_image() {
+            local service="$1"
+            local digest="$2"
+            local tag="${IMAGE_BASE}-${service}:${IMAGE_TAG}"
+            [[ "$digest" =~ ^sha256:[a-f0-9]{64}$ ]] || {
+              echo "::error::Invalid manifest digest for $service" >&2
+              exit 1
+            }
+            # Pull using the verified manifest digest, not a mutable staging tag.
+            docker pull "${IMAGE_BASE}-${service}@${digest}"
+            docker tag "${IMAGE_BASE}-${service}@${digest}" "$tag"
+            local image_id
+            image_id="$(docker image inspect --format '{{.Id}}' "$tag")"
+            [[ "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]] || exit 1
+            printf '%s %s\n' "$tag" "$image_id" >> offline/image-ids.tsv
+          }
+
+          fetch_exact_image web "$WEB_DIGEST"
+          fetch_exact_image api "$API_DIGEST"
+          fetch_exact_image ai-worker "$AI_DIGEST"
+          test "$(wc -l < offline/image-ids.tsv)" -eq 3
+
+          # Save shared layers together; gzip avoids requiring zstd on EC2.
+          docker save \
+            "${IMAGE_BASE}-web:${IMAGE_TAG}" \
+            "${IMAGE_BASE}-api:${IMAGE_TAG}" \
+            "${IMAGE_BASE}-ai-worker:${IMAGE_TAG}" | gzip -1 > offline/images.tar.gz
+          test -s offline/images.tar.gz
+          echo "archive_sha=$(sha256sum offline/images.tar.gz | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "manifest_sha=$(sha256sum offline/image-ids.tsv | cut -d' ' -f1)" >> "$GITHUB_OUTPUT"
+          echo "Verified three pinned images and packed an integrity-checked SSH transfer."
+
+      - name: Transfer offline bundle to staging EC2 over SSH
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          fingerprint: ${{ secrets.STAGING_SSH_HOST_FINGERPRINT }}
+          timeout: 60s
+          command_timeout: 45m
+          source: "offline/images.tar.gz,offline/image-ids.tsv"
+          target: "/opt/skillup/release-bundles/${{ github.sha }}/${{ github.run_id }}-${{ github.run_attempt }}"
+          strip_components: 1
+
   deploy:
-    needs: [prep, build-and-push, resolve-images]
+    needs: [prep, build-and-push, resolve-images, transfer-images]
     runs-on: ubuntu-latest
     environment: staging
     permissions:
@@ -157,8 +234,6 @@ jobs:
       - name: Deploy and certify internal Phase 1 gates on EC2
         uses: appleboy/ssh-action@v1.2.0
         env:
-          GH_ACTOR: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           IMAGE_BASE: ${{ needs.prep.outputs.image_base }}
           IMAGE_TAG: ${{ github.sha }}
           PIPELINE_ID: ${{ github.run_id }}-${{ github.run_attempt }}
@@ -170,6 +245,8 @@ jobs:
           AI_IMAGE_DIGEST: ${{ needs.resolve-images.outputs.ai_image_digest }}
           PREVIOUS_RELEASE_REF: ${{ needs.resolve-images.outputs.previous_release_ref }}
           COMPOSE_B64: ${{ steps.compose.outputs.compose_b64 }}
+          EXPECTED_IMAGE_ARCHIVE_SHA: ${{ needs.transfer-images.outputs.archive_sha }}
+          EXPECTED_IMAGE_MANIFEST_SHA: ${{ needs.transfer-images.outputs.manifest_sha }}
           JAZZCASH_V11_MERCHANT_ID: ${{ secrets.JAZZCASH_V11_MERCHANT_ID }}
           JAZZCASH_V11_PASSWORD: ${{ secrets.JAZZCASH_V11_PASSWORD }}
           JAZZCASH_V11_INTEGRITY_SALT: ${{ secrets.JAZZCASH_V11_INTEGRITY_SALT }}
@@ -182,9 +259,10 @@ jobs:
           host: ${{ secrets.STAGING_HOST }}
           username: ${{ secrets.STAGING_SSH_USER }}
           key: ${{ secrets.STAGING_SSH_KEY }}
+          fingerprint: ${{ secrets.STAGING_SSH_HOST_FINGERPRINT }}
           timeout: 60s
           command_timeout: 20m
-          envs: GH_ACTOR,GH_TOKEN,IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL,JAZZCASH_V11_REFUND_URL,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_PHONE_NUMBER
+          envs: IMAGE_BASE,IMAGE_TAG,PIPELINE_ID,WEB_ARTIFACT_REF,WEB_IMAGE_DIGEST,API_ARTIFACT_REF,API_IMAGE_DIGEST,AI_ARTIFACT_REF,AI_IMAGE_DIGEST,PREVIOUS_RELEASE_REF,COMPOSE_B64,EXPECTED_IMAGE_ARCHIVE_SHA,EXPECTED_IMAGE_MANIFEST_SHA,JAZZCASH_V11_MERCHANT_ID,JAZZCASH_V11_PASSWORD,JAZZCASH_V11_INTEGRITY_SALT,JAZZCASH_V11_RETURN_URL,JAZZCASH_V11_REFUND_URL,TWILIO_ACCOUNT_SID,TWILIO_AUTH_TOKEN,TWILIO_PHONE_NUMBER
           script: |
             set -euo pipefail
 
@@ -331,32 +409,43 @@ jobs:
             CONTAINMENT_SQL
             echo "Staging operator suspension and session containment completed before registry access."
 
-            # Registry token reachability on EC2 can intermittently time out. Retry only
-            # the immutable image acquisition; never skip digest or public-release checks.
-            retry_registry() {
-              local operation="$1"
-              local attempt=1
-              local delay
-              while [ "$attempt" -le 5 ]; do
-                if [ "$operation" = "login" ]; then
-                  if printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GH_ACTOR" --password-stdin >/dev/null; then
-                    return 0
-                  fi
-                elif docker compose -f docker-compose.staging.yml pull; then
-                  return 0
-                fi
-                if [ "$attempt" -eq 5 ]; then
-                  echo "::error::GHCR $operation failed after 5 attempts. Check EC2 outbound HTTPS, DNS, and ghcr.io/token connectivity." >&2
-                  return 1
-                fi
-                delay=$((attempt * 10))
-                echo "GHCR $operation retry in ${delay}s (attempt $attempt/5); no release was switched."
-                sleep "$delay"
-                attempt=$((attempt + 1))
-              done
+            # EC2 currently cannot reach ghcr.io/token. The runner has already
+            # fetched all three images by immutable digest and transferred them via SSH.
+            bundle="/opt/skillup/release-bundles/${IMAGE_TAG}/${PIPELINE_ID}"
+            test -s "$bundle/images.tar.gz" || {
+              echo "::error::Missing staged image archive; refusing deployment." >&2
+              exit 1
             }
-            retry_registry login
-            retry_registry pull
+            test -s "$bundle/image-ids.tsv" || {
+              echo "::error::Missing staged image manifest; refusing deployment." >&2
+              exit 1
+            }
+            actual_archive_sha="$(sha256sum "$bundle/images.tar.gz" | cut -d' ' -f1)"
+            actual_manifest_sha="$(sha256sum "$bundle/image-ids.tsv" | cut -d' ' -f1)"
+            test "$actual_archive_sha" = "$EXPECTED_IMAGE_ARCHIVE_SHA" || {
+              echo "::error::Offline archive checksum mismatch; refusing deployment." >&2
+              exit 1
+            }
+            test "$actual_manifest_sha" = "$EXPECTED_IMAGE_MANIFEST_SHA" || {
+              echo "::error::Offline image manifest checksum mismatch; refusing deployment." >&2
+              exit 1
+            }
+            test "$(wc -l < "$bundle/image-ids.tsv")" -eq 3
+            docker load --input "$bundle/images.tar.gz"
+            for service in web api ai-worker; do
+              ref="${IMAGE_BASE}-${service}:${IMAGE_TAG}"
+              expected_id="$(awk -v name="$ref" '$1 == name { print $2 }' "$bundle/image-ids.tsv")"
+              test -n "$expected_id" || {
+                echo "::error::Missing image identity for $service." >&2
+                exit 1
+              }
+              loaded_id="$(docker image inspect --format '{{.Id}}' "$ref")"
+              test "$loaded_id" = "$expected_id" || {
+                echo "::error::Loaded image identity mismatch for $service." >&2
+                exit 1
+              }
+            done
+            echo "OFFLINE IMAGE TRANSFER + EXACT IMAGE IDS: PASS"
             docker compose -f docker-compose.staging.yml up -d postgres
             for attempt in $(seq 1 45); do
               if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then
@@ -416,6 +505,8 @@ jobs:
 
             rm -f /tmp/skillup-origin-legit.json /tmp/skillup-origin-hostile.json
             docker image prune -f
+            rm -f "$bundle/images.tar.gz" "$bundle/image-ids.tsv"
+            rmdir "$bundle" 2>/dev/null || true
             echo "INTERNAL PHASE 1 GATES: PASS"
 
       - name: Verify public staging edge from external runner
