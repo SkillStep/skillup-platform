@@ -39,4 +39,12 @@ describe("installable PWA privacy boundary", () => {
     expect(layout).toContain("<PwaStatus />");
     expect(serviceWorker).toContain('event.data?.type === "SKIP_WAITING"');
   });
+
+  it("does not surface an in-app install SkillUp prompt", () => {
+    const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
+    expect(pwaStatus).not.toContain("Install SkillUp for quicker access");
+    expect(pwaStatus).not.toContain("Install SkillUp");
+    expect(pwaStatus).toContain("beforeinstallprompt");
+    expect(pwaStatus).toContain("preventDefault");
+  });
 });

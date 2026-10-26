@@ -4,15 +4,8 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./pwa-status.module.css";
 
-type InstallPromptEvent = Event &
-  Readonly<{
-    prompt: () => Promise<void>;
-    userChoice: Promise<Readonly<{ outcome: "accepted" | "dismissed"; platform: string }>>;
-  }>;
-
 export function PwaStatus() {
   const [online, setOnline] = useState(true);
-  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const refreshing = useRef(false);
   const updateRequested = useRef(false);
@@ -24,13 +17,11 @@ export function PwaStatus() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
+    // Suppress the browser install affordance; do not show an in-app install prompt.
     const handleInstallPrompt = (event: Event) => {
       event.preventDefault();
-      setInstallPrompt(event as InstallPromptEvent);
     };
-    const handleInstalled = () => setInstallPrompt(null);
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
-    window.addEventListener("appinstalled", handleInstalled);
 
     const handleControllerChange = () => {
       if (!updateRequested.current || refreshing.current) return;
@@ -58,17 +49,9 @@ export function PwaStatus() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
-      window.removeEventListener("appinstalled", handleInstalled);
       navigator.serviceWorker?.removeEventListener("controllerchange", handleControllerChange);
     };
   }, []);
-
-  async function install(): Promise<void> {
-    if (!installPrompt) return;
-    await installPrompt.prompt();
-    await installPrompt.userChoice;
-    setInstallPrompt(null);
-  }
 
   function update(): void {
     if (!waitingWorker) return;
@@ -76,7 +59,7 @@ export function PwaStatus() {
     waitingWorker.postMessage({ type: "SKIP_WAITING" });
   }
 
-  if (online && !installPrompt && !waitingWorker) return null;
+  if (online && !waitingWorker) return null;
 
   return (
     <aside className={styles["status"]} aria-live="polite" aria-label="Application status">
@@ -91,14 +74,6 @@ export function PwaStatus() {
           <p>A reviewed SkillUp update is ready.</p>
           <button type="button" onClick={update}>
             Update safely
-          </button>
-        </div>
-      ) : null}
-      {installPrompt && online ? (
-        <div>
-          <p>Install SkillUp for quicker access from this device.</p>
-          <button type="button" onClick={() => void install()}>
-            Install SkillUp
           </button>
         </div>
       ) : null}

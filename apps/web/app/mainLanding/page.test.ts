@@ -34,10 +34,18 @@ describe("mainLanding page", () => {
     expect(source).toContain("Learn AI Skills through games for better earning");
     expect(source).toContain("ScrollReveal");
     expect(source).toContain("What You Can Learn");
+    expect(source).toContain("aboveFold");
     expect(subscribeSource).toContain("/landing/jazzcash-logo.png");
     expect(subscribeSource).toContain("Subscribe Now");
     expect(subscribeSource).toContain("/api/v1/premium/billing/jazzcash-v11/link/start");
     expect(subscribeSource).toContain("trackAddToCart");
+  });
+
+  it("keeps the JazzCash block in the first viewport shell", () => {
+    const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
+    expect(css).toContain("height: 100svh");
+    expect(css).toContain("object-fit: cover");
+    expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
   });
 
   it("keeps legal links on the landing surface", () => {
