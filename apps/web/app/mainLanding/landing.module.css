@@ -43,10 +43,23 @@
   background: #fff;
 }
 
+.bannerSwap {
+  position: relative;
+  line-height: 0;
+}
+
 .bannerImage {
   width: 100%;
   height: auto;
   display: block;
+}
+
+.bannerDesktop {
+  display: block;
+}
+
+.bannerMobile {
+  display: none;
 }
 
 .aboveFold {
@@ -452,6 +465,14 @@
 }
 
 @media (max-width: 720px) {
+  .bannerDesktop {
+    display: none;
+  }
+
+  .bannerMobile {
+    display: block;
+  }
+
   .paymentCard {
     width: calc(100% - 24px);
     padding: 18px 16px 16px;

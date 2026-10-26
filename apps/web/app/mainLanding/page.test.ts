@@ -28,7 +28,9 @@ describe("mainLanding campaign URL", () => {
 
 describe("mainLanding page", () => {
   it("renders the SkillUp Premium design", () => {
+    expect(source).toContain("LandingBanner");
     expect(source).toContain("/landing/skillup-premium-banner.jpg");
+    expect(source).toContain("/landing/skillup-premium-banner-mobile.jpg");
     expect(source).toContain("Learn AI Skills through games for better earning");
     expect(source).toContain("ScrollReveal");
     expect(source).toContain("What You Can Learn");

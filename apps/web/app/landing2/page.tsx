@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactElement } from "react";
 
@@ -9,6 +8,7 @@ import {
   normalizeLanding2Campaign,
 } from "../../lib/landing-campaign";
 import { LandingAnalyticsBoot } from "../mainLanding/landing-analytics-boot";
+import { LandingBanner } from "../mainLanding/landing-banner";
 import styles from "../mainLanding/landing.module.css";
 import { Icon } from "../mainLanding/landing-icons";
 import { LandingSubscribeCard } from "../mainLanding/landing-subscribe";
@@ -116,14 +116,14 @@ function Landing2Content({
           <h1 id="premium-hero-heading" className={styles["visuallyHidden"]}>
             Learn AI Skills through games for better earning — 20% off yearly Premium
           </h1>
-          <Image
-            src="/landing/skillup-premium-banner.jpg"
-            alt="SkillUp Premium: Learn AI Skills through games for better earning. Game khelo, Skill seekho, Zyada kamao. Trusted by learners across Pakistan."
-            width={780}
-            height={312}
-            className={styles["bannerImage"]}
-            priority
-            sizes="(max-width: 900px) 100vw, 900px"
+          <LandingBanner
+            desktopSrc="/landing/tiktok-campaign-banner-web.jpg"
+            mobileSrc="/landing/tiktok-campaign-banner-mobile.jpg"
+            alt="SkillUp Premium: Become a Pro Member. Win PKR 10,000 JazzCash Credit Every Month. Trusted by learners across Pakistan."
+            desktopWidth={1600}
+            desktopHeight={639}
+            mobileWidth={900}
+            mobileHeight={1600}
           />
         </section>
 

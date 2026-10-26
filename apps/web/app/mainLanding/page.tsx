@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { type LandingCampaign, normalizeLandingCampaign } from "../../lib/landing-campaign";
 import { LandingAnalyticsBoot } from "./landing-analytics-boot";
+import { LandingBanner } from "./landing-banner";
 import styles from "./landing.module.css";
 import { Icon } from "./landing-icons";
 import { LandingSubscribeCard } from "./landing-subscribe";
@@ -112,14 +112,14 @@ function LandingContent({
           <h1 id="premium-hero-heading" className={styles["visuallyHidden"]}>
             Learn AI Skills through games for better earning
           </h1>
-          <Image
-            src="/landing/skillup-premium-banner.jpg"
+          <LandingBanner
+            desktopSrc="/landing/skillup-premium-banner.jpg"
+            mobileSrc="/landing/skillup-premium-banner-mobile.jpg"
             alt="SkillUp Premium: Learn AI Skills through games for better earning. Game khelo, Skill seekho, Zyada kamao. Trusted by learners across Pakistan."
-            width={780}
-            height={312}
-            className={styles["bannerImage"]}
-            priority
-            sizes="(max-width: 900px) 100vw, 900px"
+            desktopWidth={780}
+            desktopHeight={312}
+            mobileWidth={900}
+            mobileHeight={1600}
           />
         </section>
 

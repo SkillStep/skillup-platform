@@ -21,7 +21,9 @@ describe("landing2 20% off campaign", () => {
   });
 
   it("renders the Premium landing with 20% off offer copy", () => {
-    expect(source).toContain("/landing/skillup-premium-banner.jpg");
+    expect(source).toContain("LandingBanner");
+    expect(source).toContain("/landing/tiktok-campaign-banner-web.jpg");
+    expect(source).toContain("/landing/tiktok-campaign-banner-mobile.jpg");
     expect(source).toContain("20% off");
     expect(source).toContain("PKR 3,999");
     expect(source).toContain("buildLanding2Path");
