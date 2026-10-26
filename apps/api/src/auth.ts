@@ -277,6 +277,30 @@ function generateCode(): string {
   return randomInt(0, 10_000).toString().padStart(4, "0");
 }
 
+/** Fixed phone OTP for non-production only. Never used in production. */
+export const FIXED_PHONE_OTP = "1234";
+
+/**
+ * Staging/local phone sign-in uses a fixed OTP while SMS delivery is unavailable.
+ * Email always uses a generated code + real mailbox delivery.
+ */
+export function resolveFixedPhoneOtp(
+  identity: Readonly<{ type: string }>,
+  appEnv: string | undefined,
+): string | null {
+  if (appEnv !== "local" && appEnv !== "staging") return null;
+  if (identity.type !== "phone") return null;
+  return FIXED_PHONE_OTP;
+}
+
+function resolveChallengeCode(
+  identity: NormalizedIdentity,
+  appEnv: string | undefined,
+  createCode: () => string,
+): string {
+  return resolveFixedPhoneOtp(identity, appEnv) ?? createCode();
+}
+
 function generateSessionToken(): string {
   return randomBytes(32).toString("base64url");
 }
@@ -524,7 +548,7 @@ export function createAuthService(
     }
 
     const challengeId = randomUUID();
-    const code = createCode();
+    const code = resolveChallengeCode(input.identity, options.appEnv, createCode);
     const expiresAt = addMinutes(requestedAt, options.challengeMinutes);
     const secretDigest = digest(options.secret, `challenge:${challengeId}:${code}`);
 

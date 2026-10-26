@@ -3,8 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import {
   AuthRequestError,
   createAuthService,
+  FIXED_PHONE_OTP,
   normalizeAuthIdentity,
   normalizePakistanMobile,
+  resolveFixedPhoneOtp,
 } from "./auth.js";
 
 describe("unified authentication identity normalization", () => {
@@ -48,13 +50,39 @@ describe("unified authentication identity normalization", () => {
 });
 
 describe("non-production OTP safety", () => {
+  it("never applies a fixed phone OTP in production", () => {
+    expect(resolveFixedPhoneOtp({ type: "phone" }, "production")).toBeNull();
+    expect(resolveFixedPhoneOtp({ type: "email" }, "staging")).toBeNull();
+  });
+
   it.each([
     ["local", "local.admin@skillup.test"],
     ["staging", "staging.admin@skillup.test"],
-    ["staging", "03123456789"],
-  ])(
-    "uses generated OTP for %s identity %s rather than a shared code",
-    async (appEnv, identity) => {
+  ])("uses generated OTP for %s email %s", async (appEnv, identity) => {
+    const query = vi.fn(async () => ({
+      rows: [{ identity_count: "0", fingerprint_count: "0" }],
+    }));
+    const sendSignInCode = vi.fn(async () => undefined);
+    const auth = createAuthService({
+      pool: { query } as unknown as Parameters<typeof createAuthService>[0]["pool"],
+      secret: "non-production-test-secret-at-least-32-characters",
+      challengeMinutes: 10,
+      sessionIdleMinutes: 30,
+      sessionAbsoluteHours: 24,
+      delivery: { sendSignInCode },
+      appEnv,
+      createCode: () => "7392",
+    });
+
+    await auth.startSignIn({ identity, requestFingerprint: "qa-fixture-test" });
+
+    expect(sendSignInCode).toHaveBeenCalledOnce();
+    expect(sendSignInCode).toHaveBeenCalledWith(expect.objectContaining({ code: "7392" }));
+  });
+
+  it.each(["local", "staging"] as const)(
+    "uses fixed phone OTP 1234 on %s without requiring SMS",
+    async (appEnv) => {
       const query = vi.fn(async () => ({
         rows: [{ identity_count: "0", fingerprint_count: "0" }],
       }));
@@ -70,10 +98,15 @@ describe("non-production OTP safety", () => {
         createCode: () => "7392",
       });
 
-      await auth.startSignIn({ identity, requestFingerprint: "qa-fixture-test" });
+      await auth.startSignIn({
+        identity: "03123456789",
+        requestFingerprint: "qa-fixture-test",
+      });
 
       expect(sendSignInCode).toHaveBeenCalledOnce();
-      expect(sendSignInCode).toHaveBeenCalledWith(expect.objectContaining({ code: "7392" }));
+      expect(sendSignInCode).toHaveBeenCalledWith(
+        expect.objectContaining({ channel: "phone", code: FIXED_PHONE_OTP }),
+      );
     },
   );
 });

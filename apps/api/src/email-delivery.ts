@@ -1,6 +1,6 @@
 import { createTransport, type Transporter } from "nodemailer";
 
-import type { AuthCodeDelivery } from "./auth.js";
+import { type AuthCodeDelivery, resolveFixedPhoneOtp } from "./auth.js";
 import type { ApiConfig } from "./config.js";
 
 type SignInMessage = Readonly<{
@@ -157,6 +157,15 @@ export function createConfiguredAuthCodeDelivery(
 
   return {
     sendSignInCode: async (input) => {
+      // Staging/local phone OTPs are fixed (1234); skip SMS so start does not 503.
+      if (
+        resolveFixedPhoneOtp({ type: input.channel }, config.APP_ENV) !== null &&
+        input.channel === "phone"
+      ) {
+        console.info(`[${config.APP_ENV}-auth] fixed phone OTP for ${input.destination}`);
+        return;
+      }
+
       if (input.channel === "email") {
         if (!smtp) {
           // Local-only: email is disabled, so print the OTP for developers.
