@@ -10,11 +10,24 @@
 
   width: min(100%, 900px);
   margin: 0 auto;
-  overflow: hidden;
+  /* Match preferred ~80% browser zoom while users stay at 100%. */
+  zoom: 0.8;
+  overflow: visible;
   background: var(--cream);
   color: var(--ink);
   font-family: Arial, Helvetica, sans-serif;
   padding-bottom: 18px;
+}
+
+/* Single document scrollbar only — body must not create a nested one. */
+:global(html):has(.page) {
+  overflow-x: clip;
+  overflow-y: auto;
+}
+
+:global(body):has(.page),
+:global(#main-content):has(.page) {
+  overflow: visible;
 }
 
 .page button,
@@ -36,8 +49,7 @@
 
 .hero {
   position: relative;
-  flex: 1 1 0;
-  min-height: 0;
+  width: 100%;
   margin: 0;
   padding: 0;
   line-height: 0;
@@ -48,14 +60,20 @@
 .bannerSwap {
   position: relative;
   width: 100%;
-  height: 100%;
+  margin: 0 auto;
   line-height: 0;
+  text-align: center;
 }
 
 .bannerImage {
-  /* Next/Image fill — scale entire creative into the slot, no edge cropping. */
-  object-fit: contain !important;
-  object-position: center center !important;
+  /* Full column width, natural aspect ratio — never crop the creative. */
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100%;
+  display: block;
+  margin: 0 auto;
+  object-fit: contain;
+  object-position: center center;
 }
 
 .bannerDesktop {
@@ -66,16 +84,15 @@
   display: none;
 }
 
-/* Banner + JazzCash card fill the first screen so the MSISDN field is always visible. */
+/* Banner spans the column; JazzCash card sits directly under it. */
 .aboveFold {
-  height: 100svh;
-  max-height: 100svh;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  overflow: hidden;
+  align-items: stretch;
   padding-bottom: 0.75rem;
   box-sizing: border-box;
+  overflow: visible;
 }
 
 .paymentCard {
@@ -83,6 +100,7 @@
   z-index: 10;
   flex: 0 0 auto;
   width: calc(100% - 48px);
+  max-width: 100%;
   margin: 12px auto 0;
   padding: 18px 28px 16px;
   background: #fff;
@@ -480,6 +498,27 @@
 
   .bannerMobile {
     display: block;
+  }
+
+  /*
+   * Portrait mobile creatives are tall — keep full graphic visible (contain)
+   * while leaving room for the JazzCash card on the first screen.
+   */
+  .bannerSwap {
+    width: 100%;
+    max-height: 52svh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+  }
+
+  .bannerMobile {
+    width: auto !important;
+    max-width: 100%;
+    max-height: 52svh;
+    height: auto !important;
+    object-fit: contain;
   }
 
   .aboveFold {

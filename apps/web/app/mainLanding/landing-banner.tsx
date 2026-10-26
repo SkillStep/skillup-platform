@@ -14,29 +14,34 @@ export type LandingBannerProps = Readonly<{
 }>;
 
 /**
- * Art-directed campaign hero: landscape on desktop, portrait creative on mobile.
- * `fill` + object-fit:contain scales the whole creative into the above-fold slot
- * without cropping edges.
+ * Full-width campaign hero. Desktop/mobile art swap; image always spans the
+ * landing column and scales by aspect ratio (no cropping).
  */
 export function LandingBanner({
   desktopSrc,
   mobileSrc,
   alt,
+  desktopWidth,
+  desktopHeight,
+  mobileWidth,
+  mobileHeight,
 }: LandingBannerProps): ReactElement {
   return (
     <div className={styles["bannerSwap"]}>
       <Image
         src={desktopSrc}
         alt={alt}
-        fill
+        width={desktopWidth}
+        height={desktopHeight}
         className={`${styles["bannerImage"]} ${styles["bannerDesktop"]}`}
         priority
-        sizes="(max-width: 720px) 1px, (max-width: 900px) 100vw, 900px"
+        sizes="(max-width: 900px) 100vw, 900px"
       />
       <Image
         src={mobileSrc}
         alt={alt}
-        fill
+        width={mobileWidth}
+        height={mobileHeight}
         className={`${styles["bannerImage"]} ${styles["bannerMobile"]}`}
         priority
         sizes="(max-width: 720px) 100vw, 1px"

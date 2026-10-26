@@ -41,13 +41,15 @@ describe("mainLanding page", () => {
     expect(subscribeSource).toContain("trackAddToCart");
   });
 
-  it("keeps the JazzCash block in the first viewport shell", () => {
+  it("keeps banners full-width and uncropped in the landing column", () => {
     const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
     const banner = readFileSync(new URL("./landing-banner.tsx", import.meta.url), "utf8");
-    expect(css).toContain("height: 100svh");
+    expect(css).toContain("width: 100% !important");
     expect(css).toContain("object-fit: contain");
     expect(css).not.toContain("object-fit: cover");
-    expect(banner).toContain("fill");
+    expect(css).toContain("zoom: 0.8");
+    expect(css).toMatch(/\.page\s*\{[^}]*overflow:\s*visible/);
+    expect(banner).not.toContain("fill");
     expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
   });
 
