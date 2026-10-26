@@ -15,24 +15,20 @@ export type LandingBannerProps = Readonly<{
 
 /**
  * Art-directed campaign hero: landscape on desktop, portrait creative on mobile.
- * Uses CSS display swap so each breakpoint gets the correct aspect ratio for CLS.
+ * `fill` + object-fit:contain scales the whole creative into the above-fold slot
+ * without cropping edges.
  */
 export function LandingBanner({
   desktopSrc,
   mobileSrc,
   alt,
-  desktopWidth,
-  desktopHeight,
-  mobileWidth,
-  mobileHeight,
 }: LandingBannerProps): ReactElement {
   return (
     <div className={styles["bannerSwap"]}>
       <Image
         src={desktopSrc}
         alt={alt}
-        width={desktopWidth}
-        height={desktopHeight}
+        fill
         className={`${styles["bannerImage"]} ${styles["bannerDesktop"]}`}
         priority
         sizes="(max-width: 720px) 1px, (max-width: 900px) 100vw, 900px"
@@ -40,8 +36,7 @@ export function LandingBanner({
       <Image
         src={mobileSrc}
         alt={alt}
-        width={mobileWidth}
-        height={mobileHeight}
+        fill
         className={`${styles["bannerImage"]} ${styles["bannerMobile"]}`}
         priority
         sizes="(max-width: 720px) 100vw, 1px"

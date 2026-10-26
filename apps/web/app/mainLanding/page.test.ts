@@ -43,8 +43,11 @@ describe("mainLanding page", () => {
 
   it("keeps the JazzCash block in the first viewport shell", () => {
     const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
+    const banner = readFileSync(new URL("./landing-banner.tsx", import.meta.url), "utf8");
     expect(css).toContain("height: 100svh");
-    expect(css).toContain("object-fit: cover");
+    expect(css).toContain("object-fit: contain");
+    expect(css).not.toContain("object-fit: cover");
+    expect(banner).toContain("fill");
     expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
   });
 
