@@ -492,6 +492,11 @@
 }
 
 @media (max-width: 720px) {
+  /* Mobile uses native scale — first screen is banner + JazzCash only. */
+  .page {
+    zoom: 1;
+  }
+
   .bannerDesktop {
     display: none;
   }
@@ -501,12 +506,34 @@
   }
 
   /*
-   * Portrait mobile creatives are tall — keep full graphic visible (contain)
-   * while leaving room for the JazzCash card on the first screen.
+   * First viewport: banner on top, full JazzCash block at bottom.
+   * Learning / footer content sits below and appears after scroll.
    */
+  .aboveFold {
+    height: 100svh;
+    height: 100dvh;
+    max-height: 100svh;
+    max-height: 100dvh;
+    padding-bottom: 0.5rem;
+    box-sizing: border-box;
+    overflow: hidden;
+  }
+
+  .hero {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: #fff;
+  }
+
   .bannerSwap {
     width: 100%;
-    max-height: 52svh;
+    height: 100%;
+    max-height: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -515,19 +542,18 @@
 
   .bannerMobile {
     width: auto !important;
-    max-width: 100%;
-    max-height: 52svh;
     height: auto !important;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: contain;
-  }
-
-  .aboveFold {
-    padding-bottom: 0.5rem;
+    object-position: center center;
   }
 
   .paymentCard {
+    flex: 0 0 auto;
     width: calc(100% - 24px);
     margin-top: 8px;
+    margin-bottom: 0;
     padding: 14px 16px 12px;
   }
 

@@ -53,6 +53,13 @@ describe("mainLanding page", () => {
     expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
   });
 
+  it("pins banner + JazzCash to the first mobile viewport", () => {
+    const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
+    expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*height:\s*100dvh/);
+    expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*\.hero[\s\S]*flex:\s*1\s+1\s+0/);
+    expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*zoom:\s*1/);
+  });
+
   it("keeps legal links on the landing surface", () => {
     expect(subscribeSource).toContain('href="/en/legal/terms"');
     expect(source).toContain('href="/en/legal/privacy"');
