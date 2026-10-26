@@ -510,13 +510,19 @@
    * Learning / footer content sits below and appears after scroll.
    */
   .aboveFold {
+    /* dvh preferred on mobile browsers; svh fallback for older engines. */
     height: 100svh;
-    height: 100dvh;
     max-height: 100svh;
-    max-height: 100dvh;
     padding-bottom: 0.5rem;
     box-sizing: border-box;
     overflow: hidden;
+  }
+
+  @supports (height: 100dvh) {
+    .aboveFold {
+      height: 100dvh;
+      max-height: 100dvh;
+    }
   }
 
   .hero {
