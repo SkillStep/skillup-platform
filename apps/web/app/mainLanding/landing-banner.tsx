@@ -14,8 +14,8 @@ export type LandingBannerProps = Readonly<{
 }>;
 
 /**
- * Full-width campaign hero. Desktop/mobile art swap; image always spans the
- * landing column and scales by aspect ratio (no cropping).
+ * Full-width campaign hero. Desktop/mobile art swap.
+ * Mobile covers the hero slot edge-to-edge; desktop keeps natural ratio.
  */
 export function LandingBanner({
   desktopSrc,

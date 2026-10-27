@@ -29,8 +29,8 @@ describe("mainLanding campaign URL", () => {
 describe("mainLanding page", () => {
   it("renders the SkillUp Premium design", () => {
     expect(source).toContain("LandingBanner");
-    expect(source).toContain("/landing/skillup-premium-banner.jpg");
-    expect(source).toContain("/landing/skillup-premium-banner-mobile.jpg");
+    expect(source).toContain("/landing/skillup-premium-banner-v2.jpg");
+    expect(source).toContain("/landing/skillup-premium-banner-mobile-v3.jpg");
     expect(source).toContain("Learn AI Skills through games for better earning");
     expect(source).toContain("ScrollReveal");
     expect(source).toContain("What You Can Learn");
@@ -45,11 +45,10 @@ describe("mainLanding page", () => {
     const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
     const banner = readFileSync(new URL("./landing-banner.tsx", import.meta.url), "utf8");
     expect(css).toContain("width: 100% !important");
-    expect(css).toContain("object-fit: contain");
-    expect(css).not.toContain("object-fit: cover");
+    expect(css).toMatch(/\.bannerImage\s*\{[^}]*object-fit:\s*contain/);
     expect(css).toContain("zoom: 0.8");
     expect(css).toMatch(/\.page\s*\{[^}]*overflow:\s*visible/);
-    expect(banner).not.toContain("fill");
+    expect(banner).not.toMatch(/\bfill[={\s]/);
     expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
   });
 
@@ -59,6 +58,13 @@ describe("mainLanding page", () => {
     expect(css).toContain("@supports (height: 100dvh)");
     expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*\.hero[\s\S]*flex:\s*1\s+1\s+0/);
     expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*zoom:\s*1/);
+    expect(css).toMatch(
+      /@media \(max-width: 720px\)[\s\S]*\.bannerMobile[\s\S]*object-fit:\s*cover/,
+    );
+    expect(source).toContain("skillup-premium-banner-mobile-v3.jpg");
+    expect(css).toMatch(
+      /@media \(max-width: 720px\)[\s\S]*\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/,
+    );
   });
 
   it("keeps legal links on the landing surface", () => {

@@ -7,9 +7,9 @@ import {
   type LandingCampaign,
   normalizeLanding2Campaign,
 } from "../../lib/landing-campaign";
+import styles from "../mainLanding/landing.module.css";
 import { LandingAnalyticsBoot } from "../mainLanding/landing-analytics-boot";
 import { LandingBanner } from "../mainLanding/landing-banner";
-import styles from "../mainLanding/landing.module.css";
 import { Icon } from "../mainLanding/landing-icons";
 import { LandingSubscribeCard } from "../mainLanding/landing-subscribe";
 import { ScrollReveal } from "../mainLanding/scroll-reveal";
@@ -22,9 +22,6 @@ type CheckoutMode = "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" |
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 const apiBaseUrl = process.env["API_BASE_URL"] ?? "http://localhost:3001";
-
-const OFFER_NOTICE =
-  "Limited 20% off yearly Premium — PKR 4,999 se PKR 3,999. Subscribe Now se JazzCash wallet link hoga. Offer campaign ke liye valid hai.";
 
 export const dynamic = "force-dynamic";
 
@@ -118,19 +115,18 @@ function Landing2Content({
           </h1>
           <LandingBanner
             desktopSrc="/landing/tiktok-campaign-banner-web.jpg"
-            mobileSrc="/landing/tiktok-campaign-banner-mobile.jpg"
+            mobileSrc="/landing/tiktok-campaign-banner-mobile-v3.jpg"
             alt="SkillUp Premium: Become a Pro Member. Win PKR 10,000 JazzCash Credit Every Month. Trusted by learners across Pakistan."
             desktopWidth={1600}
             desktopHeight={639}
-            mobileWidth={900}
-            mobileHeight={1600}
+            mobileWidth={864}
+            mobileHeight={1152}
           />
         </section>
 
         <LandingSubscribeCard
           campaign={campaign}
           checkoutMode={checkoutMode}
-          offerNotice={OFFER_NOTICE}
           returnPath={buildLanding2Path(campaign)}
           landing="landing2"
         />
