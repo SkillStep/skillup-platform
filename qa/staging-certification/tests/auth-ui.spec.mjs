@@ -1,16 +1,16 @@
 import { expect, test } from "@playwright/test";
 
-import { qaIdentity } from "../helpers/identity.mjs";
+import { QA_LEARNER_PASSWORD, qaPasswordPhone } from "../helpers/identity.mjs";
 
 const api = "/api/v1";
 
 test("mobile password sign-in authenticates a staging QA learner", async ({ page }) => {
-  const phone = qaIdentity("STAGING_QA_PHONE");
+  const phone = qaPasswordPhone();
   await page.goto("/en/sign-in?returnTo=%2Fen%2Fprogress");
   await page.getByRole("textbox", { name: "Full name" }).fill("Staging QA Learner");
   await page.getByRole("textbox", { name: "Mobile number" }).fill(phone);
-  await page.getByLabel("Password", { exact: true }).fill("Abc@123");
-  await page.getByLabel("Confirm password").fill("Abc@123");
+  await page.getByLabel("Password", { exact: true }).fill(QA_LEARNER_PASSWORD);
+  await page.getByLabel("Confirm password").fill(QA_LEARNER_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await page.waitForURL((url) => !url.pathname.endsWith("/sign-in"));
@@ -30,7 +30,7 @@ test("untrusted Origin cannot start authentication", async ({ request }) => {
     data: {
       displayName: "Attacker",
       phone: "03001234567",
-      password: "Abc@123",
+      password: QA_LEARNER_PASSWORD,
     },
   });
   expect(response.status()).toBe(403);

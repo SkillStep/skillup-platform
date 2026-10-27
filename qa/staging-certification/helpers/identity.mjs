@@ -91,3 +91,19 @@ export async function retrieveOtpForUi(email, startedAfter) {
 export function qaIdentity(name) {
   return required(name);
 }
+
+/**
+ * Phone used for learner password sign-in certification.
+ * Prefers STAGING_QA_PHONE when SMS certification is wired; otherwise a
+ * dedicated password-fixture MSISDN that password signup/login can create.
+ */
+export function qaPasswordPhone() {
+  return (
+    process.env.STAGING_QA_PHONE?.trim() ||
+    process.env.STAGING_QA_PASSWORD_PHONE?.trim() ||
+    "03009999111"
+  );
+}
+
+/** Matches apps/api learner migration / password signup default. */
+export const QA_LEARNER_PASSWORD = "Abc@123";
