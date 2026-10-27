@@ -11,6 +11,12 @@ import {
   verifyAdminPassword,
 } from "./admin-password.js";
 import type { ApiConfig } from "./config.js";
+import {
+  hashLearnerPassword,
+  isValidLearnerPassword,
+  loadLearnerPasswordCredential,
+  verifyLearnerPassword,
+} from "./learner-password.js";
 
 export type AuthIdentityType = "email" | "phone";
 
@@ -31,6 +37,12 @@ const VerifyOtpSchema = z.object({
 const AdminPasswordSignInSchema = z.object({
   email: z.string().trim().email().max(254),
   password: z.string().min(8).max(128),
+});
+
+const LearnerPasswordSignInSchema = z.object({
+  displayName: z.string().trim().min(2).max(60),
+  phone: z.string().trim().min(10).max(20),
+  password: z.string().min(7).max(128),
 });
 
 const IdentityTypeParamsSchema = z.object({
@@ -173,6 +185,12 @@ export type AuthService = Readonly<{
    */
   signInAdminPassword: (
     input: Readonly<{ email: string; password: string }>,
+  ) => Promise<VerifiedSession>;
+  /**
+   * Learner mobile + password sign-in or account creation (replaces OTP for learners).
+   */
+  signInOrRegisterLearnerPassword: (
+    input: Readonly<{ displayName: string; phone: string; password: string }>,
   ) => Promise<VerifiedSession>;
   /**
    * Merge a phone-only checkout account into the signed-in learner when they verify that phone.
@@ -962,6 +980,93 @@ export function createAuthService(
       }
     },
 
+    signInOrRegisterLearnerPassword: async ({ displayName, phone, password }) => {
+      if (!isValidLearnerPassword(password)) {
+        throw new AuthRequestError(
+          400,
+          "Password must be at least 7 characters and include upper, lower, number and symbol.",
+        );
+      }
+
+      let identity: NormalizedIdentity;
+      try {
+        identity = normalizeAuthIdentity(phone);
+      } catch {
+        throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
+      }
+      if (identity.type !== "phone") {
+        throw new AuthRequestError(400, "Enter a valid Pakistani mobile number.");
+      }
+
+      const verifiedAt = now();
+      const client = await options.pool.connect();
+      try {
+        await client.query("begin");
+        await client.query("select pg_advisory_xact_lock(hashtextextended($1, 0))", [
+          `${identity.type}:${identity.normalized}`,
+        ]);
+
+        const owner = await identityOwner(client, identity);
+        let userId: string;
+
+        if (owner) {
+          if (owner.status !== "active") {
+            throw new AuthRequestError(403, "This account is not available for sign-in.");
+          }
+          userId = owner.userId;
+          const credential = await loadLearnerPasswordCredential(options.pool, userId);
+          if (!credential || !(await verifyLearnerPassword(password, credential))) {
+            throw new AuthRequestError(401, "Invalid mobile number or password.");
+          }
+          await client.query(
+            `update learner_profiles
+                set display_name = $2, updated_at = $3
+              where user_id = $1`,
+            [userId, displayName, verifiedAt],
+          );
+        } else {
+          const user = await client.query<{ id: string }>(
+            "insert into users (status, created_at, updated_at) values ('active', $1, $1) returning id",
+            [verifiedAt],
+          );
+          const createdUserId = user.rows[0]?.id;
+          if (!createdUserId) throw new Error("The learner account could not be created.");
+          userId = createdUserId;
+          await insertIdentity(client, userId, identity, verifiedAt, false);
+          await client.query(
+            "insert into learner_profiles (user_id, display_name, created_at, updated_at) values ($1, $2, $3, $3)",
+            [userId, displayName, verifiedAt],
+          );
+          const hashed = await hashLearnerPassword(password);
+          await client.query(
+            `insert into learner_password_credentials
+              (user_id, password_hash, password_salt, algorithm, created_at, updated_at)
+             values ($1, $2, $3, $4, $5, $5)`,
+            [userId, hashed.hash, hashed.salt, hashed.algorithm, verifiedAt],
+          );
+        }
+
+        const sessionToken = createToken();
+        const sessionTokenDigest = digest(options.secret, `session:${sessionToken}`);
+        const sessionExpiresAt = addHours(verifiedAt, options.sessionAbsoluteHours);
+        const idleExpiresAt = addMinutes(verifiedAt, options.sessionIdleMinutes);
+        await client.query(
+          `insert into auth_sessions
+            (user_id, token_digest, expires_at, idle_expires_at, last_seen_at, created_at)
+           values ($1, $2, $3::timestamptz, least($4::timestamptz, $3::timestamptz), $5::timestamptz, $5::timestamptz)`,
+          [userId, sessionTokenDigest, sessionExpiresAt, idleExpiresAt, verifiedAt],
+        );
+        const learner = await loadLearner(client, userId);
+        await client.query("commit");
+        return { sessionToken, sessionExpiresAt, learner };
+      } catch (error) {
+        await client.query("rollback").catch(() => undefined);
+        throw error;
+      } finally {
+        client.release();
+      }
+    },
+
     mergePhoneCheckoutAccountIfNeeded: async ({ targetUserId, phoneNormalized }) => {
       const identity = normalizeAuthIdentity(phoneNormalized);
       if (identity.type !== "phone") {
@@ -1200,6 +1305,17 @@ export function registerAuthRoutes(
     requireTrustedOrigin(request, options.config);
     const body = AdminPasswordSignInSchema.parse(request.body);
     const verified = await options.authService.signInAdminPassword(body);
+    reply.header(
+      "set-cookie",
+      sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
+    );
+    return reply.status(200).send({ learner: verified.learner });
+  });
+
+  app.post("/v1/auth/password/login", async (request, reply) => {
+    requireTrustedOrigin(request, options.config);
+    const body = LearnerPasswordSignInSchema.parse(request.body);
+    const verified = await options.authService.signInOrRegisterLearnerPassword(body);
     reply.header(
       "set-cookie",
       sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),

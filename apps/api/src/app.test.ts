@@ -108,6 +108,9 @@ function createAuthService(): AuthService {
     signInAdminPassword: vi.fn(async () => {
       throw new Error("not implemented in test mock");
     }),
+    signInOrRegisterLearnerPassword: vi.fn(async () => {
+      throw new Error("not implemented in test mock");
+    }),
     mergePhoneCheckoutAccountIfNeeded: vi.fn(async () => ({ merged: false })),
     revokeSession: vi.fn(async () => undefined),
     updateProfile: vi.fn(async (_userId, patch) => ({

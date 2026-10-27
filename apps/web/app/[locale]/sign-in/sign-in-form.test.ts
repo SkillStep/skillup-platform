@@ -4,16 +4,14 @@ import { describe, expect, it } from "vitest";
 
 const source = readFileSync(new URL("./sign-in-form.tsx", import.meta.url), "utf8");
 
-describe("sign-in form full name", () => {
-  it("collects full name with identity and sends displayName on verify", () => {
+describe("sign-in form password flow", () => {
+  it("collects name, mobile, password and confirm password without OTP", () => {
     expect(source).toContain("Full name");
-    expect(source).toContain('name="fullName"');
-    expect(source).toContain("displayName: fullName.trim()");
-    expect(source).toContain("/api/v1/auth/otp/verify");
-  });
-
-  it("supports admin mode that skips learner onboarding", () => {
-    expect(source).toContain('mode?: "learner" | "admin"');
-    expect(source).toContain("Opening the operations console");
+    expect(source).toContain("Mobile number");
+    expect(source).toContain("Confirm password");
+    expect(source).toContain("/api/v1/auth/password/login");
+    expect(source).not.toContain("/api/v1/auth/otp/");
+    expect(source).toContain("LANDING_MSISDN_STORAGE_KEY");
+    expect(source).toContain("displayName: trimmedName");
   });
 });

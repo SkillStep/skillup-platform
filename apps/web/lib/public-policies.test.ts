@@ -12,6 +12,9 @@ describe("public launch policies", () => {
     expect(refund?.version).toBe("2026-09-07");
     expect(JSON.stringify(terms)).toContain("Rs. 599");
     expect(JSON.stringify(terms)).toContain("Rs. 4,999");
+    expect(JSON.stringify(terms)).toContain("Maidan Premium Monthly");
+    expect(JSON.stringify(terms)).toContain("Step Charging Logic");
+    expect(JSON.stringify(terms)).toContain("Promotional Campaigns");
     expect(JSON.stringify(terms)).toContain("admin@codistan.org");
     expect(JSON.stringify(terms)).toContain("laws of Pakistan");
     expect(

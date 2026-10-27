@@ -14,8 +14,7 @@ type PageProps = Readonly<{
 
 export const metadata: Metadata = {
   title: "Sign in",
-  description:
-    "Securely sign in or create a SkillUp account with a short-lived email or SMS verification code.",
+  description: "Sign in to SkillUp with your mobile number and password.",
   robots: { index: false, follow: false, noarchive: true },
 };
 
@@ -42,12 +41,12 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
             Pick up where you left off.
           </h1>
           <p className={styles["summary"]}>
-            Sign in securely to save progress, continue your learning path and build a useful daily
-            practice habit.
+            Sign in with your name, JazzCash mobile number and password to save progress and continue
+            learning.
           </p>
           <ul className={styles["commitments"]} aria-label="Account commitments">
-            <li>Email or mobile — no password stored</li>
-            <li>Short-lived, single-use verification code</li>
+            <li>Mobile number + password sign-in</li>
+            <li>Name required for your learning profile</li>
             <li>Private progress is never indexed</li>
           </ul>
         </section>

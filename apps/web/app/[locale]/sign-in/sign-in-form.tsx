@@ -8,13 +8,6 @@ import styles from "../account-flow.module.css";
 
 type ApiError = Readonly<{ message?: string }>;
 
-type ChallengeResponse = Readonly<{
-  challengeId: string;
-  channel: "email" | "phone";
-  maskedDestination: string;
-  expiresAt: string;
-}>;
-
 type VerifyResponse = Readonly<{
   learner?: Readonly<{
     profile?: Readonly<{
@@ -29,6 +22,16 @@ type SignInFormProps = Readonly<{
   mode?: "learner" | "admin";
 }>;
 
+function isStrongPassword(password: string): boolean {
+  return (
+    password.length >= 7 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+}
+
 async function readError(response: Response): Promise<string> {
   try {
     const body = (await response.json()) as ApiError;
@@ -41,13 +44,14 @@ async function readError(response: Response): Promise<string> {
 
 export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   const fullNameId = useId();
-  const identityId = useId();
-  const codeId = useId();
+  const phoneId = useId();
+  const passwordId = useId();
+  const confirmPasswordId = useId();
   const [hydrated, setHydrated] = useState(false);
   const [fullName, setFullName] = useState("");
-  const [identity, setIdentity] = useState("");
-  const [challenge, setChallenge] = useState<ChallengeResponse | null>(null);
-  const [code, setCode] = useState("");
+  const [phone, setPhone] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
@@ -56,38 +60,18 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   useEffect(() => {
     setHydrated(true);
     if (isAdmin) return;
+    // Prefill only when JazzCash checkout already stored the MSISDN (pay-first return).
     try {
       const saved = window.sessionStorage.getItem(LANDING_MSISDN_STORAGE_KEY);
       if (saved && /^\d{11,15}$/.test(saved)) {
-        setIdentity(saved);
+        setPhone(saved);
       }
     } catch {
       // Ignore storage access failures.
     }
   }, [isAdmin]);
 
-  async function requestCode(): Promise<void> {
-    const response = await fetch("/api/v1/auth/otp/start", {
-      method: "POST",
-      credentials: "same-origin",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ identity }),
-    });
-
-    if (!response.ok) {
-      setIsError(true);
-      setMessage(await readError(response));
-      return;
-    }
-
-    const body = (await response.json()) as ChallengeResponse;
-    setChallenge(body);
-    setCode("");
-    setIsError(false);
-    setMessage(`Enter the four-digit code sent to ${body.maskedDestination}.`);
-  }
-
-  async function start(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedName = fullName.trim();
     if (trimmedName.length < 2) {
@@ -95,46 +79,31 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
       setMessage("Enter your full name (at least 2 characters).");
       return;
     }
-    setBusy(true);
-    setMessage(null);
-    try {
-      await requestCode();
-    } catch {
+    if (!isStrongPassword(password)) {
       setIsError(true);
-      setMessage("We could not reach SkillUp. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+      setMessage(
+        "Password must be at least 7 characters and include upper, lower, number and symbol (e.g. Abc@123).",
+      );
+      return;
     }
-  }
-
-  async function resend() {
-    setBusy(true);
-    setMessage(null);
-    try {
-      await requestCode();
-    } catch {
+    if (password !== confirmPassword) {
       setIsError(true);
-      setMessage("We could not resend the code. Check your connection and try again.");
-    } finally {
-      setBusy(false);
+      setMessage("Password and confirm password do not match.");
+      return;
     }
-  }
 
-  async function verify(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!challenge) return;
     setBusy(true);
     setMessage(null);
 
     try {
-      const response = await fetch("/api/v1/auth/otp/verify", {
+      const response = await fetch("/api/v1/auth/password/login", {
         method: "POST",
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          challengeId: challenge.challengeId,
-          code,
-          displayName: fullName.trim(),
+          displayName: trimmedName,
+          phone: phone.trim(),
+          password,
         }),
       });
 
@@ -163,122 +132,124 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
       window.location.assign(destination);
     } catch {
       setIsError(true);
-      setMessage("We could not verify the code. Check your connection and try again.");
+      setMessage("We could not sign you in. Check your connection and try again.");
     } finally {
       setBusy(false);
     }
   }
 
+  if (isAdmin) {
+    return (
+      <div className={styles["card"]}>
+        <h2>Admin sign in</h2>
+        <p className={styles["cardLead"]}>
+          Operator access uses the admin email/password console, not learner mobile login.
+        </p>
+        <p className={styles["privacy"]}>Use /en/admin/sign-in for operator credentials.</p>
+      </div>
+    );
+  }
+
   return (
     <div className={styles["card"]}>
-      <h2>
-        {challenge ? "Enter your code" : isAdmin ? "Admin sign in" : "Sign in or create account"}
-      </h2>
+      <h2>Sign in</h2>
       <p className={styles["cardLead"]}>
-        {challenge
-          ? `We sent a short-lived code to ${challenge.maskedDestination}.`
-          : isAdmin
-            ? "Operator access uses the same passwordless code flow. After verification you return to the admin panel."
-            : "Enter your full name with your email or Pakistani mobile number. No password is required."}
+        Enter your name, JazzCash mobile number and password. New numbers create an account.
       </p>
 
-      {challenge ? (
-        <form className={styles["form"]} onSubmit={verify}>
-          <div className={styles["codeGrid"]}>
-            <div className={styles["field"]}>
-              <label className={styles["label"]} htmlFor={codeId}>
-                Four-digit code
-              </label>
-              <input
-                className={styles["input"]}
-                id={codeId}
-                name="code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{4}"
-                maxLength={4}
-                value={code}
-                onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 4))}
-                required
-              />
-              <p className={styles["help"]}>
-                The code expires shortly and stops working after five unsuccessful attempts.
-              </p>
-            </div>
-            <button className={styles["action"]} type="submit" disabled={busy || code.length !== 4}>
-              {busy ? "Verifying…" : "Verify and continue"}
-            </button>
-            <button
-              className={styles["secondaryAction"]}
-              type="button"
-              disabled={busy}
-              onClick={() => void resend()}
-            >
-              Resend code
-            </button>
-            <button
-              className={styles["secondaryAction"]}
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                setChallenge(null);
-                setCode("");
-                setMessage(null);
-              }}
-            >
-              Use a different email or number
-            </button>
-          </div>
-        </form>
-      ) : (
-        <form className={styles["form"]} onSubmit={start}>
-          <div className={styles["field"]}>
-            <label className={styles["label"]} htmlFor={fullNameId}>
-              Full name
-            </label>
-            <input
-              className={styles["input"]}
-              id={fullNameId}
-              name="fullName"
-              type="text"
-              autoComplete="name"
-              maxLength={60}
-              minLength={2}
-              placeholder="Your full name"
-              value={fullName}
-              onChange={(event) => setFullName(event.target.value)}
-              required
-            />
-          </div>
-          <div className={styles["field"]}>
-            <label className={styles["label"]} htmlFor={identityId}>
-              Email or mobile number
-            </label>
-            <input
-              className={styles["input"]}
-              id={identityId}
-              name="identity"
-              type="text"
-              autoComplete="username"
-              maxLength={254}
-              placeholder="0300 1234567 or you@example.com"
-              value={identity}
-              onChange={(event) => setIdentity(event.target.value)}
-              required
-            />
-            <p className={styles["help"]}>
-              Pakistan mobile formats such as 0300 1234567 and +923001234567 are accepted.
-            </p>
-          </div>
-          <button
-            className={styles["action"]}
-            type="submit"
-            disabled={!hydrated || busy || identity.trim().length < 3 || fullName.trim().length < 2}
-          >
-            {busy ? "Sending code…" : "Continue"}
-          </button>
-        </form>
-      )}
+      <form className={styles["form"]} onSubmit={onSubmit}>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={fullNameId}>
+            Full name
+          </label>
+          <input
+            className={styles["input"]}
+            id={fullNameId}
+            name="fullName"
+            type="text"
+            autoComplete="name"
+            maxLength={60}
+            minLength={2}
+            placeholder="Your full name"
+            value={fullName}
+            onChange={(event) => setFullName(event.target.value)}
+            required
+          />
+        </div>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={phoneId}>
+            Mobile number
+          </label>
+          <input
+            className={styles["input"]}
+            id={phoneId}
+            name="phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            maxLength={15}
+            placeholder="03XXXXXXXXX"
+            value={phone}
+            onChange={(event) => setPhone(event.target.value)}
+            required
+          />
+          <p className={styles["help"]}>
+            Pakistan mobile formats such as 0300 1234567 and +923001234567 are accepted. Prefills
+            after JazzCash checkout.
+          </p>
+        </div>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={passwordId}>
+            Password
+          </label>
+          <input
+            className={styles["input"]}
+            id={passwordId}
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            maxLength={128}
+            placeholder="Create or enter password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+          <p className={styles["help"]}>
+            At least 7 characters with upper, lower, number and symbol (example: Abc@123).
+          </p>
+        </div>
+        <div className={styles["field"]}>
+          <label className={styles["label"]} htmlFor={confirmPasswordId}>
+            Confirm password
+          </label>
+          <input
+            className={styles["input"]}
+            id={confirmPasswordId}
+            name="confirmPassword"
+            type="password"
+            autoComplete="new-password"
+            maxLength={128}
+            placeholder="Re-enter password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            required
+          />
+        </div>
+        <button
+          className={styles["action"]}
+          type="submit"
+          disabled={
+            !hydrated ||
+            busy ||
+            fullName.trim().length < 2 ||
+            phone.trim().length < 10 ||
+            password.length < 7 ||
+            confirmPassword.length < 7
+          }
+        >
+          {busy ? "Signing in…" : "Sign in"}
+        </button>
+      </form>
 
       <div aria-live="polite" aria-atomic="true">
         {message ? (
@@ -288,8 +259,8 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
         ) : null}
       </div>
       <p className={styles["privacy"]}>
-        SkillUp does not return or log verification codes. Account existence is not disclosed by the
-        request step.
+        Existing learners who previously used OTP can sign in with password Abc@123, then change it
+        later from support if needed.
       </p>
     </div>
   );

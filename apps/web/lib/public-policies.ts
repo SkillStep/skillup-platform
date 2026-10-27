@@ -59,7 +59,7 @@ export const publicPolicies: readonly PublicPolicy[] = [
       {
         heading: "4. Accounts and Responsible Use",
         body: [
-          "You must provide accurate account information, keep login credentials and verification codes secure, and use your account only for yourself.",
+          "You must provide accurate account information, keep login credentials and passwords secure, and use your account only for yourself.",
           "You must not share active sessions, manipulate scores, bypass learning or payment controls, scrape unpublished content, interfere with Platform security, or attempt unauthorized security testing.",
           "Where a User is not legally able to agree to these Terms independently, use of the Platform should occur only with the permission and supervision required by applicable law.",
         ],
@@ -71,10 +71,10 @@ export const publicPolicies: readonly PublicPolicy[] = [
           "Current published plans are:",
         ],
         table: {
-          headers: ["Plan", "Billing Cycle", "Subscription Fee"],
+          headers: ["Plan", "Billing Cycle", "Subscription Fee", "Billing Notes"],
           rows: [
-            ["SkillUp Premium Monthly", "Monthly", "Rs. 599"],
-            ["SkillUp Premium Yearly", "Yearly", "Rs. 4,999"],
+            ["Maidan Premium Monthly", "Monthly", "Rs. 599 plus tax", "Recurring every 30 days"],
+            ["Maidan Premium Yearly", "Yearly", "Rs. 4,999 plus tax", "Recurring yearly"],
           ],
         },
       },
@@ -92,7 +92,20 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "7. Learning Areas",
+        heading: "7. Promotional Campaigns, Incentives and Rewards",
+        body: [
+          "SkillUp Shop may offer promotional incentives, including PKR 10,000 in JazzCash credits every month, subject to campaign terms and conditions.",
+          "Participants must meet the eligibility criteria specified for each promotional campaign.",
+          "Rewards may be based on learning progress, completed challenges, participation, or other announced criteria.",
+          "Eligible winners will be selected according to the rules and selection process announced for the campaign.",
+          "Rewards will be distributed through JazzCash or another officially announced payment method, subject to verification.",
+          "Fraudulent activities, multiple fake accounts, or misuse of the platform may result in disqualification.",
+          "SkillUp Shop reserves the right to modify, suspend, or discontinue promotional campaigns, subject to applicable laws.",
+          "Participation in any campaign does not guarantee winning or receiving an incentive.",
+        ],
+      },
+      {
+        heading: "8. Learning Areas",
         body: [
           "SkillUp may provide or develop practical learning across areas such as:",
           "Specific learning paths, availability and publication status may differ. Some paths may be planned, in pilot, under review or released progressively.",
@@ -105,21 +118,21 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "8. Subscription Billing and Renewal",
+        heading: "9. Subscription Billing and Renewal",
         body: [
           "When you explicitly link a JazzCash wallet for a Premium plan, you authorize SkillUp and the Payment Provider to charge the applicable subscription fee according to the selected billing cycle until you cancel the subscription or unlink the wallet.",
           "The authoritative plan price, entitlement and billing schedule come from SkillUp and its payment service. Browser redirects, screenshots or client-side values do not activate Premium.",
         ],
       },
       {
-        heading: "9. Wallet Security and Payment Credentials",
+        heading: "10. Wallet Security and Payment Credentials",
         body: [
           "Your JazzCash MPIN is entered only on JazzCash’s hosted payment page. SkillUp support will not ask you to provide your MPIN, payment password, one-time payment credential or other secret payment authentication information.",
           "SkillUp may retain a payment token or authorization reference needed to process server-side billing, subject to the Privacy Policy and applicable payment-provider rules.",
         ],
       },
       {
-        heading: "10. Cancellation, Wallet Unlinking and Access",
+        heading: "11. Cancellation, Wallet Unlinking and Access",
         body: [
           "Cancelling a Premium subscription stops future renewal for that subscription while the linked wallet may remain available on your account.",
           "Unlinking the wallet removes the saved billing authorization for SkillUp and stops future debits for open SkillUp subscriptions associated with that wallet.",
@@ -127,7 +140,7 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "11. Refunds and Payment Review",
+        heading: "12. Refunds and Payment Review",
         body: [
           "Payment disputes and refund requests are reviewed against payment-provider evidence and SkillUp’s authoritative entitlement and audit records.",
           "SkillUp does not promise an unsupported refund window, proration or settlement time. Provider processing and settlement timing may affect when an approved refund appears.",
@@ -136,14 +149,25 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "12. Learning Content and Educational Limits",
+        heading: "13. Step Charging Logic",
+        body: [
+          "Step charging splits the subscription fee into two parts to improve conversion rates when the user's wallet balance may be insufficient for the full amount.",
+          "Decision flow:",
+          "System first attempts to charge the FULL plan price.",
+          "If full charge succeeds, subscription is ACTIVE_FULL immediately.",
+          "If full charge fails, system attempts the STEP CHARGE (partial amount).",
+          "If step charge succeeds, subscription is ACTIVE again with full access.",
+        ],
+      },
+      {
+        heading: "14. Learning Content and Educational Limits",
         body: [
           "SkillUp provides educational practice, guidance and feedback. It is not professional certification, guaranteed employment advice, a promise of income, or a guarantee of fluency, business success or career outcomes.",
           "Published content may be reviewed and versioned, but learners should still apply judgment and independently verify information where a decision carries material financial, legal, professional, health, safety or other risk.",
         ],
       },
       {
-        heading: "13. Progress, Scores and Learning History",
+        heading: "15. Progress, Scores and Learning History",
         body: [
           "SkillUp may record progress, completed activities, points, scores, learning evidence and related account history to provide the learning experience.",
           "Authoritative score, entitlement, publication and payment outcomes are generated by SkillUp’s server-side systems and cannot be replaced by browser analytics or user-submitted screenshots.",
@@ -151,25 +175,25 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "14. AI-Assisted Learning Features",
+        heading: "16. AI-Assisted Learning Features",
         body: [
           "Some Premium or future learning experiences may use reviewed AI-assisted challenges or personalization. Such features are learning aids and may not always be complete, current or error-free.",
           "Users should not rely on AI-assisted output as a substitute for qualified professional advice or independent verification where material decisions are involved.",
         ],
       },
       {
-        heading: "15. Intellectual Property and Content Use",
+        heading: "17. Intellectual Property and Content Use",
         body: [
           "SkillUp names, branding, interface designs, software, learning games, questions, explanations, content structures and other Platform materials belong to SkillUp or its licensors unless stated otherwise.",
           "Users may use Learning Content for personal learning only. You must not copy, republish, sell, scrape, reverse engineer, systematically extract or commercially exploit SkillUp content without permission.",
         ],
       },
       {
-        heading: "16. Activities Not Permitted",
+        heading: "18. Activities Not Permitted",
         body: ["You must not:"],
         list: [
           "use SkillUp for unlawful, deceptive, abusive or fraudulent activity;",
-          "share or misuse another person’s account, session or verification code;",
+          "share or misuse another person’s account, session or password;",
           "manipulate scores, progress, entitlements, missions or payment controls;",
           "upload malware, interfere with Platform security or attempt unauthorized access;",
           "scrape unpublished or protected learning content;",
@@ -178,37 +202,37 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "17. Communications",
+        heading: "19. Communications",
         body: [
-          "SkillUp may send account, verification, learning, support, billing, subscription, security and promotional communications through email, SMS, notifications or other permitted channels.",
+          "SkillUp may send account, learning, support, billing, subscription, security and promotional communications through email, SMS, notifications or other permitted channels.",
           "Where promotional communications are optional, available account controls or unsubscribe methods may be used to manage them. Essential account, security and transaction communications may continue.",
         ],
       },
       {
-        heading: "18. Privacy and Learner Information",
+        heading: "20. Privacy and Learner Information",
         body: [
           "SkillUp may use minimized account, session, profile, learning, security, support and commercial records to operate the service and protect its integrity.",
-          "Authentication codes, session secrets, payment credentials and protected answer logic are not used for advertising.",
+          "Passwords, session secrets, payment credentials and protected answer logic are not used for advertising.",
           "Where available, learners may use account controls for optional analytics, marketing contact, leaderboard aliases, achievement sharing and AI-assisted personalization.",
           "Learners may be able to inspect sessions, revoke access, request a bounded data export and schedule account deletion. Certain payment, fraud-prevention, legal and audit records may need to be retained after profile data is deleted or pseudonymized.",
         ],
       },
       {
-        heading: "19. Platform Availability and Changes",
+        heading: "21. Platform Availability and Changes",
         body: [
           "SkillUp may change, suspend, replace or discontinue features, content, learning paths, benefits or technical services. We do not guarantee uninterrupted, error-free or permanently available access.",
           "Planned or pilot learning paths may be delayed, revised or not released after review or learner testing.",
         ],
       },
       {
-        heading: "20. Suspension and Termination",
+        heading: "22. Suspension and Termination",
         body: [
           "SkillUp may limit, suspend or revoke access where reasonably necessary to protect learners, payments, content quality, Platform security or legal compliance.",
           "Serious or repeated breaches of these Terms, fraud, payment abuse or unauthorized technical activity may result in account restriction or termination.",
         ],
       },
       {
-        heading: "21. Disclaimers and Limits of Responsibility",
+        heading: "23. Disclaimers and Limits of Responsibility",
         body: [
           "To the fullest extent permitted by applicable law, SkillUp and its Services are provided on an “as is” and “as available” basis.",
           "SkillUp does not guarantee any particular educational, employment, earning, business or career outcome from use of the Platform.",
@@ -216,27 +240,27 @@ export const publicPolicies: readonly PublicPolicy[] = [
         ],
       },
       {
-        heading: "22. Events Outside Our Control",
+        heading: "24. Events Outside Our Control",
         body: [
           "SkillUp is not responsible for failure or delay caused by events beyond its reasonable control, including telecommunications or power failures, payment-provider outages, system failures, cyber incidents, government action, natural events or comparable circumstances.",
         ],
       },
       {
-        heading: "23. Applicable Law and Dispute Resolution",
+        heading: "25. Applicable Law and Dispute Resolution",
         body: [
           "These Terms are governed by the laws of Pakistan.",
           "The parties should first attempt to resolve disputes amicably through written notice and good-faith discussion. Where a dispute cannot be resolved, the parties may use any dispute-resolution process or competent court available under applicable Pakistani law.",
         ],
       },
       {
-        heading: "24. Other Legal Provisions",
+        heading: "26. Other Legal Provisions",
         body: [
           "If any provision of these Terms is held invalid or unenforceable, the remaining provisions will continue in effect to the extent permitted by law.",
           "These Terms, together with the Privacy Policy, Refund and Cancellation Policy, plan details and any other applicable published policies, govern your use of SkillUp.",
         ],
       },
       {
-        heading: "25. SkillUp Customer Support",
+        heading: "27. SkillUp Customer Support",
         body: [
           "For support with SkillUp accounts, Premium billing or learning access, contact SkillUp Customer Support.",
           "Email: admin@codistan.org",

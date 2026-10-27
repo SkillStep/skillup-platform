@@ -7,6 +7,7 @@ import { createAiJobStatusService, registerAiJobStatusRoutes } from "./ai-job-st
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
+import { ensureLearnerMigrationPasswords } from "./learner-password.js";
 import { createCampaignDailyLogsEmailTask } from "./campaign-daily-logs-email.js";
 import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
@@ -50,6 +51,16 @@ const authService = createAuthService({
   delivery: createConfiguredAuthCodeDelivery(config),
   appEnv: config.APP_ENV,
 });
+
+void ensureLearnerMigrationPasswords(database.pool)
+  .then((count) => {
+    if (count > 0) {
+      console.info(`Assigned migration password to ${count} existing phone learner(s).`);
+    }
+  })
+  .catch((error: unknown) => {
+    console.error("Failed to ensure learner migration passwords.", error);
+  });
 const gameplayService = createGameplayService({ pool: database.pool });
 const progressService = createProgressService({ pool: database.pool });
 const jazzCashCps = resolveJazzCashCpsClient(config);
