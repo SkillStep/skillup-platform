@@ -1,22 +1,17 @@
 import { expect, test } from "@playwright/test";
 
-import { qaIdentity, retrieveOtpForUi } from "../helpers/identity.mjs";
+import { qaIdentity } from "../helpers/identity.mjs";
 
 const api = "/api/v1";
 
-test("passwordless sign-in delivers and verifies a real staging OTP", async ({ page }) => {
-  const email = qaIdentity("STAGING_QA_LEARNER_EMAIL");
+test("mobile password sign-in authenticates a staging QA learner", async ({ page }) => {
+  const phone = qaIdentity("STAGING_QA_PHONE");
   await page.goto("/en/sign-in?returnTo=%2Fen%2Fprogress");
   await page.getByRole("textbox", { name: "Full name" }).fill("Staging QA Learner");
-
-  await page.getByRole("textbox", { name: "Email or mobile number" }).fill(email);
-  const startedAfter = new Date(Date.now() - 2_000).toISOString();
-  await page.getByRole("button", { name: "Continue" }).click();
-
-  await expect(page.getByRole("heading", { name: "Enter your code" })).toBeVisible();
-  const code = await retrieveOtpForUi(email, startedAfter);
-  await page.getByLabel("Four-digit code").fill(code);
-  await page.getByRole("button", { name: "Verify and continue" }).click();
+  await page.getByRole("textbox", { name: "Mobile number" }).fill(phone);
+  await page.getByLabel("Password", { exact: true }).fill("Abc@123");
+  await page.getByLabel("Confirm password").fill("Abc@123");
+  await page.getByRole("button", { name: "Sign in" }).click();
 
   await page.waitForURL((url) => !url.pathname.endsWith("/sign-in"));
   expect(["/en/onboarding", "/en/progress"]).toContain(new URL(page.url()).pathname);
@@ -30,9 +25,13 @@ test("invalid sign-in email is rejected", async ({ request }) => {
 });
 
 test("untrusted Origin cannot start authentication", async ({ request }) => {
-  const response = await request.post(`${api}/auth/email/start`, {
+  const response = await request.post(`${api}/auth/password/login`, {
     headers: { origin: "https://attacker.invalid" },
-    data: { email: "qa-invalid-origin@example.invalid" },
+    data: {
+      displayName: "Attacker",
+      phone: "03001234567",
+      password: "Abc@123",
+    },
   });
   expect(response.status()).toBe(403);
 });

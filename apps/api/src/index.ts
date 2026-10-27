@@ -7,7 +7,6 @@ import { createAiJobStatusService, registerAiJobStatusRoutes } from "./ai-job-st
 import { createAnalyticsService } from "./analytics-service.js";
 import { buildApi } from "./app.js";
 import { createAuthService } from "./auth.js";
-import { ensureLearnerMigrationPasswords } from "./learner-password.js";
 import { createCampaignDailyLogsEmailTask } from "./campaign-daily-logs-email.js";
 import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
@@ -24,6 +23,7 @@ import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
 import { resolveJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
+import { ensureLearnerMigrationPasswords } from "./learner-password.js";
 import { createMaintenanceRunner } from "./maintenance.js";
 import {
   createPaymentOperationsService,

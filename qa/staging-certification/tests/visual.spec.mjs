@@ -10,7 +10,7 @@ test("@visual Premium pricing", async ({ page }) => {
   await expect(page).toHaveScreenshot("premium-pricing.png", { fullPage: true });
 });
 
-test("@visual passwordless sign-in card", async ({ page }) => {
+test("@visual password sign-in card", async ({ page }) => {
   await page.goto("/en/sign-in");
   await expect(page.locator("main")).toHaveScreenshot("sign-in-main.png");
 });

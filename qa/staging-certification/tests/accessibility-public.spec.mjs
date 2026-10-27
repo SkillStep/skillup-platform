@@ -19,16 +19,14 @@ for (const route of ["/en", "/en/skills", "/en/pricing", "/en/sign-in"]) {
   });
 }
 
-test("passwordless sign-in is operable with keyboard focus and labelled controls", async ({
-  page,
-}) => {
+test("password sign-in is operable with keyboard focus and labelled controls", async ({ page }) => {
   await page.goto("/en/sign-in");
   await page.getByRole("textbox", { name: "Full name" }).fill("QA Focus");
-  const identity = page.getByRole("textbox", { name: "Email or mobile number" });
-  await expect(identity).toBeVisible();
-  await identity.fill("qa-focus@example.invalid");
-  await identity.focus();
-  await expect(identity).toBeFocused();
+  const phone = page.getByRole("textbox", { name: "Mobile number" });
+  await expect(phone).toBeVisible();
+  await phone.fill("03001234567");
+  await phone.focus();
+  await expect(phone).toBeFocused();
   await page.keyboard.press("Tab");
-  await expect(page.getByRole("button", { name: "Continue" })).toBeFocused();
+  await expect(page.getByLabel("Password", { exact: true })).toBeFocused();
 });
