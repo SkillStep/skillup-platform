@@ -43,13 +43,21 @@ describe("installable PWA privacy boundary", () => {
   it("keeps campaign landings outside the installed desktop PWA", () => {
     expect(manifest).toContain('scope: "/en"');
     expect(manifest).toContain('handle_links: "not-preferred"');
-    expect(manifest).not.toContain('scope: "/"');
+    expect(manifest).toContain('capture_links: "none"');
+    expect(manifest).not.toMatch(/scope:\s*"\/"/);
     const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
     expect(pwaStatus).toContain('scope: "/en"');
     const mainLanding = readFileSync(new URL("./mainLanding/page.tsx", import.meta.url), "utf8");
     const landing2 = readFileSync(new URL("./landing2/page.tsx", import.meta.url), "utf8");
-    expect(mainLanding).toContain("manifest: null");
-    expect(landing2).toContain("manifest: null");
+    expect(mainLanding).toContain("LandingBrowserEscape");
+    expect(landing2).toContain("LandingBrowserEscape");
+    const association = readFileSync(
+      new URL("../public/.well-known/web-app-origin-association", import.meta.url),
+      "utf8",
+    );
+    expect(association).toContain('"/landing2"');
+    expect(association).toContain('"/mainLanding"');
+    expect(association).toContain('"/en/*"');
   });
 
   it("does not surface an in-app install SkillUp prompt", () => {

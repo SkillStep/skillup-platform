@@ -3,11 +3,13 @@ import type { MetadataRoute } from "next";
 /** Extended fields not yet on Next's Manifest type. */
 type SkillUpManifest = MetadataRoute.Manifest & {
   handle_links?: "auto" | "preferred" | "not-preferred";
+  capture_links?: "none" | "new-client" | "existing-client-navigate";
 };
 
 export default function manifest(): SkillUpManifest {
   return {
-    id: "/en",
+    // New id forces installed clients to refresh URL-handler registration.
+    id: "/en?links=browser",
     name: "SkillUp — Learn. Play. Level Up.",
     short_name: "SkillUp",
     description: "Practical skills through short mobile-first learning games.",
@@ -16,6 +18,8 @@ export default function manifest(): SkillUpManifest {
     // stay outside scope so shared links open in the browser, not the desktop app.
     scope: "/en",
     handle_links: "not-preferred",
+    // Do not capture external navigations (WhatsApp Web, email, etc.) into the desktop app.
+    capture_links: "none",
     display: "standalone",
     background_color: "#F8FAFC",
     theme_color: "#4338CA",

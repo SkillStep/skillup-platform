@@ -1,0 +1,22 @@
+{
+  "web_apps": [
+    {
+      "manifest": "https://skillupshop.codistan.org/manifest.webmanifest",
+      "details": {
+        "paths": ["/en", "/en/*"],
+        "exclude_paths": [
+          "/mainLanding",
+          "/mainLanding*",
+          "/mainLanding2",
+          "/mainLanding2*",
+          "/landing",
+          "/landing*",
+          "/landing2",
+          "/landing2*",
+          "/offline",
+          "/offline*"
+        ]
+      }
+    }
+  ]
+}

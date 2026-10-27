@@ -6,6 +6,7 @@ import { type LandingCampaign, normalizeLandingCampaign } from "../../lib/landin
 import styles from "./landing.module.css";
 import { LandingAnalyticsBoot } from "./landing-analytics-boot";
 import { LandingBanner } from "./landing-banner";
+import { LandingBrowserEscape } from "./landing-browser-escape";
 import { Icon } from "./landing-icons";
 import { LandingSubscribeCard } from "./landing-subscribe";
 import { ScrollReveal } from "./scroll-reveal";
@@ -33,8 +34,8 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     title: "SkillUp Premium — Learn AI Skills through Games",
     description:
       "Learn AI Skills through games for better earning. Enter your JazzCash number to subscribe to SkillUp Premium.",
-    // Campaign landings must open in the browser, not the installed desktop PWA.
-    manifest: null,
+    // Keep the site manifest linked so an already-installed desktop PWA can
+    // refresh to scope=/en (landings out of scope). Still mark as non-apple-web-app.
     appleWebApp: {
       capable: false,
     },
@@ -111,6 +112,7 @@ function LandingContent({
 }>): ReactElement {
   return (
     <main className={styles["page"]}>
+      <LandingBrowserEscape />
       <LandingAnalyticsBoot campaign={campaign} landing="mainLanding" />
       <div className={styles["aboveFold"]}>
         <section className={styles["hero"]} aria-labelledby="premium-hero-heading">
