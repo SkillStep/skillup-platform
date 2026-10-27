@@ -52,6 +52,11 @@ function sectionAnchor(heading: string): string {
     .replace(/^-|-$/g, "");
 }
 
+/** Headings already include "1. …"; strip that so the TOC `<ol>` does not double-number. */
+function tocLabel(heading: string): string {
+  return heading.replace(/^\d+\.\s*/, "");
+}
+
 function PolicySection({ section }: Readonly<{ section: PublicPolicySection }>) {
   const anchor = sectionAnchor(section.heading);
   return (
@@ -146,7 +151,7 @@ export default async function PolicyPage({ params }: PageProps) {
             <ol>
               {policy.sections.map((section) => (
                 <li key={section.heading}>
-                  <a href={`#${sectionAnchor(section.heading)}`}>{section.heading}</a>
+                  <a href={`#${sectionAnchor(section.heading)}`}>{tocLabel(section.heading)}</a>
                 </li>
               ))}
             </ol>
