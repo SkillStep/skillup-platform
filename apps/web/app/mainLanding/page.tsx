@@ -33,6 +33,11 @@ export async function generateMetadata({ searchParams }: PageProps): Promise<Met
     title: "SkillUp Premium — Learn AI Skills through Games",
     description:
       "Learn AI Skills through games for better earning. Enter your JazzCash number to subscribe to SkillUp Premium.",
+    // Campaign landings must open in the browser, not the installed desktop PWA.
+    manifest: null,
+    appleWebApp: {
+      capable: false,
+    },
     alternates: {
       canonical: canonical.toString(),
     },

@@ -1,13 +1,21 @@
 import type { MetadataRoute } from "next";
 
-export default function manifest(): MetadataRoute.Manifest {
+/** Extended fields not yet on Next's Manifest type. */
+type SkillUpManifest = MetadataRoute.Manifest & {
+  handle_links?: "auto" | "preferred" | "not-preferred";
+};
+
+export default function manifest(): SkillUpManifest {
   return {
     id: "/en",
     name: "SkillUp — Learn. Play. Level Up.",
     short_name: "SkillUp",
     description: "Practical skills through short mobile-first learning games.",
     start_url: "/en",
-    scope: "/",
+    // Keep PWA in the learner app only — campaign landings (/mainLanding, /landing2)
+    // stay outside scope so shared links open in the browser, not the desktop app.
+    scope: "/en",
+    handle_links: "not-preferred",
     display: "standalone",
     background_color: "#F8FAFC",
     theme_color: "#4338CA",

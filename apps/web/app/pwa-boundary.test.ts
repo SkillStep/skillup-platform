@@ -40,6 +40,18 @@ describe("installable PWA privacy boundary", () => {
     expect(serviceWorker).toContain('event.data?.type === "SKIP_WAITING"');
   });
 
+  it("keeps campaign landings outside the installed desktop PWA", () => {
+    expect(manifest).toContain('scope: "/en"');
+    expect(manifest).toContain('handle_links: "not-preferred"');
+    expect(manifest).not.toContain('scope: "/"');
+    const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
+    expect(pwaStatus).toContain('scope: "/en"');
+    const mainLanding = readFileSync(new URL("./mainLanding/page.tsx", import.meta.url), "utf8");
+    const landing2 = readFileSync(new URL("./landing2/page.tsx", import.meta.url), "utf8");
+    expect(mainLanding).toContain("manifest: null");
+    expect(landing2).toContain("manifest: null");
+  });
+
   it("does not surface an in-app install SkillUp prompt", () => {
     const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
     expect(pwaStatus).not.toContain("Install SkillUp for quicker access");

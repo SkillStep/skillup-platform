@@ -30,8 +30,16 @@ export function PwaStatus() {
     };
     navigator.serviceWorker?.addEventListener("controllerchange", handleControllerChange);
 
-    if ("serviceWorker" in navigator) {
-      void navigator.serviceWorker.register("/sw.js", { scope: "/" }).then((registration) => {
+    // Do not register a worker from campaign landings — keep those URLs browser-only.
+    const onCampaignLanding =
+      window.location.pathname === "/mainLanding" ||
+      window.location.pathname === "/mainLanding2" ||
+      window.location.pathname === "/landing" ||
+      window.location.pathname === "/landing2";
+
+    if ("serviceWorker" in navigator && !onCampaignLanding) {
+      // Scope matches the web app manifest (/en) so campaign landings stay browser-only.
+      void navigator.serviceWorker.register("/sw.js", { scope: "/en" }).then((registration) => {
         if (registration.waiting) setWaitingWorker(registration.waiting);
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;

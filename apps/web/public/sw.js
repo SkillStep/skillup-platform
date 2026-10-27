@@ -1,7 +1,7 @@
 "use strict";
 
 const CACHE_PREFIX = "skillup-public-";
-const CACHE_VERSION = "2026-07-30-1";
+const CACHE_VERSION = "2026-10-27-1";
 const PUBLIC_CACHE = `${CACHE_PREFIX}${CACHE_VERSION}`;
 const OFFLINE_URL = "/offline";
 const INSTALL_ASSETS = [
