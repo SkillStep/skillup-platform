@@ -191,7 +191,7 @@ export type AuthService = Readonly<{
    * Learner mobile + password sign-in or account creation (replaces OTP for learners).
    */
   signInOrRegisterLearnerPassword: (
-    input: Readonly<{ displayName?: string; phone: string; password: string }>,
+    input: Readonly<{ displayName?: string | undefined; phone: string; password: string }>,
   ) => Promise<VerifiedSession>;
   /**
    * Merge a phone-only checkout account into the signed-in learner when they verify that phone.
@@ -1321,7 +1321,11 @@ export function registerAuthRoutes(
   app.post("/v1/auth/password/login", async (request, reply) => {
     requireTrustedOrigin(request, options.config);
     const body = LearnerPasswordSignInSchema.parse(request.body);
-    const verified = await options.authService.signInOrRegisterLearnerPassword(body);
+    const verified = await options.authService.signInOrRegisterLearnerPassword({
+      phone: body.phone,
+      password: body.password,
+      ...(body.displayName !== undefined ? { displayName: body.displayName } : {}),
+    });
     reply.header(
       "set-cookie",
       sessionCookie(options.config, verified.sessionToken, verified.sessionExpiresAt),
