@@ -145,6 +145,12 @@
   outline: none;
 }
 
+.input:read-only {
+  background: #eef2f7;
+  color: var(--ink-700);
+  cursor: default;
+}
+
 .help {
   color: var(--ink-500);
   font-size: 0.8rem;

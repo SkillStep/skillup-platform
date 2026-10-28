@@ -13,5 +13,9 @@ describe("sign-in form password flow", () => {
     expect(source).not.toContain("/api/v1/auth/otp/");
     expect(source).toContain("LANDING_MSISDN_STORAGE_KEY");
     expect(source).toContain("displayName: trimmedName");
+    expect(source).toContain("phoneLocked");
+    expect(source).toContain("readOnly={phoneLocked}");
+    expect(source).toContain("clearPremiumUnlockedFlag");
   });
 });
+

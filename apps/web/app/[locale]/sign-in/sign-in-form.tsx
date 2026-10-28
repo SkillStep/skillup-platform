@@ -3,6 +3,7 @@
 import { type FormEvent, useEffect, useId, useState } from "react";
 
 import { LANDING_MSISDN_STORAGE_KEY } from "../../../lib/jazzcash-checkout";
+import { clearPremiumUnlockedFlag } from "../../../lib/premium-unlock";
 import { withReturnTo } from "../../../lib/return-to";
 import styles from "../account-flow.module.css";
 
@@ -50,6 +51,8 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   const [hydrated, setHydrated] = useState(false);
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
+  /** Locked to the JazzCash landing number until password sign-in succeeds. */
+  const [phoneLocked, setPhoneLocked] = useState(false);
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -60,11 +63,12 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   useEffect(() => {
     setHydrated(true);
     if (isAdmin) return;
-    // Prefill only when JazzCash checkout already stored the MSISDN (pay-first return).
+    // Prefill + lock when JazzCash checkout already stored the MSISDN (pay-first return).
     try {
       const saved = window.sessionStorage.getItem(LANDING_MSISDN_STORAGE_KEY);
       if (saved && /^\d{11,15}$/.test(saved)) {
         setPhone(saved);
+        setPhoneLocked(true);
       }
     } catch {
       // Ignore storage access failures.
@@ -120,6 +124,14 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
         : onboardingComplete
           ? returnTo
           : withReturnTo("/en/onboarding", returnTo);
+
+      try {
+        window.sessionStorage.removeItem(LANDING_MSISDN_STORAGE_KEY);
+      } catch {
+        // Ignore storage access failures.
+      }
+      clearPremiumUnlockedFlag();
+      setPhoneLocked(false);
 
       setIsError(false);
       setMessage(
@@ -190,12 +202,18 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
             maxLength={15}
             placeholder="03XXXXXXXXX"
             value={phone}
-            onChange={(event) => setPhone(event.target.value)}
+            onChange={(event) => {
+              if (phoneLocked) return;
+              setPhone(event.target.value);
+            }}
+            readOnly={phoneLocked}
+            aria-readonly={phoneLocked}
             required
           />
           <p className={styles["help"]}>
-            Pakistan mobile formats such as 0300 1234567 and +923001234567 are accepted. Prefills
-            after JazzCash checkout.
+            {phoneLocked
+              ? "Locked to the JazzCash number from your landing checkout. It unlocks after you sign in successfully."
+              : "Pakistan mobile formats such as 0300 1234567 and +923001234567 are accepted."}
           </p>
         </div>
         <div className={styles["field"]}>

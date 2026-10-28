@@ -16,7 +16,9 @@ describe("public auth navigation", () => {
     expect(nav).toContain('href={"/en/pricing" as Route}');
     expect(nav).toContain("/api/v1/commercial/account");
     expect(nav).toContain('status === "active" || status === "grace"');
+    expect(nav).toContain("hasPremiumUnlockedFlag");
     expect(nav).toContain("return null");
     expect(nav).not.toContain("/en/premium");
   });
 });
+

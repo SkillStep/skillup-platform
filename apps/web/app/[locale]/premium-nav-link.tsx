@@ -4,6 +4,8 @@ import type { Route } from "next";
 import Link from "next/link";
 import { type ReactElement, useEffect, useState } from "react";
 
+import { hasPremiumUnlockedFlag } from "../../lib/premium-unlock";
+
 type Entitlement = Readonly<{
   status: "active" | "grace" | "expired" | "cancelled" | "refunded" | "revoked";
 }>;
@@ -11,6 +13,7 @@ type Entitlement = Readonly<{
 /**
  * Premium opens package selection. Hidden while the signed-in learner has an
  * active/grace paid plan; shown again after expiry or cancel.
+ * Also hidden for guests after JazzCash pay-first unlock (before sign-in).
  */
 export function PremiumNavLink({
   children = "Premium",
@@ -31,7 +34,8 @@ export function PremiumNavLink({
           signal: controller.signal,
         });
         if (response.status === 401) {
-          setHidden(false);
+          // Guest who completed JazzCash linking: hide Premium until they sign in.
+          setHidden(hasPremiumUnlockedFlag());
           return;
         }
         if (!response.ok) return;
