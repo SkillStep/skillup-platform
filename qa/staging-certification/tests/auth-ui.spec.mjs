@@ -10,7 +10,6 @@ test("mobile password sign-in authenticates a staging QA learner", async ({ page
   await page.getByRole("textbox", { name: "Full name" }).fill("Staging QA Learner");
   await page.getByRole("textbox", { name: "Mobile number" }).fill(phone);
   await page.getByLabel("Password", { exact: true }).fill(QA_LEARNER_PASSWORD);
-  await page.getByLabel("Confirm password").fill(QA_LEARNER_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await page.waitForURL((url) => !url.pathname.endsWith("/sign-in"));

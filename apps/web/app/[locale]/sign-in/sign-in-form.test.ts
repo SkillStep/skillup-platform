@@ -9,6 +9,7 @@ describe("sign-in form password flow", () => {
     expect(source).toContain("Full name");
     expect(source).toContain("Mobile number");
     expect(source).toContain("Confirm password");
+    expect(source).toContain("{isSignUp ? (");
     expect(source).toContain("/api/v1/auth/password/login");
     expect(source).not.toContain("/api/v1/auth/otp/");
     expect(source).toContain("LANDING_MSISDN_STORAGE_KEY");
@@ -19,5 +20,6 @@ describe("sign-in form password flow", () => {
     expect(source).toContain('intent?: "sign-up" | "sign-in"');
     expect(source).toContain("Already have an account?");
     expect(source).toContain("Click here to Sign in");
+    expect(source).toContain("isSignUp && password !== confirmPassword");
   });
 });

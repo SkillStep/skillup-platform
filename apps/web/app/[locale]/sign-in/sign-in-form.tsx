@@ -95,7 +95,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
       );
       return;
     }
-    if (password !== confirmPassword) {
+    if (isSignUp && password !== confirmPassword) {
       setIsError(true);
       setMessage("Password and confirm password do not match.");
       return;
@@ -251,23 +251,25 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
             At least 7 characters with upper, lower, number and symbol (example: Abc@123).
           </p>
         </div>
-        <div className={styles["field"]}>
-          <label className={styles["label"]} htmlFor={confirmPasswordId}>
-            Confirm password
-          </label>
-          <input
-            className={styles["input"]}
-            id={confirmPasswordId}
-            name="confirmPassword"
-            type="password"
-            autoComplete={isSignUp ? "new-password" : "current-password"}
-            maxLength={128}
-            placeholder="Re-enter password"
-            value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
-            required
-          />
-        </div>
+        {isSignUp ? (
+          <div className={styles["field"]}>
+            <label className={styles["label"]} htmlFor={confirmPasswordId}>
+              Confirm password
+            </label>
+            <input
+              className={styles["input"]}
+              id={confirmPasswordId}
+              name="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              maxLength={128}
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChange={(event) => setConfirmPassword(event.target.value)}
+              required
+            />
+          </div>
+        ) : null}
         <button
           className={styles["action"]}
           type="submit"
@@ -277,7 +279,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
             fullName.trim().length < 2 ||
             phone.trim().length < 10 ||
             password.length < 7 ||
-            confirmPassword.length < 7
+            (isSignUp && confirmPassword.length < 7)
           }
         >
           {busy ? (isSignUp ? "Signing up…" : "Signing in…") : isSignUp ? "Sign up" : "Sign in"}

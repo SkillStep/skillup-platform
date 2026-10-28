@@ -13,7 +13,6 @@ test("invalid mobile number is rejected without signing in", async ({ page }) =>
   await page.getByRole("textbox", { name: "Full name" }).fill("QA Negative");
   await page.getByRole("textbox", { name: "Mobile number" }).fill("not-a-phone");
   await page.getByLabel("Password", { exact: true }).fill("Abc@123");
-  await page.getByLabel("Confirm password").fill("Abc@123");
   const rejected = page.waitForResponse(
     (response) =>
       response.url().endsWith("/api/v1/auth/password/login") &&
@@ -83,7 +82,6 @@ test("sign-in UI reports a bounded network failure", async ({ page }) => {
   await page.getByRole("textbox", { name: "Full name" }).fill("QA Network");
   await page.getByRole("textbox", { name: "Mobile number" }).fill("03001234567");
   await page.getByLabel("Password", { exact: true }).fill("Abc@123");
-  await page.getByLabel("Confirm password").fill("Abc@123");
   await page.getByRole("button", { name: "Sign in" }).click();
   await expect(
     page.getByText("We could not sign you in. Check your connection and try again."),
