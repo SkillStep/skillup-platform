@@ -51,7 +51,7 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
           </ul>
         </section>
 
-        <SignInForm returnTo={destination} />
+        <SignInForm returnTo={destination} intent="sign-in" />
       </div>
     </main>
   );

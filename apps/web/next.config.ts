@@ -127,7 +127,7 @@ const nextConfig: NextConfig = {
         headers: publicRouteHeaders,
       },
       {
-        source: "/:locale(en|ur)/(sign-in|onboarding|progress|account|admin)/:path*",
+        source: "/:locale(en|ur)/(sign-in|sign-up|onboarding|progress|account|admin)/:path*",
         headers: privateRouteHeaders,
       },
       {

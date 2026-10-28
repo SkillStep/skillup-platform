@@ -72,12 +72,12 @@ export function AuthNavAction({
   }
 
   if (variant === "mobile") {
-    return <Link href="/en/sign-in">Sign in</Link>;
+    return <Link href="/en/sign-up">Sign up</Link>;
   }
 
   return (
-    <Link className={styles["navAction"]} href="/en/sign-in">
-      Sign in
+    <Link className={styles["navAction"]} href="/en/sign-up">
+      Sign up
     </Link>
   );
 }

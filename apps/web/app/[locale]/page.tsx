@@ -66,8 +66,8 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
               progress after every session.
             </p>
             <div className="hero-actions">
-              <Link className="button button-primary" href="/en/sign-in">
-                Create your learning profile
+              <Link className="button button-primary" href="/en/sign-up">
+                Sign up
               </Link>
               <Link className="button button-secondary" href="/en/skills">
                 Explore launch skills
@@ -176,8 +176,8 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
               account.
             </p>
           </div>
-          <Link className="button button-light" href="/en/sign-in">
-            Start account setup
+          <Link className="button button-light" href="/en/sign-up">
+            Sign up
           </Link>
         </section>
       </main>

@@ -5,6 +5,8 @@ function isReservedAccountPath(pathname: string): boolean {
   return (
     pathname === "/en/sign-in" ||
     pathname.startsWith("/en/sign-in/") ||
+    pathname === "/en/sign-up" ||
+    pathname.startsWith("/en/sign-up/") ||
     pathname === "/en/admin/sign-in" ||
     pathname.startsWith("/en/admin/sign-in/") ||
     pathname === "/en/onboarding" ||

@@ -7,9 +7,9 @@ const source = readFileSync(new URL("./auth-nav-action.tsx", import.meta.url), "
 const nav = readFileSync(new URL("./premium-nav-link.tsx", import.meta.url), "utf8");
 
 describe("public auth navigation", () => {
-  it("keeps sign-in entry points", () => {
-    expect(source).toContain("/en/sign-in");
-    expect(source).toContain("Sign in");
+  it("keeps sign-up entry points for guests", () => {
+    expect(source).toContain("/en/sign-up");
+    expect(source).toContain("Sign up");
   });
 
   it("hides Premium nav when the learner has an active paid plan", () => {

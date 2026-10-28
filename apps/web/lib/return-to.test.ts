@@ -23,6 +23,8 @@ describe("safeReturnTo", () => {
     "/ur/learn/level-id",
     "/en/sign-in",
     "/en/sign-in/again",
+    "/en/sign-up",
+    "/en/sign-up/again",
     "/en/admin/sign-in",
     "/en/admin/sign-in/again",
     "/en/onboarding",

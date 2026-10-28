@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { type FormEvent, useEffect, useId, useState } from "react";
 
 import { LANDING_MSISDN_STORAGE_KEY } from "../../../lib/jazzcash-checkout";
@@ -21,6 +22,8 @@ type SignInFormProps = Readonly<{
   returnTo: string;
   /** Admin login skips learner onboarding and uses operator-facing copy. */
   mode?: "learner" | "admin";
+  /** Homepage/nav entry is Sign up; dedicated Sign in page for returning learners. */
+  intent?: "sign-up" | "sign-in";
 }>;
 
 function isStrongPassword(password: string): boolean {
@@ -43,7 +46,7 @@ async function readError(response: Response): Promise<string> {
   return "This step is not available right now. Please try again later.";
 }
 
-export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
+export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: SignInFormProps) {
   const fullNameId = useId();
   const phoneId = useId();
   const passwordId = useId();
@@ -59,6 +62,7 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
   const [message, setMessage] = useState<string | null>(null);
   const [isError, setIsError] = useState(false);
   const isAdmin = mode === "admin";
+  const isSignUp = intent === "sign-up";
 
   useEffect(() => {
     setHydrated(true);
@@ -137,14 +141,22 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
       setMessage(
         isAdmin
           ? "Signed in. Opening the operations console…"
-          : onboardingComplete
-            ? "Signed in. Returning to your learning activity…"
-            : "Signed in. Preparing your SkillUp profile…",
+          : isSignUp
+            ? onboardingComplete
+              ? "Account ready. Returning to your learning activity…"
+              : "Account ready. Preparing your SkillUp profile…"
+            : onboardingComplete
+              ? "Signed in. Returning to your learning activity…"
+              : "Signed in. Preparing your SkillUp profile…",
       );
       window.location.assign(destination);
     } catch {
       setIsError(true);
-      setMessage("We could not sign you in. Check your connection and try again.");
+      setMessage(
+        isSignUp
+          ? "We could not create your account. Check your connection and try again."
+          : "We could not sign you in. Check your connection and try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -164,9 +176,11 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
 
   return (
     <div className={styles["card"]}>
-      <h2>Sign in</h2>
+      <h2>{isSignUp ? "Sign up" : "Sign in"}</h2>
       <p className={styles["cardLead"]}>
-        Enter your name, JazzCash mobile number and password. New numbers create an account.
+        {isSignUp
+          ? "Enter your name, JazzCash mobile number and password to create your SkillUp account."
+          : "Enter your name, JazzCash mobile number and password to continue learning."}
       </p>
 
       <form className={styles["form"]} onSubmit={onSubmit}>
@@ -225,9 +239,9 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
             id={passwordId}
             name="password"
             type="password"
-            autoComplete="new-password"
+            autoComplete={isSignUp ? "new-password" : "current-password"}
             maxLength={128}
-            placeholder="Create or enter password"
+            placeholder={isSignUp ? "Create a password" : "Enter password"}
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             required
@@ -245,7 +259,7 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
             id={confirmPasswordId}
             name="confirmPassword"
             type="password"
-            autoComplete="new-password"
+            autoComplete={isSignUp ? "new-password" : "current-password"}
             maxLength={128}
             placeholder="Re-enter password"
             value={confirmPassword}
@@ -265,7 +279,7 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
             confirmPassword.length < 7
           }
         >
-          {busy ? "Signing in…" : "Sign in"}
+          {busy ? (isSignUp ? "Signing up…" : "Signing in…") : isSignUp ? "Sign up" : "Sign in"}
         </button>
       </form>
 
@@ -276,10 +290,18 @@ export function SignInForm({ returnTo, mode = "learner" }: SignInFormProps) {
           </p>
         ) : null}
       </div>
-      <p className={styles["privacy"]}>
-        Existing learners who previously used OTP can sign in with password Abc@123, then change it
-        later from support if needed.
-      </p>
+
+      {isSignUp ? (
+        <p className={styles["privacy"]}>
+          Already have an account?{" "}
+          <Link href={withReturnTo("/en/sign-in", returnTo)}>Click here to Sign in</Link>.
+        </p>
+      ) : (
+        <p className={styles["privacy"]}>
+          Existing learners who previously used OTP can sign in with password Abc@123, then change
+          it later from support if needed.
+        </p>
+      )}
     </div>
   );
 }

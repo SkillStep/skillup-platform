@@ -16,5 +16,8 @@ describe("sign-in form password flow", () => {
     expect(source).toContain("phoneLocked");
     expect(source).toContain("readOnly={phoneLocked}");
     expect(source).toContain("clearPremiumUnlockedFlag");
+    expect(source).toContain('intent?: "sign-up" | "sign-in"');
+    expect(source).toContain("Already have an account?");
+    expect(source).toContain("Click here to Sign in");
   });
 });
