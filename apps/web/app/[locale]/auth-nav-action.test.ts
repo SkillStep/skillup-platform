@@ -21,4 +21,3 @@ describe("public auth navigation", () => {
     expect(nav).not.toContain("/en/premium");
   });
 });
-

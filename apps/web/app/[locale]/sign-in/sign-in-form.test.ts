@@ -18,4 +18,3 @@ describe("sign-in form password flow", () => {
     expect(source).toContain("clearPremiumUnlockedFlag");
   });
 });
-
