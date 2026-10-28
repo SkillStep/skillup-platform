@@ -41,12 +41,12 @@ export default async function SignInPage({ params, searchParams }: PageProps) {
             Pick up where you left off.
           </h1>
           <p className={styles["summary"]}>
-            Sign in with your name, JazzCash mobile number and password to save progress and
-            continue learning.
+            Sign in with your JazzCash mobile number and password to save progress and continue
+            learning.
           </p>
           <ul className={styles["commitments"]} aria-label="Account commitments">
             <li>Mobile number + password sign-in</li>
-            <li>Name required for your learning profile</li>
+            <li>New accounts are created from Sign up</li>
             <li>Private progress is never indexed</li>
           </ul>
         </section>

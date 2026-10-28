@@ -13,7 +13,7 @@ describe("sign-in form password flow", () => {
     expect(source).toContain("/api/v1/auth/password/login");
     expect(source).not.toContain("/api/v1/auth/otp/");
     expect(source).toContain("LANDING_MSISDN_STORAGE_KEY");
-    expect(source).toContain("displayName: trimmedName");
+    expect(source).toContain("...(isSignUp ? { displayName: trimmedName } : {})");
     expect(source).toContain("phoneLocked");
     expect(source).toContain("readOnly={phoneLocked}");
     expect(source).toContain("clearPremiumUnlockedFlag");
@@ -21,5 +21,6 @@ describe("sign-in form password flow", () => {
     expect(source).toContain("Already have an account?");
     expect(source).toContain("Click here to Sign in");
     expect(source).toContain("isSignUp && password !== confirmPassword");
+    expect(source).toContain("isSignUp && trimmedName.length < 2");
   });
 });

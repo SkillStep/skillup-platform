@@ -10,7 +10,6 @@ function baseUrl() {
 
 test("invalid mobile number is rejected without signing in", async ({ page }) => {
   await page.goto("/en/sign-in");
-  await page.getByRole("textbox", { name: "Full name" }).fill("QA Negative");
   await page.getByRole("textbox", { name: "Mobile number" }).fill("not-a-phone");
   await page.getByLabel("Password", { exact: true }).fill("Abc@123");
   const rejected = page.waitForResponse(
@@ -79,7 +78,6 @@ test("anonymous callers cannot access learner or Admin private APIs", async () =
 test("sign-in UI reports a bounded network failure", async ({ page }) => {
   await page.route("**/api/v1/auth/password/login", (route) => route.abort("failed"));
   await page.goto("/en/sign-in");
-  await page.getByRole("textbox", { name: "Full name" }).fill("QA Network");
   await page.getByRole("textbox", { name: "Mobile number" }).fill("03001234567");
   await page.getByLabel("Password", { exact: true }).fill("Abc@123");
   await page.getByRole("button", { name: "Sign in" }).click();

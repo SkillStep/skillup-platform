@@ -7,7 +7,6 @@ const api = "/api/v1";
 test("mobile password sign-in authenticates a staging QA learner", async ({ page }) => {
   const phone = qaPasswordPhone();
   await page.goto("/en/sign-in?returnTo=%2Fen%2Fprogress");
-  await page.getByRole("textbox", { name: "Full name" }).fill("Staging QA Learner");
   await page.getByRole("textbox", { name: "Mobile number" }).fill(phone);
   await page.getByLabel("Password", { exact: true }).fill(QA_LEARNER_PASSWORD);
   await page.getByRole("button", { name: "Sign in" }).click();
@@ -27,7 +26,6 @@ test("untrusted Origin cannot start authentication", async ({ request }) => {
   const response = await request.post(`${api}/auth/password/login`, {
     headers: { origin: "https://attacker.invalid" },
     data: {
-      displayName: "Attacker",
       phone: "03001234567",
       password: QA_LEARNER_PASSWORD,
     },

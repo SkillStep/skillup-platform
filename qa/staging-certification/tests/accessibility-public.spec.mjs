@@ -21,7 +21,6 @@ for (const route of ["/en", "/en/skills", "/en/pricing", "/en/sign-in"]) {
 
 test("password sign-in is operable with keyboard focus and labelled controls", async ({ page }) => {
   await page.goto("/en/sign-in");
-  await page.getByRole("textbox", { name: "Full name" }).fill("QA Focus");
   const phone = page.getByRole("textbox", { name: "Mobile number" });
   await expect(phone).toBeVisible();
   await phone.fill("03001234567");

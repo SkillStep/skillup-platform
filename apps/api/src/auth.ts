@@ -40,7 +40,8 @@ const AdminPasswordSignInSchema = z.object({
 });
 
 const LearnerPasswordSignInSchema = z.object({
-  displayName: z.string().trim().min(2).max(60),
+  /** Required when creating a new learner; optional for returning sign-in. */
+  displayName: z.string().trim().min(2).max(60).optional(),
   phone: z.string().trim().min(10).max(20),
   password: z.string().min(7).max(128),
 });
@@ -190,7 +191,7 @@ export type AuthService = Readonly<{
    * Learner mobile + password sign-in or account creation (replaces OTP for learners).
    */
   signInOrRegisterLearnerPassword: (
-    input: Readonly<{ displayName: string; phone: string; password: string }>,
+    input: Readonly<{ displayName?: string; phone: string; password: string }>,
   ) => Promise<VerifiedSession>;
   /**
    * Merge a phone-only checkout account into the signed-in learner when they verify that phone.
@@ -1018,13 +1019,18 @@ export function createAuthService(
           if (!credential || !(await verifyLearnerPassword(password, credential))) {
             throw new AuthRequestError(401, "Invalid mobile number or password.");
           }
-          await client.query(
-            `update learner_profiles
-                set display_name = $2, updated_at = $3
-              where user_id = $1`,
-            [userId, displayName, verifiedAt],
-          );
+          if (displayName) {
+            await client.query(
+              `update learner_profiles
+                  set display_name = $2, updated_at = $3
+                where user_id = $1`,
+              [userId, displayName, verifiedAt],
+            );
+          }
         } else {
+          if (!displayName) {
+            throw new AuthRequestError(400, "Enter your full name to create an account.");
+          }
           const user = await client.query<{ id: string }>(
             "insert into users (status, created_at, updated_at) values ('active', $1, $1) returning id",
             [verifiedAt],

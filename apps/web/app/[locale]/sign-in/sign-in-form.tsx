@@ -83,7 +83,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmedName = fullName.trim();
-    if (trimmedName.length < 2) {
+    if (isSignUp && trimmedName.length < 2) {
       setIsError(true);
       setMessage("Enter your full name (at least 2 characters).");
       return;
@@ -110,7 +110,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
         credentials: "same-origin",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          displayName: trimmedName,
+          ...(isSignUp ? { displayName: trimmedName } : {}),
           phone: phone.trim(),
           password,
         }),
@@ -181,28 +181,30 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
       <p className={styles["cardLead"]}>
         {isSignUp
           ? "Enter your name, JazzCash mobile number and password to create your SkillUp account."
-          : "Enter your name, JazzCash mobile number and password to continue learning."}
+          : "Enter your JazzCash mobile number and password to continue learning."}
       </p>
 
       <form className={styles["form"]} onSubmit={onSubmit}>
-        <div className={styles["field"]}>
-          <label className={styles["label"]} htmlFor={fullNameId}>
-            Full name
-          </label>
-          <input
-            className={styles["input"]}
-            id={fullNameId}
-            name="fullName"
-            type="text"
-            autoComplete="name"
-            maxLength={60}
-            minLength={2}
-            placeholder="Your full name"
-            value={fullName}
-            onChange={(event) => setFullName(event.target.value)}
-            required
-          />
-        </div>
+        {isSignUp ? (
+          <div className={styles["field"]}>
+            <label className={styles["label"]} htmlFor={fullNameId}>
+              Full name
+            </label>
+            <input
+              className={styles["input"]}
+              id={fullNameId}
+              name="fullName"
+              type="text"
+              autoComplete="name"
+              maxLength={60}
+              minLength={2}
+              placeholder="Your full name"
+              value={fullName}
+              onChange={(event) => setFullName(event.target.value)}
+              required
+            />
+          </div>
+        ) : null}
         <div className={styles["field"]}>
           <label className={styles["label"]} htmlFor={phoneId}>
             Mobile number
@@ -276,7 +278,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
           disabled={
             !hydrated ||
             busy ||
-            fullName.trim().length < 2 ||
+            (isSignUp && fullName.trim().length < 2) ||
             phone.trim().length < 10 ||
             password.length < 7 ||
             (isSignUp && confirmPassword.length < 7)
