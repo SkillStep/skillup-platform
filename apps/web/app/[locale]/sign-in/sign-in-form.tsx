@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { type FormEvent, useEffect, useId, useState } from "react";
 
@@ -294,7 +295,7 @@ export function SignInForm({ returnTo, mode = "learner", intent = "sign-in" }: S
       {isSignUp ? (
         <p className={styles["privacy"]}>
           Already have an account?{" "}
-          <Link href={withReturnTo("/en/sign-in", returnTo)}>Click here to Sign in</Link>.
+          <Link href={withReturnTo("/en/sign-in", returnTo) as Route}>Click here to Sign in</Link>.
         </p>
       ) : (
         <p className={styles["privacy"]}>
