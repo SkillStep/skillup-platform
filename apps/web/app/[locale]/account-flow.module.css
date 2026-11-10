@@ -199,6 +199,12 @@
   color: #991b1b;
 }
 
+.error a {
+  color: inherit;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
 .success {
   background: var(--progress-100);
   border: 1px solid #bef264;

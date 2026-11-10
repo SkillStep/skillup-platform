@@ -20,4 +20,10 @@ describe("public auth navigation", () => {
     expect(nav).toContain("return null");
     expect(nav).not.toContain("/en/premium");
   });
+
+  it("keeps Unsubscribe always available in the public header", () => {
+    const shell = readFileSync(new URL("./discovery-shell.tsx", import.meta.url), "utf8");
+    expect(shell).toContain('href="/en/unsubscribe"');
+    expect(shell).toContain(">Unsubscribe<");
+  });
 });

@@ -1,6 +1,24 @@
 import { describe, expect, it } from "vitest";
 
-import { jazzCashSecureHash, verifyJazzCashSecureHash } from "./commercial.js";
+import {
+  jazzCashMsisdnVariants,
+  jazzCashSecureHash,
+  verifyJazzCashSecureHash,
+} from "./commercial.js";
+
+describe("JazzCash MSISDN unsubscribe lookup helpers", () => {
+  it("normalizes checkout digits for phone identity matching", () => {
+    expect(jazzCashMsisdnVariants("03123456789")).toEqual({
+      digits: "03123456789",
+      phoneNormalized: "+923123456789",
+      phoneDisplay: "03123456789",
+    });
+  });
+
+  it("rejects too-short JazzCash numbers", () => {
+    expect(() => jazzCashMsisdnVariants("03123")).toThrow(/valid JazzCash mobile number/i);
+  });
+});
 
 describe("JazzCash request authentication", () => {
   it("matches the official sandbox HMAC-SHA256 example", () => {

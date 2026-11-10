@@ -22,6 +22,7 @@ export function PublicHeader(): ReactNode {
       <nav className={styles["desktopNav"]} aria-label="Primary navigation">
         <Link href="/en/skills">Browse skills</Link>
         <PremiumNavLink />
+        <Link href="/en/unsubscribe">Unsubscribe</Link>
         <Link href="/en/progress">Your progress</Link>
         <Link href="/en/account">User Profile</Link>
         <AuthNavAction variant="desktop" />
@@ -32,6 +33,7 @@ export function PublicHeader(): ReactNode {
         <nav aria-label="Mobile navigation">
           <Link href="/en/skills">Browse skills</Link>
           <PremiumNavLink />
+          <Link href="/en/unsubscribe">Unsubscribe</Link>
           <Link href="/en/progress">Your progress</Link>
           <Link href="/en/account">User Profile</Link>
           <AuthNavAction variant="mobile" />
