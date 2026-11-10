@@ -15,7 +15,30 @@
 .desktopNav {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 1.1rem;
+  justify-content: flex-end;
+  max-width: min(820px, calc(100vw - 8rem));
+}
+
+.profileNavLink {
+  align-items: center;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.premiumTag {
+  background: color-mix(in srgb, var(--brand-700) 14%, white);
+  border: 1px solid color-mix(in srgb, var(--brand-700) 35%, white);
+  border-radius: 999px;
+  color: var(--brand-700);
+  font-size: 0.68rem;
+  font-weight: 850;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  padding: 0.28rem 0.5rem;
+  text-transform: uppercase;
 }
 
 .desktopNav a,

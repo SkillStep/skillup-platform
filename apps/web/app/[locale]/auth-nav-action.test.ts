@@ -25,5 +25,15 @@ describe("public auth navigation", () => {
     const shell = readFileSync(new URL("./discovery-shell.tsx", import.meta.url), "utf8");
     expect(shell).toContain('href="/en/unsubscribe"');
     expect(shell).toContain(">Unsubscribe<");
+    expect(shell.match(/href="\/en\/unsubscribe"/g)?.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("shows User Profile with a Premium tag after JazzCash unlock", () => {
+    const shell = readFileSync(new URL("./discovery-shell.tsx", import.meta.url), "utf8");
+    const profile = readFileSync(new URL("./profile-nav-link.tsx", import.meta.url), "utf8");
+    expect(shell).toContain("<ProfileNavLink />");
+    expect(profile).toContain("User Profile");
+    expect(profile).toContain("Premium");
+    expect(profile).toContain("hasPremiumUnlockedFlag");
   });
 });

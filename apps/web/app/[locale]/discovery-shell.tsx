@@ -6,6 +6,7 @@ import type { ReactNode } from "react";
 import { AuthNavAction } from "./auth-nav-action";
 import styles from "./discovery.module.css";
 import { PremiumNavLink } from "./premium-nav-link";
+import { ProfileNavLink } from "./profile-nav-link";
 
 export type BreadcrumbItem = Readonly<{
   label: string;
@@ -24,7 +25,7 @@ export function PublicHeader(): ReactNode {
         <PremiumNavLink />
         <Link href="/en/unsubscribe">Unsubscribe</Link>
         <Link href="/en/progress">Your progress</Link>
-        <Link href="/en/account">User Profile</Link>
+        <ProfileNavLink />
         <AuthNavAction variant="desktop" />
       </nav>
 
@@ -35,7 +36,7 @@ export function PublicHeader(): ReactNode {
           <PremiumNavLink />
           <Link href="/en/unsubscribe">Unsubscribe</Link>
           <Link href="/en/progress">Your progress</Link>
-          <Link href="/en/account">User Profile</Link>
+          <ProfileNavLink />
           <AuthNavAction variant="mobile" />
         </nav>
       </details>
