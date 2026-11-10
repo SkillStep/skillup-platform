@@ -4,11 +4,7 @@ import type { DatabaseClient } from "@skillup/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import {
-  AuthRequestError,
-  type AuthService,
-  normalizePakistanMobile,
-} from "./auth.js";
+import { AuthRequestError, type AuthService, normalizePakistanMobile } from "./auth.js";
 import {
   type ApiConfig,
   isJazzCashV11CheckoutEnabled,
