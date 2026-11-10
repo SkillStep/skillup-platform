@@ -4,7 +4,11 @@ import type { DatabaseClient } from "@skillup/database";
 import type { FastifyInstance } from "fastify";
 import { z } from "zod";
 
-import type { AuthService } from "./auth.js";
+import {
+  AuthRequestError,
+  type AuthService,
+  normalizePakistanMobile,
+} from "./auth.js";
 import {
   type ApiConfig,
   isJazzCashV11CheckoutEnabled,
@@ -18,6 +22,7 @@ import {
   premiumAttributionJson,
   sanitizePremiumAttribution,
 } from "./premium-attribution.js";
+import { BoundedRateLimitStore } from "./rate-limit.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const CreateOrderSchema = z
@@ -44,6 +49,25 @@ const BypassActivateSchema = z
   .object({
     planCode: z.enum(["premium-monthly", "premium-yearly"]),
     attribution: PremiumAttributionInputSchema.optional(),
+  })
+  .strict();
+
+const MsisdnLookupSchema = z
+  .object({
+    msisdn: z
+      .string()
+      .trim()
+      .regex(/^\d{11,15}$/, "Enter a JazzCash mobile number using 11–15 digits."),
+  })
+  .strict();
+
+const MsisdnUnsubscribeConfirmSchema = z
+  .object({
+    msisdn: z
+      .string()
+      .trim()
+      .regex(/^\d{11,15}$/, "Enter a JazzCash mobile number using 11–15 digits."),
+    confirm: z.literal(true),
   })
   .strict();
 
@@ -123,6 +147,19 @@ export type CommercialService = Readonly<{
   unsubscribePremium: (
     userId: string,
   ) => Promise<Readonly<{ entitlement: Entitlement | null; cancelled: boolean }>>;
+  /**
+   * Guest / pay-first unsubscribe: resolve learner by JazzCash MSISDN and report
+   * whether an active/grace Premium entitlement exists. Does not mutate state.
+   */
+  lookupPremiumByMsisdn: (
+    msisdn: string,
+  ) => Promise<Readonly<{ subscribed: boolean; planCode: string | null }>>;
+  /**
+   * Guest / pay-first unsubscribe confirm: cancel Premium for the JazzCash MSISDN owner.
+   */
+  unsubscribePremiumByMsisdn: (
+    msisdn: string,
+  ) => Promise<Readonly<{ entitlement: Entitlement | null; cancelled: boolean }>>;
   recordOfferView: (input: {
     userId: string | null;
     planCode?: string | undefined;
@@ -138,6 +175,81 @@ class CommercialRequestError extends Error {
     this.name = "CommercialRequestError";
     this.statusCode = statusCode;
   }
+}
+
+/** JazzCash checkout stores digits (03…); auth stores +923…. */
+export function jazzCashMsisdnVariants(msisdn: string): Readonly<{
+  digits: string;
+  phoneNormalized: string;
+  phoneDisplay: string;
+}> {
+  const digits = msisdn.trim().replace(/\D/g, "");
+  if (!/^\d{11,15}$/.test(digits)) {
+    throw new CommercialRequestError(400, "Enter a valid JazzCash mobile number.");
+  }
+  let phoneNormalized: string;
+  try {
+    phoneNormalized = normalizePakistanMobile(digits);
+  } catch (error) {
+    if (error instanceof AuthRequestError) {
+      throw new CommercialRequestError(400, "Enter a valid JazzCash mobile number.");
+    }
+    throw error;
+  }
+  return {
+    digits,
+    phoneNormalized,
+    phoneDisplay: `0${phoneNormalized.slice(3)}`,
+  };
+}
+
+async function resolveUserIdByJazzCashMsisdn(
+  pool: DatabaseClient["pool"],
+  msisdn: string,
+): Promise<string | null> {
+  const variants = jazzCashMsisdnVariants(msisdn);
+  const byPhone = await pool.query<{ user_id: string }>(
+    `select ph.user_id
+       from user_phone_identities ph
+       join users u on u.id = ph.user_id
+      where ph.phone_normalized = $1
+        and u.status = 'active'
+      limit 1`,
+    [variants.phoneNormalized],
+  );
+  if (byPhone.rows[0]?.user_id) return byPhone.rows[0].user_id;
+
+  const byWallet = await pool.query<{ user_id: string }>(
+    `select wl.user_id
+       from jazzcash_wallet_links wl
+       join users u on u.id = wl.user_id
+      where wl.msisdn in ($1, $2)
+        and u.status = 'active'
+      order by
+        case when wl.status = 'active' then 0 else 1 end,
+        wl.updated_at desc
+      limit 1`,
+    [variants.digits, variants.phoneDisplay],
+  );
+  return byWallet.rows[0]?.user_id ?? null;
+}
+
+async function activePremiumPlanCode(
+  pool: DatabaseClient["pool"],
+  userId: string,
+): Promise<"premium-monthly" | "premium-yearly" | null> {
+  const result = await pool.query<{ plan_code: "premium-monthly" | "premium-yearly" }>(
+    `select p.code as plan_code
+       from entitlements e
+       join commercial_plan_versions v on v.id = e.plan_version_id
+       join commercial_plans p on p.id = v.plan_id
+      where e.user_id = $1
+        and e.status in ('active', 'grace')
+      order by e.updated_at desc
+      limit 1`,
+    [userId],
+  );
+  return result.rows[0]?.plan_code ?? null;
 }
 
 function mapOrder(row: Record<string, unknown>): PaymentOrder {
@@ -1257,6 +1369,19 @@ export function createCommercialService(
       }
     },
 
+    lookupPremiumByMsisdn: async (msisdn) => {
+      const userId = await resolveUserIdByJazzCashMsisdn(options.pool, msisdn);
+      if (!userId) return { subscribed: false, planCode: null };
+      const planCode = await activePremiumPlanCode(options.pool, userId);
+      return { subscribed: planCode !== null, planCode };
+    },
+
+    unsubscribePremiumByMsisdn: async (msisdn) => {
+      const userId = await resolveUserIdByJazzCashMsisdn(options.pool, msisdn);
+      if (!userId) return { entitlement: null, cancelled: false };
+      return service.unsubscribePremium(userId);
+    },
+
     recordOfferView: async ({ userId, planCode, surface }) => {
       await options.pool.query(
         `insert into commercial_events (user_id, event_name, plan_code, properties)
@@ -1289,6 +1414,28 @@ export function registerCommercialRoutes(
     commercialService: CommercialService;
   }>,
 ): void {
+  // Guest unsubscribe by JazzCash MSISDN (pay-first). Bound per requester fingerprint.
+  const unsubscribeByMsisdnLimit = new BoundedRateLimitStore({
+    windowMs: 15 * 60_000,
+    maxRequests: 20,
+    maxEntries: 5_000,
+  });
+
+  function enforceUnsubscribeMsisdnRateLimit(request: {
+    ip: string;
+    headers: Readonly<Record<string, string | string[] | undefined>>;
+  }): void {
+    const ua = request.headers["user-agent"];
+    const agent = typeof ua === "string" ? ua.slice(0, 120) : "";
+    const decision = unsubscribeByMsisdnLimit.consume(`${request.ip}|${agent}|unsubscribe-msisdn`);
+    if (!decision.allowed) {
+      throw new CommercialRequestError(
+        429,
+        "Too many unsubscribe attempts. Please wait a few minutes and try again.",
+      );
+    }
+  }
+
   app.get("/v1/commercial/plans", async () => ({
     plans: await options.commercialService.listPlans(),
   }));
@@ -1337,6 +1484,41 @@ export function registerCommercialRoutes(
       return reply.status(409).send({
         error: "not_subscribed",
         message: "No active Premium subscription was found to unsubscribe.",
+      });
+    }
+    return result;
+  });
+
+  app.post("/v1/commercial/premium/unsubscribe/lookup", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    enforceUnsubscribeMsisdnRateLimit(request);
+    const body = MsisdnLookupSchema.parse(request.body);
+    const result = await options.commercialService.lookupPremiumByMsisdn(body.msisdn);
+    if (!result.subscribed) {
+      return reply.status(404).send({
+        error: "not_subscribed",
+        subscribed: false,
+        planCode: null,
+        message: "You don't have any active subscription.",
+      });
+    }
+    return {
+      subscribed: true,
+      planCode: result.planCode,
+      message: "An active Premium subscription was found for this JazzCash number.",
+    };
+  });
+
+  app.post("/v1/commercial/premium/unsubscribe/confirm", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    enforceUnsubscribeMsisdnRateLimit(request);
+    const body = MsisdnUnsubscribeConfirmSchema.parse(request.body);
+    const result = await options.commercialService.unsubscribePremiumByMsisdn(body.msisdn);
+    if (!result.cancelled) {
+      return reply.status(409).send({
+        error: "not_subscribed",
+        cancelled: false,
+        message: "You don't have any active subscription.",
       });
     }
     return result;

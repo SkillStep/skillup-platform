@@ -38,9 +38,9 @@
     "release:evidence": "node tools/write-release-evidence.mjs",
     "recovery:verify": "node tools/verify-backup-restore.mjs",
     "local:setup": "pnpm infra:up && pnpm db:wait && pnpm db:migrate && pnpm db:seed && pnpm db:smoke",
-    "infra:up": "docker compose -f infra/compose.yaml up -d",
-    "infra:down": "docker compose -f infra/compose.yaml down",
-    "infra:reset": "docker compose -f infra/compose.yaml down -v"
+    "infra:up": "docker compose --env-file .env -f infra/compose.yaml up -d",
+    "infra:down": "docker compose --env-file .env -f infra/compose.yaml down",
+    "infra:reset": "docker compose --env-file .env -f infra/compose.yaml down -v"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.11",

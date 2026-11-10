@@ -9,7 +9,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-skillup_local}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-skillup_local_only}
     ports:
-      - "127.0.0.1:5432:5432"
+      # Override with POSTGRES_HOST_PORT when local Windows PostgreSQL already uses 5432.
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     volumes:
       - skillup_postgres_data:/var/lib/postgresql
     healthcheck:
