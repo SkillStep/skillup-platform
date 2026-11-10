@@ -431,21 +431,32 @@ jobs:
               exit 1
             }
             test "$(wc -l < "$bundle/image-ids.tsv")" -eq 3
-            docker load --input "$bundle/images.tar.gz"
-            for service in web api ai-worker; do
-              ref="${IMAGE_BASE}-${service}:${IMAGE_TAG}"
-              expected_id="$(awk -v name="$ref" '$1 == name { print $2 }' "$bundle/image-ids.tsv")"
-              test -n "$expected_id" || {
-                echo "::error::Missing image identity for $service." >&2
+            # gunzip|load is portable across Docker versions that disagree on gzip --input.
+            # Archive + manifest SHA already prove the bundle is bit-exact; local image IDs are
+            # NOT portable across graph drivers / containerd image stores, so do not hard-fail on Id drift.
+            gunzip -c "$bundle/images.tar.gz" | docker load
+            while read -r ref expected_id; do
+              test -n "$ref" && test -n "$expected_id" || {
+                echo "::error::Malformed offline image manifest row." >&2
                 exit 1
               }
               loaded_id="$(docker image inspect --format '{{.Id}}' "$ref")"
-              test "$loaded_id" = "$expected_id" || {
-                echo "::error::Loaded image identity mismatch for $service." >&2
+              test -n "$loaded_id" || {
+                echo "::error::Loaded image tag missing after offline transfer: $ref" >&2
+                exit 1
+              }
+              if [ "$loaded_id" != "$expected_id" ]; then
+                echo "::warning::Local image Id differs for $ref (bundle=$expected_id host=$loaded_id); accepting tag load because archive/manifest checksums matched."
+              fi
+            done < "$bundle/image-ids.tsv"
+            for service in web api ai-worker; do
+              ref="${IMAGE_BASE}-${service}:${IMAGE_TAG}"
+              docker image inspect "$ref" >/dev/null || {
+                echo "::error::Required release tag missing after offline transfer: $ref" >&2
                 exit 1
               }
             done
-            echo "OFFLINE IMAGE TRANSFER + EXACT IMAGE IDS: PASS"
+            echo "OFFLINE IMAGE TRANSFER + TAG LOAD: PASS"
             docker compose -f docker-compose.staging.yml up -d postgres
             for attempt in $(seq 1 45); do
               if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then
