@@ -3,8 +3,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { publicSkills } from "../../../lib/public-catalog";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../discovery-shell";
 import styles from "../discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../discovery-shell";
+import { MotionReveal } from "../motion-reveal";
 import { SkillSearch } from "./skill-search";
 
 type PageProps = Readonly<{
@@ -44,15 +45,17 @@ export default async function SkillsPage({ params }: PageProps) {
       <PublicHeader />
       <main className={styles["page"]}>
         <Breadcrumbs items={[{ label: "Home", href: "/en" }, { label: "Skills" }]} />
-        <section className={styles["hero"]} aria-labelledby="skills-title">
-          <p className={styles["eyebrow"]}>Reviewed launch catalog</p>
-          <h1 id="skills-title">Choose one practical skill to improve.</h1>
-          <p className={styles["heroSummary"]}>
-            Every listed path now includes reviewed modules, playable levels, varied challenges and
-            version-pinned learner progress. Start with the skill that best matches your current
-            study or work goal.
-          </p>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <section className={styles["hero"]} aria-labelledby="skills-title">
+            <p className={styles["eyebrow"]}>Reviewed launch catalog</p>
+            <h1 id="skills-title">Choose one practical skill to improve.</h1>
+            <p className={styles["heroSummary"]}>
+              Every listed path now includes reviewed modules, playable levels, varied challenges
+              and version-pinned learner progress. Start with the skill that best matches your
+              current study or work goal.
+            </p>
+          </section>
+        </MotionReveal>
 
         <SkillSearch skills={publicSkills} />
 

@@ -72,6 +72,7 @@ export function PublicFooter(): ReactNode {
       <nav aria-label="Footer navigation">
         <Link href="/en/skills">Skills</Link>
         <Link href="/en/pricing">Premium pricing</Link>
+        <Link href="/en/unsubscribe">Unsubscribe</Link>
         <Link href="/en/support">Support</Link>
         <Link href="/en/legal/terms">Terms</Link>
         <Link href="/en/legal/privacy">Privacy</Link>

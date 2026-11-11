@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { launchCategory, publicSkills } from "../../../../lib/public-catalog";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 import styles from "../../discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
+import { MotionReveal } from "../../motion-reveal";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
@@ -48,33 +49,42 @@ export default async function LaunchCategoryPage({ params }: PageProps) {
       <main className={styles["page"]}>
         <Breadcrumbs items={[{ label: "Home", href: "/en" }, { label: launchCategory.title }]} />
 
-        <section className={styles["hero"]} aria-labelledby="category-title">
-          <p className={styles["eyebrow"]}>Skill category</p>
-          <h1 id="category-title">{launchCategory.title}</h1>
-          <p className={styles["heroSummary"]}>{launchCategory.summary}</p>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <section className={styles["hero"]} aria-labelledby="category-title">
+            <p className={styles["eyebrow"]}>Skill category</p>
+            <h1 id="category-title">{launchCategory.title}</h1>
+            <p className={styles["heroSummary"]}>{launchCategory.summary}</p>
+          </section>
+        </MotionReveal>
 
         <div className={styles["catalogGrid"]}>
-          {publicSkills.map((skill) => (
-            <article className={styles["catalogCard"]} key={skill.slug}>
-              <span
-                className={`${styles["status"]} ${
-                  skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
-                }`}
-              >
-                {skill.status === "pilot" ? "Reviewed pilot" : "Planned path"}
-              </span>
-              <h2>{skill.title}</h2>
-              <p>{skill.summary}</p>
-              <div className={styles["cardLinks"]}>
-                <Link className={styles["primaryLink"]} href={`/en/skills/${skill.slug}`}>
-                  Explore skill
-                </Link>
-                <Link className={styles["secondaryLink"]} href={`/en/paths/${skill.slug}`}>
-                  View path
-                </Link>
-              </div>
-            </article>
+          {publicSkills.map((skill, index) => (
+            <MotionReveal
+              key={skill.slug}
+              variant="zoom-in"
+              delayMs={Math.min(index, 5) * 80}
+              durationMs={600}
+            >
+              <article className={styles["catalogCard"]}>
+                <span
+                  className={`${styles["status"]} ${
+                    skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
+                  }`}
+                >
+                  {skill.status === "pilot" ? "Reviewed pilot" : "Planned path"}
+                </span>
+                <h2>{skill.title}</h2>
+                <p>{skill.summary}</p>
+                <div className={styles["cardLinks"]}>
+                  <Link className={styles["primaryLink"]} href={`/en/skills/${skill.slug}`}>
+                    Explore skill
+                  </Link>
+                  <Link className={styles["secondaryLink"]} href={`/en/paths/${skill.slug}`}>
+                    View path
+                  </Link>
+                </div>
+              </article>
+            </MotionReveal>
           ))}
         </div>
 

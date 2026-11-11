@@ -60,6 +60,11 @@ const contentSecurityPolicy = [
 
 const nextConfig: NextConfig = {
   compress: true,
+  images: {
+    deviceSizes: [640, 750, 828, 1080, 1200, 1440, 1920, 2048],
+    imageSizes: [96, 128, 256, 384, 512, 640, 768],
+    qualities: [75, 90],
+  },
   output: "standalone",
   outputFileTracingRoot: path.join(process.cwd(), "../.."),
   poweredByHeader: false,

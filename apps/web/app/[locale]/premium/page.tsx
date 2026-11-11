@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import accountStyles from "../account/account.module.css";
 import { PublicFooter, PublicHeader } from "../discovery-shell";
+import { MotionReveal } from "../motion-reveal";
 import { PremiumFeatures } from "./premium-features";
 
 type PageProps = Readonly<{
@@ -24,15 +25,19 @@ export default async function PremiumFeaturesPage({ params }: PageProps) {
     <>
       <PublicHeader />
       <main className={accountStyles["main"]}>
-        <header className={accountStyles["header"]}>
-          <p className="eyebrow">Premium</p>
-          <h1>Premium Features</h1>
-          <p>
-            After a successful JazzCash subscription, sign in with your JazzCash mobile number to
-            use Premium Features. This page is never indexed.
-          </p>
-        </header>
-        <PremiumFeatures />
+        <MotionReveal variant="fade-right" durationMs={700}>
+          <header className={accountStyles["header"]}>
+            <p className="eyebrow">Premium</p>
+            <h1>Premium Features</h1>
+            <p>
+              After a successful JazzCash subscription, sign in with your JazzCash mobile number to
+              use Premium Features. This page is never indexed.
+            </p>
+          </header>
+        </MotionReveal>
+        <MotionReveal variant="fade-up" delayMs={100} durationMs={650}>
+          <PremiumFeatures />
+        </MotionReveal>
       </main>
       <PublicFooter />
     </>

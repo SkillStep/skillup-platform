@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { publicSkill, publicSkills } from "../../../../lib/public-catalog";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 import styles from "../../discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
+import { MotionReveal } from "../../motion-reveal";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; slug: string }>;
@@ -59,53 +60,59 @@ export default async function SkillPage({ params }: PageProps) {
           ]}
         />
 
-        <section className={styles["detailHero"]} aria-labelledby="skill-title">
-          <span
-            className={`${styles["status"]} ${
-              skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
-            }`}
-          >
-            {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
-          </span>
-          <h1 id="skill-title">{skill.title}</h1>
-          <p className={styles["detailSummary"]}>{skill.summary}</p>
-          <div className={styles["detailMeta"]}>
-            <span>English launch content</span>
-            <span>{skill.reviewCadence}</span>
-          </div>
-          <div className={styles["cardLinks"]}>
-            <Link className={styles["primaryLink"]} href={`/en/paths/${skill.slug}`}>
-              View learning path
-            </Link>
-            <Link className={styles["secondaryLink"]} href={`/en/learn/${skill.levelId}`}>
-              Start reviewed practice
-            </Link>
-          </div>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <section className={styles["detailHero"]} aria-labelledby="skill-title">
+            <span
+              className={`${styles["status"]} ${
+                skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
+              }`}
+            >
+              {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
+            </span>
+            <h1 id="skill-title">{skill.title}</h1>
+            <p className={styles["detailSummary"]}>{skill.summary}</p>
+            <div className={styles["detailMeta"]}>
+              <span>English launch content</span>
+              <span>{skill.reviewCadence}</span>
+            </div>
+            <div className={styles["cardLinks"]}>
+              <Link className={styles["primaryLink"]} href={`/en/paths/${skill.slug}`}>
+                View learning path
+              </Link>
+              <Link className={styles["secondaryLink"]} href={`/en/learn/${skill.levelId}`}>
+                Start reviewed practice
+              </Link>
+            </div>
+          </section>
+        </MotionReveal>
 
         <div className={styles["contentGrid"]}>
-          <section className={styles["outcomeCard"]} aria-labelledby="outcomes-title">
-            <h2 id="outcomes-title">What you will practice</h2>
-            <ul>
-              {skill.outcomes.map((outcome) => (
-                <li key={outcome}>{outcome}</li>
-              ))}
-            </ul>
-          </section>
+          <MotionReveal variant="fade-up" delayMs={60} durationMs={650}>
+            <section className={styles["outcomeCard"]} aria-labelledby="outcomes-title">
+              <h2 id="outcomes-title">What you will practice</h2>
+              <ul>
+                {skill.outcomes.map((outcome) => (
+                  <li key={outcome}>{outcome}</li>
+                ))}
+              </ul>
+            </section>
+          </MotionReveal>
 
-          <section className={styles["contentCard"]} aria-labelledby="approach-title">
-            <h2 id="approach-title">How SkillUp approaches this skill</h2>
-            <p>
-              Short challenges focus on realistic decisions, useful explanations and visible
-              progress. Published learning always references the exact reviewed content version
-              presented to the learner.
-            </p>
-            {skill.editorialNote ? (
+          <MotionReveal variant="fade-up" delayMs={140} durationMs={650}>
+            <section className={styles["contentCard"]} aria-labelledby="approach-title">
+              <h2 id="approach-title">How SkillUp approaches this skill</h2>
               <p>
-                <strong>Editorial boundary:</strong> {skill.editorialNote}
+                Short challenges focus on realistic decisions, useful explanations and visible
+                progress. Published learning always references the exact reviewed content version
+                presented to the learner.
               </p>
-            ) : null}
-          </section>
+              {skill.editorialNote ? (
+                <p>
+                  <strong>Editorial boundary:</strong> {skill.editorialNote}
+                </p>
+              ) : null}
+            </section>
+          </MotionReveal>
         </div>
 
         <JsonLd

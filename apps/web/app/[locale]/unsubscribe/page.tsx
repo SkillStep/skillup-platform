@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import styles from "../account-flow.module.css";
+import { MotionReveal } from "../motion-reveal";
 import { UnsubscribeForm } from "./unsubscribe-form";
 
 type PageProps = Readonly<{
@@ -33,23 +34,27 @@ export default async function UnsubscribePage({ params }: PageProps) {
       </header>
 
       <div className={styles["layout"]}>
-        <section className={styles["intro"]} aria-labelledby="unsubscribe-title">
-          <p className={styles["eyebrow"]}>Premium billing</p>
-          <h1 className={styles["title"]} id="unsubscribe-title">
-            Cancel Premium with your JazzCash number.
-          </h1>
-          <p className={styles["summary"]}>
-            Enter the JazzCash mobile number from checkout. If that number has an active SkillUp
-            subscription, you will confirm before Premium is cancelled.
-          </p>
-          <ul className={styles["commitments"]} aria-label="Unsubscribe commitments">
-            <li>Works for guest pay-first checkouts (no sign-in required)</li>
-            <li>Confirmation required before cancellation</li>
-            <li>Premium features lock immediately after a successful unsubscribe</li>
-          </ul>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={700}>
+          <section className={styles["intro"]} aria-labelledby="unsubscribe-title">
+            <p className={styles["eyebrow"]}>Premium billing</p>
+            <h1 className={styles["title"]} id="unsubscribe-title">
+              Cancel Premium with your JazzCash number.
+            </h1>
+            <p className={styles["summary"]}>
+              Enter the JazzCash mobile number from checkout. If that number has an active SkillUp
+              subscription, you will confirm before Premium is cancelled.
+            </p>
+            <ul className={styles["commitments"]} aria-label="Unsubscribe commitments">
+              <li>Works for guest pay-first checkouts (no sign-in required)</li>
+              <li>Confirmation required before cancellation</li>
+              <li>Premium features lock immediately after a successful unsubscribe</li>
+            </ul>
+          </section>
+        </MotionReveal>
 
-        <UnsubscribeForm />
+        <MotionReveal variant="zoom-in" delayMs={100} durationMs={650}>
+          <UnsubscribeForm />
+        </MotionReveal>
       </div>
     </main>
   );

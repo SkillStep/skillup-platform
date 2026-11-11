@@ -7,16 +7,18 @@ describe("public launch policies", () => {
     expect(publicPolicies).not.toHaveLength(0);
     const terms = publicPolicies.find((policy) => policy.key === "terms");
     const refund = publicPolicies.find((policy) => policy.key === "refund");
-    expect(terms?.version).toBe("2026-10-06");
+    expect(terms?.version).toBe("2026-11-11");
     expect(terms?.title).toBe("SkillUp Terms and Conditions");
     expect(refund?.version).toBe("2026-09-07");
-    expect(JSON.stringify(terms)).toContain("Rs. 599");
-    expect(JSON.stringify(terms)).toContain("Rs. 4,999");
-    expect(JSON.stringify(terms)).toContain("Maidan Premium Monthly");
+    expect(JSON.stringify(terms)).toContain("Rs. 600");
+    expect(JSON.stringify(terms)).toContain("Rs. 990");
+    expect(JSON.stringify(terms)).toContain("Elite Value");
+    expect(JSON.stringify(terms)).toContain("Platinum");
     expect(JSON.stringify(terms)).toContain("Step Charging Logic");
-    expect(JSON.stringify(terms)).toContain("Promotional Campaigns");
-    expect(JSON.stringify(terms)).toContain("admin@codistan.org");
-    expect(JSON.stringify(terms)).toContain("laws of Pakistan");
+    expect(JSON.stringify(terms)).toContain("Promotional Terms and Conditions");
+    expect(JSON.stringify(terms)).toContain("support@digisphere.com.pk");
+    expect(JSON.stringify(terms)).toContain("DigiSphere");
+    expect(JSON.stringify(terms)).toContain("Islamic Republic of Pakistan");
     expect(
       publicPolicies
         .filter((policy) => policy.key !== "terms" && policy.key !== "refund")

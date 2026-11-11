@@ -3,8 +3,9 @@ import type { Route } from "next";
 import Link from "next/link";
 
 import { type PublicContentEntry, publicContentPath } from "../../lib/public-content";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "./discovery-shell";
 import styles from "./discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "./discovery-shell";
+import { MotionReveal } from "./motion-reveal";
 import { PublicContentReport } from "./public-content-report";
 
 function records(value: unknown): readonly Readonly<Record<string, unknown>>[] {
@@ -90,105 +91,140 @@ export function PublicContentPage({ entry }: Readonly<{ entry: PublicContentEntr
           ]}
         />
 
-        <section className={styles["detailHero"]} aria-labelledby="content-title">
-          <p className={styles["eyebrow"]}>
-            {label(entry.kind)} · reviewed version {entry.version}
-          </p>
-          <h1 id="content-title">{entry.title}</h1>
-          <p className={styles["detailSummary"]}>{entry.summary}</p>
-          <div className={styles["detailMeta"]}>
-            <span>By {entry.authorName}</span>
-            <span>Reviewed by {entry.reviewerName}</span>
-            <span>Reviewed {dateLabel(entry.reviewedAt)}</span>
-          </div>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <section className={styles["detailHero"]} aria-labelledby="content-title">
+            <p className={styles["eyebrow"]}>
+              {label(entry.kind)} · reviewed version {entry.version}
+            </p>
+            <h1 id="content-title">{entry.title}</h1>
+            <p className={styles["detailSummary"]}>{entry.summary}</p>
+            <div className={styles["detailMeta"]}>
+              <span>By {entry.authorName}</span>
+              <span>Reviewed by {entry.reviewerName}</span>
+              <span>Reviewed {dateLabel(entry.reviewedAt)}</span>
+            </div>
+          </section>
+        </MotionReveal>
 
         {entry.directAnswer ? (
-          <section className={styles["outcomeCard"]} aria-labelledby="direct-answer-title">
-            <h2 id="direct-answer-title">Direct answer</h2>
-            <p>{entry.directAnswer}</p>
-          </section>
+          <MotionReveal variant="fade-up" durationMs={650}>
+            <section className={styles["outcomeCard"]} aria-labelledby="direct-answer-title">
+              <h2 id="direct-answer-title">Direct answer</h2>
+              <p>{entry.directAnswer}</p>
+            </section>
+          </MotionReveal>
         ) : null}
 
         {introduction ? (
-          <section className={styles["contentCard"]}>
-            <p>{introduction}</p>
-          </section>
+          <MotionReveal variant="fade-up" delayMs={60} durationMs={650}>
+            <section className={styles["contentCard"]}>
+              <p>{introduction}</p>
+            </section>
+          </MotionReveal>
         ) : null}
 
         <div className={styles["contentGrid"]}>
-          {sections.map((section) => {
+          {sections.map((section, index) => {
             const heading =
               typeof section["heading"] === "string" ? section["heading"] : "Reviewed guidance";
             return (
-              <section className={styles["contentCard"]} key={heading}>
-                <h2>{heading}</h2>
-                {strings(section["paragraphs"]).map((paragraph) => (
-                  <p key={paragraph}>{paragraph}</p>
-                ))}
-              </section>
+              <MotionReveal
+                key={heading}
+                variant="fade-up"
+                delayMs={Math.min(index, 4) * 70}
+                durationMs={600}
+              >
+                <section className={styles["contentCard"]}>
+                  <h2>{heading}</h2>
+                  {strings(section["paragraphs"]).map((paragraph) => (
+                    <p key={paragraph}>{paragraph}</p>
+                  ))}
+                </section>
+              </MotionReveal>
             );
           })}
 
-          {examples.map((example) => {
+          {examples.map((example, index) => {
             const exampleLabel =
               typeof example["label"] === "string" ? example["label"] : "Example";
             const text = typeof example["text"] === "string" ? example["text"] : "";
             return (
-              <section className={styles["contentCard"]} key={`${exampleLabel}:${text}`}>
-                <h2>{exampleLabel}</h2>
-                <p>{text}</p>
-              </section>
+              <MotionReveal
+                key={`${exampleLabel}:${text}`}
+                variant="zoom-in"
+                delayMs={Math.min(index, 3) * 80}
+                durationMs={600}
+              >
+                <section className={styles["contentCard"]}>
+                  <h2>{exampleLabel}</h2>
+                  <p>{text}</p>
+                </section>
+              </MotionReveal>
             );
           })}
 
           {singleExample ? (
-            <section className={styles["contentCard"]}>
-              <h2>Example answer</h2>
-              <p>{singleExample}</p>
-            </section>
+            <MotionReveal variant="fade-up" durationMs={600}>
+              <section className={styles["contentCard"]}>
+                <h2>Example answer</h2>
+                <p>{singleExample}</p>
+              </section>
+            </MotionReveal>
           ) : null}
 
-          {comparison.map((row) => {
+          {comparison.map((row, index) => {
             const dimension =
               typeof row["dimension"] === "string" ? row["dimension"] : "Comparison";
             return (
-              <section className={styles["contentCard"]} key={dimension}>
-                <h2>{dimension}</h2>
-                <p>
-                  <strong>Vague:</strong> {typeof row["vague"] === "string" ? row["vague"] : ""}
-                </p>
-                <p>
-                  <strong>Evidence-based:</strong>{" "}
-                  {typeof row["evidenceBased"] === "string" ? row["evidenceBased"] : ""}
-                </p>
-              </section>
+              <MotionReveal
+                key={dimension}
+                variant="fade-up"
+                delayMs={Math.min(index, 3) * 70}
+                durationMs={600}
+              >
+                <section className={styles["contentCard"]}>
+                  <h2>{dimension}</h2>
+                  <p>
+                    <strong>Vague:</strong> {typeof row["vague"] === "string" ? row["vague"] : ""}
+                  </p>
+                  <p>
+                    <strong>Evidence-based:</strong>{" "}
+                    {typeof row["evidenceBased"] === "string" ? row["evidenceBased"] : ""}
+                  </p>
+                </section>
+              </MotionReveal>
             );
           })}
 
-          <RelatedLinks body={entry.body} />
+          <MotionReveal variant="fade-in" durationMs={650}>
+            <RelatedLinks body={entry.body} />
+          </MotionReveal>
         </div>
 
-        <section className={styles["contentCard"]} aria-labelledby="evidence-title">
-          <h2 id="evidence-title">Source and freshness evidence</h2>
-          <p>
-            Published {dateLabel(entry.publishedAt)}. Next freshness review:{" "}
-            {dateLabel(entry.freshnessReviewAt)}.
-          </p>
-          <ul>
-            {entry.sourceReferences.map((source) => (
-              <li
-                key={`${String(source["title"] ?? "Source")}:${String(source["publisher"] ?? "Unknown publisher")}:${String(source["locator"] ?? "No locator")}`}
-              >
-                <strong>{String(source["title"] ?? "Reviewed source")}</strong>
-                {source["publisher"] ? ` — ${String(source["publisher"])}` : ""}
-                {source["locator"] ? `, ${String(source["locator"])}` : ""}
-              </li>
-            ))}
-          </ul>
-        </section>
+        <MotionReveal variant="fade-up" durationMs={650}>
+          <section className={styles["contentCard"]} aria-labelledby="evidence-title">
+            <h2 id="evidence-title">Source and freshness evidence</h2>
+            <p>
+              Published {dateLabel(entry.publishedAt)}. Next freshness review:{" "}
+              {dateLabel(entry.freshnessReviewAt)}.
+            </p>
+            <ul>
+              {entry.sourceReferences.map((source) => (
+                <li
+                  key={`${String(source["title"] ?? "Source")}:${String(source["publisher"] ?? "Unknown publisher")}:${String(source["locator"] ?? "No locator")}`}
+                >
+                  <strong>{String(source["title"] ?? "Reviewed source")}</strong>
+                  {source["publisher"] ? ` — ${String(source["publisher"])}` : ""}
+                  {source["locator"] ? `, ${String(source["locator"])}` : ""}
+                </li>
+              ))}
+            </ul>
+          </section>
+        </MotionReveal>
 
-        <PublicContentReport targetId={entry.id} />
+        <MotionReveal variant="fade-in" durationMs={700}>
+          <PublicContentReport targetId={entry.id} />
+        </MotionReveal>
 
         <JsonLd
           value={{

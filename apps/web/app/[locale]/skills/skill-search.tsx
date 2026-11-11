@@ -5,6 +5,7 @@ import { useDeferredValue, useId, useMemo, useState } from "react";
 
 import type { PublicSkill } from "../../../lib/public-catalog";
 import styles from "../discovery.module.css";
+import { MotionReveal } from "../motion-reveal";
 
 export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[] }>) {
   const inputId = useId();
@@ -22,44 +23,53 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
 
   return (
     <>
-      <search className={styles["searchPanel"]}>
-        <label htmlFor={inputId}>Search the launch catalog</label>
-        <input
-          className={styles["searchInput"]}
-          id={inputId}
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.currentTarget.value)}
-          placeholder="Try interview, AI, English or freelancing"
-          autoComplete="off"
-        />
-      </search>
+      <MotionReveal variant="fade-up" durationMs={650}>
+        <search className={styles["searchPanel"]}>
+          <label htmlFor={inputId}>Search the launch catalog</label>
+          <input
+            className={styles["searchInput"]}
+            id={inputId}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.currentTarget.value)}
+            placeholder="Try interview, AI, English or freelancing"
+            autoComplete="off"
+          />
+        </search>
+      </MotionReveal>
 
       <p aria-live="polite" className="visually-hidden">
         {visibleSkills.length} {visibleSkills.length === 1 ? "skill" : "skills"} shown.
       </p>
 
       <div className={styles["catalogGrid"]}>
-        {visibleSkills.map((skill) => (
-          <article className={styles["catalogCard"]} key={skill.slug}>
-            <span
-              className={`${styles["status"]} ${
-                skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
-              }`}
-            >
-              {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
-            </span>
-            <h2>{skill.title}</h2>
-            <p>{skill.summary}</p>
-            <div className={styles["cardLinks"]}>
-              <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
-                Start practice
-              </Link>
-              <Link className={styles["secondaryLink"]} href={`/en/paths/${skill.slug}`}>
-                View learning path
-              </Link>
-            </div>
-          </article>
+        {visibleSkills.map((skill, index) => (
+          <MotionReveal
+            key={skill.slug}
+            variant="zoom-in"
+            delayMs={Math.min(index, 5) * 80}
+            durationMs={600}
+          >
+            <article className={styles["catalogCard"]}>
+              <span
+                className={`${styles["status"]} ${
+                  skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
+                }`}
+              >
+                {skill.status === "pilot" ? "Reviewed pilot" : "Reviewed launch path"}
+              </span>
+              <h2>{skill.title}</h2>
+              <p>{skill.summary}</p>
+              <div className={styles["cardLinks"]}>
+                <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
+                  Start practice
+                </Link>
+                <Link className={styles["secondaryLink"]} href={`/en/paths/${skill.slug}`}>
+                  View learning path
+                </Link>
+              </div>
+            </article>
+          </MotionReveal>
         ))}
         {visibleSkills.length === 0 ? (
           <p className={styles["empty"]}>

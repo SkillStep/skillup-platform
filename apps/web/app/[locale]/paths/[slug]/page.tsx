@@ -4,8 +4,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { publicSkill, publicSkills } from "../../../../lib/public-catalog";
-import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 import styles from "../../discovery.module.css";
+import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
+import { MotionReveal } from "../../motion-reveal";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string; slug: string }>;
@@ -77,63 +78,73 @@ export default async function PathPage({ params }: PageProps) {
           ]}
         />
 
-        <section className={styles["detailHero"]} aria-labelledby="path-title">
-          <p className={styles["eyebrow"]}>Reviewed learning path</p>
-          <h1 id="path-title">{skill.title}</h1>
-          <p className={styles["detailSummary"]}>{skill.summary}</p>
-          <div className={styles["detailMeta"]}>
-            <span>
-              {skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}
-            </span>
-            <span>{skill.reviewCadence}</span>
-          </div>
-          <div className={styles["cardLinks"]}>
-            <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
-              Start reviewed practice
-            </Link>
-            <Link className={styles["secondaryLink"]} href={`/en/skills/${skill.slug}`}>
-              Read skill overview
-            </Link>
-          </div>
-        </section>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <section className={styles["detailHero"]} aria-labelledby="path-title">
+            <p className={styles["eyebrow"]}>Reviewed learning path</p>
+            <h1 id="path-title">{skill.title}</h1>
+            <p className={styles["detailSummary"]}>{skill.summary}</p>
+            <div className={styles["detailMeta"]}>
+              <span>
+                {skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}
+              </span>
+              <span>{skill.reviewCadence}</span>
+            </div>
+            <div className={styles["cardLinks"]}>
+              <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
+                Start reviewed practice
+              </Link>
+              <Link className={styles["secondaryLink"]} href={`/en/skills/${skill.slug}`}>
+                Read skill overview
+              </Link>
+            </div>
+          </section>
+        </MotionReveal>
 
         <div className={styles["contentGrid"]}>
-          <section className={styles["outcomeCard"]} aria-labelledby="path-outcomes-title">
-            <h2 id="path-outcomes-title">Learning outcomes</h2>
-            <ul>
-              {skill.outcomes.map((outcome) => (
-                <li key={outcome}>{outcome}</li>
-              ))}
-            </ul>
-          </section>
+          <MotionReveal variant="fade-up" delayMs={40} durationMs={600}>
+            <section className={styles["outcomeCard"]} aria-labelledby="path-outcomes-title">
+              <h2 id="path-outcomes-title">Learning outcomes</h2>
+              <ul>
+                {skill.outcomes.map((outcome) => (
+                  <li key={outcome}>{outcome}</li>
+                ))}
+              </ul>
+            </section>
+          </MotionReveal>
 
-          <section className={styles["contentCard"]} aria-labelledby="path-structure-title">
-            <h2 id="path-structure-title">Path structure</h2>
-            <ol>
-              {skill.modules.map((module) => (
-                <li key={module}>{module}</li>
-              ))}
-            </ol>
-          </section>
+          <MotionReveal variant="fade-up" delayMs={100} durationMs={600}>
+            <section className={styles["contentCard"]} aria-labelledby="path-structure-title">
+              <h2 id="path-structure-title">Path structure</h2>
+              <ol>
+                {skill.modules.map((module) => (
+                  <li key={module}>{module}</li>
+                ))}
+              </ol>
+            </section>
+          </MotionReveal>
 
-          <section className={styles["contentCard"]} aria-labelledby="challenge-types-title">
-            <h2 id="challenge-types-title">Practice formats</h2>
-            <ul>
-              {skill.challengeTypes.map((challengeType) => (
-                <li key={challengeType}>{challengeType}</li>
-              ))}
-            </ul>
-          </section>
+          <MotionReveal variant="fade-up" delayMs={160} durationMs={600}>
+            <section className={styles["contentCard"]} aria-labelledby="challenge-types-title">
+              <h2 id="challenge-types-title">Practice formats</h2>
+              <ul>
+                {skill.challengeTypes.map((challengeType) => (
+                  <li key={challengeType}>{challengeType}</li>
+                ))}
+              </ul>
+            </section>
+          </MotionReveal>
 
-          <section className={styles["contentCard"]} aria-labelledby="publication-title">
-            <h2 id="publication-title">Publication standard</h2>
-            <p>
-              SkillUp publishes a path only after its learning objectives, answer logic,
-              explanations, accessibility and safety have been reviewed. Learner attempts remain
-              tied to the exact version presented.
-            </p>
-            {skill.editorialNote ? <p>{skill.editorialNote}</p> : null}
-          </section>
+          <MotionReveal variant="fade-up" delayMs={220} durationMs={600}>
+            <section className={styles["contentCard"]} aria-labelledby="publication-title">
+              <h2 id="publication-title">Publication standard</h2>
+              <p>
+                SkillUp publishes a path only after its learning objectives, answer logic,
+                explanations, accessibility and safety have been reviewed. Learner attempts remain
+                tied to the exact version presented.
+              </p>
+              {skill.editorialNote ? <p>{skill.editorialNote}</p> : null}
+            </section>
+          </MotionReveal>
         </div>
 
         <JsonLd value={structuredPath} />

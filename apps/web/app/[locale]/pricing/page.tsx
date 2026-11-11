@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { JsonLd, PublicFooter, PublicHeader } from "../discovery-shell";
+import { MotionReveal } from "../motion-reveal";
 import { PremiumOffer } from "./premium-offer";
 import styles from "./pricing.module.css";
 
@@ -140,43 +141,54 @@ export default async function PricingPage({ params }: PageProps) {
     <>
       <PublicHeader />
       <main className={styles["main"]}>
-        <header className={styles["hero"]}>
-          <p className="eyebrow">Clear, Pakistan-first pricing</p>
-          <h1>Learn free. Upgrade when Premium value is clear.</h1>
-          <p>
-            Choose Monthly or Yearly. You will enter your JazzCash number on the next step, then
-            complete verification on JazzCash.
-          </p>
-        </header>
+        <MotionReveal variant="fade-right" durationMs={750}>
+          <header className={styles["hero"]}>
+            <p className="eyebrow">Clear, Pakistan-first pricing</p>
+            <p>
+              Choose Monthly or Yearly. You will enter your JazzCash number on the next step, then
+              complete verification on JazzCash.
+            </p>
+          </header>
+        </MotionReveal>
 
-        <PremiumOffer plans={plans} />
+        <MotionReveal variant="zoom-in" delayMs={80} durationMs={700}>
+          <PremiumOffer plans={plans} />
+        </MotionReveal>
 
-        <section className={styles["free"]} aria-labelledby="free-title">
-          <h2 id="free-title">The free experience remains meaningful.</h2>
-          <p>
-            You can create a profile, play reviewed pilot levels, receive explanations, earn points
-            and keep progress without purchasing Premium.
-          </p>
-        </section>
+        <MotionReveal variant="fade-up" durationMs={650}>
+          <section className={styles["free"]} aria-labelledby="free-title">
+            <h2 id="free-title">The free experience remains meaningful.</h2>
+            <p>
+              You can create a profile, play reviewed pilot levels, receive explanations, earn
+              points and keep progress without purchasing Premium.
+            </p>
+          </section>
+        </MotionReveal>
 
         <section className={styles["policy"]} aria-label="Premium commitments">
-          <article>
-            <h2>Server-verified access</h2>
-            <p>Browser redirects and payment screenshots cannot activate Premium.</p>
-          </article>
-          <article>
-            <h2>Hosted wallet security</h2>
-            <p>
-              Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.
-            </p>
-          </article>
-          <article>
-            <h2>Billing controls</h2>
-            <p>
-              Subscription cancellation and wallet unlinking are available from your private
-              account.
-            </p>
-          </article>
+          <MotionReveal variant="fade-up" delayMs={0} durationMs={600}>
+            <article>
+              <h2>Server-verified access</h2>
+              <p>Browser redirects and payment screenshots cannot activate Premium.</p>
+            </article>
+          </MotionReveal>
+          <MotionReveal variant="fade-up" delayMs={90} durationMs={600}>
+            <article>
+              <h2>Hosted wallet security</h2>
+              <p>
+                Your JazzCash MPIN is entered only on JazzCash&apos;s hosted page, never in SkillUp.
+              </p>
+            </article>
+          </MotionReveal>
+          <MotionReveal variant="fade-up" delayMs={160} durationMs={600}>
+            <article>
+              <h2>Billing controls</h2>
+              <p>
+                Subscription cancellation and wallet unlinking are available from your private
+                account.
+              </p>
+            </article>
+          </MotionReveal>
         </section>
       </main>
       <JsonLd
