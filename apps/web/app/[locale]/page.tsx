@@ -110,7 +110,7 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
             <div className="hero-visual hero-visual-float">
               <div className="hero-visual-glow" aria-hidden="true" />
               <Image
-                src="/home/home-hero-banner.png"
+                src="/home/home-hero-banner-fixed.png"
                 alt="SkillUp learner on mobile with short skill cards for interview, digital and business learning"
                 width={1248}
                 height={727}
@@ -182,8 +182,8 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
                     <Image
                       src={
                         path.status === "pilot"
-                          ? "/home/step-choose-goal.jpeg"
-                          : "/home/step-practice.jpeg"
+                          ? "/home/path-interview.png"
+                          : "/home/path-study.png"
                       }
                       alt=""
                       width={720}
@@ -241,8 +241,8 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
                     index === 0
                       ? "/home/step-progress.jpeg"
                       : index === 1
-                        ? "/home/step-choose-goal.jpeg"
-                        : "/home/step-practice.jpeg";
+                        ? "/home/path-freelance.png"
+                        : "/home/path-marketing.png";
 
                   return (
                     <HomeReveal

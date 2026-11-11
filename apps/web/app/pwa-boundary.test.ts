@@ -32,12 +32,16 @@ describe("installable PWA privacy boundary", () => {
     expect(serviceWorker).not.toContain("caches.match(event.request).then");
   });
 
-  it("provides install metadata, scalable icons and update controls", () => {
+  it("provides install metadata, scalable icons and quiet update activation", () => {
     expect(manifest).toContain('display: "standalone"');
     expect(manifest).toContain('purpose: "maskable"');
     expect(manifest).toContain('url: "/en/skills"');
     expect(layout).toContain("<PwaStatus />");
     expect(serviceWorker).toContain('event.data?.type === "SKIP_WAITING"');
+    const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
+    expect(pwaStatus).toContain('type: "SKIP_WAITING"');
+    expect(pwaStatus).not.toContain("A reviewed SkillUp update is ready");
+    expect(pwaStatus).not.toContain("Update safely");
   });
 
   it("keeps campaign landings outside the installed desktop PWA", () => {
@@ -66,5 +70,12 @@ describe("installable PWA privacy boundary", () => {
     expect(pwaStatus).not.toContain("Install SkillUp");
     expect(pwaStatus).toContain("beforeinstallprompt");
     expect(pwaStatus).toContain("preventDefault");
+  });
+
+  it("does not show a reviewed update ready banner", () => {
+    const pwaStatus = readFileSync(new URL("./pwa-status.tsx", import.meta.url), "utf8");
+    expect(pwaStatus).not.toContain("A reviewed SkillUp update is ready");
+    expect(pwaStatus).not.toContain("Update safely");
+    expect(pwaStatus).not.toContain("waitingWorker");
   });
 });

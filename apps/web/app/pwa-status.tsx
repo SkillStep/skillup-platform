@@ -1,14 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import styles from "./pwa-status.module.css";
 
 export function PwaStatus() {
   const [online, setOnline] = useState(true);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
-  const refreshing = useRef(false);
-  const updateRequested = useRef(false);
 
   useEffect(() => {
     setOnline(navigator.onLine);
@@ -23,13 +20,6 @@ export function PwaStatus() {
     };
     window.addEventListener("beforeinstallprompt", handleInstallPrompt);
 
-    const handleControllerChange = () => {
-      if (!updateRequested.current || refreshing.current) return;
-      refreshing.current = true;
-      window.location.reload();
-    };
-    navigator.serviceWorker?.addEventListener("controllerchange", handleControllerChange);
-
     // Do not register a worker from campaign landings — keep those URLs browser-only.
     const onCampaignLanding =
       window.location.pathname === "/mainLanding" ||
@@ -39,14 +29,20 @@ export function PwaStatus() {
 
     if ("serviceWorker" in navigator && !onCampaignLanding) {
       // Scope matches the web app manifest (/en) so campaign landings stay browser-only.
+      // Activate waiting updates quietly — never show an "update ready" banner.
       void navigator.serviceWorker.register("/sw.js", { scope: "/en" }).then((registration) => {
-        if (registration.waiting) setWaitingWorker(registration.waiting);
+        const activateQuietly = (worker: ServiceWorker | null | undefined) => {
+          worker?.postMessage({ type: "SKIP_WAITING" });
+        };
+
+        if (registration.waiting) activateQuietly(registration.waiting);
+
         registration.addEventListener("updatefound", () => {
           const worker = registration.installing;
           if (!worker) return;
           worker.addEventListener("statechange", () => {
             if (worker.state === "installed" && navigator.serviceWorker.controller) {
-              setWaitingWorker(worker);
+              activateQuietly(worker);
             }
           });
         });
@@ -57,34 +53,17 @@ export function PwaStatus() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
       window.removeEventListener("beforeinstallprompt", handleInstallPrompt);
-      navigator.serviceWorker?.removeEventListener("controllerchange", handleControllerChange);
     };
   }, []);
 
-  function update(): void {
-    if (!waitingWorker) return;
-    updateRequested.current = true;
-    waitingWorker.postMessage({ type: "SKIP_WAITING" });
-  }
-
-  if (online && !waitingWorker) return null;
+  if (online) return null;
 
   return (
     <aside className={styles["status"]} aria-live="polite" aria-label="Application status">
-      {!online ? (
-        <p>
-          You are offline. Public pages may use a saved copy; account, gameplay and progress actions
-          wait for a secure connection.
-        </p>
-      ) : null}
-      {waitingWorker ? (
-        <div>
-          <p>A reviewed SkillUp update is ready.</p>
-          <button type="button" onClick={update}>
-            Update safely
-          </button>
-        </div>
-      ) : null}
+      <p>
+        You are offline. Public pages may use a saved copy; account, gameplay and progress actions
+        wait for a secure connection.
+      </p>
     </aside>
   );
 }
