@@ -10,6 +10,7 @@ import styles from "./admin.module.css";
 
 const ADMIN_TABS = [
   { label: "Overview", href: "/en/admin" },
+  { label: "Course drafts", href: "/en/admin/course-drafts" },
   { label: "Summary", href: "/en/admin/premium?tab=summary" },
   { label: "Campaign", href: "/en/admin/premium?tab=campaign" },
   { label: "Payments", href: "/en/admin/premium?tab=payments" },
