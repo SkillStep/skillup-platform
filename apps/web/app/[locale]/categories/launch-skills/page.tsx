@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { launchCategory, publicSkills } from "../../../../lib/public-catalog";
+import { launchCategory } from "../../../../lib/public-catalog";
+import { loadPublishedPublicSkills } from "../../../../lib/live-catalog";
 import styles from "../../discovery.module.css";
 import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 import { MotionReveal } from "../../motion-reveal";
@@ -40,6 +41,7 @@ export default async function LaunchCategoryPage({ params }: PageProps) {
   const { locale } = await params;
   if (locale !== "en") notFound();
 
+  const publicSkills = await loadPublishedPublicSkills();
   const homeUrl = canonicalUrl(publicAppUrl, "en");
   const categoryUrl = canonicalUrl(publicAppUrl, "en", `/categories/${launchCategory.slug}`);
 
@@ -57,6 +59,9 @@ export default async function LaunchCategoryPage({ params }: PageProps) {
           </section>
         </MotionReveal>
 
+        {publicSkills.length === 0 ? (
+          <p role="status">The published course catalogue is temporarily unavailable.</p>
+        ) : null}
         <div className={styles["catalogGrid"]}>
           {publicSkills.map((skill, index) => (
             <MotionReveal
@@ -71,7 +76,7 @@ export default async function LaunchCategoryPage({ params }: PageProps) {
                     skill.status === "pilot" ? styles["statusPilot"] : styles["statusPlanned"]
                   }`}
                 >
-                  {skill.status === "pilot" ? "Reviewed pilot" : "Planned path"}
+                  {skill.status === "pilot" ? "Reviewed pilot" : "Published path"}
                 </span>
                 <h2>{skill.title}</h2>
                 <p>{skill.summary}</p>

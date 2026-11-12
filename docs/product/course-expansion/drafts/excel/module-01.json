@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "excel-google-sheets-work",
+  "locale": "en",
+  "moduleNumber": 1,
+  "moduleTitle": "Clean and Structure Data",
+  "state": "draft",
+  "authoredBy": "AI-assisted draft",
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "levels": [
+    {
+      "number": 1,
+      "title": "Identify Spreadsheet Rows and Columns",
+      "objective": "Distinguish headers, records, cells and data types in an order sheet.",
+      "teaching": "A column stores one field, a row stores one complete record, and a cell names one intersection. Reliable sheets use a unique header row.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "In a bookshop workbook A1=Order ID, B1=Date, C1=Amount. What does C4 refer to?",
+          "options": {
+            "a": "The entire fourth customer order",
+            "b": "The amount stored in row four",
+            "c": "The column containing all dates"
+          },
+          "answer": "b",
+          "feedback": "The letter C identifies the Amount column; 4 identifies the fourth row. C4 is one amount cell."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A colleague says 'the total is wrong in row 12.' Which reference helps you find the amount without changing another field?",
+          "options": {
+            "a": "Look at B12 because B always means amount",
+            "b": "Look at the entire sheet and delete row 12",
+            "c": "Check which column has the Amount header, then inspect its row-12 cell"
+          },
+          "answer": "c",
+          "feedback": "Columns must be identified by their actual headers before interpreting a row number."
+        },
+        {
+          "type": "true_false",
+          "prompt": "In a one-record-per-row order sheet, each row below the header should describe one order, not mix several orders in one cell.",
+          "answer": true,
+          "feedback": "Keeping one order per row makes sorting and formulas reliable; a header row is not an order."
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Set Up a Clean Data Table",
+      "objective": "Choose useful column names and one-record-per-row structure.",
+      "teaching": "A usable transaction table needs one header per field, consistent values and a stable identifier. Avoid merged cells and repeated header rows inside data.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "You are designing an orders table. Which header set supports filtering and totals?",
+          "options": {
+            "a": "Customer + details",
+            "b": "Order ID, Order Date, Item, Quantity, Unit Price",
+            "c": "Order details including the date, product and everything else"
+          },
+          "answer": "b",
+          "feedback": "Separate date, quantity and unit price fields allow meaningful formulas and filtering."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A shop records 'Order 501, two red bags, PKR 2,000' as one merged cell. What is the best redesign?",
+          "options": {
+            "a": "Separate ID, item, quantity and unit price into dedicated columns",
+            "b": "Keep merged cells but color them yellow",
+            "c": "Use a new worksheet for each order"
+          },
+          "answer": "a",
+          "feedback": "Separate fields make calculations, validation and sorting possible without extracting values from prose."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Repeating a header row after every five orders inside one data range improves spreadsheet filtering.",
+          "answer": false,
+          "feedback": "Repeated headers become data records and disrupt filters. Use frozen headers or a formatted table instead."
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Keep Dates, Money and Numbers Consistent",
+      "objective": "Spot data types that distort financial summaries.",
+      "teaching": "A cell that looks like a number may actually be text. Store numeric amounts numerically and use number formatting for currency; choose a consistent date convention.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A SUM of four prices ignores 'PKR 850' typed as text in one cell. What should change?",
+          "options": {
+            "a": "Replace the amount with a numeric 850 and format the cell as PKR",
+            "b": "Add the word total next to every price",
+            "c": "Convert the entire sheet to plain text"
+          },
+          "answer": "a",
+          "feedback": "Numbers must remain numeric for arithmetic; the PKR label belongs in formatting."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Two dates appear as 03/04/2026 and 2026-04-03. Your team uses day-month-year. How should you avoid confusing the order dates?",
+          "options": {
+            "a": "Assume both mean 3 April",
+            "b": "Record dates consistently with a stated convention, preferably as actual date values",
+            "c": "Sort both as raw text and trust the result"
+          },
+          "answer": "b",
+          "feedback": "Ambiguous date strings can invert day and month and break accurate chronological reports."
+        },
+        {
+          "type": "true_false",
+          "prompt": "The value 1,200 entered as text with an apostrophe will always behave exactly like numeric 1200 in SUM calculations.",
+          "answer": false,
+          "feedback": "Text and numeric values can look identical but may behave differently in formulas and sorting."
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Find Missing and Duplicate Records",
+      "objective": "Identify blanks, duplicates and legitimate repeated orders.",
+      "teaching": "Duplicate detection needs a reliable key such as Order ID. Two similar purchases can be real separate orders; blank fields require verification instead of assumptions.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Order ID 741 occurs twice with identical date, item, quantity and amount. What should you do before removing either row?",
+          "options": {
+            "a": "Delete the second row immediately",
+            "b": "Confirm whether the two rows represent one event using the source order log",
+            "c": "Keep both because duplicates are never mistakes"
+          },
+          "answer": "b",
+          "feedback": "Even a perfect-looking duplicate needs comparison with source records before deletion."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Order 782 and 783 have the same customer and total, but different order IDs and timestamps. What is the safest interpretation?",
+          "options": {
+            "a": "Keep both as potentially legitimate separate orders pending evidence",
+            "b": "Merge them because the totals match",
+            "c": "Set the customer field to blank on one record"
+          },
+          "answer": "a",
+          "feedback": "Matching customer and total are not sufficient to establish a duplicate transaction."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A blank delivery date should be filled with today's date without checking the shipment record.",
+          "answer": false,
+          "feedback": "Inventing dates contaminates operational reports; missing data should be marked and verified."
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Sort, Filter and Inspect Data",
+      "objective": "Use filters to answer a business question without destroying records.",
+      "teaching": "Filtering hides unmatched records without deleting them. Sort the complete table range to preserve the relationship between order IDs and amounts.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "How do you show only orders marked 'Pending' while retaining all completed orders?",
+          "options": {
+            "a": "Delete all completed rows",
+            "b": "Apply a filter on the Status column for Pending",
+            "c": "Sort the Amount column alone"
+          },
+          "answer": "b",
+          "feedback": "Filters change the visible view, not the underlying records."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Someone sorts only the Amount cells, leaving Order ID and customer columns in place. What problem results?",
+          "options": {
+            "a": "The spreadsheet improves because amounts are grouped",
+            "b": "The date format changes automatically",
+            "c": "Amounts may be attached to the wrong orders"
+          },
+          "answer": "c",
+          "feedback": "Sort the whole table so each record stays together across all columns."
+        },
+        {
+          "type": "true_false",
+          "prompt": "After a filter hides 18 completed orders, those orders are permanently removed from the spreadsheet.",
+          "answer": false,
+          "feedback": "Filters only hide rows until the filter is cleared; deleting rows is a separate action."
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "title": "Checkpoint: Clean Sample Orders",
+      "objective": "Correct a 25-row synthetic order dataset using a documented checklist.",
+      "teaching": "A cleaning pass should verify headers, IDs, numeric fields, dates and missing values, then reconcile record counts against the source rather than silently guessing.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A synthetic 25-row order file has one repeated Order ID, two missing quantities and three currency strings. Which check should come before final totals?",
+          "options": {
+            "a": "Verify the duplicate and missing quantities against source records, then convert text amounts safely",
+            "b": "Delete all rows with any unusual value",
+            "c": "Format every column red and publish the total"
+          },
+          "answer": "a",
+          "feedback": "Quality control comes before arithmetic; unresolved source discrepancies must be reported."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A cleaned file now has 24 rows. The source log shows 25 actual orders and one shared customer name. What should you check?",
+          "options": {
+            "a": "Assume the customer repeated because data is broken",
+            "b": "Reconcile every original Order ID and restore any distinct order incorrectly removed",
+            "c": "Add an invented order to make the count 25"
+          },
+          "answer": "b",
+          "feedback": "Record count must be reconciled to unique source order IDs, not guessed from customer names."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A cleaning report should distinguish corrections confirmed by a source from unresolved blanks that still need attention.",
+          "answer": true,
+          "feedback": "A transparent audit separates verified repairs from uncertainties so downstream analysis is trustworthy."
+        }
+      ]
+    }
+  ]
+}

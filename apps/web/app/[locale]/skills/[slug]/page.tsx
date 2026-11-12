@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { publicSkill, publicSkills } from "../../../../lib/public-catalog";
+import { publicSkills } from "../../../../lib/public-catalog";
+import { loadPublishedPublicSkill } from "../../../../lib/live-catalog";
 import styles from "../../discovery.module.css";
 import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../../discovery-shell";
 import { MotionReveal } from "../../motion-reveal";
@@ -23,7 +24,7 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale, slug } = await params;
   if (locale !== "en") return {};
-  const skill = publicSkill(slug);
+  const skill = await loadPublishedPublicSkill(slug);
   if (!skill) return {};
 
   const url = canonicalUrl(publicAppUrl, "en", `/skills/${skill.slug}`);
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function SkillPage({ params }: PageProps) {
   const { locale, slug } = await params;
   if (locale !== "en") notFound();
-  const skill = publicSkill(slug);
+  const skill = await loadPublishedPublicSkill(slug);
   if (!skill) notFound();
 
   const homeUrl = canonicalUrl(publicAppUrl, "en");

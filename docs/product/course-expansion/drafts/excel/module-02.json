@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "excel-google-sheets-work",
+  "locale": "en",
+  "moduleNumber": 2,
+  "moduleTitle": "Useful Formulas",
+  "state": "draft",
+  "authoredBy": "AI-assisted draft",
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "levels": [
+    {
+      "number": 7,
+      "title": "Add and Average Transaction Values",
+      "objective": "Choose SUM and AVERAGE for a business data question.",
+      "teaching": "SUM returns the total of numeric cells; AVERAGE divides that total by the number of numeric entries, not by the number of visually filled cells.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Three order amounts are PKR 1,200, 800 and 500. What does =SUM(C2:C4) return when these values are in C2:C4?",
+          "options": {
+            "a": "PKR 2,500",
+            "b": "PKR 833.33",
+            "c": "PKR 1,500"
+          },
+          "answer": "a",
+          "feedback": "1,200 + 800 + 500 equals 2,500. AVERAGE, not SUM, gives the mean."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A manager wants the typical value per order for amounts 1,200, 800 and 500. Which formula answers that question?",
+          "options": {
+            "a": "=COUNT(C2:C4)",
+            "b": "=AVERAGE(C2:C4)",
+            "c": "=SUM(C2:C4)"
+          },
+          "answer": "b",
+          "feedback": "AVERAGE gives 2,500 divided by three orders, or about PKR 833.33."
+        },
+        {
+          "type": "true_false",
+          "prompt": "If one of three visible amount cells contains the text 'missing', AVERAGE will treat it as a numeric zero.",
+          "answer": false,
+          "feedback": "AVERAGE generally ignores text values in referenced cells; decide how to handle missing data before interpreting the mean."
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "title": "Understand Cell References",
+      "objective": "Distinguish relative and absolute cell references when copying formulas.",
+      "teaching": "Relative references change as formulas are copied; dollar signs lock rows, columns or both. A fixed tax-rate cell should remain fixed across transactions.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A tax rate is stored in F1. Which formula correctly uses the same rate when copied down from row 2 to row 10?",
+          "options": {
+            "a": "=C2*F1",
+            "b": "=C2*$F$1",
+            "c": "=$C$2*F10"
+          },
+          "answer": "b",
+          "feedback": "$F$1 is absolute, while C2 changes to C3, C4 and so on with each row."
+        },
+        {
+          "type": "scenario",
+          "prompt": "You copy =B2*C2 from D2 into D3. Which formula should a normal spreadsheet produce?",
+          "options": {
+            "a": "=B3*C3",
+            "b": "=B2*C2",
+            "c": "=B2*C3"
+          },
+          "answer": "a",
+          "feedback": "Both B2 and C2 are relative, so the row numbers advance together."
+        },
+        {
+          "type": "true_false",
+          "prompt": "In =C2*$F$1, copying the formula one row down should change the reference $F$1 to $F$2.",
+          "answer": false,
+          "feedback": "Both the F column and row 1 are locked with dollar signs."
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "title": "Make an IF Decision",
+      "objective": "Use a simple logical condition to label a late order accurately.",
+      "teaching": "IF takes a condition, a value when true, and a value when false. Choose explicit threshold rules and verify the boundary value.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A delivery is \"Late\" only if Days Taken in D2 is greater than 5. Which formula is correct?",
+          "options": {
+            "a": "=IF(D2>5,\"Late\",\"On time\")",
+            "b": "=IF(D2<5,\"Late\",\"On time\")",
+            "c": "=IF(D2=5,\"Late\",\"On time\")"
+          },
+          "answer": "a",
+          "feedback": "The condition D2>5 is true for 6 or more days but false at exactly five days."
+        },
+        {
+          "type": "scenario",
+          "prompt": "An order took exactly five days. Your rule is 'late if more than five days'. What status must the sheet return?",
+          "options": {
+            "a": "Late",
+            "b": "On time",
+            "c": "Unknown even when D2 is numeric"
+          },
+          "answer": "b",
+          "feedback": "A strict greater-than threshold excludes exactly five days."
+        },
+        {
+          "type": "true_false",
+          "prompt": "The formula =IF(D2>=5,\"Late\",\"On time\") labels an order delivered in exactly five days as Late.",
+          "answer": true,
+          "feedback": "The greater-than-or-equal comparison includes five; this is different from a greater-than-only rule."
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "title": "Total One Category with SUMIF",
+      "objective": "Select SUMIF criterion and total ranges to calculate a category subtotal.",
+      "teaching": "SUMIF compares a criterion against one range and sums numeric values from a corresponding range. Those ranges must cover matching rows.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Categories in B2:B5 are Food, Stationery, Food, Travel; values in C2:C5 are 500, 200, 300, 400. Which formula totals Food only?",
+          "options": {
+            "a": "=SUM(C2:C5)",
+            "b": "=SUMIF(B2:B5,\"Food\",C2:C5)",
+            "c": "=COUNTIF(B2:B5,\"Food\")"
+          },
+          "answer": "b",
+          "feedback": "SUMIF adds the matching Food amounts 500 and 300, giving PKR 800."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A formula =SUMIF(C2:C5,\"Food\",B2:B5) is returning zero. What should you correct?",
+          "options": {
+            "a": "Swap the ranges so B contains the category criterion and C contains amounts",
+            "b": "Change the category to Food 2",
+            "c": "Convert the order IDs into prices"
+          },
+          "answer": "a",
+          "feedback": "The criterion range must contain category labels; the sum range must contain numeric amounts."
+        },
+        {
+          "type": "true_false",
+          "prompt": "For values Food 500, Stationery 200, Food 300, Travel 400, the Food subtotal is PKR 800.",
+          "answer": true,
+          "feedback": "Only the two Food rows qualify, so 500 + 300 = 800."
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "title": "Count Orders with COUNTIF",
+      "objective": "Count records that meet a chosen status without double counting.",
+      "teaching": "COUNTIF counts cells matching a specified criterion; it does not add transaction values. Keep consistent status spelling and filter conditions.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Statuses in D2:D6 are Pending, Shipped, Pending, Cancelled, Pending. What is =COUNTIF(D2:D6,\"Pending\")?",
+          "options": {
+            "a": "2",
+            "b": "3",
+            "c": "5"
+          },
+          "answer": "b",
+          "feedback": "Three cells equal Pending; the other two have different statuses."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A shop uses both \"Pending\" and \"pending \" with a trailing space. Which step improves reliable counting?",
+          "options": {
+            "a": "Standardize or validate status values before using COUNTIF",
+            "b": "Change every status to Shipped",
+            "c": "Count the orders by summing the Amount column"
+          },
+          "answer": "a",
+          "feedback": "Uncontrolled spaces can cause matching and classification errors; normalize entries rather than guessing."
+        },
+        {
+          "type": "true_false",
+          "prompt": "COUNTIF(D2:D6,\"Pending\") returns the combined rupee amount of Pending orders.",
+          "answer": false,
+          "feedback": "COUNTIF returns the number of matching cells; SUMIF adds matching numeric values."
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "title": "Checkpoint: Debug a Broken Formula",
+      "objective": "Find a wrong range or data type causing totals to disagree with the source.",
+      "teaching": "Debug a calculation by inspecting the reference range, cell types and inclusion rule. Cross-check totals against a known small example.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Amounts in C2:C5 are 1,200, 800, 500 and 200. A report uses =SUM(C2:C4). What amount is omitted?",
+          "options": {
+            "a": "PKR 1,200",
+            "b": "PKR 200",
+            "c": "PKR 800"
+          },
+          "answer": "b",
+          "feedback": "The formula ends at row 4 and leaves out C5, which contains 200."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A monthly subtotal is lower than the order ledger. You find that the final three amounts were pasted as text. What is the defensible repair?",
+          "options": {
+            "a": "Verify the originals, convert the values to numbers, then recalculate and reconcile",
+            "b": "Manually add an unexplained adjustment cell",
+            "c": "Ignore the mismatch because the chart looks normal"
+          },
+          "answer": "a",
+          "feedback": "A transparent repair fixes data types with source evidence and reruns the formula."
+        },
+        {
+          "type": "true_false",
+          "prompt": "After fixing the reference from C2:C4 to C2:C5, SUM should return PKR 2,700 for 1,200, 800, 500 and 200.",
+          "answer": true,
+          "feedback": "Including all four numeric amounts produces 2,700."
+        }
+      ]
+    }
+  ]
+}

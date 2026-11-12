@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "excel-google-sheets-work",
+  "locale": "en",
+  "moduleNumber": 4,
+  "moduleTitle": "Business Tracker Capstone",
+  "state": "draft",
+  "authoredBy": "AI-assisted draft",
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "levels": [
+    {
+      "number": 19,
+      "title": "Plan a Reusable Sales Tracker",
+      "objective": "Choose the essential fields and business questions for a repeatable workbook.",
+      "teaching": "Start with the decision the tracker must support, then choose fields that can answer it. An order tracker needs a stable ID and clear dates, amounts and statuses.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A shop wants to track paid orders and monthly revenue. Which field set is fit for that goal?",
+          "options": {
+            "a": "Order ID, date, amount, payment status",
+            "b": "Customer nickname and background color only",
+            "c": "One merged text note per week"
+          },
+          "answer": "a",
+          "feedback": "Order identifiers, dates, numeric amounts and payment status enable reconciled sales reports."
+        },
+        {
+          "type": "scenario",
+          "prompt": "The manager asks for an order-level tracker but the sheet has only daily totals. What should you add?",
+          "options": {
+            "a": "A source-linked, individual order record for each sale",
+            "b": "Random order numbers without references",
+            "c": "A decorative dashboard title"
+          },
+          "answer": "a",
+          "feedback": "Order-level records preserve traceability and allow later aggregation and verification."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A well-designed order tracker can use a stable Order ID to reconcile records across weekly reports.",
+          "answer": true,
+          "feedback": "Stable identifiers allow comparisons and prevent counting the same order twice."
+        }
+      ]
+    },
+    {
+      "number": 20,
+      "title": "Add Data Validation and Checks",
+      "objective": "Prevent common entry errors and spot inconsistent totals.",
+      "teaching": "Data validation constrains acceptable entries; check formulas detect errors after entry. Choose rules based on actual business requirements.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Order Status should be only New, Packed or Shipped. What validation setting fits?",
+          "options": {
+            "a": "A dropdown allowing those three values",
+            "b": "Free text with no rule",
+            "c": "A formula converting all statuses to Paid"
+          },
+          "answer": "a",
+          "feedback": "A permitted-value dropdown prevents accidental variants and invalid states."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Someone enters Quantity = -4 on a new customer order. What is the most useful safeguard?",
+          "options": {
+            "a": "A positive-whole-number validation rule for normal orders",
+            "b": "Change -4 to 4 silently without checking",
+            "c": "Leave the value because any integer is allowed"
+          },
+          "answer": "a",
+          "feedback": "Quantity should follow defined business rules; returns/refunds need a separate documented process."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Validation rules mean you never need to review imported or pasted data for errors.",
+          "answer": false,
+          "feedback": "Imports and overrides can bypass or conflict with validation; reconciliation is still required."
+        }
+      ]
+    },
+    {
+      "number": 21,
+      "title": "Add a Basic Expense View",
+      "objective": "Summarize monthly expenses by category and calculate a reasonable total.",
+      "teaching": "Expenses should be stored as individual transactions with category, date, amount and receipt reference. Use numeric totals to compare planned and actual spending.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Sample expenses are Rent PKR 20,000, Utilities 5,000, Packaging 2,000. What is the total monthly expense?",
+          "options": {
+            "a": "PKR 27,000",
+            "b": "PKR 25,000",
+            "c": "PKR 22,000"
+          },
+          "answer": "a",
+          "feedback": "Adding 20,000 + 5,000 + 2,000 gives 27,000."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A repeated electricity bill reference appears twice in the sheet. What should happen before a monthly total is shared?",
+          "options": {
+            "a": "Check invoice/receipt records to determine whether one bill was entered twice",
+            "b": "Ignore because the amounts are small",
+            "c": "Delete both utility rows automatically"
+          },
+          "answer": "a",
+          "feedback": "Expense totals require one entry per real transaction; investigate duplicates using source documents."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Money entries written as free text in an Expense Details column can be added accurately with SUM without any conversion.",
+          "answer": false,
+          "feedback": "Amounts need a numeric field; free-text descriptions should be kept separate."
+        }
+      ]
+    },
+    {
+      "number": 22,
+      "title": "Share a Sheet Safely",
+      "objective": "Set read/edit access appropriately for synthetic and sensitive business data.",
+      "teaching": "Sharing should follow least privilege: viewers can inspect reports, editors can change records. Never expose real contact data in public links or learning exercises.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A partner only needs to read a finished report. Which access level is appropriate?",
+          "options": {
+            "a": "Editor with full deletion rights",
+            "b": "Viewer with the minimum required scope",
+            "c": "Public link allowing anyone to edit"
+          },
+          "answer": "b",
+          "feedback": "Viewer access satisfies read-only needs without granting unnecessary write permissions."
+        },
+        {
+          "type": "scenario",
+          "prompt": "An order sheet includes real customer phone numbers. A teammate asks to publish it for a class. What should you do?",
+          "options": {
+            "a": "Use a fictional/anonymized dataset and restrict the original",
+            "b": "Publish it unchanged because it helps learning",
+            "c": "Hide the phone column visually but share the unrestricted file"
+          },
+          "answer": "a",
+          "feedback": "Hiding a column is not anonymization or access control; use synthetic records instead."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Sharing a spreadsheet with Edit access is always required for someone who only needs to see monthly totals.",
+          "answer": false,
+          "feedback": "Read-only access is adequate for review and protects data integrity."
+        }
+      ]
+    },
+    {
+      "number": 23,
+      "title": "Explain Insights in Plain Language",
+      "objective": "Write a concise factual interpretation and acknowledge data limitations.",
+      "teaching": "A useful summary names the metric, period, direction and magnitude, then distinguishes observed facts from possible explanations.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "April revenue was PKR 90,000 and May revenue PKR 99,000. Which statement is accurate?",
+          "options": {
+            "a": "Revenue rose PKR 9,000, or 10%, between April and May",
+            "b": "Revenue fell PKR 9,000 between April and May",
+            "c": "May doubled April revenue"
+          },
+          "answer": "a",
+          "feedback": "99,000 - 90,000 = 9,000; divided by 90,000 equals ten percent."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A spreadsheet shows 10% higher revenue but no campaign data. Which claim should your written summary avoid?",
+          "options": {
+            "a": "Revenue was 10% higher than the prior month",
+            "b": "A specific advertising campaign caused the increase",
+            "c": "The report covers April and May"
+          },
+          "answer": "b",
+          "feedback": "Without evidence for causation, you can report the measured change but not its cause."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Including a note that refunds were not included helps readers interpret a revenue comparison correctly.",
+          "answer": true,
+          "feedback": "A clearly stated exclusion prevents a reader from mistaking gross transaction totals for net retained revenue."
+        }
+      ]
+    },
+    {
+      "number": 24,
+      "title": "Capstone: Deliver the Tracker",
+      "objective": "Self-check an accurate sales/expense workbook and communicate limitations.",
+      "teaching": "A complete handover contains a clean dataset, reliable formulas, a meaningful chart, an interpretation and safe sharing settings. Verify each part with a clear rubric.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Which set of outputs makes the mock sales tracker genuinely useful?",
+          "options": {
+            "a": "A clean source table, checked formulas, a labeled chart, two KPIs and a limitation note",
+            "b": "A logo image and a total typed by hand",
+            "c": "Only a colorful chart without source values"
+          },
+          "answer": "a",
+          "feedback": "The capstone checks both the operational data and the clarity of its interpretation."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Your calculated total is PKR 2,700 but a source-ledger subtotal is PKR 2,900. What should you do before submitting the project?",
+          "options": {
+            "a": "Reconcile the difference and note unresolved issues rather than force a match",
+            "b": "Replace the ledger number with 2,700",
+            "c": "Hide the source sheet and publish the chart"
+          },
+          "answer": "a",
+          "feedback": "A responsible handover verifies discrepancies before presenting outcomes as correct."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A capstone may be marked accurate even when formulas are broken, provided the chart looks polished.",
+          "answer": false,
+          "feedback": "Presentation quality cannot substitute for correct underlying data and reproducible calculations."
+        }
+      ]
+    }
+  ]
+}

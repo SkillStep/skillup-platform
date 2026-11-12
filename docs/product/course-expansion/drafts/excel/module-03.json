@@ -1,0 +1,230 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "excel-google-sheets-work",
+  "locale": "en",
+  "moduleNumber": 3,
+  "moduleTitle": "Charts and Decisions",
+  "state": "draft",
+  "authoredBy": "AI-assisted draft",
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "levels": [
+    {
+      "number": 13,
+      "title": "Define a Useful Business KPI",
+      "objective": "Separate operational outcomes from attention or vanity metrics.",
+      "teaching": "Choose metrics that answer a real business question. A sales KPI may be order completion or average order value, not merely the number of page views.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "A shop needs to know whether customers receive their paid orders. Which measure best answers that question?",
+          "options": {
+            "a": "Total Instagram impressions",
+            "b": "Percentage of paid orders delivered",
+            "c": "Number of logo colors"
+          },
+          "answer": "b",
+          "feedback": "Paid-order delivery rate measures fulfillment outcomes directly."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Out of 100 paid orders, 5 were refunded. What refund-rate KPI should the weekly report display?",
+          "options": {
+            "a": "0.5%",
+            "b": "5%",
+            "c": "50%"
+          },
+          "answer": "b",
+          "feedback": "Five divided by 100 equals 0.05, or five percent. Always show the denominator and period."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A rise in profile views proves that more customers completed purchases.",
+          "answer": false,
+          "feedback": "Views are activity, not completed sales; conversion or order evidence is needed."
+        }
+      ]
+    },
+    {
+      "number": 14,
+      "title": "Summarize Data by Category",
+      "objective": "Group transaction records and compare meaningful subtotals.",
+      "teaching": "Category summaries group records by a consistent label and aggregate numeric values. Check that categories are mutually understandable before comparing.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "The sheet has Tea PKR 200, Coffee 500, Tea 300, Coffee 100. Which category totals are correct?",
+          "options": {
+            "a": "Tea 500 and Coffee 600",
+            "b": "Tea 200 and Coffee 500",
+            "c": "Tea 600 and Coffee 500"
+          },
+          "answer": "a",
+          "feedback": "Tea sums to 200+300=500, while Coffee sums to 500+100=600."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A pivot table lists Tea, tea, and TEA as separate items. What should you do before reporting category totals?",
+          "options": {
+            "a": "Treat each spelling as a new product line",
+            "b": "Normalize the category labels against an agreed list",
+            "c": "Delete every row marked tea"
+          },
+          "answer": "b",
+          "feedback": "Consistent classification prevents one category being split into several artificial groups."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A category subtotal table should count the same transaction twice if it has a repeated category label.",
+          "answer": false,
+          "feedback": "Each source transaction should contribute once to its intended category; repeated labels do not imply duplicate purchases."
+        }
+      ]
+    },
+    {
+      "number": 15,
+      "title": "Select the Right Chart",
+      "objective": "Choose charts that match comparison, time trend and composition tasks.",
+      "teaching": "Chart choice depends on the question. A line chart usually suits change over time; a bar chart compares categories. Label axes and units.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Your manager wants to see monthly orders from January through June. Which display best shows the time trend?",
+          "options": {
+            "a": "Line chart with months in chronological order",
+            "b": "Pie chart with a slice for every order ID",
+            "c": "An unlabeled image of the store"
+          },
+          "answer": "a",
+          "feedback": "A chronological line allows readers to follow rises and falls across months."
+        },
+        {
+          "type": "scenario",
+          "prompt": "You need to compare sales totals across four product categories in one month. Which design is clearest?",
+          "options": {
+            "a": "An unlabeled 3D pie chart",
+            "b": "A bar chart with product names and PKR axis units",
+            "c": "A line chart with order IDs sorted alphabetically"
+          },
+          "answer": "b",
+          "feedback": "A labeled bar chart supports direct comparison across discrete categories."
+        },
+        {
+          "type": "true_false",
+          "prompt": "A chart with no labels or units can still be considered a fully interpretable business report.",
+          "answer": false,
+          "feedback": "Readers need category/time labels and meaningful units to understand the values."
+        }
+      ]
+    },
+    {
+      "number": 16,
+      "title": "Use Conditional Formatting Meaningfully",
+      "objective": "Highlight overdue transactions while preserving accessibility.",
+      "teaching": "Conditional formatting applies a repeatable rule to a range. Combine colors with text or symbols so important meaning is not color-only.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Orders older than seven days are overdue. Which formatting condition correctly highlights them?",
+          "options": {
+            "a": "Days Open > 7",
+            "b": "Days Open < 7",
+            "c": "Order ID contains a number"
+          },
+          "answer": "a",
+          "feedback": "A strictly greater-than-seven rule highlights days eight and above."
+        },
+        {
+          "type": "scenario",
+          "prompt": "Your overdue rows appear only red, with no other indication. How should you make the tracker easier to use for color-blind readers?",
+          "options": {
+            "a": "Remove the date column",
+            "b": "Add a labeled Overdue status or icon alongside the visual highlight",
+            "c": "Use two nearly identical red shades"
+          },
+          "answer": "b",
+          "feedback": "An explicit status label communicates the rule without requiring color perception."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Under a Days Open > 7 overdue rule, an order at exactly seven days should be flagged overdue.",
+          "answer": false,
+          "feedback": "Seven is not greater than seven; review thresholds carefully."
+        }
+      ]
+    },
+    {
+      "number": 17,
+      "title": "Avoid Misleading Dashboards",
+      "objective": "Explain how axes, selective periods and missing denominators distort interpretations.",
+      "teaching": "A small difference may look enormous if an axis begins near the observed values. Compare charts on fair scales and state the period and denominator.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Sales increased from PKR 98,000 to 100,000. Which axis choice risks making this modest change look dramatic?",
+          "options": {
+            "a": "A vertical axis starting at 97,000 without clear context",
+            "b": "A clearly labeled zero-baseline bar chart",
+            "c": "A table displaying both exact amounts"
+          },
+          "answer": "a",
+          "feedback": "Truncating the vertical axis magnifies the apparent bar-height difference; the actual increase is about two percent."
+        },
+        {
+          "type": "scenario",
+          "prompt": "A report says complaints doubled from 1 to 2 but hides that 10,000 orders were delivered. What should be added?",
+          "options": {
+            "a": "The order denominator and comparison period",
+            "b": "Only a larger red complaint icon",
+            "c": "An unrelated sales photograph"
+          },
+          "answer": "a",
+          "feedback": "Absolute counts need volume and timing context; two complaints among 10,000 orders differ from two among ten."
+        },
+        {
+          "type": "true_false",
+          "prompt": "Using a consistent zero baseline for bar length comparisons makes large-looking differences less likely to mislead.",
+          "answer": true,
+          "feedback": "A zero baseline keeps bar-height comparisons proportional to absolute values."
+        }
+      ]
+    },
+    {
+      "number": 18,
+      "title": "Checkpoint: Create a Simple Sales Summary",
+      "objective": "Interpret three monthly totals and identify limits in a summary.",
+      "teaching": "A useful dashboard reports verified values, change direction and limitations. Avoid causal conclusions without evidence.",
+      "challenges": [
+        {
+          "type": "multiple_choice",
+          "prompt": "Sales totals are April PKR 120,000, May 135,000, June 130,000. Which month had the highest total?",
+          "options": {
+            "a": "April",
+            "b": "May",
+            "c": "June"
+          },
+          "answer": "b",
+          "feedback": "May was 135,000, above both April and June."
+        },
+        {
+          "type": "scenario",
+          "prompt": "You want to explain the May-to-June change. What is a defensible statement?",
+          "options": {
+            "a": "Sales fell PKR 5,000, but these totals alone do not explain why",
+            "b": "Customers disliked the new logo, so sales fell",
+            "c": "Sales grew by PKR 15,000 because July was stronger"
+          },
+          "answer": "a",
+          "feedback": "June is 5,000 below May. Cause needs additional data; don't invent reasons."
+        },
+        {
+          "type": "true_false",
+          "prompt": "The three monthly totals alone are enough to prove that advertising caused the increase in May.",
+          "answer": false,
+          "feedback": "A monthly revenue pattern cannot establish the effect of one campaign without appropriate controls and attribution."
+        }
+      ]
+    }
+  ]
+}
