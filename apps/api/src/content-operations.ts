@@ -299,6 +299,7 @@ export type ContentOperationsService = Readonly<{
   listAdmin: (
     query: z.infer<typeof AdminListQuerySchema>,
   ) => Promise<readonly Record<string, unknown>[]>;
+  listCourseDrafts: () => Promise<readonly Record<string, unknown>[]>;
   create: (
     actor: AdminIdentity,
     input: z.infer<typeof ContentInputSchema>,
@@ -400,6 +401,64 @@ export function createContentOperationsService(
         [query.kind ?? null, query.locale ?? null, query.status ?? null, query.limit, query.offset],
       );
       return result.rows.map(adminView);
+    },
+
+    listCourseDrafts: async () => {
+      const result = await options.pool.query<{
+        slug: string;
+        title: string;
+        status: string;
+        module_count: number;
+        level_count: number;
+        challenge_count: number;
+        draft_challenges: number;
+      }>(
+        `select s.slug, v.title, s.status,
+          (select count(*)::int
+             from learning_modules m
+             join learning_paths p on p.id = m.learning_path_id
+            where p.skill_id = s.id) as module_count,
+          (select count(*)::int
+             from levels l
+             join lessons les on les.id = l.lesson_id
+             join learning_modules m on m.id = les.module_id
+             join learning_paths p on p.id = m.learning_path_id
+            where p.skill_id = s.id) as level_count,
+          (select count(*)::int
+             from challenges c
+             join levels l on l.id = c.level_id
+             join lessons les on les.id = l.lesson_id
+             join learning_modules m on m.id = les.module_id
+             join learning_paths p on p.id = m.learning_path_id
+            where p.skill_id = s.id) as challenge_count,
+          (select count(*)::int
+             from challenge_versions cv
+             join challenges c on c.id = cv.challenge_id
+             join levels l on l.id = c.level_id
+             join lessons les on les.id = l.lesson_id
+             join learning_modules m on m.id = les.module_id
+             join learning_paths p on p.id = m.learning_path_id
+            where p.skill_id = s.id and cv.state = 'draft') as draft_challenges
+          from skills s
+          join lateral (
+            select sv.title from skill_versions sv
+             where sv.skill_id = s.id and sv.locale = 'en'
+             order by sv.version desc limit 1
+          ) v on true
+         where s.status in ('draft', 'in_review')
+         order by s.created_at desc, s.slug
+         limit 100`,
+      );
+      return result.rows.map((row) => ({
+        slug: row.slug,
+        title: row.title,
+        status: row.status,
+        moduleCount: row.module_count,
+        levelCount: row.level_count,
+        challengeCount: row.challenge_count,
+        draftChallenges: row.draft_challenges,
+        reviewStatus: "not_approved",
+      }));
     },
 
     create: async (actor, input) => {
@@ -813,6 +872,12 @@ export function registerContentOperationsRoutes(
     return {
       entries: await options.contentService.listAdmin(AdminListQuerySchema.parse(request.query)),
     };
+  });
+
+  app.get("/v1/admin/course-drafts", async (request, reply) => {
+    await requireAdminRoles(request, options, ["content_editor", "content_reviewer", "publisher"]);
+    reply.header("cache-control", "private, no-store");
+    return { courses: await options.contentService.listCourseDrafts() };
   });
 
   app.post("/v1/admin/content", async (request, reply) => {
