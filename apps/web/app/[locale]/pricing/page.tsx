@@ -75,7 +75,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: { canonical: canonicalUrl(publicAppUrl, "en", "pricing") },
     openGraph: {
       title: "SkillUp Premium pricing",
-      description: "Monthly PKR 990 inclusive of tax or yearly PKR 4,999, with server-verified JazzCash billing.",
+      description:
+        "Monthly PKR 990 inclusive of tax or yearly PKR 4,999, with server-verified JazzCash billing.",
       type: "website",
       url: canonicalUrl(publicAppUrl, "en", "pricing"),
     },
