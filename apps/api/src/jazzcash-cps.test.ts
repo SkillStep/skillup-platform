@@ -94,7 +94,7 @@ describe("JazzCash CPS client", () => {
         RefundRequest: Record<string, string>;
       };
       expect(body.RefundRequest["pp_TxnRefNo"]).toBe("SU202609030002");
-      expect(body.RefundRequest["pp_Amount"]).toBe("59900");
+      expect(body.RefundRequest["pp_Amount"]).toBe("99000");
       expect(body.RefundRequest["pp_TxnCurrency"]).toBe("PKR");
       expect(body.RefundRequest["pp_SecureHash"]).toMatch(/^[a-f0-9]{64}$/);
       return jsonResponse({ responseCode: "000", responseMessage: "Refund accepted" });
@@ -103,7 +103,7 @@ describe("JazzCash CPS client", () => {
 
     const evidence = await client.refund({
       merchantReference: "SU202609030002",
-      amountMinor: 59_900,
+      amountMinor: 99_000,
       currency: "PKR",
     });
 
@@ -141,7 +141,7 @@ describe("JazzCash CPS client", () => {
 
     const evidence = await client.refund({
       merchantReference: "SU202609030004",
-      amountMinor: 59_900,
+      amountMinor: 99_000,
       currency: "PKR",
     });
 

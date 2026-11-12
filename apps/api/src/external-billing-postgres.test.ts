@@ -29,8 +29,8 @@ const plans: readonly ExternalPaymentPlan[] = [
   {
     code: "monthly",
     interval: "monthly",
-    fullAmountMinor: 59_900,
-    stepAmountMinor: 59_900,
+    fullAmountMinor: 99_000,
+    stepAmountMinor: 99_000,
     trialHours: 0,
     currency: "PKR",
   },
@@ -67,8 +67,8 @@ function statusFor(
       {
         id: "subscription-test-1",
         plan_code: "monthly",
-        amount_minor: 59_900,
-        step_amount_minor: 59_900,
+        amount_minor: 99_000,
+        step_amount_minor: 99_000,
         charge_tier: "full",
         currency: "PKR",
         interval: "monthly",

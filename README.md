@@ -9,7 +9,7 @@ This repository is the sole production source of truth. Earlier QRK repositories
 - Primary audience: Pakistani learners, initially ages 16–30.
 - First delivery surface: responsive web application and installable PWA. Native mobile apps are deferred.
 - Business model: freemium with monthly and yearly premium plans.
-- Initial premium pricing: PKR 599 monthly and PKR 4,999 yearly.
+- Initial premium pricing: PKR 990 monthly inclusive of tax and PKR 4,999 yearly.
 - Payment launch: JazzCash.
 - Initial language: English, with Urdu-ready content, URL, data and design architecture from the start.
 - AI strategy: provider-agnostic gateway with DeepSeek as the economical primary candidate, Groq as an approved fallback candidate, OpenRouter only for controlled evaluation, and a deterministic offline adapter for CI.

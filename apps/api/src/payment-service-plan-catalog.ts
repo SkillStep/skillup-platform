@@ -13,8 +13,8 @@ export function launchPaymentServicePlans(config: ApiConfig): readonly LaunchPay
       external: {
         code: config.PAYMENT_SERVICE_MONTHLY_PLAN_CODE ?? "monthly",
         interval: "monthly",
-        fullAmountMinor: 59_900,
-        stepAmountMinor: 59_900,
+        fullAmountMinor: 99_000,
+        stepAmountMinor: 99_000,
         trialHours: 0,
         currency: "PKR",
       },

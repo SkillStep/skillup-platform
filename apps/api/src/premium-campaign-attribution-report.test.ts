@@ -39,7 +39,7 @@ describe("campaign attribution report", () => {
           package: "default",
           parameter: "default",
           subscriptions: 1,
-          amountMinor: 59_900,
+          amountMinor: 99_000,
         },
         {
           date: "2026-10-12",
@@ -56,7 +56,7 @@ describe("campaign attribution report", () => {
 
     expect(report.reportSchemaVersion).toBe(CAMPAIGN_ATTRIBUTION_SCHEMA_VERSION);
     expect(report.timezone).toBe("Asia/Karachi");
-    expect(report.totals).toEqual({ subscriptions: 4, amountMinor: 1_259_600 });
+    expect(report.totals).toEqual({ subscriptions: 4, amountMinor: 1_298_700 });
 
     const tiktok = report.basic.find(
       (row) =>

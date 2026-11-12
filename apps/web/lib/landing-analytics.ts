@@ -45,7 +45,7 @@ export function packageCommerceMapping(
   }
   return {
     conversion_event: "subscribe",
-    value: 599,
+    value: 990,
     item_name: "SkillUp Premium Monthly",
   };
 }

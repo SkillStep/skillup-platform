@@ -29,7 +29,7 @@ Implemented repository contract:
 - five-skill reviewed launch catalog;
 - English-first and Urdu-ready architecture;
 - meaningful freemium experience;
-- PKR 599 monthly and PKR 4,999 yearly premium plans;
+- PKR 990 monthly inclusive of tax and PKR 4,999 yearly premium plans;
 - JazzCash-first commercial boundary;
 - privacy, policy, content review and KPI contracts.
 

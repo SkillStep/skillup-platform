@@ -176,7 +176,7 @@ try {
         signedCallback(
           {
             pp_TxnRefNo: "SU20990101000000ABCDEF12",
-            pp_Amount: "59900",
+            pp_Amount: "99000",
             pp_TxnCurrency: "PKR",
             pp_ResponseCode: "000",
             pp_RetreivalReferenceNo: `unknown-${randomUUID()}`,

@@ -26,7 +26,7 @@ const stamp = pakistanStamp(now);
 const expiry = pakistanStamp(new Date(now.getTime() + 15 * 60_000));
 const paymentToken = process.env["JAZZCASH_DUMP_PAYMENT_TOKEN"]?.trim() || "TEST-PAYMENT-TOKEN";
 const body = buildJazzCashTokenChargeFields(config, {
-  amountMinor: 59_900,
+  amountMinor: 99_000,
   billReference: `B${stamp}`,
   description: "SkillUp premium membership",
   paymentToken,

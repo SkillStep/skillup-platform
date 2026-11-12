@@ -511,7 +511,7 @@ export function PremiumWorkspace() {
   const [planReason, setPlanReason] = useState("");
   const [draftPlan, setDraftPlan] = useState({
     planCode: "premium-monthly",
-    amount: "599",
+    amount: "990",
     billingPeriod: "month",
     termsVersion: "launch-v1",
     capabilities: "expanded_levels,detailed_progress,advanced_ai_challenges,premium_avatars",

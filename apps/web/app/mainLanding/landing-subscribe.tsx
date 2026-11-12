@@ -26,7 +26,7 @@ import { Icon } from "./landing-icons";
 type CheckoutMode = "jazzcash_wallet_link" | "jazzcash_v11" | "premium_bypass" | null;
 
 const DEFAULT_OFFER_NOTICE =
-  "Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye valid hai. Us k bad PKR 599/m lago hun gay.";
+  "Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye valid hai. Us k bad PKR 990/month inclusive of tax lago hun gay.";
 
 export function LandingSubscribeCard({
   campaign,

@@ -29,8 +29,8 @@ try {
     );
     assert(catalog.rows.length === 2, "The launch catalog must expose two active premium plans.");
     assert(
-      catalog.rows[0]?.code === "premium-monthly" && catalog.rows[0].amount_minor === 59_900,
-      "The monthly launch plan must remain PKR 599.",
+      catalog.rows[0]?.code === "premium-monthly" && catalog.rows[0].amount_minor === 99_000,
+      "The monthly launch plan must remain PKR 990.",
     );
     assert(
       catalog.rows[1]?.code === "premium-yearly" && catalog.rows[1].amount_minor === 499_900,
@@ -62,7 +62,7 @@ try {
          merchant_reference,
          checkout_expires_at
        )
-       values ($1, $2, 'sandbox', 'pending', 59900, 'PKR', $3, $4, now() + interval '15 minutes')
+       values ($1, $2, 'sandbox', 'pending', 99000, 'PKR', $3, $4, now() + interval '15 minutes')
        returning id`,
       [userId, planVersionId, `smoke-${randomUUID()}`, merchantReference],
     );

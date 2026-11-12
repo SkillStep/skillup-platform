@@ -70,7 +70,7 @@ async function run(): Promise<void> {
           (user_id, plan_version_id, provider, status, amount_minor, currency,
            idempotency_key, merchant_reference, checkout_expires_at, completed_at,
            created_at, updated_at)
-         values ($1, $2, 'sandbox', $3, 59900, 'PKR', $4, $5,
+         values ($1, $2, 'sandbox', $3, 99000, 'PKR', $4, $5,
                  $6::timestamptz + interval '30 minutes',
                  case when $3 in ('succeeded','refunded') then $6::timestamptz else null end,
                  $6::timestamptz, $6::timestamptz)

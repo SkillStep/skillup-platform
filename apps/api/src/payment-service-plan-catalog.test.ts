@@ -24,8 +24,8 @@ const expected: readonly ExternalPaymentPlan[] = [
   {
     code: "monthly",
     interval: "monthly",
-    fullAmountMinor: 59_900,
-    stepAmountMinor: 59_900,
+    fullAmountMinor: 99_000,
+    stepAmountMinor: 99_000,
     trialHours: 0,
     currency: "PKR",
   },

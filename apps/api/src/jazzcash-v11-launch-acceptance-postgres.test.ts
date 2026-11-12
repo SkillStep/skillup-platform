@@ -217,7 +217,7 @@ describeWithPostgres("launch payment acceptance gate", () => {
     });
 
     expect(result.order.status).toBe("succeeded");
-    expect(result.order.amountMinor).toBe(59_900);
+    expect(result.order.amountMinor).toBe(99_000);
     expect(chargeWithToken).toHaveBeenCalledTimes(1);
 
     const evidence = await entitlementEvidence(result.order.id, userId);

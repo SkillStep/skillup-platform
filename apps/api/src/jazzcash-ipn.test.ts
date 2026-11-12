@@ -33,7 +33,7 @@ describe("JazzCash IPN and refund wiring", () => {
   it("accepts classic lowercase and V11 uppercase SecureHash values", () => {
     const salt = "test-integrity-salt-32chars-min";
     const classicFields = {
-      pp_Amount: "59900",
+      pp_Amount: "99000",
       pp_TxnCurrency: "PKR",
       pp_TxnRefNo: "SU20261020120000ABCD",
       pp_ResponseCode: "000",
@@ -47,7 +47,7 @@ describe("JazzCash IPN and refund wiring", () => {
     );
 
     const v11Fields = {
-      pp_Amount: "59900",
+      pp_Amount: "99000",
       pp_TxnCurrency: "PKR",
       pp_TxnRefNo: "Goo20261020120000A1",
       pp_ResponseCode: "000",

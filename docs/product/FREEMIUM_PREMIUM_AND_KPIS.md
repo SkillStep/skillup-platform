@@ -4,7 +4,7 @@
 
 ## 1. Pricing
 
-- **Monthly Premium:** PKR 599 displayed checkout price (`59900` paisas).
+- **Monthly Premium:** PKR 990 displayed checkout price inclusive of tax (`99000` paisas).
 - **Yearly Premium:** PKR 4,999 displayed checkout price (`499900` paisas).
 - The MVP offers monthly and yearly plans only.
 - The payment-service product catalog must use the configured monthly/yearly plan codes and the exact prices above.

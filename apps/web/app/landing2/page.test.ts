@@ -31,7 +31,7 @@ describe("landing2 20% off campaign", () => {
     expect(source).toContain("20% off");
     expect(source).not.toContain("offerNotice");
     expect(subscribe).toContain(
-      "Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye valid hai. Us k bad PKR 599/m lago hun gay.",
+      "Subscribe Now click kertay he Rs.1 kat lia jae ga. Ye limited offer sirf aj k din k liye valid hai. Us k bad PKR 990/month inclusive of tax lago hun gay.",
     );
     expect(source).toContain("buildLanding2Path");
     expect(source).toContain("normalizeLanding2Campaign");

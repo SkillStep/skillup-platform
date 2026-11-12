@@ -9,7 +9,7 @@ Implemented repository-side for the SkillUp Premium monthly and yearly launch mo
 - Currency: PKR.
 - Reporting timezone: `Asia/Karachi`.
 - Timestamp storage: UTC `timestamptz`.
-- Approved plans: PKR 599 monthly and PKR 4,999 yearly.
+- Approved plans: PKR 990 monthly inclusive of tax and PKR 4,999 yearly.
 - Current payment model: user-initiated JazzCash term purchase.
 - Automatic recurring debit and auto-renew consent: not applicable until separately approved and implemented.
 

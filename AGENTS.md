@@ -12,7 +12,7 @@ Build SkillUp as a Pakistan-first, mobile-first AI-powered skill learning game. 
 - First platform: responsive web application and installable PWA.
 - Native mobile apps are deferred.
 - English launches first; Urdu-ready architecture is mandatory.
-- Premium MVP: PKR 599 monthly and PKR 4,999 yearly.
+- Premium MVP: PKR 990 monthly inclusive of tax and PKR 4,999 yearly.
 - First payment provider: JazzCash.
 - AI must be provider-agnostic; use DeepSeek or the cheapest acceptable model per approved quality/cost policy.
 - SEO, AEO, and GEO are foundational requirements.

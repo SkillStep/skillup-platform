@@ -13,10 +13,10 @@ import {
 } from "./landing-analytics";
 
 describe("landing analytics mapping", () => {
-  it("maps monthly package to subscribe @ 599", () => {
+  it("maps monthly package to subscribe @ 990", () => {
     expect(packageCommerceMapping("default", "default")).toEqual({
       conversion_event: "subscribe",
-      value: 599,
+      value: 990,
       item_name: "SkillUp Premium Monthly",
     });
   });

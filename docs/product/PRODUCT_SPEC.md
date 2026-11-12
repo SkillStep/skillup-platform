@@ -84,7 +84,7 @@ Initial premium experience:
 - unlimited or materially expanded level access;
 - advanced AI challenges;
 - premium avatars and perks;
-- monthly plan at PKR 599;
+- monthly plan at PKR 990 inclusive of tax;
 - yearly plan at PKR 4,999.
 
 The MVP payment scope is monthly and yearly only.
@@ -165,7 +165,7 @@ SEO, AEO, and GEO must be tested during feature delivery rather than applied aft
 - Unbounded AI chat as the primary learning interface.
 - Mass-generated indexable pages.
 - More payment providers before JazzCash is stable and measurable.
-- Monthly plan variants beyond PKR 599 and yearly PKR 4,999.
+- Monthly plan variants beyond PKR 990 and yearly PKR 4,999.
 
 ## 9. MVP success measures
 

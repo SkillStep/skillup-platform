@@ -54,7 +54,7 @@ test("Premium plan and grant mutations require trusted origin and valid input", 
     headers: { origin: "https://attacker.invalid" },
     data: {
       planCode: "premium-monthly",
-      amountMinor: 59_900,
+      amountMinor: 99_000,
       currency: "PKR",
       billingPeriod: "month",
       capabilities: ["premium_access"],

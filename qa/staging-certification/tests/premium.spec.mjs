@@ -26,7 +26,7 @@ test("commercial plan API returns only the two approved launch plans", async ({ 
 
   expect(plans).toHaveLength(2);
   expect(plans.map((plan) => [plan.code, plan.amountMinor, plan.currency])).toEqual([
-    ["premium-monthly", 59_900, "PKR"],
+    ["premium-monthly", 99_000, "PKR"],
     ["premium-yearly", 499_900, "PKR"],
   ]);
 });
@@ -68,7 +68,7 @@ test("checkout creation is replay-safe and never grants access by client claim",
   requireOk(orderLookup, "Created order lookup");
   const persisted = (await orderLookup.json()).order;
   expect(persisted.id).toBe(firstBody.order.id);
-  expect(persisted.amountMinor).toBe(59_900);
+  expect(persisted.amountMinor).toBe(99_000);
   expect(persisted.currency).toBe("PKR");
 
   const capabilities = await request.get("/api/v1/account/capabilities");
@@ -107,7 +107,7 @@ test("JazzCash callback rejects malformed or unsigned provider payloads", async 
     data: {
       pp_TxnRefNo: `AUTO-QA-${Date.now()}`,
       pp_ResponseCode: "000",
-      pp_Amount: "59900",
+      pp_Amount: "99000",
       pp_TxnCurrency: "PKR",
       pp_SecureHash: "invalid-signature",
     },

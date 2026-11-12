@@ -185,7 +185,7 @@ The code is held in memory and never written to reports. This is mailbox retriev
 
 ### Premium and commercial
 
-- PKR 599 monthly and PKR 4,999 yearly authority.
+- PKR 990 monthly inclusive of tax and PKR 4,999 yearly authority.
 - exactly the two approved launch plan codes/prices.
 - replay-safe checkout order creation.
 - provider checkout handoff structure.

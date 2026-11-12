@@ -111,7 +111,7 @@ Live email delivery remains disabled until an approved provider, verified sender
 
 ## 6. Commercial authority
 
-- Versioned PKR 599 monthly and PKR 4,999 yearly plans.
+- Versioned PKR 990 monthly inclusive of tax and PKR 4,999 yearly plans.
 - Server-created payment orders and append-only provider/payment evidence.
 - Entitlement-derived capability projection; client state cannot grant premium.
 - Transactional free daily mission enforcement.

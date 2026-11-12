@@ -21,7 +21,7 @@ Test at 360×800, 390×844, tablet and desktop widths.
 
 - [ ] Home, skills, category, path and pricing pages render useful HTML without JavaScript.
 - [ ] Metadata, canonical, robots and visible copy agree.
-- [ ] Pricing displays PKR 599 monthly and PKR 4,999 yearly.
+- [ ] Pricing displays PKR 990 monthly inclusive of tax and PKR 4,999 yearly.
 - [ ] Public pages remain readable at 200% zoom.
 - [ ] Keyboard-only navigation reaches every control in logical order.
 - [ ] Screen-reader headings, labels and status messages are meaningful.

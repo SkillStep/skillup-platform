@@ -178,7 +178,7 @@ Package mapping (hardcoded until a portal exists):
 
 | Package | Token-time GA4 event | Value (PKR) |
 | --- | --- | --- |
-| monthly (`default` / `1`) | `subscribe` | 599 |
+| monthly (`default` / `1`) | `subscribe` | 990 |
 | yearly (`2`) | `purchase` | 4999 (3999 if `parameter=20percentoff`) |
 
 UTM → `traffic_source`: `M`→`meta`, `T`→`tiktok`, else `direct`. Context kept in `sessionStorage` key `lp_context`; sent-token dedupe key `lp_sent_tokens`.

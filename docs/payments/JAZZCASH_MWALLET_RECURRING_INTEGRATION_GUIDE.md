@@ -420,7 +420,7 @@ FE                    BE                         JazzCash
 
 | Topic | Rule |
 | --- | --- |
-| Amount | Integer **paisa** as string. `59900` = PKR 599.00 |
+| Amount | Integer **paisa** as string. `99000` = PKR 990.00 |
 | Currency | `PKR` |
 | Datetime | `yyyyMMddHHmmss` (merchant local / agreed JazzCash clock) |
 | `pp_TxnRefNo` | Unique per charge; keep ≤ 20 characters for orchestrator compatibility |

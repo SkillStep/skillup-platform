@@ -35,7 +35,7 @@ describe("JazzCash request authentication", () => {
 
   it("accepts an exact secure hash and rejects tampering", () => {
     const fields = {
-      pp_Amount: "59900",
+      pp_Amount: "99000",
       pp_MerchantID: "MC12345",
       pp_TxnCurrency: "PKR",
       pp_TxnRefNo: "SU20260731153800AB12CD34",
@@ -50,10 +50,10 @@ describe("JazzCash request authentication", () => {
   });
 
   it("rejects missing and malformed secure hashes", () => {
-    expect(verifyJazzCashSecureHash({ pp_Amount: "59900" }, "test-integrity-salt")).toBe(false);
+    expect(verifyJazzCashSecureHash({ pp_Amount: "99000" }, "test-integrity-salt")).toBe(false);
     expect(
       verifyJazzCashSecureHash(
-        { pp_Amount: "59900", pp_SecureHash: "not-a-hash" },
+        { pp_Amount: "99000", pp_SecureHash: "not-a-hash" },
         "test-integrity-salt",
       ),
     ).toBe(false);
