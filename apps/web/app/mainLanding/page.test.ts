@@ -46,7 +46,7 @@ describe("mainLanding page", () => {
     const banner = readFileSync(new URL("./landing-banner.tsx", import.meta.url), "utf8");
     expect(css).toContain("width: 100% !important");
     expect(css).toMatch(/\.bannerImage\s*\{[^}]*object-fit:\s*contain/);
-    expect(css).toContain("zoom: 0.8");
+    expect(css).toContain("width: min(calc(100% - 80px), 1200px)");
     expect(css).toMatch(/\.page\s*\{[^}]*overflow:\s*visible/);
     expect(banner).not.toMatch(/\bfill[={\s]/);
     expect(css).toMatch(/\.paymentCard[\s\S]*flex:\s*0\s+0\s+auto/);
@@ -54,6 +54,8 @@ describe("mainLanding page", () => {
 
   it("pins banner + JazzCash to the first mobile viewport", () => {
     const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
+    expect(css).toMatch(/\.aboveFold\s*\{[^}]*min-height:\s*100svh/);
+    expect(css).toContain("@supports (height: 100dvh)");
     expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*height:\s*100svh/);
     expect(css).toContain("@supports (height: 100dvh)");
     expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*\.hero[\s\S]*flex:\s*1\s+1\s+0/);

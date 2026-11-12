@@ -8,10 +8,8 @@
   --muted: #6b6578;
   --line: #e4e1ea;
 
-  width: min(100%, 900px);
+  width: min(calc(100% - 80px), 1200px);
   margin: 0 auto;
-  /* Match preferred ~80% browser zoom while users stay at 100%. */
-  zoom: 0.8;
   overflow: visible;
   background: var(--cream);
   color: var(--ink);
@@ -90,16 +88,23 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
+  min-height: 100svh;
   padding-bottom: 0.75rem;
   box-sizing: border-box;
   overflow: visible;
+}
+
+@supports (height: 100dvh) {
+  .aboveFold {
+    min-height: 100dvh;
+  }
 }
 
 .paymentCard {
   position: relative;
   z-index: 10;
   flex: 0 0 auto;
-  width: calc(100% - 48px);
+  width: min(66%, 800px);
   max-width: 100%;
   margin: 12px auto 0;
   padding: 18px 28px 16px;
@@ -494,6 +499,7 @@
 @media (max-width: 720px) {
   /* Mobile uses native scale — first screen is banner + JazzCash only. */
   .page {
+    width: 100%;
     zoom: 1;
   }
 
