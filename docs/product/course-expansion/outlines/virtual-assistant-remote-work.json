@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "virtual-assistant-remote-work",
+  "courseTitle": "Virtual Assistant & Remote Work",
+  "locale": "en",
+  "wave": 2,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Coordinate requests, calendars and research with reliable privacy habits",
+  "capstone": "Deliver a remote assistant operations starter kit",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Task Intake",
+      "objective": "Clarify scope, priorities and expected delivery",
+      "levelTitles": [
+        "Clarify What a Client Actually Needs",
+        "Separate Urgent Tasks from Important Ones",
+        "Confirm Deliverables and Deadlines",
+        "Use a Repeatable Task Tracker",
+        "Escalate Conflicting Requests Early",
+        "Checkpoint: Prioritize an Inbox"
+      ],
+      "exampleScenario": "Prioritize six competing support requests",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Research and Documentation",
+      "objective": "Find, compare and cite reliable information",
+      "levelTitles": [
+        "Set a Trustworthy Research Question",
+        "Compare Sources and Publication Dates",
+        "Record Vendor Features Accurately",
+        "Document Links and Evidence",
+        "Present Uncertainty Transparently",
+        "Checkpoint: Deliver a Vendor Comparison"
+      ],
+      "exampleScenario": "Produce a sourced vendor comparison",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Email, Calendar and Coordination",
+      "objective": "Manage professional reminders and follow-ups",
+      "levelTitles": [
+        "Write a Clear Scheduling Email",
+        "Check Calendar Availability",
+        "Respect Time Zones and Working Hours",
+        "Prepare a Meeting Agenda",
+        "Send an Accurate Follow-up Note",
+        "Checkpoint: Coordinate a Busy Week"
+      ],
+      "exampleScenario": "Schedule a conflict-free sample week",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Remote Handover Capstone",
+      "objective": "Deliver tracked work with access, privacy and handoff controls",
+      "levelTitles": [
+        "Prepare a Weekly Status Summary",
+        "Protect Contact and Client Records",
+        "Document Decisions and Open Items",
+        "Define a Clean Handover Checklist",
+        "Confirm Completion with Evidence",
+        "Capstone: Build an Assistant Toolkit"
+      ],
+      "exampleScenario": "Assemble an assistant weekly report",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

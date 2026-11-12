@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "video-editing-reels",
+  "courseTitle": "Video Editing for Reels",
+  "locale": "en",
+  "wave": 2,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Plan, cut and export short videos that communicate one clear idea",
+  "capstone": "Produce a 30-second original promotional video",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Story and Shot Planning",
+      "objective": "Plan a compelling hook and ethical visual sequence",
+      "levelTitles": [
+        "Define a Single-Message Video Goal",
+        "Choose a Hook with a Clear Promise",
+        "Write a 30-Second Shot List",
+        "Plan Subjects and Screen Direction",
+        "Prepare a Realistic Filming Checklist",
+        "Checkpoint: Storyboard a Product Reel"
+      ],
+      "exampleScenario": "Storyboard a 30-second product reel",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Editing and Pacing",
+      "objective": "Cut with continuity, rhythm and clarity",
+      "levelTitles": [
+        "Organize and Name Source Clips",
+        "Trim Unnecessary Pauses",
+        "Keep Match Cuts and Eye Lines Clear",
+        "Choose a Legible Pacing Pattern",
+        "Avoid Jarring Transitions",
+        "Checkpoint: Edit a 30-Second Sequence"
+      ],
+      "exampleScenario": "Trim a 50-second draft to 30 seconds",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Captions, Sound and Rights",
+      "objective": "Apply readable captions, licensed sound and appropriate levels",
+      "levelTitles": [
+        "Write Captions That Match Speech",
+        "Set Readable Safe-Area Captions",
+        "Balance Dialogue and Background Audio",
+        "Verify Music and Stock-Asset Licenses",
+        "Avoid Misleading Crops and Edits",
+        "Checkpoint: Audit Captions and Rights"
+      ],
+      "exampleScenario": "Audit a reel for missing captions",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Export and Review",
+      "objective": "Validate resolution, safe zones and final playback",
+      "levelTitles": [
+        "Choose Aspect Ratio and Resolution",
+        "Export Without Cropping Key Content",
+        "Check Playback and Audio Sync",
+        "Review on a Mobile Device",
+        "Apply Feedback Without Overediting",
+        "Capstone: Deliver an Original Reel"
+      ],
+      "exampleScenario": "Present a finished reel with QA checklist",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "canva-social-media-design",
+  "courseTitle": "Canva & Social Media Design",
+  "locale": "en",
+  "wave": 1,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Create accessible, consistent social visuals with clear communication",
+  "capstone": "Design a five-post branded social mini-portfolio",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Visual Communication",
+      "objective": "Use hierarchy, contrast, spacing and a defined message",
+      "levelTitles": [
+        "Select One Message Per Post",
+        "Use Hierarchy and Focal Point",
+        "Choose Readable Typography",
+        "Apply Contrast for Legibility",
+        "Design with Whitespace",
+        "Checkpoint: Fix a Cluttered Post"
+      ],
+      "exampleScenario": "Fix a crowded promotional post",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Brand Consistency",
+      "objective": "Select repeatable type, colors and reusable components",
+      "levelTitles": [
+        "Define Brand Personality",
+        "Choose an Accessible Color Palette",
+        "Build a Consistent Type Scale",
+        "Create Modular Layout Components",
+        "Design a Repeatable Template",
+        "Checkpoint: Prepare a Style Mini Guide"
+      ],
+      "exampleScenario": "Build a three-color mini style guide",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Platform-Ready Design",
+      "objective": "Apply dimensions, safe areas and legible export choices",
+      "levelTitles": [
+        "Plan Feed and Story Variants",
+        "Set Safe Margins and Text Areas",
+        "Export for Sharp Mobile Viewing",
+        "Credit Images and Fonts Correctly",
+        "Write Meaningful Image Alt Text",
+        "Checkpoint: Adapt One Campaign"
+      ],
+      "exampleScenario": "Adapt a design from feed to story",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Five-Post Portfolio",
+      "objective": "Review, refine, license-check and export a cohesive series",
+      "levelTitles": [
+        "Define Five Post Objectives",
+        "Draft Clear Social Post Copy",
+        "Design the First Two Posts",
+        "Design Three Supporting Posts",
+        "Check Visual Grid Coherence",
+        "Capstone: Present a Five-Post Pack"
+      ],
+      "exampleScenario": "Deliver five accessible branded posts",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

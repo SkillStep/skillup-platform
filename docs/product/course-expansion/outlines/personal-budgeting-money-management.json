@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "personal-budgeting-money-management",
+  "courseTitle": "Personal Budgeting & Money Management",
+  "locale": "en",
+  "wave": 3,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Make simple budgets and informed everyday money decisions",
+  "capstone": "Prepare a flexible 30-day budget and emergency-fund goal",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Income and Spending",
+      "objective": "Track cash flow, needs and recurring expenses",
+      "levelTitles": [
+        "Distinguish Income and Cash Receipts",
+        "Record Daily Spending Accurately",
+        "Group Essential and Optional Expenses",
+        "Find Recurring Costs",
+        "Identify Hidden Monthly Fees",
+        "Checkpoint: Audit a Sample Budget"
+      ],
+      "exampleScenario": "Categorize one month of sample spending",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Budgeting and Savings",
+      "objective": "Allocate a budget and adapt to unexpected costs",
+      "levelTitles": [
+        "Choose a Realistic Spending Plan",
+        "Create an Emergency-Savings Goal",
+        "Compare Needs Across Months",
+        "Adjust for an Unexpected Expense",
+        "Separate Savings from Available Cash",
+        "Checkpoint: Balance a 30-Day Budget"
+      ],
+      "exampleScenario": "Build a realistic savings goal",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Borrowing and Trade-offs",
+      "objective": "Compare basic borrowing costs without recommending products",
+      "levelTitles": [
+        "Recognize Borrowing Costs and Fees",
+        "Compare Installment Total Payments",
+        "Identify Dangerous Debt Assumptions",
+        "Distinguish Emergency and Lifestyle Borrowing",
+        "Avoid Unsupported Investment Promises",
+        "Checkpoint: Review a Loan Example"
+      ],
+      "exampleScenario": "Identify a hidden fee in an example",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Fraud Awareness and Capstone",
+      "objective": "Recognize common scams and complete a personal budget",
+      "levelTitles": [
+        "Recognize Payment Scam Red Flags",
+        "Protect Passwords and OTPs",
+        "Plan a Safe Response to Fraud",
+        "Create a Flexible Cash Reserve Plan",
+        "Document Budget Assumptions",
+        "Capstone: Present a Personal Spending Plan"
+      ],
+      "exampleScenario": "Create an emergency cash plan",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "seo-google-business-profile",
+  "courseTitle": "SEO & Google Business Profile",
+  "locale": "en",
+  "wave": 2,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Improve discoverability without manipulative SEO or fake reviews",
+  "capstone": "Produce a small-business SEO and local presence audit",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Search Intent",
+      "objective": "Identify customer queries and useful destination pages",
+      "levelTitles": [
+        "Explain a Customer's Search Intent",
+        "Differentiate Informational and Local Queries",
+        "Find Accurate Service Keywords",
+        "Map Queries to Useful Web Pages",
+        "Avoid Keyword Stuffing",
+        "Checkpoint: Create a Search-Intent Map"
+      ],
+      "exampleScenario": "Classify five local service searches",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "On-Page SEO",
+      "objective": "Write helpful titles, headings, links and snippets",
+      "levelTitles": [
+        "Write a Useful Page Title",
+        "Organize Headings for Real Readers",
+        "Create Clear Internal Navigation",
+        "Add Helpful Image Alternatives",
+        "Check Search Snippet Accuracy",
+        "Checkpoint: Improve a Local Service Page"
+      ],
+      "exampleScenario": "Improve an unclear service page title",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Google Business Profile Basics",
+      "objective": "Maintain accurate listings, hours, photos and reviews",
+      "levelTitles": [
+        "Confirm Legitimate Business Ownership",
+        "Complete Accurate Contact Details",
+        "Publish Correct Hours and Service Areas",
+        "Select Appropriate Business Categories",
+        "Respond Ethically to Customer Reviews",
+        "Checkpoint: Audit a Shop Listing"
+      ],
+      "exampleScenario": "Audit a sample shop profile for accuracy",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Reporting and Action Plan",
+      "objective": "Prioritize ethical fixes and track simple outcomes",
+      "levelTitles": [
+        "Define a Search Visibility Baseline",
+        "Separate Rankings from Enquiries",
+        "Prioritize High-Value Fixes",
+        "Avoid Paid-Link and Fake-Review Tricks",
+        "Report Limits of SEO Attribution",
+        "Capstone: Prepare a 30-Day SEO Plan"
+      ],
+      "exampleScenario": "Prepare a 30-day local SEO checklist",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

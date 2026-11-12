@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "applied-ai-workflows",
+  "courseTitle": "Applied AI for Work",
+  "locale": "en",
+  "wave": 3,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Plan safe AI-assisted workflows, verify outputs and document accountability",
+  "capstone": "Design a repeatable AI-assisted task workflow with human checks",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Workflow Identification",
+      "objective": "Choose bounded, appropriate tasks for AI assistance",
+      "levelTitles": [
+        "List Repeatable Low-Risk Work Tasks",
+        "Recognize Tasks Needing Human Judgment",
+        "Define a Clear Workflow Outcome",
+        "Identify Inputs and Access Requirements",
+        "Estimate the Cost of a Bad Answer",
+        "Checkpoint: Select a Safe AI Workflow"
+      ],
+      "exampleScenario": "Identify where automation should stop",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Prompt and Tool Patterns",
+      "objective": "Create structured instructions and reusable templates",
+      "levelTitles": [
+        "Write a Structured Task Brief",
+        "Specify Format and Quality Standards",
+        "Add Relevant Context Without Secrets",
+        "Break Complex Work into Verified Steps",
+        "Design a Reusable Prompt Template",
+        "Checkpoint: Improve a Reporting Prompt"
+      ],
+      "exampleScenario": "Design a reusable meeting-summary prompt",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Verification and Privacy",
+      "objective": "Check claims, sources, permissions and sensitive inputs",
+      "levelTitles": [
+        "Recognize Unsupported AI Claims",
+        "Verify Facts with Primary Sources",
+        "Protect Private Work Materials",
+        "Document Sources and Assumptions",
+        "Escalate Sensitive or High-Stakes Decisions",
+        "Checkpoint: Audit an AI-Generated Report"
+      ],
+      "exampleScenario": "Audit an inaccurate AI-generated report",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Applied AI Capstone",
+      "objective": "Document a human-reviewed repeatable workflow",
+      "levelTitles": [
+        "Map Human Review Checkpoints",
+        "Define Repeatable Inputs and Outputs",
+        "Write a Simple Quality Checklist",
+        "Test a Workflow on Fictional Data",
+        "Measure Corrections and Time Saved",
+        "Capstone: Document a Reviewed AI Process"
+      ],
+      "exampleScenario": "Build a verified weekly reporting process",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

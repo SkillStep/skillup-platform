@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "sales-client-negotiation",
+  "courseTitle": "Sales & Client Negotiation",
+  "locale": "en",
+  "wave": 3,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Discover client needs, propose fairly and handle objections with evidence",
+  "capstone": "Prepare a discovery script, proposal and follow-up sequence",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Needs Discovery",
+      "objective": "Ask meaningful questions without pressuring clients",
+      "levelTitles": [
+        "Research an Appropriate Client Fit",
+        "Open a Respectful Discovery Conversation",
+        "Ask Specific Needs Questions",
+        "Confirm Decision Criteria",
+        "Summarize a Client's Actual Request",
+        "Checkpoint: Prepare a Discovery Script"
+      ],
+      "exampleScenario": "Clarify an ambiguous sales requirement",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Proposal and Pricing",
+      "objective": "Describe deliverables, scope and cost transparently",
+      "levelTitles": [
+        "Describe Scope and Deliverables Clearly",
+        "Estimate Effort and Dependencies",
+        "Explain Pricing Assumptions",
+        "Compare Proposals Transparently",
+        "Specify Exclusions and Revision Limits",
+        "Checkpoint: Write a Two-Option Offer"
+      ],
+      "exampleScenario": "Compare two proposal options objectively",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Objections and Boundaries",
+      "objective": "Respond to concerns without fabricated urgency",
+      "levelTitles": [
+        "Handle a Budget Concern Calmly",
+        "Respond to a Scope-Creep Request",
+        "Explain a Realistic Deadline",
+        "Avoid False Scarcity and Pressure",
+        "Know When to Decline a Bad Fit",
+        "Checkpoint: Practice an Objection Response"
+      ],
+      "exampleScenario": "Handle a budget objection respectfully",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Sales Conversation Capstone",
+      "objective": "Write a complete consultative sales sequence",
+      "levelTitles": [
+        "Build a Consultative Sales Sequence",
+        "Prepare an Accurate Written Proposal",
+        "Write a Practical Follow-up Message",
+        "Plan a Transparent Handover",
+        "Audit Claims and Commercial Terms",
+        "Capstone: Deliver a Client Offer Pack"
+      ],
+      "exampleScenario": "Present a transparent sample offer",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
