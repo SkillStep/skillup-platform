@@ -7,7 +7,7 @@
 
 ## Outcome and non-negotiable definition of value
 
-Grow the current 5 skills into **20 genuinely playable courses** by adding 15 paths in three waves of 5. Each new course targets 4 modules × 6 levels = **24 levels**, at least 3 subject-specific challenges per level, baseline/end assessment and a tangible project. This adds **360 planned levels, at least 1,080 challenge interactions and 15 capstone projects**. Together with the existing 68 curriculum levels, the planned catalogue totals 428 levels. Targets are not publication claims.
+Grow the current 5 skills into **20 genuinely playable courses** by adding 15 paths in three waves of 5. Each new course targets 4 modules × 6 levels = **24 levels**, at least 3 subject-specific challenges per level, baseline/end assessment and a tangible project. This adds **360 planned levels, at least 1,080 challenge interactions and 15 capstone projects**. Together with the existing 68 curriculum-defined levels, the planned canonical curriculum totals **428 levels**. The deployed database seed smoke also counts one separate legacy pilot level (69 seeded levels and 206 generated challenges at baseline), so it could contain **429 total level rows** if that pilot remains. Reconcile the pilot rather than silently deleting learner history or double-counting it in marketing. Targets are not publication claims.
 
 A subscriber should complete something useful: spreadsheet, CV, design portfolio, content calendar, customer-support playbook, short video, dashboard, small website, etc. Course quality and successful Premium access are more important than the apparent number of cards.
 
@@ -15,7 +15,7 @@ A subscriber should complete something useful: spreadsheet, CV, design portfolio
 
 | Area | Current state | Implementation consequence |
 | --- | --- | --- |
-| `packages/database/src/complete-launch-curriculum.ts` | 5 paths, 68 curriculum levels | Preserve identifiers and existing learner attempts; improve existing levels rather than deleting them |
+| `packages/database/src/complete-launch-curriculum.ts` | 5 paths, 68 curriculum levels; seed smoke reports 69 levels/206 challenges including an older pilot | Preserve identifiers and existing learner attempts; reconcile the legacy pilot without double-counting it |
 | `packages/database/src/complete-launch-challenges.ts` | 3 format-rotated, substantially generic challenges per level | **P0 quality issue**: replace repetitive content with subject-specific scenarios and answer logic |
 | `packages/database/src/complete-launch-seed-v2.ts` | Deterministically creates and publishes launch content; uses a fixed historical reviewed date | Do **not** pipe AI drafts directly into this auto-publishing flow or invent review attestations |
 | `apps/web/lib/public-catalog.ts` and `apps/web/lib/home-content.ts` | Curated client-facing 5-course projection | Replace duplicated catalogue data with a protected, published-only server projection |
