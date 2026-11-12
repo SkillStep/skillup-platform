@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "data-analytics-dashboards",
+  "courseTitle": "Data Analytics & Dashboards",
+  "locale": "en",
+  "wave": 2,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Clean data, define useful KPIs and explain trade-offs clearly",
+  "capstone": "Build a simple operational dashboard with interpretation",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Data Questions and Metrics",
+      "objective": "Choose questions before analyzing data",
+      "levelTitles": [
+        "Translate a Business Concern into Data Questions",
+        "Define an Outcome Metric",
+        "Choose a Useful Comparison Period",
+        "Identify Missing Data Requirements",
+        "Avoid Vanity Metric Traps",
+        "Checkpoint: Write a KPI Brief"
+      ],
+      "exampleScenario": "Distinguish a vanity metric from an outcome",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Data Cleaning and Checks",
+      "objective": "Identify missing records, duplicates and invalid inputs",
+      "levelTitles": [
+        "Distinguish Numeric and Text Data",
+        "Identify Invalid Dates and Values",
+        "Detect True Versus False Duplicates",
+        "Check Outliers Against Sources",
+        "Reconcile Totals After Cleaning",
+        "Checkpoint: Verify a Small Dataset"
+      ],
+      "exampleScenario": "Find inconsistent dates in a dataset",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Visual Analysis",
+      "objective": "Use tables and charts without misleading the audience",
+      "levelTitles": [
+        "Choose a Fair Comparison Chart",
+        "Label Axes and Units Clearly",
+        "Compare Categories Without Distorting Scale",
+        "Interpret a Trend with Context",
+        "Describe Limitations and Missing Drivers",
+        "Checkpoint: Explain a Dashboard"
+      ],
+      "exampleScenario": "Select a chart for category comparison",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Dashboard Capstone",
+      "objective": "Build a report that explains findings and limitations",
+      "levelTitles": [
+        "Select Three Meaningful KPIs",
+        "Design a Readable Dashboard Layout",
+        "Connect Charts to Accurate Source Tables",
+        "Add Caveats to Summary Insights",
+        "Prioritize Actions Supported by Evidence",
+        "Capstone: Present an Operational Dashboard"
+      ],
+      "exampleScenario": "Deliver an actionable performance dashboard",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

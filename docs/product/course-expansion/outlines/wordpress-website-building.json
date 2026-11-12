@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "wordpress-website-building",
+  "courseTitle": "WordPress Website Building",
+  "locale": "en",
+  "wave": 3,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Plan, assemble and test a basic accessible business website",
+  "capstone": "Build a sample business website in a sandbox environment",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Site Planning",
+      "objective": "Define audiences, pages, content and responsibilities",
+      "levelTitles": [
+        "Define the Website's Main Audience",
+        "Choose Necessary Business Pages",
+        "Plan Accessible Navigation",
+        "Gather Original Page Content",
+        "Confirm Domain and Hosting Responsibilities",
+        "Checkpoint: Sketch a Business Site Map"
+      ],
+      "exampleScenario": "Map the essential pages for a cafe",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Pages and Content",
+      "objective": "Use accessible headings, images and contact details",
+      "levelTitles": [
+        "Build a Readable Home Page",
+        "Create a Clear Service Page",
+        "Write Useful Calls to Action",
+        "Optimize Images Responsibly",
+        "Check Mobile Layout and Readability",
+        "Checkpoint: Review a Landing Page"
+      ],
+      "exampleScenario": "Build a clear service landing page",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Forms and Basic SEO",
+      "objective": "Validate forms, site navigation and helpful metadata",
+      "levelTitles": [
+        "Write Truthful Page Titles and Descriptions",
+        "Build a Contact Form with Consent",
+        "Confirm Form Delivery Safely",
+        "Add an Accessible Contact Method",
+        "Protect Form Data from Public Exposure",
+        "Checkpoint: Test the Contact Journey"
+      ],
+      "exampleScenario": "Review a contact form for privacy",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Launch and Maintenance",
+      "objective": "Check backups, mobile behavior and maintenance",
+      "levelTitles": [
+        "Prepare a Safe Backup Strategy",
+        "Test Mobile and Desktop Navigation",
+        "Check Links and Error Pages",
+        "Plan Theme and Plugin Updates",
+        "Build a Launch Acceptance Checklist",
+        "Capstone: Present a Sandbox Business Site"
+      ],
+      "exampleScenario": "Prepare a safe website launch checklist",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

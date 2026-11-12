@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "customer-service-whatsapp-business",
+  "courseTitle": "Customer Service & WhatsApp Business",
+  "locale": "en",
+  "wave": 1,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Respond to customers clearly and resolve issues consistently",
+  "capstone": "Prepare a customer service response and escalation playbook",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Customer Conversations",
+      "objective": "Collect the right information using respectful language",
+      "levelTitles": [
+        "Ask Useful Clarifying Questions",
+        "Separate Urgent and Routine Requests",
+        "Explain Availability Transparently",
+        "Use Clear Helpful Language",
+        "Set Expectations Without Guessing",
+        "Checkpoint: Close a Service Conversation"
+      ],
+      "exampleScenario": "Clarify an incomplete order inquiry",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Order and Inquiry Handling",
+      "objective": "Track actions, dates and ownership for common requests",
+      "levelTitles": [
+        "Confirm Orders Without Oversharing",
+        "Explain Fulfilment Status Accurately",
+        "Write a Delayed Order Update",
+        "Distinguish Refunds and Exchanges",
+        "Escalate Delivery Exceptions",
+        "Checkpoint: Resolve a Pending Order"
+      ],
+      "exampleScenario": "Write an accurate delayed-order update",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Complaints and De-escalation",
+      "objective": "Respond to dissatisfaction and escalate high-risk cases",
+      "levelTitles": [
+        "Acknowledge a Specific Complaint",
+        "Request Evidence Respectfully",
+        "Offer Accurate Resolutions",
+        "Handle Escalation Calmly",
+        "Protect Privacy in Public Replies",
+        "Checkpoint: Review a Difficult Case"
+      ],
+      "exampleScenario": "Handle a refund complaint empathetically",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Service Playbook Capstone",
+      "objective": "Build reusable templates with privacy and escalation rules",
+      "levelTitles": [
+        "Categorize Support Request Types",
+        "Prepare Reusable FAQs and Replies",
+        "Build a Fair Escalation Matrix",
+        "Create Clear Handover Notes",
+        "Measure Resolution Quality",
+        "Capstone: Build a Service Playbook"
+      ],
+      "exampleScenario": "Deliver a 12-scenario response guide",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

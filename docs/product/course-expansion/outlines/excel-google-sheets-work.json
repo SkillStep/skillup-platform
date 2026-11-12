@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "excel-google-sheets-work",
+  "courseTitle": "Excel & Google Sheets for Work",
+  "locale": "en",
+  "wave": 1,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Clean business data, calculate results and communicate useful insights",
+  "capstone": "Build a reusable sales and expense tracker with charts",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Clean and Structure Data",
+      "objective": "Set up clear tables, consistent records and clean inputs",
+      "levelTitles": [
+        "Identify Spreadsheet Rows and Columns",
+        "Set Up a Clean Data Table",
+        "Keep Dates, Money and Numbers Consistent",
+        "Find Missing and Duplicate Records",
+        "Sort, Filter and Inspect Data",
+        "Checkpoint: Clean Sample Orders"
+      ],
+      "exampleScenario": "Normalize a messy order list",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Useful Formulas",
+      "objective": "Apply common arithmetic, conditional logic and references",
+      "levelTitles": [
+        "Add and Average Transaction Values",
+        "Understand Cell References",
+        "Make an IF Decision",
+        "Total One Category with SUMIF",
+        "Count Orders with COUNTIF",
+        "Checkpoint: Debug a Broken Formula"
+      ],
+      "exampleScenario": "Calculate totals with SUMIF",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Charts and Decisions",
+      "objective": "Choose fair visuals and interpret data without exaggeration",
+      "levelTitles": [
+        "Define a Useful Business KPI",
+        "Summarize Data by Category",
+        "Select the Right Chart",
+        "Use Conditional Formatting Meaningfully",
+        "Avoid Misleading Dashboards",
+        "Checkpoint: Create a Simple Sales Summary"
+      ],
+      "exampleScenario": "Explain why one sales chart misleads",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Business Tracker Capstone",
+      "objective": "Build, verify, share and explain an operational workbook",
+      "levelTitles": [
+        "Plan a Reusable Sales Tracker",
+        "Add Data Validation and Checks",
+        "Add a Basic Expense View",
+        "Share a Sheet Safely",
+        "Explain Insights in Plain Language",
+        "Capstone: Deliver the Tracker"
+      ],
+      "exampleScenario": "Deliver a monthly sales dashboard",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

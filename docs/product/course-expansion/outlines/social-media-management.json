@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "social-media-management",
+  "courseTitle": "Social Media Management",
+  "locale": "en",
+  "wave": 1,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Plan content, handle communities and measure meaningful outcomes",
+  "capstone": "Prepare a 14-day channel calendar and response plan",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Audience and Goals",
+      "objective": "Define audiences, goals and measurable channel roles",
+      "levelTitles": [
+        "Choose a Measurable Business Goal",
+        "Define a Real Audience Segment",
+        "Identify Audience Questions",
+        "Assign Distinct Platform Roles",
+        "Choose Useful Channel KPIs",
+        "Checkpoint: Write a Channel Brief"
+      ],
+      "exampleScenario": "Choose a meaningful engagement target",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Content Planning",
+      "objective": "Organize a realistic multi-channel publishing workflow",
+      "levelTitles": [
+        "Map Practical Content Pillars",
+        "Balance Formats Across Platforms",
+        "Build a Two-Week Calendar",
+        "Draft Original Captions and CTAs",
+        "Plan Publishing Approval Roles",
+        "Checkpoint: Complete a 14-Day Schedule"
+      ],
+      "exampleScenario": "Build a two-week content schedule",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Community Management",
+      "objective": "Respond appropriately and moderate without exposing people",
+      "levelTitles": [
+        "Write Respectful Reply Templates",
+        "Route Product and Billing Questions",
+        "Respond to Complaints Constructively",
+        "Moderate Harmful Comments Fairly",
+        "Protect Customer Data in DMs",
+        "Checkpoint: Manage a Difficult Scenario"
+      ],
+      "exampleScenario": "Handle a public complaint safely",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Reporting and Improvement",
+      "objective": "Review results and iterate with ethical practices",
+      "levelTitles": [
+        "Calculate Engagement with Denominators",
+        "Distinguish Reach from Orders",
+        "Interpret Week-on-Week Results",
+        "Run a Small Content Experiment",
+        "Explain Campaign Trade-offs",
+        "Capstone: Present a Channel Report"
+      ],
+      "exampleScenario": "Write a one-page channel report",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "presentation-public-speaking",
+  "courseTitle": "Presentation & Public Speaking",
+  "locale": "en",
+  "wave": 2,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Explain ideas clearly, design useful slides and handle questions",
+  "capstone": "Prepare and rehearse a three-minute presentation",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Message and Structure",
+      "objective": "Define an audience, a promise and a logical narrative",
+      "levelTitles": [
+        "Define the Audience's Main Question",
+        "State One Purposeful Takeaway",
+        "Choose a Clear Three-Part Structure",
+        "Support a Claim with Evidence",
+        "Close with a Realistic Call to Action",
+        "Checkpoint: Outline a Three-Minute Talk"
+      ],
+      "exampleScenario": "Turn five ideas into a coherent outline",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Visual Storytelling",
+      "objective": "Use accessible slides that support, not replace, speech",
+      "levelTitles": [
+        "Give Each Slide One Job",
+        "Use Readable Fonts and Spacing",
+        "Show Comparisons with Honest Charts",
+        "Choose Images That Clarify Meaning",
+        "Prepare Accessibility Notes",
+        "Checkpoint: Redesign a Crowded Slide"
+      ],
+      "exampleScenario": "Remove clutter from a comparison slide",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Delivery and Confidence",
+      "objective": "Practice pacing, pausing and understandable language",
+      "levelTitles": [
+        "Open Without Reading the Slide",
+        "Practice Comfortable Speaking Pace",
+        "Use Pauses to Highlight Ideas",
+        "Use Clear Language Instead of Jargon",
+        "Manage Nervous Moments Professionally",
+        "Checkpoint: Rehearse a Short Opening"
+      ],
+      "exampleScenario": "Simplify a jargon-heavy introduction",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Q&A and Capstone",
+      "objective": "Respond to questions honestly and gather feedback",
+      "levelTitles": [
+        "Anticipate Difficult Questions",
+        "Answer Uncertainty Without Inventing Facts",
+        "Respond to Feedback Constructively",
+        "Practice Within a Time Limit",
+        "Collect Objective Presentation Feedback",
+        "Capstone: Deliver a Three-Minute Talk"
+      ],
+      "exampleScenario": "Deliver a three-minute sample talk",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

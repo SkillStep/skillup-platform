@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "cv-linkedin-job-applications",
+  "courseTitle": "CV, LinkedIn & Job Applications",
+  "locale": "en",
+  "wave": 1,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "Communicate verifiable strengths and tailor applications to real roles",
+  "capstone": "Produce a role-targeted CV, profile summary and application tracker",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Career Story and Evidence",
+      "objective": "Identify skills, evidence and credible achievements",
+      "levelTitles": [
+        "Map Interests to Job Roles",
+        "Distinguish Skills from Claims",
+        "Collect Project Evidence",
+        "Quantify Achievements Truthfully",
+        "Identify Transferable Skills",
+        "Checkpoint: Build an Evidence Bank"
+      ],
+      "exampleScenario": "Turn duties into evidence-based achievements",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "CV and Profile Craft",
+      "objective": "Build readable, accessible CVs and useful profile text",
+      "levelTitles": [
+        "Choose a Readable CV Structure",
+        "Write a Clear Profile Summary",
+        "Convert Duties into Results",
+        "Add Projects Without Exaggeration",
+        "Proofread Contacts and Dates",
+        "Checkpoint: Review a Targeted CV"
+      ],
+      "exampleScenario": "Write a truthful summary without fluff",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Targeting and Applications",
+      "objective": "Analyze roles and adapt applications ethically",
+      "levelTitles": [
+        "Extract Role Requirements",
+        "Match Evidence to Keywords",
+        "Explain Career Gaps Honestly",
+        "Write a Tailored Cover Note",
+        "Track Applications and Follow-ups",
+        "Checkpoint: Tailor an Application"
+      ],
+      "exampleScenario": "Match CV evidence to a job description",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Application Toolkit Capstone",
+      "objective": "Prepare and review a complete application package",
+      "levelTitles": [
+        "Audit a LinkedIn Headline",
+        "Assemble Work Samples",
+        "Build a Truthful Project Portfolio",
+        "Practice Recruiter Follow-up",
+        "Review Accessibility and Accuracy",
+        "Capstone: Submit an Application Pack"
+      ],
+      "exampleScenario": "Audit a sample job application for gaps",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

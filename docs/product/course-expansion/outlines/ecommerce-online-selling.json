@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "ecommerce-online-selling",
+  "courseTitle": "E-commerce & Online Selling",
+  "locale": "en",
+  "wave": 3,
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "learningOutcome": "List products accurately and plan simple order and support workflows",
+  "capstone": "Create a sample product catalogue and order-handling plan",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Product and Customer Fit",
+      "objective": "Describe benefits, availability and constraints truthfully",
+      "levelTitles": [
+        "Identify Real Customer Problems",
+        "Write an Accurate Product Description",
+        "Choose Helpful Product Photos",
+        "Show Honest Stock Availability",
+        "Avoid Unsupported Product Claims",
+        "Checkpoint: Prepare a Product Listing"
+      ],
+      "exampleScenario": "Rewrite an unclear product listing",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Pricing and Stock Basics",
+      "objective": "Track costs, stock and simple sales margins",
+      "levelTitles": [
+        "Identify Costs Beyond Purchase Price",
+        "Calculate a Simple Gross Margin",
+        "Track Stock by Distinct SKU",
+        "Recognize Discount Math Mistakes",
+        "Plan for Returns and Damaged Stock",
+        "Checkpoint: Review a Pricing Sheet"
+      ],
+      "exampleScenario": "Calculate an example contribution margin",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Checkout and Fulfillment",
+      "objective": "Map customer journeys, dispatch and order exceptions",
+      "levelTitles": [
+        "Map the Checkout-to-Delivery Journey",
+        "Explain Dispatch and Shipping Times",
+        "Confirm Order Details Privately",
+        "Handle an Out-of-Stock Item Fairly",
+        "Distinguish Cancellation and Refund Steps",
+        "Checkpoint: Resolve a Fulfilment Problem"
+      ],
+      "exampleScenario": "Resolve a sample out-of-stock order",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Seller Operations Capstone",
+      "objective": "Build a transparent store operations checklist",
+      "levelTitles": [
+        "Set Up a Ten-Product Catalogue",
+        "Create a Stock Adjustment Checklist",
+        "Prepare Customer Notification Templates",
+        "Design a Refund and Return FAQ",
+        "Identify Daily Store Metrics",
+        "Capstone: Present a Seller Operations Guide"
+      ],
+      "exampleScenario": "Deliver a ten-product mock catalogue",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
