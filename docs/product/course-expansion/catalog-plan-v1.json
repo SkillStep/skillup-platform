@@ -37,11 +37,7 @@
       "capstoneDeliverable": "Build a reusable sales and expense tracker with charts",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Clean and Structure Data",
@@ -80,11 +76,7 @@
       "capstoneDeliverable": "Produce a role-targeted CV, profile summary and application tracker",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Career Story and Evidence",
@@ -123,11 +115,7 @@
       "capstoneDeliverable": "Design a five-post branded social mini-portfolio",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Visual Communication",
@@ -166,11 +154,7 @@
       "capstoneDeliverable": "Prepare a 14-day channel calendar and response plan",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Audience and Goals",
@@ -209,11 +193,7 @@
       "capstoneDeliverable": "Prepare a customer service response and escalation playbook",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Customer Conversations",
@@ -252,11 +232,7 @@
       "capstoneDeliverable": "Produce a 30-second original promotional video",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Story and Shot Planning",
@@ -295,11 +271,7 @@
       "capstoneDeliverable": "Deliver a remote assistant operations starter kit",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Task Intake",
@@ -338,11 +310,7 @@
       "capstoneDeliverable": "Produce a small-business SEO and local presence audit",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Search Intent",
@@ -381,11 +349,7 @@
       "capstoneDeliverable": "Build a simple operational dashboard with interpretation",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Data Questions and Metrics",
@@ -424,11 +388,7 @@
       "capstoneDeliverable": "Prepare and rehearse a three-minute presentation",
       "reviewCadenceDays": 365,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Message and Structure",
@@ -467,11 +427,7 @@
       "capstoneDeliverable": "Design a repeatable AI-assisted task workflow with human checks",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Workflow Identification",
@@ -510,11 +466,7 @@
       "capstoneDeliverable": "Build a sample business website in a sandbox environment",
       "reviewCadenceDays": 90,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Site Planning",
@@ -553,11 +505,7 @@
       "capstoneDeliverable": "Create a sample product catalogue and order-handling plan",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Product and Customer Fit",
@@ -596,11 +544,7 @@
       "capstoneDeliverable": "Prepare a discovery script, proposal and follow-up sequence",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Needs Discovery",
@@ -639,11 +583,7 @@
       "capstoneDeliverable": "Prepare a flexible 30-day budget and emergency-fund goal",
       "reviewCadenceDays": 180,
       "levelTarget": 24,
-      "minimumReviewers": [
-        "subject_editor",
-        "language_or_accessibility_reviewer",
-        "publisher"
-      ],
+      "minimumReviewers": ["subject_editor", "language_or_accessibility_reviewer", "publisher"],
       "modules": [
         {
           "title": "Income and Spending",

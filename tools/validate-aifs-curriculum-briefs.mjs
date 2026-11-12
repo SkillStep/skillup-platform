@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-const catalogUrl = new URL("../docs/product/course-expansion/catalog-plan-v1.json", import.meta.url);
+const catalogUrl = new URL(
+  "../docs/product/course-expansion/catalog-plan-v1.json",
+  import.meta.url,
+);
 const outlineRoot = new URL("../docs/product/course-expansion/outlines/", import.meta.url);
 
 export function readCurriculumPlan() {
@@ -80,7 +83,8 @@ export function validateCurriculumBriefs(manifest, outlines) {
     }
     if (levelTitles.size !== 24) errors.push(`Course ${name}: expected 24 distinct levels.`);
   }
-  if (levelCount !== 360) errors.push(`Expected 360 distinct proposed level positions; found ${levelCount}.`);
+  if (levelCount !== 360)
+    errors.push(`Expected 360 distinct proposed level positions; found ${levelCount}.`);
   return errors;
 }
 
@@ -119,9 +123,11 @@ export function buildAiDraftRequestBriefs(manifest, outlines) {
             permittedData: "fictional examples only",
             originality: "distinct scenarios, non-recycled subject-specific questions",
             practiceRequirement: "three different supported exercise types; correct private keys",
-            teachingRequirement: "clear explanation, worked example, hint and misconception remediation",
+            teachingRequirement:
+              "clear explanation, worked example, hint and misconception remediation",
             sourcePolicy: "no unverified citations or copyrighted third-party course copies",
-            editorialState: "unreviewed draft; human subject, language and publisher approval required",
+            editorialState:
+              "unreviewed draft; human subject, language and publisher approval required",
           },
         });
       }

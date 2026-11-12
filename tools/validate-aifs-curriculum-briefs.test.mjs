@@ -37,7 +37,10 @@ test("counterfeit review approval and publishing flags cannot enter the generati
   edited[2].publishedAt = "2026-11-12T00:00:00.000Z";
   const errors = validateCurriculumBriefs(manifest, edited).join(" ");
   assert.match(errors, /review boundary/);
-  assert.throws(() => buildAiDraftRequestBriefs(manifest, edited), /Invalid AI-first course briefs/);
+  assert.throws(
+    () => buildAiDraftRequestBriefs(manifest, edited),
+    /Invalid AI-first course briefs/,
+  );
 });
 
 test("duplicate, generic or incomplete level plans fail before AI drafting", () => {
