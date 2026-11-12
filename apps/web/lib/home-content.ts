@@ -1,4 +1,4 @@
-import { publicSkills } from "./public-catalog";
+import { publicSkills, type PublicSkill } from "./public-catalog";
 
 export type LaunchPath = Readonly<{
   slug: string;
@@ -20,4 +20,15 @@ export function featuredPath(): LaunchPath {
   const pilot = launchPaths.find((path) => path.status === "pilot");
   if (!pilot) throw new Error("A reviewed pilot path is required.");
   return pilot;
+}
+
+/** Transform the published-only catalogue into home cards. */
+export function publishedLaunchPaths(skills: readonly PublicSkill[]): readonly LaunchPath[] {
+  return skills.map((skill) => ({
+    slug: skill.slug,
+    title: skill.title,
+    summary: skill.summary,
+    status: skill.status,
+    levelId: skill.levelId,
+  }));
 }

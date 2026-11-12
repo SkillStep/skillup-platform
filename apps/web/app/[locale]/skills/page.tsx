@@ -2,7 +2,7 @@ import { canonicalUrl } from "@skillup/discoverability";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-import { publicSkills } from "../../../lib/public-catalog";
+import { loadPublishedPublicSkills } from "../../../lib/live-catalog";
 import styles from "../discovery.module.css";
 import { Breadcrumbs, JsonLd, PublicFooter, PublicHeader } from "../discovery-shell";
 import { MotionReveal } from "../motion-reveal";
@@ -37,6 +37,7 @@ export default async function SkillsPage({ params }: PageProps) {
   const { locale } = await params;
   if (locale !== "en") notFound();
 
+  const publicSkills = await loadPublishedPublicSkills();
   const pageUrl = canonicalUrl(publicAppUrl, "en", "/skills");
   const homeUrl = canonicalUrl(publicAppUrl, "en");
 
@@ -47,17 +48,22 @@ export default async function SkillsPage({ params }: PageProps) {
         <Breadcrumbs items={[{ label: "Home", href: "/en" }, { label: "Skills" }]} />
         <MotionReveal variant="fade-right" durationMs={750}>
           <section className={styles["hero"]} aria-labelledby="skills-title">
-            <p className={styles["eyebrow"]}>Reviewed launch catalog</p>
+            <p className={styles["eyebrow"]}>Published learning catalogue</p>
             <h1 id="skills-title">Choose one practical skill to improve.</h1>
             <p className={styles["heroSummary"]}>
-              Every listed path now includes reviewed modules, playable levels, varied challenges
-              and version-pinned learner progress. Start with the skill that best matches your
-              current study or work goal.
+              Explore learning paths with published, playable levels. Every course shown is checked
+              against the active catalogue, not a list of unreleased courses.
             </p>
           </section>
         </MotionReveal>
 
-        <SkillSearch skills={publicSkills} />
+        {publicSkills.length > 0 ? (
+          <SkillSearch skills={publicSkills} />
+        ) : (
+          <p role="status" className={styles["heroSummary"]}>
+            The course catalogue is temporarily unavailable. Please check again shortly.
+          </p>
+        )}
 
         <JsonLd
           value={{

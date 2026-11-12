@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { featuredPath, launchPaths } from "../../lib/home-content";
+import { publishedLaunchPaths } from "../../lib/home-content";
+import { loadPublishedPublicSkills } from "../../lib/live-catalog";
 import { PublicFooter, PublicHeader } from "./discovery-shell";
 import { HomePaymentBanner } from "./home-payment-banner";
 import { HomeReveal } from "./home-reveal";
@@ -73,7 +74,8 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
   const [{ locale }, query] = await Promise.all([params, searchParams]);
   if (locale !== "en") notFound();
 
-  const pilot = featuredPath();
+  const launchPaths = publishedLaunchPaths(await loadPublishedPublicSkills());
+  const pilot = launchPaths.find((path) => path.status === "pilot") ?? launchPaths[0];
   const payment = firstQueryValue(query.payment);
   const orderId = firstQueryValue(query.orderId);
   const featuredPaths = launchPaths.slice(0, 2);
@@ -164,12 +166,13 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
           <HomeReveal variant="fade-up" durationMs={700}>
             <div className="section-heading section-heading-split">
               <div>
-                <p className="eyebrow">Initial skill catalog</p>
+                <p className="eyebrow">Available courses</p>
                 <h2 id="paths-title">Start with practical skills for real life.</h2>
               </div>
               <p>
-                Five focused learning paths to build communication, English, digital and work-ready
-                skills. The first complete pilot is {pilot.title}.
+                {launchPaths.length > 0
+                  ? `Explore ${launchPaths.length} published learning paths. Start with ${pilot?.title ?? "a useful skill"}.`
+                  : "The published course catalogue is temporarily unavailable. Please check again shortly."}
               </p>
             </div>
           </HomeReveal>
@@ -194,7 +197,7 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
                     <span
                       className={`status status-${path.status === "pilot" ? "pilot" : "planned"}`}
                     >
-                      {path.status === "pilot" ? "First pilot" : "Planned"}
+                      {path.status === "pilot" ? "Reviewed pilot" : "Available now"}
                     </span>
                   </div>
                   <div className="path-card-body">
@@ -205,14 +208,14 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
                       <li>Visible progress</li>
                     </ul>
                     <div className="hero-actions">
-                      {path.status === "pilot" && path.levelId ? (
+                      {path.levelId ? (
                         <Link className="button button-primary" href={`/en/learn/${path.levelId}`}>
-                          Practice reviewed pilot
+                          Start learning
                           <span aria-hidden="true">→</span>
                         </Link>
                       ) : (
                         <Link className="button button-secondary" href={`/en/paths/${path.slug}`}>
-                          View planned path
+                          View course
                           <span aria-hidden="true">→</span>
                         </Link>
                       )}
@@ -227,11 +230,10 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
             <div className="more-paths">
               <HomeReveal variant="fade-up" durationMs={700}>
                 <div className="section-heading">
-                  <p className="eyebrow">More planned paths</p>
-                  <h2>More skills on the way.</h2>
+                  <p className="eyebrow">More available courses</p>
+                  <h2>Keep building practical skills.</h2>
                   <p className="section-note">
-                    Additional learning paths will be released after content review and learner
-                    testing.
+                    These are published learning paths with playable practice levels.
                   </p>
                 </div>
               </HomeReveal>
@@ -261,13 +263,13 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
                             className="path-card-image"
                             sizes="(max-width: 820px) 100vw, 33vw"
                           />
-                          <span className="status status-planned">Planned</span>
+                          <span className="status status-planned">Published</span>
                         </div>
                         <div className="path-card-body path-card-body-compact">
                           <h3>{path.title}</h3>
                           <p>{path.summary}</p>
                           <Link className="button button-secondary" href={`/en/paths/${path.slug}`}>
-                            View planned path
+                            View course
                             <span aria-hidden="true">→</span>
                           </Link>
                         </div>

@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { ReactElement } from "react";
 
 import { type LandingCampaign, normalizeLandingCampaign } from "../../lib/landing-campaign";
+import { loadPublishedPublicSkills } from "../../lib/live-catalog";
+import type { PublicSkill } from "../../lib/public-catalog";
 import styles from "./landing.module.css";
 import { LandingAnalyticsBoot } from "./landing-analytics-boot";
 import { LandingBanner } from "./landing-banner";
@@ -72,43 +74,17 @@ async function resolveCheckoutMode(): Promise<CheckoutMode> {
   }
 }
 
-const courses = [
-  {
-    icon: "briefcase" as const,
-    title: "Freelancing &",
-    text: "Remote Work",
-    sub: "Online kaam seekho aur earning shuru karo",
-    tone: styles["purple"],
-  },
-  {
-    icon: "store" as const,
-    title: "Business &",
-    text: "Entrepreneurship",
-    sub: "Apna business samjho aur grow karo",
-    tone: styles["green"],
-  },
-  {
-    icon: "megaphone" as const,
-    title: "Marketing,",
-    text: "Content & Growth",
-    sub: "Apna brand banao aur audience tak pahuche",
-    tone: styles["orange"],
-  },
-  {
-    icon: "user" as const,
-    title: "Career &",
-    text: "Employability",
-    sub: "Naukri ke liye skills seekho aur ready ho jao",
-    tone: styles["blue"],
-  },
-];
+const courseIcons = ["briefcase", "store", "megaphone", "user"] as const;
+const courseTones = [styles["purple"], styles["green"], styles["orange"], styles["blue"]] as const;
 
 function LandingContent({
   campaign,
   checkoutMode,
+  courses,
 }: Readonly<{
   campaign: LandingCampaign;
   checkoutMode: CheckoutMode;
+  courses: readonly PublicSkill[];
 }>): ReactElement {
   return (
     <main className={styles["page"]}>
@@ -141,21 +117,22 @@ function LandingContent({
             <span />
           </div>
           <div className={styles["courseGrid"]}>
-            {courses.map((course) => (
-              <article className={styles["course"]} key={course.title}>
-                <div className={`${styles["courseIcon"]} ${course.tone}`}>
-                  <Icon name={course.icon} />
+            {courses.slice(0, 8).map((course, index) => (
+              <article className={styles["course"]} key={course.slug}>
+                <div
+                  className={`${styles["courseIcon"]} ${courseTones[index % courseTones.length]}`}
+                >
+                  <Icon name={courseIcons[index % courseIcons.length] ?? "briefcase"} />
                 </div>
-                <h3>
-                  {course.title}
-                  <br />
-                  {course.text}
-                </h3>
-                <p>{course.sub}</p>
+                <h3>{course.title}</h3>
+                <p>{course.levelCount ?? 0} published practice levels</p>
+                <Link href={`/en/skills/${course.slug}`}>Explore this course</Link>
               </article>
             ))}
+            {courses.length === 0 ? (
+              <p role="status">The published course catalogue is temporarily unavailable.</p>
+            ) : null}
           </div>
-
           <div className={`${styles["sectionHeading"]} ${styles["sectionHeadingSmall"]}`}>
             <span />
             <h2>... and much more</h2>
@@ -198,6 +175,9 @@ function LandingContent({
 
 export default async function LandingPage({ searchParams }: PageProps): Promise<ReactElement> {
   const campaign = normalizeLandingCampaign(await searchParams);
-  const checkoutMode = await resolveCheckoutMode();
-  return <LandingContent campaign={campaign} checkoutMode={checkoutMode} />;
+  const [checkoutMode, courses] = await Promise.all([
+    resolveCheckoutMode(),
+    loadPublishedPublicSkills(),
+  ]);
+  return <LandingContent campaign={campaign} checkoutMode={checkoutMode} courses={courses} />;
 }

@@ -1,7 +1,8 @@
 import { canonicalUrl } from "@skillup/discoverability";
 import type { MetadataRoute } from "next";
 
-import { launchCategory, publicSkills } from "../lib/public-catalog";
+import { launchCategory } from "../lib/public-catalog";
+import { loadPublishedPublicSkills } from "../lib/live-catalog";
 import { publicContentRoutes } from "../lib/public-content";
 import { publicPolicies } from "../lib/public-policies";
 
@@ -10,7 +11,8 @@ const lastModified = new Date("2026-08-01T00:00:00.000Z");
 
 export const dynamic = "force-dynamic";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const publicSkills = await loadPublishedPublicSkills();
   return [
     {
       url: canonicalUrl(publicAppUrl, "en"),

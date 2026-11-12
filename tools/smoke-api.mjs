@@ -96,6 +96,37 @@ try {
     throw new Error(`Unexpected API health payload: ${JSON.stringify({ ready, health })}`);
   }
 
+  const catalogueResponse = await fetch(`http://127.0.0.1:${port}/v1/catalog/courses?locale=en`, {
+    signal: AbortSignal.timeout(3_000),
+  });
+  if (!catalogueResponse.ok) {
+    throw new Error(`Published course catalogue returned HTTP ${catalogueResponse.status}.`);
+  }
+  const catalogue = await catalogueResponse.json();
+  if (!Array.isArray(catalogue.courses) || catalogue.courses.length !== 5) {
+    throw new Error(
+      `Expected five real published launch courses, received ${catalogue.courses?.length ?? "invalid"}: ${JSON.stringify(catalogue)}`,
+    );
+  }
+  for (const course of catalogue.courses) {
+    if (course.levelCount < 12 || course.moduleCount < 3 || !course.levelId) {
+      throw new Error(`Published course ${course.slug} lacks playable modules or levels.`);
+    }
+  }
+  const pilotCourse = catalogue.courses.find(
+    (course) => course.slug === "interview-workplace-communication",
+  );
+  if (
+    !pilotCourse?.modules.includes("Use Evidence in Interview Answers") ||
+    pilotCourse.levelCount !== 21 ||
+    pilotCourse.moduleCount !== 5
+  ) {
+    throw new Error(
+      `Published course API is missing the first pilot module: ${JSON.stringify(pilotCourse)}`,
+    );
+  }
+  console.log("Published-only catalogue API smoke passed (five playable launch courses).");
+
   console.log("SkillUp API/PostgreSQL startup smoke passed.");
 } catch (error) {
   await persistDiagnostics(error);

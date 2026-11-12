@@ -168,11 +168,7 @@ const pilotSkill = await request("/en/skills/interview-workplace-communication",
   accept: "text/html",
 });
 const pilotSkillHtml = await pilotSkill.text();
-requireContains(
-  pilotSkillHtml,
-  "Answer common interview questions with evidence.",
-  "Pilot skill outcomes",
-);
+requireContains(pilotSkillHtml, "What you will practice", "Pilot skill published outcomes");
 requireContains(pilotSkillHtml, "LearningResource", "Pilot skill structured data");
 requirePublicCacheBoundary(pilotSkill, "Pilot skill");
 
@@ -180,7 +176,10 @@ const pilotPath = await request("/en/paths/interview-workplace-communication", {
   accept: "text/html",
 });
 const pilotPathHtml = await pilotPath.text();
-requireContains(pilotPathHtml, "Interview Evidence", "Pilot path modules");
+if (!pilotPathHtml.includes("Use Evidence in Interview Answers")) {
+  const excerpt = pilotPathHtml.slice(0, 3_000);
+  throw new Error(`Pilot path lacks the expected module. Diagnostic HTML excerpt: ${excerpt}`);
+}
 requireContains(pilotPathHtml, '"@type":"Course"', "Pilot path course data");
 requirePublicCacheBoundary(pilotPath, "Pilot path");
 

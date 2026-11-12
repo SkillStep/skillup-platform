@@ -10,6 +10,9 @@ export type PublicSkill = Readonly<{
   modules: readonly string[];
   challengeTypes: readonly string[];
   levelId: string;
+  levelCount?: number;
+  moduleCount?: number;
+  estimatedMinutes?: number;
   reviewCadence: string;
 }>;
 

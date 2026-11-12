@@ -11,6 +11,10 @@ import { createCampaignDailyLogsEmailTask } from "./campaign-daily-logs-email.js
 import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
 import { createCommercialService } from "./commercial.js";
+import {
+  createPublishedCourseCatalogService,
+  registerPublishedCourseCatalogRoutes,
+} from "./course-catalog.js";
 import { createCommercialAutomationService } from "./commercial-automation.js";
 import { isJazzCashV11CheckoutEnabled, readApiConfig } from "./config.js";
 import {
@@ -137,6 +141,10 @@ if (externalBilling) {
     billingService: externalBilling,
   });
 }
+
+registerPublishedCourseCatalogRoutes(app, {
+  service: createPublishedCourseCatalogService({ pool: database.pool }),
+});
 
 registerRecommendationRoutes(app, {
   config,
