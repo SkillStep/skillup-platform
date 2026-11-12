@@ -37,7 +37,9 @@ export function validateCourseExpansionPlan(plan) {
     plan.sourceBaseline?.totalSeededLevels !== 69 ||
     plan.sourceBaseline?.totalSeededChallenges !== 206
   ) {
-    errors.push("The five-course, 68-curriculum-level + legacy pilot seeded baseline is not preserved.");
+    errors.push(
+      "The five-course, 68-curriculum-level + legacy pilot seeded baseline is not preserved.",
+    );
   }
 
   if (!Array.isArray(plan.courses) || plan.courses.length !== 15) {
