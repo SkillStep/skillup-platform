@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-const manifestLocation = new URL("../docs/product/course-expansion/catalog-plan-v1.json", import.meta.url);
+const manifestLocation = new URL(
+  "../docs/product/course-expansion/catalog-plan-v1.json",
+  import.meta.url,
+);
 
 const requiredCategories = new Set([
   "career-readiness",
@@ -22,10 +25,19 @@ export function validateCourseExpansionPlan(plan) {
 
   if (plan.schemaVersion !== 1) errors.push("Expected schemaVersion=1.");
   if (plan.publicationPolicy !== "planning_only_no_auto_publish") {
-    errors.push("The expansion manifest must remain planning-only and may not authorize publication.");
+    errors.push(
+      "The expansion manifest must remain planning-only and may not authorize publication.",
+    );
   }
-  if (plan.sourceBaseline?.existingCourses !== 5 || plan.sourceBaseline?.existingCurriculumLevels !== 68) {
-    errors.push("The five-course, 68-level audited baseline is not preserved.");
+  if (
+    plan.sourceBaseline?.existingCourses !== 5 ||
+    plan.sourceBaseline?.existingCurriculumLevels !== 68 ||
+    plan.sourceBaseline?.seededLegacyPilotLevels !== 1 ||
+    plan.sourceBaseline?.seededLegacyPilotChallenges !== 2 ||
+    plan.sourceBaseline?.totalSeededLevels !== 69 ||
+    plan.sourceBaseline?.totalSeededChallenges !== 206
+  ) {
+    errors.push("The five-course, 68-curriculum-level + legacy pilot seeded baseline is not preserved.");
   }
 
   if (!Array.isArray(plan.courses) || plan.courses.length !== 15) {
@@ -35,7 +47,11 @@ export function validateCourseExpansionPlan(plan) {
 
   const seenSlugs = new Set();
   const seenTitles = new Set();
-  const waveCounts = new Map([[1, 0], [2, 0], [3, 0]]);
+  const waveCounts = new Map([
+    [1, 0],
+    [2, 0],
+    [3, 0],
+  ]);
   let modulesTotal = 0;
   let levelsTotal = 0;
 
@@ -68,7 +84,9 @@ export function validateCourseExpansionPlan(plan) {
     }
     if (course?.levelTarget !== 24) errors.push(`Course ${name} requires 24 planned levels.`);
     if (!Array.isArray(course?.minimumReviewers) || course.minimumReviewers.length < 3) {
-      errors.push(`Course ${name} requires subject, language/accessibility and publisher review roles.`);
+      errors.push(
+        `Course ${name} requires subject, language/accessibility and publisher review roles.`,
+      );
     }
 
     if (!Array.isArray(course?.modules) || course.modules.length !== 4) {
@@ -79,7 +97,11 @@ export function validateCourseExpansionPlan(plan) {
     for (const module of course.modules) {
       modulesTotal += 1;
       levelsTotal += Number.isInteger(module?.levelTarget) ? module.levelTarget : 0;
-      if (!present(module?.title) || !present(module?.learningObjective) || !present(module?.exampleLevel)) {
+      if (
+        !present(module?.title) ||
+        !present(module?.learningObjective) ||
+        !present(module?.exampleLevel)
+      ) {
         errors.push(`Course ${name} contains an incomplete module.`);
       }
       if (module?.levelTarget !== 6) {
@@ -107,10 +129,14 @@ export function validateCourseExpansionPlan(plan) {
     targets.levelsPerModule !== 6 ||
     targets.minimumChallengesPerLevel !== 3 ||
     targets.newCapstoneProjects !== 15 ||
+    targets.potentialSeededLevelsIfLegacyPilotRemains !== 429 ||
+    targets.minimumSeededChallengesIfLegacyPilotRemains !== 1286 ||
     modulesTotal !== 60 ||
     levelsTotal !== 360
   ) {
-    errors.push("The expansion target totals do not reconcile with the course and module manifest.");
+    errors.push(
+      "The expansion target totals do not reconcile with the course and module manifest.",
+    );
   }
 
   return errors;
@@ -123,6 +149,8 @@ if (process.argv[1]?.endsWith("validate-course-expansion-plan.mjs")) {
     for (const error of errors) console.error(`COURSE EXPANSION PLAN ERROR: ${error}`);
     process.exitCode = 1;
   } else {
-    console.info("Course expansion draft manifest verified: 15 courses, 60 modules, 360 proposed levels, 3 equal waves.");
+    console.info(
+      "Course expansion draft manifest verified: 15 courses, 60 modules, 360 proposed levels, 3 equal waves.",
+    );
   }
 }
