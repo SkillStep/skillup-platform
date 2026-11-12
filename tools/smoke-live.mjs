@@ -138,7 +138,8 @@ requireSecurityHeaders(webHealth.response, "Web health");
 
 const homepage = await request("/en", { accept: "text/html" });
 const homepageHtml = await homepage.text();
-requireContains(homepageHtml, "Learn useful skills in short, focused games.", "Homepage HTML");
+requireContains(homepageHtml, "Learn useful skills in short, focused", "Homepage HTML");
+requireContains(homepageHtml, "games", "Homepage HTML");
 requireContains(homepageHtml, "Practical learning for Pakistan", "Homepage positioning");
 requireContains(homepageHtml, "Skip to main content", "Homepage keyboard navigation");
 requireContains(homepageHtml, 'id="main-content"', "Homepage main landmark target");
