@@ -97,6 +97,8 @@ if (process.argv[1]?.endsWith("validate-aifs-capstones.mjs")) {
     for (const error of errors) console.error(`CAPSTONE QUALITY ERROR: ${error}`);
     process.exitCode = 1;
   } else {
-    console.info("Practical capstones checked: 14 distinct new kits + original Excel tracker. Publication not authorized.");
+    console.info(
+      "Practical capstones checked: 14 distinct new kits + original Excel tracker. Publication not authorized.",
+    );
   }
 }
