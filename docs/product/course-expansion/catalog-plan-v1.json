@@ -1,0 +1,669 @@
+{
+  "schemaVersion": 1,
+  "proposalName": "SkillUp AI-first 20-course expansion",
+  "proposalDate": "2026-11-12",
+  "publicationPolicy": "planning_only_no_auto_publish",
+  "sourceBaseline": {
+    "existingCourses": 5,
+    "existingCurriculumLevels": 68,
+    "existingGeneratedChallengesPerLevel": 3
+  },
+  "targets": {
+    "newCourses": 15,
+    "newLevels": 360,
+    "minimumNewChallenges": 1080,
+    "totalCourses": 20,
+    "totalCurriculumLevels": 428,
+    "modulesPerNewCourse": 4,
+    "levelsPerModule": 6,
+    "minimumChallengesPerLevel": 3,
+    "newCapstoneProjects": 15
+  },
+  "courses": [
+    {
+      "slug": "excel-google-sheets-work",
+      "title": "Excel & Google Sheets for Work",
+      "wave": 1,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Students, job seekers, office and small-business staff",
+      "learningOutcome": "Clean business data, calculate results and communicate useful insights",
+      "capstoneDeliverable": "Build a reusable sales and expense tracker with charts",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Clean and Structure Data",
+          "learningObjective": "Set up clear tables, consistent records and clean inputs",
+          "levelTarget": 6,
+          "exampleLevel": "Normalize a messy order list"
+        },
+        {
+          "title": "Useful Formulas",
+          "learningObjective": "Apply common arithmetic, conditional logic and references",
+          "levelTarget": 6,
+          "exampleLevel": "Calculate totals with SUMIF"
+        },
+        {
+          "title": "Charts and Decisions",
+          "learningObjective": "Choose fair visuals and interpret data without exaggeration",
+          "levelTarget": 6,
+          "exampleLevel": "Explain why one sales chart misleads"
+        },
+        {
+          "title": "Business Report Capstone",
+          "learningObjective": "Build, verify, share and explain an operational workbook",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver a monthly sales dashboard"
+        }
+      ]
+    },
+    {
+      "slug": "cv-linkedin-job-applications",
+      "title": "CV, LinkedIn & Job Applications",
+      "wave": 1,
+      "category": "career-readiness",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Students, graduates and early-career job seekers",
+      "learningOutcome": "Communicate verifiable strengths and tailor applications to real roles",
+      "capstoneDeliverable": "Produce a role-targeted CV, profile summary and application tracker",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Career Story and Evidence",
+          "learningObjective": "Identify skills, evidence and credible achievements",
+          "levelTarget": 6,
+          "exampleLevel": "Turn duties into evidence-based achievements"
+        },
+        {
+          "title": "CV and Profile Craft",
+          "learningObjective": "Build readable, accessible CVs and useful profile text",
+          "levelTarget": 6,
+          "exampleLevel": "Write a truthful summary without fluff"
+        },
+        {
+          "title": "Targeting and Applications",
+          "learningObjective": "Analyze roles and adapt applications ethically",
+          "levelTarget": 6,
+          "exampleLevel": "Match CV evidence to a job description"
+        },
+        {
+          "title": "Application Toolkit Capstone",
+          "learningObjective": "Prepare and review a complete application package",
+          "levelTarget": 6,
+          "exampleLevel": "Audit a sample job application for gaps"
+        }
+      ]
+    },
+    {
+      "slug": "canva-social-media-design",
+      "title": "Canva & Social Media Design",
+      "wave": 1,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Freelancers, students and micro-business creators",
+      "learningOutcome": "Create accessible, consistent social visuals with clear communication",
+      "capstoneDeliverable": "Design a five-post branded social mini-portfolio",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Visual Communication",
+          "learningObjective": "Use hierarchy, contrast, spacing and a defined message",
+          "levelTarget": 6,
+          "exampleLevel": "Fix a crowded promotional post"
+        },
+        {
+          "title": "Brand Consistency",
+          "learningObjective": "Select repeatable type, colors and reusable components",
+          "levelTarget": 6,
+          "exampleLevel": "Build a three-color mini style guide"
+        },
+        {
+          "title": "Platform-Ready Design",
+          "learningObjective": "Apply dimensions, safe areas and legible export choices",
+          "levelTarget": 6,
+          "exampleLevel": "Adapt a design from feed to story"
+        },
+        {
+          "title": "Five-Post Portfolio",
+          "learningObjective": "Review, refine, license-check and export a cohesive series",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver five accessible branded posts"
+        }
+      ]
+    },
+    {
+      "slug": "social-media-management",
+      "title": "Social Media Management",
+      "wave": 1,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "New social managers and small-business operators",
+      "learningOutcome": "Plan content, handle communities and measure meaningful outcomes",
+      "capstoneDeliverable": "Prepare a 14-day channel calendar and response plan",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Audience and Goals",
+          "learningObjective": "Define audiences, goals and measurable channel roles",
+          "levelTarget": 6,
+          "exampleLevel": "Choose a meaningful engagement target"
+        },
+        {
+          "title": "Content Planning",
+          "learningObjective": "Organize a realistic multi-channel publishing workflow",
+          "levelTarget": 6,
+          "exampleLevel": "Build a two-week content schedule"
+        },
+        {
+          "title": "Community Management",
+          "learningObjective": "Respond appropriately and moderate without exposing people",
+          "levelTarget": 6,
+          "exampleLevel": "Handle a public complaint safely"
+        },
+        {
+          "title": "Reporting and Improvement",
+          "learningObjective": "Review results and iterate with ethical practices",
+          "levelTarget": 6,
+          "exampleLevel": "Write a one-page channel report"
+        }
+      ]
+    },
+    {
+      "slug": "customer-service-whatsapp-business",
+      "title": "Customer Service & WhatsApp Business",
+      "wave": 1,
+      "category": "business",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Retail, restaurant, support and small-business teams",
+      "learningOutcome": "Respond to customers clearly and resolve issues consistently",
+      "capstoneDeliverable": "Prepare a customer service response and escalation playbook",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Customer Conversations",
+          "learningObjective": "Collect the right information using respectful language",
+          "levelTarget": 6,
+          "exampleLevel": "Clarify an incomplete order inquiry"
+        },
+        {
+          "title": "Order and Inquiry Handling",
+          "learningObjective": "Track actions, dates and ownership for common requests",
+          "levelTarget": 6,
+          "exampleLevel": "Write an accurate delayed-order update"
+        },
+        {
+          "title": "Complaints and De-escalation",
+          "learningObjective": "Respond to dissatisfaction and escalate high-risk cases",
+          "levelTarget": 6,
+          "exampleLevel": "Handle a refund complaint empathetically"
+        },
+        {
+          "title": "Service Playbook Capstone",
+          "learningObjective": "Build reusable templates with privacy and escalation rules",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver a 12-scenario response guide"
+        }
+      ]
+    },
+    {
+      "slug": "video-editing-reels",
+      "title": "Video Editing for Reels",
+      "wave": 2,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Creators and junior editors",
+      "learningOutcome": "Plan, cut and export short videos that communicate one clear idea",
+      "capstoneDeliverable": "Produce a 30-second original promotional video",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Story and Shot Planning",
+          "learningObjective": "Plan a compelling hook and ethical visual sequence",
+          "levelTarget": 6,
+          "exampleLevel": "Storyboard a 30-second product reel"
+        },
+        {
+          "title": "Editing and Pacing",
+          "learningObjective": "Cut with continuity, rhythm and clarity",
+          "levelTarget": 6,
+          "exampleLevel": "Trim a 50-second draft to 30 seconds"
+        },
+        {
+          "title": "Captions, Sound and Rights",
+          "learningObjective": "Apply readable captions, licensed sound and appropriate levels",
+          "levelTarget": 6,
+          "exampleLevel": "Audit a reel for missing captions"
+        },
+        {
+          "title": "Export and Review",
+          "learningObjective": "Validate resolution, safe zones and final playback",
+          "levelTarget": 6,
+          "exampleLevel": "Present a finished reel with QA checklist"
+        }
+      ]
+    },
+    {
+      "slug": "virtual-assistant-remote-work",
+      "title": "Virtual Assistant & Remote Work",
+      "wave": 2,
+      "category": "career-readiness",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Entry-level remote workers and assistants",
+      "learningOutcome": "Coordinate requests, calendars and research with reliable privacy habits",
+      "capstoneDeliverable": "Deliver a remote assistant operations starter kit",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Task Intake",
+          "learningObjective": "Clarify scope, priorities and expected delivery",
+          "levelTarget": 6,
+          "exampleLevel": "Prioritize six competing support requests"
+        },
+        {
+          "title": "Research and Documentation",
+          "learningObjective": "Find, compare and cite reliable information",
+          "levelTarget": 6,
+          "exampleLevel": "Produce a sourced vendor comparison"
+        },
+        {
+          "title": "Email, Calendar and Coordination",
+          "learningObjective": "Manage professional reminders and follow-ups",
+          "levelTarget": 6,
+          "exampleLevel": "Schedule a conflict-free sample week"
+        },
+        {
+          "title": "Remote Handover Capstone",
+          "learningObjective": "Deliver tracked work with access, privacy and handoff controls",
+          "levelTarget": 6,
+          "exampleLevel": "Assemble an assistant weekly report"
+        }
+      ]
+    },
+    {
+      "slug": "seo-google-business-profile",
+      "title": "SEO & Google Business Profile",
+      "wave": 2,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Local businesses, marketers and freelance SEOs",
+      "learningOutcome": "Improve discoverability without manipulative SEO or fake reviews",
+      "capstoneDeliverable": "Produce a small-business SEO and local presence audit",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Search Intent",
+          "learningObjective": "Identify customer queries and useful destination pages",
+          "levelTarget": 6,
+          "exampleLevel": "Classify five local service searches"
+        },
+        {
+          "title": "On-Page SEO",
+          "learningObjective": "Write helpful titles, headings, links and snippets",
+          "levelTarget": 6,
+          "exampleLevel": "Improve an unclear service page title"
+        },
+        {
+          "title": "Google Business Profile Basics",
+          "learningObjective": "Maintain accurate listings, hours, photos and reviews",
+          "levelTarget": 6,
+          "exampleLevel": "Audit a sample shop profile for accuracy"
+        },
+        {
+          "title": "Reporting and Action Plan",
+          "learningObjective": "Prioritize ethical fixes and track simple outcomes",
+          "levelTarget": 6,
+          "exampleLevel": "Prepare a 30-day local SEO checklist"
+        }
+      ]
+    },
+    {
+      "slug": "data-analytics-dashboards",
+      "title": "Data Analytics & Dashboards",
+      "wave": 2,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Junior analysts, operators and curious learners",
+      "learningOutcome": "Clean data, define useful KPIs and explain trade-offs clearly",
+      "capstoneDeliverable": "Build a simple operational dashboard with interpretation",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Data Questions and Metrics",
+          "learningObjective": "Choose questions before analyzing data",
+          "levelTarget": 6,
+          "exampleLevel": "Distinguish a vanity metric from an outcome"
+        },
+        {
+          "title": "Data Cleaning and Checks",
+          "learningObjective": "Identify missing records, duplicates and invalid inputs",
+          "levelTarget": 6,
+          "exampleLevel": "Find inconsistent dates in a dataset"
+        },
+        {
+          "title": "Visual Analysis",
+          "learningObjective": "Use tables and charts without misleading the audience",
+          "levelTarget": 6,
+          "exampleLevel": "Select a chart for category comparison"
+        },
+        {
+          "title": "Dashboard Capstone",
+          "learningObjective": "Build a report that explains findings and limitations",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver an actionable performance dashboard"
+        }
+      ]
+    },
+    {
+      "slug": "presentation-public-speaking",
+      "title": "Presentation & Public Speaking",
+      "wave": 2,
+      "category": "career-readiness",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Students, early-career professionals and team leads",
+      "learningOutcome": "Explain ideas clearly, design useful slides and handle questions",
+      "capstoneDeliverable": "Prepare and rehearse a three-minute presentation",
+      "reviewCadenceDays": 365,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Message and Structure",
+          "learningObjective": "Define an audience, a promise and a logical narrative",
+          "levelTarget": 6,
+          "exampleLevel": "Turn five ideas into a coherent outline"
+        },
+        {
+          "title": "Visual Storytelling",
+          "learningObjective": "Use accessible slides that support, not replace, speech",
+          "levelTarget": 6,
+          "exampleLevel": "Remove clutter from a comparison slide"
+        },
+        {
+          "title": "Delivery and Confidence",
+          "learningObjective": "Practice pacing, pausing and understandable language",
+          "levelTarget": 6,
+          "exampleLevel": "Simplify a jargon-heavy introduction"
+        },
+        {
+          "title": "Q&A and Capstone",
+          "learningObjective": "Respond to questions honestly and gather feedback",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver a three-minute sample talk"
+        }
+      ]
+    },
+    {
+      "slug": "applied-ai-workflows",
+      "title": "Applied AI for Work",
+      "wave": 3,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Students, office workers and freelancers who know AI basics",
+      "learningOutcome": "Plan safe AI-assisted workflows, verify outputs and document accountability",
+      "capstoneDeliverable": "Design a repeatable AI-assisted task workflow with human checks",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Workflow Identification",
+          "learningObjective": "Choose bounded, appropriate tasks for AI assistance",
+          "levelTarget": 6,
+          "exampleLevel": "Identify where automation should stop"
+        },
+        {
+          "title": "Prompt and Tool Patterns",
+          "learningObjective": "Create structured instructions and reusable templates",
+          "levelTarget": 6,
+          "exampleLevel": "Design a reusable meeting-summary prompt"
+        },
+        {
+          "title": "Verification and Privacy",
+          "learningObjective": "Check claims, sources, permissions and sensitive inputs",
+          "levelTarget": 6,
+          "exampleLevel": "Audit an inaccurate AI-generated report"
+        },
+        {
+          "title": "Applied AI Capstone",
+          "learningObjective": "Document a human-reviewed repeatable workflow",
+          "levelTarget": 6,
+          "exampleLevel": "Build a verified weekly reporting process"
+        }
+      ]
+    },
+    {
+      "slug": "wordpress-website-building",
+      "title": "WordPress Website Building",
+      "wave": 3,
+      "category": "digital-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Beginner web creators and small-business teams",
+      "learningOutcome": "Plan, assemble and test a basic accessible business website",
+      "capstoneDeliverable": "Build a sample business website in a sandbox environment",
+      "reviewCadenceDays": 90,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Site Planning",
+          "learningObjective": "Define audiences, pages, content and responsibilities",
+          "levelTarget": 6,
+          "exampleLevel": "Map the essential pages for a cafe"
+        },
+        {
+          "title": "Pages and Content",
+          "learningObjective": "Use accessible headings, images and contact details",
+          "levelTarget": 6,
+          "exampleLevel": "Build a clear service landing page"
+        },
+        {
+          "title": "Forms and Basic SEO",
+          "learningObjective": "Validate forms, site navigation and helpful metadata",
+          "levelTarget": 6,
+          "exampleLevel": "Review a contact form for privacy"
+        },
+        {
+          "title": "Launch and Maintenance",
+          "learningObjective": "Check backups, mobile behavior and maintenance",
+          "levelTarget": 6,
+          "exampleLevel": "Prepare a safe website launch checklist"
+        }
+      ]
+    },
+    {
+      "slug": "ecommerce-online-selling",
+      "title": "E-commerce & Online Selling",
+      "wave": 3,
+      "category": "business",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Online sellers and early-stage ecommerce operators",
+      "learningOutcome": "List products accurately and plan simple order and support workflows",
+      "capstoneDeliverable": "Create a sample product catalogue and order-handling plan",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Product and Customer Fit",
+          "learningObjective": "Describe benefits, availability and constraints truthfully",
+          "levelTarget": 6,
+          "exampleLevel": "Rewrite an unclear product listing"
+        },
+        {
+          "title": "Pricing and Stock Basics",
+          "learningObjective": "Track costs, stock and simple sales margins",
+          "levelTarget": 6,
+          "exampleLevel": "Calculate an example contribution margin"
+        },
+        {
+          "title": "Checkout and Fulfillment",
+          "learningObjective": "Map customer journeys, dispatch and order exceptions",
+          "levelTarget": 6,
+          "exampleLevel": "Resolve a sample out-of-stock order"
+        },
+        {
+          "title": "Seller Operations Capstone",
+          "learningObjective": "Build a transparent store operations checklist",
+          "levelTarget": 6,
+          "exampleLevel": "Deliver a ten-product mock catalogue"
+        }
+      ]
+    },
+    {
+      "slug": "sales-client-negotiation",
+      "title": "Sales & Client Negotiation",
+      "wave": 3,
+      "category": "business",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Junior salespeople, freelancers and business owners",
+      "learningOutcome": "Discover client needs, propose fairly and handle objections with evidence",
+      "capstoneDeliverable": "Prepare a discovery script, proposal and follow-up sequence",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Needs Discovery",
+          "learningObjective": "Ask meaningful questions without pressuring clients",
+          "levelTarget": 6,
+          "exampleLevel": "Clarify an ambiguous sales requirement"
+        },
+        {
+          "title": "Proposal and Pricing",
+          "learningObjective": "Describe deliverables, scope and cost transparently",
+          "levelTarget": 6,
+          "exampleLevel": "Compare two proposal options objectively"
+        },
+        {
+          "title": "Objections and Boundaries",
+          "learningObjective": "Respond to concerns without fabricated urgency",
+          "levelTarget": 6,
+          "exampleLevel": "Handle a budget objection respectfully"
+        },
+        {
+          "title": "Sales Conversation Capstone",
+          "learningObjective": "Write a complete consultative sales sequence",
+          "levelTarget": 6,
+          "exampleLevel": "Present a transparent sample offer"
+        }
+      ]
+    },
+    {
+      "slug": "personal-budgeting-money-management",
+      "title": "Personal Budgeting & Money Management",
+      "wave": 3,
+      "category": "life-skills",
+      "proposedStatus": "draft_not_for_publication",
+      "audience": "Students and young adults building daily financial habits",
+      "learningOutcome": "Make simple budgets and informed everyday money decisions",
+      "capstoneDeliverable": "Prepare a flexible 30-day budget and emergency-fund goal",
+      "reviewCadenceDays": 180,
+      "levelTarget": 24,
+      "minimumReviewers": [
+        "subject_editor",
+        "language_or_accessibility_reviewer",
+        "publisher"
+      ],
+      "modules": [
+        {
+          "title": "Income and Spending",
+          "learningObjective": "Track cash flow, needs and recurring expenses",
+          "levelTarget": 6,
+          "exampleLevel": "Categorize one month of sample spending"
+        },
+        {
+          "title": "Budgeting and Savings",
+          "learningObjective": "Allocate a budget and adapt to unexpected costs",
+          "levelTarget": 6,
+          "exampleLevel": "Build a realistic savings goal"
+        },
+        {
+          "title": "Borrowing and Trade-offs",
+          "learningObjective": "Compare basic borrowing costs without recommending products",
+          "levelTarget": 6,
+          "exampleLevel": "Identify a hidden fee in an example"
+        },
+        {
+          "title": "Fraud Awareness and Capstone",
+          "learningObjective": "Recognize common scams and complete a personal budget",
+          "levelTarget": 6,
+          "exampleLevel": "Create an emergency cash plan"
+        }
+      ]
+    }
+  ]
+}
