@@ -345,7 +345,7 @@ async function setVersionStatuses(
     const sourceState = !isLegacy && from === "draft" && to === "published" ? "approved" : from;
     const result = await db.query(
       `update ${table} set ${stateColumn} = $3,
-         reviewed_at = case when $3 = 'published' then $4 else reviewed_at end,
+         reviewed_at = case when $3 = 'published' and $2 = 'draft' then $4 else reviewed_at end,
          published_at = case when $3 = 'published' then now() else published_at end
        where id = any($1::uuid[]) and ${stateColumn} = $2`,
       [targets, sourceState, to, reviewedAt],
@@ -365,7 +365,8 @@ async function setVersionStatuses(
                 case when $1 = 'skill_version' then 'index' else 'noindex' end,
                 $3, $4, now(), now()
          on conflict (entity_type, entity_version_id)
-         do update set state = 'published', reviewed_at = $4,
+         do update set state = 'published',
+               reviewed_at = coalesce(content_publication_records.reviewed_at, $4),
                published_at = now(), updated_at = now()`,
         [entityType, targets, "/en/skills/" + slug, reviewedAt],
       );
