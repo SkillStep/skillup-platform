@@ -47,28 +47,45 @@ const order: VerifiedSkillupOrder = {
 describe("SkillUp authoritative GrowthOS checkout bridge", () => {
   it("remains off without explicit settings and refuses production without approval", () => {
     expect(readGrowthosBridgeConfig({}, "staging")).toBeNull();
-    expect(() => readGrowthosBridgeConfig({ GROWTHOS_CONVERSION_ENABLED: "true" }, "staging")).toThrow();
-    expect(() => readGrowthosBridgeConfig({
-      GROWTHOS_CONVERSION_ENABLED: "true",
-      GROWTHOS_CONVERSION_URL: cfg.url,
-      GROWTHOS_CONVERSION_SECRET: cfg.token,
-      GROWTHOS_BRAND_ID: brandId,
-    }, "production")).toThrow(/approval/);
+    expect(() =>
+      readGrowthosBridgeConfig({ GROWTHOS_CONVERSION_ENABLED: "true" }, "staging"),
+    ).toThrow();
+    expect(() =>
+      readGrowthosBridgeConfig(
+        {
+          GROWTHOS_CONVERSION_ENABLED: "true",
+          GROWTHOS_CONVERSION_URL: cfg.url,
+          GROWTHOS_CONVERSION_SECRET: cfg.token,
+          GROWTHOS_BRAND_ID: brandId,
+        },
+        "production",
+      ),
+    ).toThrow(/approval/);
   });
 
   it("requires explicit HTTPS, exact endpoint, product credentials and no redirects", () => {
-    expect(() => readGrowthosBridgeConfig({
-      GROWTHOS_CONVERSION_ENABLED: "true",
-      GROWTHOS_CONVERSION_URL: "https://attacker.example/api/conversions?callback=evil",
-      GROWTHOS_CONVERSION_SECRET: cfg.token,
-      GROWTHOS_BRAND_ID: brandId,
-    }, "staging")).toThrow(/explicit HTTPS/);
-    expect(readGrowthosBridgeConfig({
-      GROWTHOS_CONVERSION_ENABLED: "true",
-      GROWTHOS_CONVERSION_URL: cfg.url,
-      GROWTHOS_CONVERSION_SECRET: cfg.token,
-      GROWTHOS_BRAND_ID: brandId,
-    }, "staging")).toMatchObject({ brandId, testTraffic: true });
+    expect(() =>
+      readGrowthosBridgeConfig(
+        {
+          GROWTHOS_CONVERSION_ENABLED: "true",
+          GROWTHOS_CONVERSION_URL: "https://attacker.example/api/conversions?callback=evil",
+          GROWTHOS_CONVERSION_SECRET: cfg.token,
+          GROWTHOS_BRAND_ID: brandId,
+        },
+        "staging",
+      ),
+    ).toThrow(/explicit HTTPS/);
+    expect(
+      readGrowthosBridgeConfig(
+        {
+          GROWTHOS_CONVERSION_ENABLED: "true",
+          GROWTHOS_CONVERSION_URL: cfg.url,
+          GROWTHOS_CONVERSION_SECRET: cfg.token,
+          GROWTHOS_BRAND_ID: brandId,
+        },
+        "staging",
+      ),
+    ).toMatchObject({ brandId, testTraffic: true });
   });
 
   it("uses verified charged amount, stable order ID, and matching GrowthOS identities", () => {
@@ -77,9 +94,20 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
       idempotencyKey: "skillup-00000000-0000-4000-8000-000000000300",
       eventName: "subscription_started",
       occurredAt: "2026-11-13T12:02:00.000Z",
-      brandId, pageId, versionId, value: 990, currency: "PKR",
+      brandId,
+      pageId,
+      versionId,
+      value: 990,
+      currency: "PKR",
       attribution: { lastTouch: { source: "meta", campaign: "november-meta" } },
-      properties: { packageId, variationId, variationVersionId, packageCode: "1", marketingConsent: false, testTraffic: true },
+      properties: {
+        packageId,
+        variationId,
+        variationVersionId,
+        packageCode: "1",
+        marketingConsent: false,
+        testTraffic: true,
+      },
     });
   });
 
@@ -90,21 +118,49 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
     expect(buildGrowthosConversion({ ...order, amount_minor: 0 }, cfg)).toBeNull();
     expect(buildGrowthosConversion({ ...order, plan_code: "premium-yearly" }, cfg)).toBeNull();
     expect(buildGrowthosConversion({ ...order, attribution: {} }, cfg)).toBeNull();
-    expect(buildGrowthosConversion({ ...order, attribution: {
-      ...(order.attribution as Record<string, unknown>), growthos_package_code: "unknown",
-    } }, cfg)).toBeNull();
-    expect(buildGrowthosConversion({ ...order, attribution: {
-      ...(order.attribution as Record<string, unknown>), growthos_variation_version_id: "bad-uuid",
-    } }, cfg)).toBeNull();
+    expect(
+      buildGrowthosConversion(
+        {
+          ...order,
+          attribution: {
+            ...(order.attribution as Record<string, unknown>),
+            growthos_package_code: "unknown",
+          },
+        },
+        cfg,
+      ),
+    ).toBeNull();
+    expect(
+      buildGrowthosConversion(
+        {
+          ...order,
+          attribution: {
+            ...(order.attribution as Record<string, unknown>),
+            growthos_variation_version_id: "bad-uuid",
+          },
+        },
+        cfg,
+      ),
+    ).toBeNull();
   });
 
   it("maps the yearly charge to Purchase without inventing advertising consent", () => {
-    const payload = buildGrowthosConversion({
-      ...order, plan_code: "premium-yearly", amount_minor: 499900,
-      attribution: { ...(order.attribution as Record<string, unknown>), growthos_package_code: "2", utm_source: "T" },
-    }, cfg);
+    const payload = buildGrowthosConversion(
+      {
+        ...order,
+        plan_code: "premium-yearly",
+        amount_minor: 499900,
+        attribution: {
+          ...(order.attribution as Record<string, unknown>),
+          growthos_package_code: "2",
+          utm_source: "T",
+        },
+      },
+      cfg,
+    );
     expect(payload).toMatchObject({
-      eventName: "purchase", value: 4999,
+      eventName: "purchase",
+      value: 4999,
       attribution: { lastTouch: { source: "tiktok" } },
       properties: { marketingConsent: false, testTraffic: true },
     });
