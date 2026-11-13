@@ -345,7 +345,7 @@ async function setVersionStatuses(
     const sourceState = !isLegacy && from === "draft" && to === "published" ? "approved" : from;
     const result = await db.query(
       `update ${table} set ${stateColumn} = $3,
-         reviewed_at = case when $3 = 'published' and $2 = 'draft' then $4 else reviewed_at end,
+         reviewed_at = case when $3 = 'published' and $2 in ('draft', 'approved') then $4 else reviewed_at end,
          published_at = case when $3 = 'published' then now() else published_at end
        where id = any($1::uuid[]) and ${stateColumn} = $2`,
       [targets, sourceState, to, reviewedAt],
