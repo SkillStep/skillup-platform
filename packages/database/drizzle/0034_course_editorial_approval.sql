@@ -71,3 +71,29 @@ end;
 $$;
 create trigger course_submission_immutable before update on course_editorial_submissions
   for each row execute function course_editorial_submission_immutable();
+
+-- Preserve every previous editorial state transition. Restoration of an archived
+-- independently approved snapshot is possible ONLY with the transaction-local
+-- permission set by the publisher-only rollback service.
+create or replace function enforce_editorial_state_transition() returns trigger as $$
+begin
+  if new.state = old.state then return new; end if;
+  if old.state = 'archived' and new.state = 'published'
+     and current_setting('skillup.course_editorial_rollback', true) = 'approved' then
+    return new;
+  end if;
+  if not (
+    (old.state = 'draft' and new.state in ('in_review', 'rejected', 'archived')) or
+    (old.state = 'in_review' and new.state in ('draft', 'approved', 'rejected')) or
+    (old.state = 'approved' and new.state in ('draft', 'scheduled', 'published', 'rejected')) or
+    (old.state = 'scheduled' and new.state in ('approved', 'published', 'archived')) or
+    (old.state = 'published' and new.state in ('superseded', 'archived')) or
+    (old.state = 'superseded' and new.state = 'archived') or
+    (old.state = 'rejected' and new.state in ('draft', 'archived'))
+  ) then
+    raise exception 'Unsupported editorial transition from % to % on %',
+      old.state, new.state, tg_table_name;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
