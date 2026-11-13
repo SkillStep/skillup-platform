@@ -52,3 +52,12 @@ test("content reviewer can read review queue but cannot request or publish conte
   });
   expect(publish.status()).toBe(403);
 });
+
+test("content reviewer can enter the draft review endpoint without content publication", async ({
+  request,
+}) => {
+  const response = await request.get(
+    `/api/v1/admin/course-drafts/qa-nonexistent-${randomUUID()}/review-packet`,
+  );
+  expect(response.status()).toBe(404);
+});

@@ -38,9 +38,38 @@ export function CourseDraftsConsole() {
   const [items, setItems] = useState<readonly DraftCourse[]>([]);
   const [message, setMessage] = useState("Loading private draft course status…");
   const [loading, setLoading] = useState(true);
+  const [downloading, setDownloading] = useState<string | null>(null);
   const [refresh, setRefresh] = useState(0);
 
   const reload = useCallback(() => setRefresh((current) => current + 1), []);
+
+  async function downloadReviewerPacket(slug: string): Promise<void> {
+    setDownloading(slug);
+    try {
+      const response = await fetch(
+        "/api/v1/admin/course-drafts/" + encodeURIComponent(slug) + "/review-packet",
+        { credentials: "same-origin", cache: "no-store" },
+      );
+      if (response.status === 401 || response.status === 403) {
+        setMessage("A content-reviewer role is required to inspect private exercise answer keys.");
+        return;
+      }
+      if (!response.ok) throw new Error("The reviewer packet could not be generated.");
+      const packet = (await response.json()) as unknown;
+      const blob = new Blob([JSON.stringify(packet, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "skillup-" + slug + "-unapproved-review-packet.json";
+      link.click();
+      window.requestAnimationFrame(() => URL.revokeObjectURL(url));
+      setMessage("Private reviewer packet exported. This does not approve or publish the course.");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Reviewer export failed.");
+    } finally {
+      setDownloading(null);
+    }
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -97,6 +126,20 @@ export function CourseDraftsConsole() {
             <p>
               Subject review, language/accessibility review and publisher authorization have not
               been completed. This course is not part of the published Premium catalogue.
+            </p>
+            <button
+              type="button"
+              className={styles["button"]}
+              onClick={() => void downloadReviewerPacket(course.slug)}
+              disabled={downloading !== null}
+            >
+              {downloading === course.slug
+                ? "Preparing private packet…"
+                : "Export reviewer-only draft packet"}
+            </button>
+            <p className={styles["meta"]}>
+              Restricted to content reviewers. The JSON includes confidential answer keys; never
+              publish, share publicly or use as evidence of completed human review.
             </p>
           </li>
         ))}

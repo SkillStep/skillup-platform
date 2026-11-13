@@ -300,6 +300,7 @@ export type ContentOperationsService = Readonly<{
     query: z.infer<typeof AdminListQuerySchema>,
   ) => Promise<readonly Record<string, unknown>[]>;
   listCourseDrafts: () => Promise<readonly Record<string, unknown>[]>;
+  getCourseDraftReviewPacket: (slug: string) => Promise<Record<string, unknown>>;
   create: (
     actor: AdminIdentity,
     input: z.infer<typeof ContentInputSchema>,
@@ -459,6 +460,91 @@ export function createContentOperationsService(
         draftChallenges: row.draft_challenges,
         reviewStatus: "not_approved",
       }));
+    },
+
+    // This worksheet deliberately contains private answer keys. It is *only* exposed
+    // through the content_reviewer RBAC route below; never use it in public catalogue
+    // projections or a role-shared admin inventory.
+    getCourseDraftReviewPacket: async (slug) => {
+      const result = await options.pool.query<{
+        course_slug: string;
+        course_title: string;
+        module_slug: string;
+        module_title: string;
+        level_slug: string;
+        level_title: string;
+        learning_objective: string;
+        instructions: string;
+        challenge_type: string | null;
+        challenge_prompt: string | null;
+        explanation: string | null;
+        public_payload: Record<string, unknown> | null;
+        private_evaluation: Record<string, unknown> | null;
+      }>(
+        `
+        select s.slug as course_slug, sv.title as course_title,
+               m.slug as module_slug, mv.title as module_title,
+               lv.slug as level_slug, lvlv.title as level_title,
+               lvlv.public_summary as learning_objective, lvlv.instructions,
+               cv.type as challenge_type, cv.prompt as challenge_prompt,
+               cv.explanation, cv.public_payload, ce.private_evaluation
+          from skills s
+          join lateral (
+            select title from skill_versions
+             where skill_id = s.id and locale = 'en' and status = 'draft'
+             order by version desc limit 1
+          ) sv on true
+          join learning_paths p on p.skill_id = s.id and p.status = 'draft'
+          join learning_modules m on m.learning_path_id = p.id
+          join lateral (
+            select title from learning_module_versions
+             where module_id = m.id and locale = 'en' and state = 'draft'
+             order by version desc limit 1
+          ) mv on true
+          join lessons les on les.module_id = m.id
+          join levels lv on lv.lesson_id = les.id
+          join lateral (
+            select id, title, public_summary, instructions from level_versions
+             where level_id = lv.id and locale = 'en' and state = 'draft'
+             order by version desc limit 1
+          ) lvlv on true
+          left join challenges ch on ch.level_id = lv.id
+          left join lateral (
+            select id, type, prompt, explanation, public_payload
+              from challenge_versions
+             where challenge_id = ch.id and level_version_id = lvlv.id
+               and locale = 'en' and state = 'draft'
+             order by version desc limit 1
+          ) cv on true
+          left join challenge_evaluations ce on ce.challenge_version_id = cv.id
+         where s.slug = $1 and s.status = 'draft'
+         order by m.sort_order, les.sort_order, lv.sort_order, ch.sort_order
+         limit 200
+        `,
+        [slug],
+      );
+      if (result.rows.length === 0) {
+        throw new ContentOperationsError(404, "The private course draft was not found.");
+      }
+      return {
+        courseSlug: result.rows[0]!.course_slug,
+        courseTitle: result.rows[0]!.course_title,
+        publicationAllowed: false,
+        reviewStatus: "subject_and_accessibility_review_pending",
+        items: result.rows.map((row) => ({
+          moduleSlug: row.module_slug,
+          moduleTitle: row.module_title,
+          levelSlug: row.level_slug,
+          levelTitle: row.level_title,
+          learningObjective: row.learning_objective,
+          instructions: row.instructions,
+          challengeType: row.challenge_type,
+          challengePrompt: row.challenge_prompt,
+          explanation: row.explanation,
+          publicPayload: row.public_payload,
+          privateEvaluation: row.private_evaluation,
+        })),
+      };
     },
 
     create: async (actor, input) => {
@@ -878,6 +964,23 @@ export function registerContentOperationsRoutes(
     await requireAdminRoles(request, options, ["content_editor", "content_reviewer", "publisher"]);
     reply.header("cache-control", "private, no-store");
     return { courses: await options.contentService.listCourseDrafts() };
+  });
+
+  // Private exercise answer keys are returned only to independent content reviewers.
+  // Drafts remain draft; this read-only endpoint cannot approve or publish.
+  app.get("/v1/admin/course-drafts/:slug/review-packet", async (request, reply) => {
+    await requireAdminRoles(request, options, ["content_reviewer"]);
+    const { slug } = z
+      .object({
+        slug: z
+          .string()
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .max(120),
+      })
+      .parse(request.params);
+    reply.header("cache-control", "private, no-store");
+    reply.header("x-robots-tag", "noindex, nofollow");
+    return { packet: await options.contentService.getCourseDraftReviewPacket(slug) };
   });
 
   app.post("/v1/admin/content", async (request, reply) => {
