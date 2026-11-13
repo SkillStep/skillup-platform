@@ -168,25 +168,45 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
 
   it("accepts verified 201 and duplicate 200; retries ambiguous or rate-limited responses", async () => {
     const body = buildGrowthosConversion(order, cfg)!;
-    const accepted = vi.fn(async (_url: RequestInfo | URL, _init?: RequestInit) =>
-      new Response(JSON.stringify({ accepted: true }), { status: 201 }));
-    expect(await submitGrowthosConversion(body, cfg, accepted)).toMatchObject({ outcome: "delivered", httpStatus: 201 });
+    const accepted = vi.fn(
+      async (_url: RequestInfo | URL, _init?: RequestInit) =>
+        new Response(JSON.stringify({ accepted: true }), { status: 201 }),
+    );
+    expect(await submitGrowthosConversion(body, cfg, accepted)).toMatchObject({
+      outcome: "delivered",
+      httpStatus: 201,
+    });
     const init = accepted.mock.calls[0]?.[1];
     expect(init?.redirect).toBe("manual");
     expect(init?.headers).toMatchObject({ authorization: `Bearer ${cfg.token}` });
-    expect(await submitGrowthosConversion(body, cfg, async () =>
-      new Response(JSON.stringify({ accepted: true, duplicate: true }), { status: 200 })))
-      .toMatchObject({ outcome: "delivered", httpStatus: 200 });
-    expect(await submitGrowthosConversion(body, cfg, async () =>
-      new Response(JSON.stringify({ accepted: false }), { status: 200 })))
-      .toMatchObject({ outcome: "retry", reason: "unconfirmed_response" });
-    expect(await submitGrowthosConversion(body, cfg, async () =>
-      new Response("slow", { status: 429 }))).toMatchObject({ outcome: "retry" });
-    expect(await submitGrowthosConversion(body, cfg, async () =>
-      new Response("error", { status: 401 }))).toMatchObject({ outcome: "blocked" });
-    expect(await submitGrowthosConversion(body, cfg, async () => { throw Error("offline"); }))
-      .toMatchObject({ outcome: "retry", reason: "network_error" });
-    expect(await submitGrowthosConversion(body, cfg, async () =>
-      new Response(null, { status: 302 }))).toMatchObject({ outcome: "blocked", reason: "redirect_rejected" });
+    expect(
+      await submitGrowthosConversion(
+        body,
+        cfg,
+        async () =>
+          new Response(JSON.stringify({ accepted: true, duplicate: true }), { status: 200 }),
+      ),
+    ).toMatchObject({ outcome: "delivered", httpStatus: 200 });
+    expect(
+      await submitGrowthosConversion(
+        body,
+        cfg,
+        async () => new Response(JSON.stringify({ accepted: false }), { status: 200 }),
+      ),
+    ).toMatchObject({ outcome: "retry", reason: "unconfirmed_response" });
+    expect(
+      await submitGrowthosConversion(body, cfg, async () => new Response("slow", { status: 429 })),
+    ).toMatchObject({ outcome: "retry" });
+    expect(
+      await submitGrowthosConversion(body, cfg, async () => new Response("error", { status: 401 })),
+    ).toMatchObject({ outcome: "blocked" });
+    expect(
+      await submitGrowthosConversion(body, cfg, async () => {
+        throw Error("offline");
+      }),
+    ).toMatchObject({ outcome: "retry", reason: "network_error" });
+    expect(
+      await submitGrowthosConversion(body, cfg, async () => new Response(null, { status: 302 })),
+    ).toMatchObject({ outcome: "blocked", reason: "redirect_rejected" });
   });
 });
