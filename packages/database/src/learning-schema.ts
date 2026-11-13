@@ -630,12 +630,12 @@ export const courseEditorialSubmissions = pgTable(
     index("course_editorial_skill_history").on(table.skillId, table.submittedAt),
     index("course_editorial_review_queue").on(table.status, table.submittedAt),
     uniqueIndex("course_editorial_one_active_submission").on(table.skillId).where(
-      sql`${table.status` in ('submitted', 'approved')`,
+      sql`${table.status} in ('submitted', 'approved')`,
     ),
-    check("course_editorial_digest_format", sql`${table.contentDigest` ~ '^[0-9a-f]{64}$'`),
-    check("course_editorial_manifest_object", sql`jsonb_typeof(${table.versionManifest`) = 'object'`),
-    check("course_editorial_reason_length", sql`char_length(${table.reason`) between 12 and 1000`),
-    check("course_editorial_status_allowed", sql`${table.status` in ('submitted','changes_requested','approved','published','superseded','withdrawn')`),
+    check("course_editorial_digest_format", sql`${table.contentDigest} ~ '^[0-9a-f]{64}$'`),
+    check("course_editorial_manifest_object", sql`jsonb_typeof(${table.versionManifest}) = 'object'`),
+    check("course_editorial_reason_length", sql`char_length(${table.reason}) between 12 and 1000`),
+    check("course_editorial_status_allowed", sql`${table.status} in ('submitted','changes_requested','approved','published','superseded','withdrawn')`),
   ],
 );
 
@@ -655,8 +655,8 @@ export const courseEditorialReviews = pgTable(
   (table) => [
     uniqueIndex("course_editorial_reviews_submission_id_review_kind_unique").on(table.submissionId, table.reviewKind),
     index("course_editorial_reviews_submission").on(table.submissionId),
-    check("course_editorial_review_kind_allowed", sql`${table.reviewKind` in ('subject','accessibility')`),
-    check("course_editorial_review_decision_allowed", sql`${table.decision` in ('approve','request_changes')`),
+    check("course_editorial_review_kind_allowed", sql`${table.reviewKind} in ('subject','accessibility')`),
+    check("course_editorial_review_decision_allowed", sql`${table.decision} in ('approve','request_changes')`),
   ],
 );
 
