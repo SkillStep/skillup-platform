@@ -25,7 +25,10 @@ export default async function CourseEditorialPage({ params }: PageProps) {
         <header className={styles["header"]}>
           <p className="eyebrow">Private editorial administration</p>
           <h1>Course review and publishing</h1>
-          <p>Separate human approval, frozen versions, complete audit evidence and reversible release control.</p>
+          <p>
+            Separate human approval, frozen versions, complete audit evidence and reversible release
+            control.
+          </p>
         </header>
         <PremiumAuthBoundary>
           <CourseEditorialConsole />

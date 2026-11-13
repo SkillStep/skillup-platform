@@ -81,23 +81,31 @@ const ContentPatchSchema = ContentEditableFieldsSchema.partial()
     }
   });
 
-
 const CourseSlugParamsSchema = z.object({
-  slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .max(120),
 });
-const EditorialReasonSchema = z.object({
-  reason: z.string().trim().min(12).max(1000),
-}).strict();
-const EditorialReviewSchema = z.object({
-  reason: z.string().trim().min(12).max(1500),
-  kind: z.enum(["subject", "accessibility"]),
-  decision: z.enum(["approve", "request_changes"]),
-  checklist: z.record(z.string(), z.boolean()),
-}).strict();
-const EditorialPublishSchema = z.object({
-  reason: z.string().trim().min(12).max(1000),
-  stagingEvidenceUrl: z.url().startsWith("https://").max(500),
-}).strict();
+const EditorialReasonSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1000),
+  })
+  .strict();
+const EditorialReviewSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1500),
+    kind: z.enum(["subject", "accessibility"]),
+    decision: z.enum(["approve", "request_changes"]),
+    checklist: z.record(z.string(), z.boolean()),
+  })
+  .strict();
+const EditorialPublishSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1000),
+    stagingEvidenceUrl: z.url().startsWith("https://").max(500),
+  })
+  .strict();
 
 const PublicListQuerySchema = z.object({
   kind: KindSchema.optional(),
@@ -1009,7 +1017,6 @@ export function registerContentOperationsRoutes(
     return { packet: await options.contentService.getCourseDraftReviewPacket(slug) };
   });
 
-
   // All authoring decisions use a database transaction, frozen fingerprint,
   // real authenticated account and a non-overlapping server-authorized role.
   app.get("/v1/admin/course-drafts/:slug/editorial", async (request, reply) => {
@@ -1025,7 +1032,9 @@ export function registerContentOperationsRoutes(
     const { admin } = await requireAdminRoles(request, options, ["content_editor"]);
     const { slug } = CourseSlugParamsSchema.parse(request.params);
     const submission = await options.contentService.editorial.submit(
-      admin, slug, EditorialReasonSchema.parse(request.body),
+      admin,
+      slug,
+      EditorialReasonSchema.parse(request.body),
     );
     return reply.status(201).send({ submission });
   });
@@ -1034,18 +1043,26 @@ export function registerContentOperationsRoutes(
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["content_reviewer"]);
     const { id } = IdParamsSchema.parse(request.params);
-    return { submission: await options.contentService.editorial.review(
-      admin, id, EditorialReviewSchema.parse(request.body),
-    ) };
+    return {
+      submission: await options.contentService.editorial.review(
+        admin,
+        id,
+        EditorialReviewSchema.parse(request.body),
+      ),
+    };
   });
 
   app.post("/v1/admin/course-submissions/:id/publish", async (request) => {
     requireTrustedRequestOrigin(request, options.config);
     const { admin } = await requireAdminRoles(request, options, ["publisher"]);
     const { id } = IdParamsSchema.parse(request.params);
-    return { submission: await options.contentService.editorial.publish(
-      admin, id, EditorialPublishSchema.parse(request.body),
-    ) };
+    return {
+      submission: await options.contentService.editorial.publish(
+        admin,
+        id,
+        EditorialPublishSchema.parse(request.body),
+      ),
+    };
   });
 
   for (const action of ["withdraw", "rollback"] as const) {
@@ -1053,9 +1070,13 @@ export function registerContentOperationsRoutes(
       requireTrustedRequestOrigin(request, options.config);
       const { admin } = await requireAdminRoles(request, options, ["publisher"]);
       const { id } = IdParamsSchema.parse(request.params);
-      return { submission: await options.contentService.editorial[action](
-        admin, id, EditorialReasonSchema.parse(request.body),
-      ) };
+      return {
+        submission: await options.contentService.editorial[action](
+          admin,
+          id,
+          EditorialReasonSchema.parse(request.body),
+        ),
+      };
     });
   }
 

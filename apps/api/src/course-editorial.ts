@@ -6,7 +6,10 @@ import type { PoolClient } from "pg";
 import type { AdminIdentity } from "./admin.js";
 
 export class CourseEditorialError extends Error {
-  constructor(readonly statusCode: number, message: string) {
+  constructor(
+    readonly statusCode: number,
+    message: string,
+  ) {
     super(message);
     this.name = "CourseEditorialError";
   }
@@ -20,20 +23,40 @@ type ReviewInput = EditorialInput &
   Readonly<{ kind: ReviewKind; decision: Decision; checklist: Record<string, boolean> }>;
 type PublishInput = EditorialInput & Readonly<{ stagingEvidenceUrl: string }>;
 type SubmissionRow = {
-  id: string; skill_id: string; path_id: string; content_digest: string;
-  version_manifest: Record<string, unknown>; submitted_by: string; status: string;
-  published_by: string | null; published_at: Date | null; submitted_at: Date;
+  id: string;
+  skill_id: string;
+  path_id: string;
+  content_digest: string;
+  version_manifest: Record<string, unknown>;
+  submitted_by: string;
+  status: string;
+  published_by: string | null;
+  published_at: Date | null;
+  submitted_at: Date;
 };
 
 type Candidate = Readonly<{
-  slug: string; skillId: string; pathId: string; digest: string;
+  slug: string;
+  skillId: string;
+  pathId: string;
+  digest: string;
   manifest: Record<string, unknown>;
   counts: Readonly<{ modules: number; levels: number; challenges: number }>;
 }>;
 
 const requiredChecklists: Record<ReviewKind, readonly string[]> = {
-  subject: ["facts_verified", "answer_keys_verified", "source_rights_verified", "assessments_verified"],
-  accessibility: ["language_checked", "keyboard_mobile_checked", "accessibility_checked", "capstone_verified"],
+  subject: [
+    "facts_verified",
+    "answer_keys_verified",
+    "source_rights_verified",
+    "assessments_verified",
+  ],
+  accessibility: [
+    "language_checked",
+    "keyboard_mobile_checked",
+    "accessibility_checked",
+    "capstone_verified",
+  ],
 };
 const digestPattern = /^[a-f0-9]{64}$/;
 
@@ -57,7 +80,9 @@ function canonical(data: unknown): unknown {
   return data;
 }
 function stableHash(data: unknown): string {
-  return createHash("sha256").update(JSON.stringify(canonical(data))).digest("hex");
+  return createHash("sha256")
+    .update(JSON.stringify(canonical(data)))
+    .digest("hex");
 }
 function ids(manifest: Record<string, unknown>, key: string): string[] {
   const value = manifest[key];
@@ -67,7 +92,8 @@ function ids(manifest: Record<string, unknown>, key: string): string[] {
   return value as string[];
 }
 async function inTransaction<T>(
-  pool: DatabaseClient["pool"], action: (db: PoolClient) => Promise<T>,
+  pool: DatabaseClient["pool"],
+  action: (db: PoolClient) => Promise<T>,
 ): Promise<T> {
   const db = await pool.connect();
   try {
@@ -88,15 +114,21 @@ async function lockSkill(db: PoolClient, skillId: string): Promise<void> {
 }
 async function loadSubmission(db: PoolClient, id: string): Promise<SubmissionRow> {
   const result = await db.query<SubmissionRow>(
-    "select * from course_editorial_submissions where id = $1 for update", [id],
+    "select * from course_editorial_submissions where id = $1 for update",
+    [id],
   );
   const row = result.rows[0];
   if (!row) throw new CourseEditorialError(404, "The course submission was not found.");
   return row;
 }
 async function audit(
-  db: PoolClient, id: string, actorId: string, action: string,
-  reason: string, digest: string, metadata: Record<string, unknown> = {},
+  db: PoolClient,
+  id: string,
+  actorId: string,
+  action: string,
+  reason: string,
+  digest: string,
+  metadata: Record<string, unknown> = {},
 ): Promise<void> {
   await db.query(
     `insert into course_editorial_events
@@ -108,9 +140,13 @@ async function audit(
 
 async function loadCandidate(db: PoolClient, slug: string): Promise<Candidate> {
   const head = await db.query<{
-    skill_id: string; path_id: string; slug: string;
-    skill_version_id: string; path_version_id: string;
-    skill_material: unknown; path_material: unknown;
+    skill_id: string;
+    path_id: string;
+    slug: string;
+    skill_version_id: string;
+    path_version_id: string;
+    skill_material: unknown;
+    path_material: unknown;
   }>(
     `select s.id as skill_id, s.slug, p.id as path_id,
         sv.id as skill_version_id, pv.id as path_version_id,
@@ -133,19 +169,29 @@ async function loadCandidate(db: PoolClient, slug: string): Promise<Candidate> {
         and pv.version = (select max(version) from learning_path_versions where learning_path_id = p.id and locale = s.default_locale)`,
     [slug],
   );
-  if (head.rows.length !== 1) incompatible("Exactly one complete, latest draft hierarchy is required.");
+  if (head.rows.length !== 1)
+    incompatible("Exactly one complete, latest draft hierarchy is required.");
   const root = head.rows[0]!;
 
   // Left joins are intentional: missing draft versions cannot be hidden by an inner join.
   // Each row also fingerprints confidential evaluator keys, options, objective and sources.
   const data = await db.query<{
-    module_id: string; module_version_id: string | null;
-    lesson_id: string | null; lesson_version_id: string | null;
-    level_id: string | null; level_version_id: string | null;
-    challenge_id: string | null; challenge_version_id: string | null;
-    module_material: unknown; lesson_material: unknown; level_material: unknown;
-    challenge_material: unknown; evaluation_material: unknown;
-    answer_options: unknown; source_references: unknown; learning_objectives: unknown;
+    module_id: string;
+    module_version_id: string | null;
+    lesson_id: string | null;
+    lesson_version_id: string | null;
+    level_id: string | null;
+    level_version_id: string | null;
+    challenge_id: string | null;
+    challenge_version_id: string | null;
+    module_material: unknown;
+    lesson_material: unknown;
+    level_material: unknown;
+    challenge_material: unknown;
+    evaluation_material: unknown;
+    answer_options: unknown;
+    source_references: unknown;
+    learning_objectives: unknown;
   }>(
     `select m.id as module_id, mv.id as module_version_id,
          les.id as lesson_id, lessv.id as lesson_version_id,
@@ -190,8 +236,9 @@ async function loadCandidate(db: PoolClient, slug: string): Promise<Candidate> {
     [root.path_id, root.path_version_id],
   );
   const rows = data.rows;
-  const unique = (field: keyof (typeof rows)[number]): string[] =>
-    [...new Set(rows.map((r) => r[field]).filter((v): v is string => typeof v === "string"))];
+  const unique = (field: keyof (typeof rows)[number]): string[] => [
+    ...new Set(rows.map((r) => r[field]).filter((v): v is string => typeof v === "string")),
+  ];
   const modules = unique("module_id");
   const moduleVersions = unique("module_version_id");
   const lessonVersions = unique("lesson_version_id");
@@ -200,48 +247,79 @@ async function loadCandidate(db: PoolClient, slug: string): Promise<Candidate> {
   const levels = unique("level_id");
   const challenges = unique("challenge_id");
 
-  if (modules.length !== 4 || moduleVersions.length !== modules.length ||
-      levels.length !== 24 || levelVersions.length !== levels.length ||
-      lessonVersions.length !== levels.length || challenges.length < 72 ||
-      challengeVersions.length !== challenges.length ||
-      rows.some((r) => !r.module_version_id || !r.lesson_version_id ||
-        !r.level_version_id || !r.challenge_version_id ||
-        !r.evaluation_material || Object.keys(r.evaluation_material as object).length === 0 ||
-        !Array.isArray(r.source_references) || r.source_references.length === 0 ||
-        !Array.isArray(r.learning_objectives) || r.learning_objectives.length === 0) ||
-      levels.some((id) => rows.filter((r) => r.level_id === id).length < 3)) {
-    incompatible("AIFS cannot submit outlines or incomplete courses: require 4 modules, 24 complete levels, 3+ evaluated exercises per level, provenance and assessable objectives.");
+  if (
+    modules.length !== 4 ||
+    moduleVersions.length !== modules.length ||
+    levels.length !== 24 ||
+    levelVersions.length !== levels.length ||
+    lessonVersions.length !== levels.length ||
+    challenges.length < 72 ||
+    challengeVersions.length !== challenges.length ||
+    rows.some(
+      (r) =>
+        !r.module_version_id ||
+        !r.lesson_version_id ||
+        !r.level_version_id ||
+        !r.challenge_version_id ||
+        !r.evaluation_material ||
+        Object.keys(r.evaluation_material as object).length === 0 ||
+        !Array.isArray(r.source_references) ||
+        r.source_references.length === 0 ||
+        !Array.isArray(r.learning_objectives) ||
+        r.learning_objectives.length === 0,
+    ) ||
+    levels.some((id) => rows.filter((r) => r.level_id === id).length < 3)
+  ) {
+    incompatible(
+      "AIFS cannot submit outlines or incomplete courses: require 4 modules, 24 complete levels, 3+ evaluated exercises per level, provenance and assessable objectives.",
+    );
   }
 
   const material = { skill: root.skill_material, path: root.path_material, rows };
   const digest = stableHash(material);
   if (!digestPattern.test(digest)) incompatible("Invalid content digest.");
   return {
-    slug: root.slug, skillId: root.skill_id, pathId: root.path_id, digest,
+    slug: root.slug,
+    skillId: root.skill_id,
+    pathId: root.path_id,
+    digest,
     counts: { modules: modules.length, levels: levels.length, challenges: challenges.length },
     manifest: {
-      skill: [root.skill_version_id], path: [root.path_version_id],
-      module: moduleVersions, lesson: lessonVersions,
-      level: levelVersions, challenge: challengeVersions,
+      skill: [root.skill_version_id],
+      path: [root.path_version_id],
+      module: moduleVersions,
+      lesson: lessonVersions,
+      level: levelVersions,
+      challenge: challengeVersions,
       counts: { modules: modules.length, levels: levels.length, challenges: challenges.length },
     },
   };
 }
 
 const versionTables = [
-  ["skill", "skill_versions", "status"], ["path", "learning_path_versions", "status"],
-  ["module", "learning_module_versions", "state"], ["lesson", "lesson_versions", "state"],
-  ["level", "level_versions", "state"], ["challenge", "challenge_versions", "state"],
+  ["skill", "skill_versions", "status"],
+  ["path", "learning_path_versions", "status"],
+  ["module", "learning_module_versions", "state"],
+  ["lesson", "lesson_versions", "state"],
+  ["level", "level_versions", "state"],
+  ["challenge", "challenge_versions", "state"],
 ] as const;
 const recordTypes: Record<string, string> = {
-  skill: "skill_version", path: "learning_path_version", module: "module_version",
-  lesson: "lesson_version", level: "level_version", challenge: "challenge_version",
+  skill: "skill_version",
+  path: "learning_path_version",
+  module: "module_version",
+  lesson: "lesson_version",
+  level: "level_version",
+  challenge: "challenge_version",
 };
 
 async function setVersionStatuses(
-  db: PoolClient, manifest: Record<string, unknown>,
-  from: "draft" | "published" | "archived", to: "published" | "archived",
-  reviewedAt: Date, slug: string,
+  db: PoolClient,
+  manifest: Record<string, unknown>,
+  from: "draft" | "published" | "archived",
+  to: "published" | "archived",
+  reviewedAt: Date,
+  slug: string,
 ): Promise<void> {
   for (const [key, table, stateColumn] of versionTables) {
     const targets = ids(manifest, key);
@@ -282,17 +360,40 @@ async function setVersionStatuses(
 }
 
 export type CourseEditorialService = Readonly<{
-  submit: (actor: AdminIdentity, slug: string, input: EditorialInput) => Promise<Record<string, unknown>>;
-  review: (actor: AdminIdentity, id: string, input: ReviewInput) => Promise<Record<string, unknown>>;
-  publish: (actor: AdminIdentity, id: string, input: PublishInput) => Promise<Record<string, unknown>>;
-  withdraw: (actor: AdminIdentity, id: string, input: EditorialInput) => Promise<Record<string, unknown>>;
-  rollback: (actor: AdminIdentity, id: string, input: EditorialInput) => Promise<Record<string, unknown>>;
+  submit: (
+    actor: AdminIdentity,
+    slug: string,
+    input: EditorialInput,
+  ) => Promise<Record<string, unknown>>;
+  review: (
+    actor: AdminIdentity,
+    id: string,
+    input: ReviewInput,
+  ) => Promise<Record<string, unknown>>;
+  publish: (
+    actor: AdminIdentity,
+    id: string,
+    input: PublishInput,
+  ) => Promise<Record<string, unknown>>;
+  withdraw: (
+    actor: AdminIdentity,
+    id: string,
+    input: EditorialInput,
+  ) => Promise<Record<string, unknown>>;
+  rollback: (
+    actor: AdminIdentity,
+    id: string,
+    input: EditorialInput,
+  ) => Promise<Record<string, unknown>>;
   history: (slug: string) => Promise<readonly Record<string, unknown>[]>;
 }>;
 
-export function createCourseEditorialService(options: Readonly<{
-  pool: DatabaseClient["pool"]; publishEnabled: boolean;
-}>): CourseEditorialService {
+export function createCourseEditorialService(
+  options: Readonly<{
+    pool: DatabaseClient["pool"];
+    publishEnabled: boolean;
+  }>,
+): CourseEditorialService {
   return {
     submit: async (actor, slug, input) => {
       requireRole(actor, "content_editor");
@@ -315,11 +416,25 @@ export function createCourseEditorialService(options: Readonly<{
           `insert into course_editorial_submissions
              (skill_id, path_id, content_digest, version_manifest, submitted_by, reason)
            values ($1, $2, $3, $4::jsonb, $5, $6) returning id`,
-          [candidate.skillId, candidate.pathId, candidate.digest,
-            JSON.stringify(candidate.manifest), actor.userId, input.reason],
+          [
+            candidate.skillId,
+            candidate.pathId,
+            candidate.digest,
+            JSON.stringify(candidate.manifest),
+            actor.userId,
+            input.reason,
+          ],
         );
         const id = inserted.rows[0]!.id;
-        await audit(db, id, actor.userId, "submit", input.reason, candidate.digest, candidate.counts);
+        await audit(
+          db,
+          id,
+          actor.userId,
+          "submit",
+          input.reason,
+          candidate.digest,
+          candidate.counts,
+        );
         return { id, status: "submitted", digest: candidate.digest, counts: candidate.counts };
       });
     },
@@ -328,37 +443,61 @@ export function createCourseEditorialService(options: Readonly<{
       requireRole(actor, "content_reviewer");
       return inTransaction(options.pool, async (db) => {
         const submission = await loadSubmission(db, id);
-        if (submission.status !== "submitted") incompatible("Only pending courses can be reviewed.");
-        if (submission.submitted_by === actor.userId) incompatible("An editor cannot review their own submission.");
+        if (submission.status !== "submitted")
+          incompatible("Only pending courses can be reviewed.");
+        if (submission.submitted_by === actor.userId)
+          incompatible("An editor cannot review their own submission.");
         await lockSkill(db, submission.skill_id);
         const candidate = await loadCandidateForSubmission(db, submission);
         const previous = await db.query<{ reviewer_user_id: string }>(
-          "select reviewer_user_id from course_editorial_reviews where submission_id = $1 for update", [id],
+          "select reviewer_user_id from course_editorial_reviews where submission_id = $1 for update",
+          [id],
         );
         if (previous.rows.some((r) => r.reviewer_user_id === actor.userId)) {
           incompatible("Subject and accessibility approvals require different human reviewers.");
         }
-        if (input.decision === "approve" && requiredChecklists[input.kind].some((key) => input.checklist[key] !== true)) {
-          incompatible("Every required checklist item must be independently checked before approval.");
+        if (
+          input.decision === "approve" &&
+          requiredChecklists[input.kind].some((key) => input.checklist[key] !== true)
+        ) {
+          incompatible(
+            "Every required checklist item must be independently checked before approval.",
+          );
         }
         await db.query(
           `insert into course_editorial_reviews
             (submission_id, review_kind, decision, reviewer_user_id, content_digest, checklist, reason)
             values ($1, $2, $3, $4, $5, $6::jsonb, $7)`,
-          [id, input.kind, input.decision, actor.userId, candidate.digest,
-            JSON.stringify(input.checklist), input.reason],
+          [
+            id,
+            input.kind,
+            input.decision,
+            actor.userId,
+            candidate.digest,
+            JSON.stringify(input.checklist),
+            input.reason,
+          ],
         );
-        const action = input.decision === "request_changes" ? "request_changes" : (
-          input.kind === "subject" ? "approve_subject" : "approve_accessibility"
-        );
-        await audit(db, id, actor.userId, action, input.reason, candidate.digest, { kind: input.kind });
+        const action =
+          input.decision === "request_changes"
+            ? "request_changes"
+            : input.kind === "subject"
+              ? "approve_subject"
+              : "approve_accessibility";
+        await audit(db, id, actor.userId, action, input.reason, candidate.digest, {
+          kind: input.kind,
+        });
         const reviewed = await db.query<{ count: number }>(
           `select count(*)::int as count from course_editorial_reviews
-              where submission_id = $1 and decision = 'approve'`, [id],
+              where submission_id = $1 and decision = 'approve'`,
+          [id],
         );
-        const status = input.decision === "request_changes"
-          ? "changes_requested"
-          : reviewed.rows[0]?.count === 2 ? "approved" : "submitted";
+        const status =
+          input.decision === "request_changes"
+            ? "changes_requested"
+            : reviewed.rows[0]?.count === 2
+              ? "approved"
+              : "submitted";
         await db.query(
           "update course_editorial_submissions set status = $2, updated_at = now() where id = $1",
           [id, status],
@@ -370,25 +509,50 @@ export function createCourseEditorialService(options: Readonly<{
     publish: async (actor, id, input) => {
       requireRole(actor, "publisher");
       if (!options.publishEnabled) {
-        throw new CourseEditorialError(403, "Course release is disabled until explicitly enabled for an authorized environment.");
+        throw new CourseEditorialError(
+          403,
+          "Course release is disabled until explicitly enabled for an authorized environment.",
+        );
       }
       return inTransaction(options.pool, async (db) => {
         const submission = await loadSubmission(db, id);
-        if (submission.status !== "approved") incompatible("Two independent signed reviews are required before publication.");
+        if (submission.status !== "approved")
+          incompatible("Two independent signed reviews are required before publication.");
         await lockSkill(db, submission.skill_id);
-        const reviews = await db.query<{ reviewer_user_id: string; review_kind: string; created_at: Date }>(
+        const reviews = await db.query<{
+          reviewer_user_id: string;
+          review_kind: string;
+          created_at: Date;
+        }>(
           `select reviewer_user_id, review_kind, created_at
              from course_editorial_reviews where submission_id = $1 and decision = 'approve'
-             order by review_kind`, [id],
+             order by review_kind`,
+          [id],
         );
-        if (reviews.rows.length !== 2 ||
-            reviews.rows.map((r) => r.review_kind).sort().join(",") !== "accessibility,subject" ||
-            new Set([submission.submitted_by, actor.userId, ...reviews.rows.map((r) => r.reviewer_user_id)]).size !== 4) {
-          incompatible("Publisher, submitter, subject reviewer and accessibility reviewer must be four distinct people.");
+        if (
+          reviews.rows.length !== 2 ||
+          reviews.rows
+            .map((r) => r.review_kind)
+            .sort()
+            .join(",") !== "accessibility,subject" ||
+          new Set([
+            submission.submitted_by,
+            actor.userId,
+            ...reviews.rows.map((r) => r.reviewer_user_id),
+          ]).size !== 4
+        ) {
+          incompatible(
+            "Publisher, submitter, subject reviewer and accessibility reviewer must be four distinct people.",
+          );
         }
         const candidate = await loadCandidateForSubmission(db, submission);
-        if (!input.stagingEvidenceUrl.startsWith("https://") || input.stagingEvidenceUrl.length > 500) {
-          incompatible("A trusted HTTPS course-specific staging QA evidence reference is required.");
+        if (
+          !input.stagingEvidenceUrl.startsWith("https://") ||
+          input.stagingEvidenceUrl.length > 500
+        ) {
+          incompatible(
+            "A trusted HTTPS course-specific staging QA evidence reference is required.",
+          );
         }
         const prior = await db.query<SubmissionRow>(
           `select * from course_editorial_submissions
@@ -397,25 +561,47 @@ export function createCourseEditorialService(options: Readonly<{
         );
         if (prior.rows.length > 1) incompatible("Conflicting published course versions.");
         if (prior.rows[0]) {
-          await setVersionStatuses(db, prior.rows[0].version_manifest, "published", "archived", new Date(), candidate.slug);
+          await setVersionStatuses(
+            db,
+            prior.rows[0].version_manifest,
+            "published",
+            "archived",
+            new Date(),
+            candidate.slug,
+          );
           await db.query(
             "update course_editorial_submissions set status = 'superseded', updated_at = now() where id = $1",
             [prior.rows[0].id],
           );
         }
         const reviewedAt = reviews.rows.reduce(
-          (latest, r) => r.created_at > latest ? r.created_at : latest, reviews.rows[0]!.created_at,
+          (latest, r) => (r.created_at > latest ? r.created_at : latest),
+          reviews.rows[0]!.created_at,
         );
-        await setVersionStatuses(db, candidate.manifest, "draft", "published", reviewedAt, candidate.slug);
-        await db.query("update skills set status = 'published', updated_at = now() where id = $1", [submission.skill_id]);
-        await db.query("update learning_paths set status = 'published', updated_at = now() where id = $1", [submission.path_id]);
+        await setVersionStatuses(
+          db,
+          candidate.manifest,
+          "draft",
+          "published",
+          reviewedAt,
+          candidate.slug,
+        );
+        await db.query("update skills set status = 'published', updated_at = now() where id = $1", [
+          submission.skill_id,
+        ]);
+        await db.query(
+          "update learning_paths set status = 'published', updated_at = now() where id = $1",
+          [submission.path_id],
+        );
         await db.query(
           `update course_editorial_submissions
              set status = 'published', published_at = now(), published_by = $2, updated_at = now()
-             where id = $1`, [id, actor.userId],
+             where id = $1`,
+          [id, actor.userId],
         );
         await audit(db, id, actor.userId, "publish", input.reason, candidate.digest, {
-          stagingEvidenceUrl: input.stagingEvidenceUrl, replacedSubmissionId: prior.rows[0]?.id ?? null,
+          stagingEvidenceUrl: input.stagingEvidenceUrl,
+          replacedSubmissionId: prior.rows[0]?.id ?? null,
         });
         return { id, status: "published", digest: candidate.digest };
       });
@@ -423,21 +609,35 @@ export function createCourseEditorialService(options: Readonly<{
 
     withdraw: async (actor, id, input) => {
       requireRole(actor, "publisher");
-      if (!options.publishEnabled) throw new CourseEditorialError(403, "Course withdrawal requires explicit release authority.");
+      if (!options.publishEnabled)
+        throw new CourseEditorialError(
+          403,
+          "Course withdrawal requires explicit release authority.",
+        );
       return inTransaction(options.pool, async (db) => {
         const submission = await loadSubmission(db, id);
-        if (submission.status !== "published") incompatible("Only a current published release can be withdrawn.");
+        if (submission.status !== "published")
+          incompatible("Only a current published release can be withdrawn.");
         await lockSkill(db, submission.skill_id);
         const slug = await skillSlug(db, submission.skill_id);
-        await setVersionStatuses(db, submission.version_manifest, "published", "archived", new Date(), slug);
+        await setVersionStatuses(
+          db,
+          submission.version_manifest,
+          "published",
+          "archived",
+          new Date(),
+          slug,
+        );
+        await db.query("update skills set status = 'archived', updated_at = now() where id = $1", [
+          submission.skill_id,
+        ]);
         await db.query(
-          "update skills set status = 'archived', updated_at = now() where id = $1", [submission.skill_id],
+          "update learning_paths set status = 'archived', updated_at = now() where id = $1",
+          [submission.path_id],
         );
         await db.query(
-          "update learning_paths set status = 'archived', updated_at = now() where id = $1", [submission.path_id],
-        );
-        await db.query(
-          "update course_editorial_submissions set status = 'withdrawn', updated_at = now() where id = $1", [id],
+          "update course_editorial_submissions set status = 'withdrawn', updated_at = now() where id = $1",
+          [id],
         );
         await audit(db, id, actor.userId, "withdraw", input.reason, submission.content_digest);
         return { id, status: "withdrawn", published: false };
@@ -446,10 +646,12 @@ export function createCourseEditorialService(options: Readonly<{
 
     rollback: async (actor, id, input) => {
       requireRole(actor, "publisher");
-      if (!options.publishEnabled) throw new CourseEditorialError(403, "Course rollback requires explicit release authority.");
+      if (!options.publishEnabled)
+        throw new CourseEditorialError(403, "Course rollback requires explicit release authority.");
       return inTransaction(options.pool, async (db) => {
         const current = await loadSubmission(db, id);
-        if (current.status !== "published") incompatible("Only the active course release may be rolled back.");
+        if (current.status !== "published")
+          incompatible("Only the active course release may be rolled back.");
         await lockSkill(db, current.skill_id);
         const prior = await db.query<SubmissionRow>(
           `select * from course_editorial_submissions
@@ -458,13 +660,30 @@ export function createCourseEditorialService(options: Readonly<{
           [current.skill_id],
         );
         const previous = prior.rows[0];
-        if (!previous) incompatible("No independently approved prior course release exists. Use withdrawal instead.");
+        if (!previous)
+          incompatible(
+            "No independently approved prior course release exists. Use withdrawal instead.",
+          );
         if (!previous.published_by || !previous.published_at) {
           incompatible("The prior course release lacks valid publication evidence.");
         }
         const slug = await skillSlug(db, current.skill_id);
-        await setVersionStatuses(db, current.version_manifest, "published", "archived", new Date(), slug);
-        await setVersionStatuses(db, previous.version_manifest, "archived", "published", previous.published_at, slug);
+        await setVersionStatuses(
+          db,
+          current.version_manifest,
+          "published",
+          "archived",
+          new Date(),
+          slug,
+        );
+        await setVersionStatuses(
+          db,
+          previous.version_manifest,
+          "archived",
+          "published",
+          previous.published_at,
+          slug,
+        );
         await db.query(
           "update course_editorial_submissions set status = 'superseded', updated_at = now() where id = $1",
           [current.id],
@@ -473,9 +692,18 @@ export function createCourseEditorialService(options: Readonly<{
           "update course_editorial_submissions set status = 'published', updated_at = now() where id = $1",
           [previous.id],
         );
-        await audit(db, current.id, actor.userId, "rollback", input.reason, current.content_digest, {
-          restoredReleaseId: previous.id, restoredDigest: previous.content_digest,
-        });
+        await audit(
+          db,
+          current.id,
+          actor.userId,
+          "rollback",
+          input.reason,
+          current.content_digest,
+          {
+            restoredReleaseId: previous.id,
+            restoredDigest: previous.content_digest,
+          },
+        );
         return { id: previous.id, status: "published", rolledBackReleaseId: current.id };
       });
     },
@@ -502,7 +730,8 @@ export function createCourseEditorialService(options: Readonly<{
                   ),'[]'::jsonb) as events
            from course_editorial_submissions e
            join skills s on s.id = e.skill_id where s.slug = $1
-           order by e.submitted_at desc limit 30`, [slug],
+           order by e.submitted_at desc limit 30`,
+        [slug],
       );
       return result.rows;
     },
@@ -516,18 +745,23 @@ async function skillSlug(db: PoolClient, skillId: string): Promise<string> {
 }
 
 async function loadCandidateForSubmission(
-  db: PoolClient, submission: SubmissionRow,
+  db: PoolClient,
+  submission: SubmissionRow,
 ): Promise<Candidate> {
-  const skill = await db.query<{ slug: string }>(
-    "select slug from skills where id = $1", [submission.skill_id],
-  );
+  const skill = await db.query<{ slug: string }>("select slug from skills where id = $1", [
+    submission.skill_id,
+  ]);
   if (!skill.rows[0]) incompatible("The submitted course no longer exists.");
   const candidate = await loadCandidate(db, skill.rows[0]!.slug);
-  if (candidate.skillId !== submission.skill_id ||
-      candidate.pathId !== submission.path_id ||
-      candidate.digest !== submission.content_digest ||
-      stableHash(candidate.manifest) !== stableHash(submission.version_manifest)) {
-    incompatible("The draft changed since submission. Independent reviews are invalid; create a new immutable submission.");
+  if (
+    candidate.skillId !== submission.skill_id ||
+    candidate.pathId !== submission.path_id ||
+    candidate.digest !== submission.content_digest ||
+    stableHash(candidate.manifest) !== stableHash(submission.version_manifest)
+  ) {
+    incompatible(
+      "The draft changed since submission. Independent reviews are invalid; create a new immutable submission.",
+    );
   }
   return candidate;
 }

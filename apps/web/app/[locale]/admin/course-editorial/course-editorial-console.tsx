@@ -47,7 +47,9 @@ export function CourseEditorialConsole() {
   const [confirmed, setConfirmed] = useState(false);
   const [submissions, setSubmissions] = useState<readonly Submission[]>([]);
   const [selected, setSelected] = useState("");
-  const [message, setMessage] = useState("Choose a course slug to inspect its signed editorial history.");
+  const [message, setMessage] = useState(
+    "Choose a course slug to inspect its signed editorial history.",
+  );
   const [busy, setBusy] = useState(false);
 
   async function loadHistory(courseSlug = slug): Promise<void> {
@@ -66,7 +68,9 @@ export function CourseEditorialConsole() {
       const history = Array.isArray(data.submissions) ? data.submissions : [];
       setSubmissions(history);
       setSelected(history[0]?.id ?? "");
-      setMessage(history.length ? "Verified server-side editorial history." : "No signed submission yet.");
+      setMessage(
+        history.length ? "Verified server-side editorial history." : "No signed submission yet.",
+      );
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "History request failed.");
     } finally {
@@ -74,7 +78,9 @@ export function CourseEditorialConsole() {
     }
   }
 
-  async function act(action: "submit" | "review" | "publish" | "withdraw" | "rollback"): Promise<void> {
+  async function act(
+    action: "submit" | "review" | "publish" | "withdraw" | "rollback",
+  ): Promise<void> {
     const submission = submissions.find((entry) => entry.id === selected);
     if (action !== "submit" && !submission) {
       setMessage("Select a signed submission before taking an action.");
@@ -101,7 +107,9 @@ export function CourseEditorialConsole() {
     if (action === "review") {
       payload["kind"] = kind;
       payload["decision"] = decision;
-      payload["checklist"] = Object.fromEntries(required.map(([key]) => [key, checks[key] === true]));
+      payload["checklist"] = Object.fromEntries(
+        required.map(([key]) => [key, checks[key] === true]),
+      );
     }
     if (action === "publish") payload["stagingEvidenceUrl"] = evidence.trim();
     setBusy(true);
@@ -113,9 +121,15 @@ export function CourseEditorialConsole() {
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = (await response.json()) as { message?: string; submission?: { id?: string; status?: string } };
-      if (!response.ok) throw new Error(result.message ?? "Action denied (" + response.status + ").");
-      setMessage("Server confirmed: " + action + " (" + (result.submission?.status ?? "recorded") + ").");
+      const result = (await response.json()) as {
+        message?: string;
+        submission?: { id?: string; status?: string };
+      };
+      if (!response.ok)
+        throw new Error(result.message ?? "Action denied (" + response.status + ").");
+      setMessage(
+        "Server confirmed: " + action + " (" + (result.submission?.status ?? "recorded") + ").",
+      );
       setConfirmed(false);
       setChecks({});
       setReason("");
@@ -177,8 +191,12 @@ export function CourseEditorialConsole() {
             {chosen.status} · {chosen.counts.modules} modules · {chosen.counts.levels} levels ·{" "}
             {chosen.counts.challenges} exercises
           </p>
-          <p>Fingerprint: <code>{chosen.contentDigest}</code></p>
-          <p>Submitted by account {chosen.submittedBy} at {chosen.submittedAt}.</p>
+          <p>
+            Fingerprint: <code>{chosen.contentDigest}</code>
+          </p>
+          <p>
+            Submitted by account {chosen.submittedBy} at {chosen.submittedAt}.
+          </p>
           <ul className={styles["list"]}>
             {chosen.reviews.map((item) => (
               <li key={item.kind} className={styles["item"]}>
@@ -207,7 +225,12 @@ export function CourseEditorialConsole() {
         maxLength={1500}
         placeholder="Describe your independently verified changes or publication decision."
       />
-      <button className={styles["button"]} type="button" onClick={() => void act("submit")} disabled={busy}>
+      <button
+        className={styles["button"]}
+        type="button"
+        onClick={() => void act("submit")}
+        disabled={busy}
+      >
         Editor: submit complete draft
       </button>
       <fieldset>
@@ -238,7 +261,9 @@ export function CourseEditorialConsole() {
             <input
               type="checkbox"
               checked={checks[key] === true}
-              onChange={(event) => setChecks((previous) => ({ ...previous, [key]: event.target.checked }))}
+              onChange={(event) =>
+                setChecks((previous) => ({ ...previous, [key]: event.target.checked }))
+              }
             />
             {label}
           </label>
@@ -269,26 +294,35 @@ export function CourseEditorialConsole() {
             checked={confirmed}
             onChange={(event) => setConfirmed(event.target.checked)}
           />
-          I am the authorized publisher and have checked this exact version, its human approvals,
-          QA evidence and impact on existing learners.
+          I am the authorized publisher and have checked this exact version, its human approvals, QA
+          evidence and impact on existing learners.
         </label>
         <p>
-          Publisher actions are disabled server-side unless AIFS_COURSE_PUBLISH_ENABLED=yes has
-          been explicitly authorized in the target environment. No automatic publication.
+          Publisher actions are disabled server-side unless AIFS_COURSE_PUBLISH_ENABLED=yes has been
+          explicitly authorized in the target environment. No automatic publication.
         </p>
-        <button className={styles["button"]} type="button"
+        <button
+          className={styles["button"]}
+          type="button"
           disabled={busy || !confirmed || chosen?.status !== "approved"}
-          onClick={() => void act("publish")}>
+          onClick={() => void act("publish")}
+        >
           Publisher: publish approved version
         </button>
-        <button className={styles["button"]} type="button"
+        <button
+          className={styles["button"]}
+          type="button"
           disabled={busy || !confirmed || chosen?.status !== "published"}
-          onClick={() => void act("rollback")}>
+          onClick={() => void act("rollback")}
+        >
           Restore previously approved release
         </button>
-        <button className={styles["button"]} type="button"
+        <button
+          className={styles["button"]}
+          type="button"
           disabled={busy || !confirmed || chosen?.status !== "published"}
-          onClick={() => void act("withdraw")}>
+          onClick={() => void act("withdraw")}
+        >
           Withdraw published course from catalogue
         </button>
       </fieldset>
