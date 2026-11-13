@@ -45,8 +45,19 @@ function requireRole(actor: AdminIdentity, role: Role): void {
 function incompatible(message: string): never {
   throw new CourseEditorialError(409, message);
 }
+function canonical(data: unknown): unknown {
+  if (Array.isArray(data)) return data.map(canonical);
+  if (data !== null && typeof data === "object") {
+    return Object.fromEntries(
+      Object.entries(data as Record<string, unknown>)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => [key, canonical(value)]),
+    );
+  }
+  return data;
+}
 function stableHash(data: unknown): string {
-  return createHash("sha256").update(JSON.stringify(data)).digest("hex");
+  return createHash("sha256").update(JSON.stringify(canonical(data))).digest("hex");
 }
 function ids(manifest: Record<string, unknown>, key: string): string[] {
   const value = manifest[key];
@@ -229,14 +240,44 @@ const recordTypes: Record<string, string> = {
 
 async function setVersionStatuses(
   db: PoolClient, manifest: Record<string, unknown>,
-  from: "draft" | "published" | "archived", to: "published" | "archived", reviewedAt: Date,
+  from: "draft" | "published" | "archived", to: "published" | "archived",
+  reviewedAt: Date, slug: string,
 ): Promise<void> {
   for (const [key, table, stateColumn] of versionTables) {
     const targets = ids(manifest, key);
     const result = await db.query(
-      `update ${table`,
+      `update ${table} set ${stateColumn} = $3,
+         reviewed_at = case when $3 = 'published' then $4 else reviewed_at end,
+         published_at = case when $3 = 'published' then now() else published_at end
+       where id = any($1::uuid[]) and ${stateColumn} = $2`,
+      [targets, from, to, reviewedAt],
     );
-    void result;
+    if (result.rowCount !== targets.length) {
+      incompatible("One or more frozen course versions have changed; publication was rolled back.");
+    }
+
+    const entityType = recordTypes[key]!;
+    const existingState = to === "published" ? "published" : "superseded";
+    if (to === "published") {
+      await db.query(
+        `insert into content_publication_records
+          (entity_type, entity_version_id, state, index_policy, canonical_path,
+           reviewed_at, published_at, updated_at)
+         select $1, unnest($2::uuid[]), 'published',
+                case when $1 = 'skill_version' then 'index' else 'noindex' end,
+                $3, $4, now(), now()
+         on conflict (entity_type, entity_version_id)
+         do update set state = 'published', reviewed_at = $4,
+               published_at = now(), updated_at = now()`,
+        [entityType, targets, "/en/skills/" + slug, reviewedAt],
+      );
+    } else {
+      await db.query(
+        `update content_publication_records set state = $3, updated_at = now()
+           where entity_type = $1 and entity_version_id = any($2::uuid[])`,
+        [entityType, targets, existingState],
+      );
+    }
   }
 }
 
@@ -245,6 +286,7 @@ export type CourseEditorialService = Readonly<{
   review: (actor: AdminIdentity, id: string, input: ReviewInput) => Promise<Record<string, unknown>>;
   publish: (actor: AdminIdentity, id: string, input: PublishInput) => Promise<Record<string, unknown>>;
   withdraw: (actor: AdminIdentity, id: string, input: EditorialInput) => Promise<Record<string, unknown>>;
+  rollback: (actor: AdminIdentity, id: string, input: EditorialInput) => Promise<Record<string, unknown>>;
   history: (slug: string) => Promise<readonly Record<string, unknown>[]>;
 }>;
 
@@ -355,7 +397,7 @@ export function createCourseEditorialService(options: Readonly<{
         );
         if (prior.rows.length > 1) incompatible("Conflicting published course versions.");
         if (prior.rows[0]) {
-          await setVersionStatuses(db, prior.rows[0].version_manifest, "published", "archived", new Date());
+          await setVersionStatuses(db, prior.rows[0].version_manifest, "published", "archived", new Date(), candidate.slug);
           await db.query(
             "update course_editorial_submissions set status = 'superseded', updated_at = now() where id = $1",
             [prior.rows[0].id],
@@ -364,7 +406,7 @@ export function createCourseEditorialService(options: Readonly<{
         const reviewedAt = reviews.rows.reduce(
           (latest, r) => r.created_at > latest ? r.created_at : latest, reviews.rows[0]!.created_at,
         );
-        await setVersionStatuses(db, candidate.manifest, "draft", "published", reviewedAt);
+        await setVersionStatuses(db, candidate.manifest, "draft", "published", reviewedAt, candidate.slug);
         await db.query("update skills set status = 'published', updated_at = now() where id = $1", [submission.skill_id]);
         await db.query("update learning_paths set status = 'published', updated_at = now() where id = $1", [submission.path_id]);
         await db.query(
@@ -386,7 +428,8 @@ export function createCourseEditorialService(options: Readonly<{
         const submission = await loadSubmission(db, id);
         if (submission.status !== "published") incompatible("Only a current published release can be withdrawn.");
         await lockSkill(db, submission.skill_id);
-        await setVersionStatuses(db, submission.version_manifest, "published", "archived", new Date());
+        const slug = await skillSlug(db, submission.skill_id);
+        await setVersionStatuses(db, submission.version_manifest, "published", "archived", new Date(), slug);
         await db.query(
           "update skills set status = 'archived', updated_at = now() where id = $1", [submission.skill_id],
         );
@@ -398,6 +441,42 @@ export function createCourseEditorialService(options: Readonly<{
         );
         await audit(db, id, actor.userId, "withdraw", input.reason, submission.content_digest);
         return { id, status: "withdrawn", published: false };
+      });
+    },
+
+    rollback: async (actor, id, input) => {
+      requireRole(actor, "publisher");
+      if (!options.publishEnabled) throw new CourseEditorialError(403, "Course rollback requires explicit release authority.");
+      return inTransaction(options.pool, async (db) => {
+        const current = await loadSubmission(db, id);
+        if (current.status !== "published") incompatible("Only the active course release may be rolled back.");
+        await lockSkill(db, current.skill_id);
+        const prior = await db.query<SubmissionRow>(
+          `select * from course_editorial_submissions
+             where skill_id = $1 and status = 'superseded'
+             order by published_at desc limit 1 for update`,
+          [current.skill_id],
+        );
+        const previous = prior.rows[0];
+        if (!previous) incompatible("No independently approved prior course release exists. Use withdrawal instead.");
+        if (!previous.published_by || !previous.published_at) {
+          incompatible("The prior course release lacks valid publication evidence.");
+        }
+        const slug = await skillSlug(db, current.skill_id);
+        await setVersionStatuses(db, current.version_manifest, "published", "archived", new Date(), slug);
+        await setVersionStatuses(db, previous.version_manifest, "archived", "published", previous.published_at, slug);
+        await db.query(
+          "update course_editorial_submissions set status = 'superseded', updated_at = now() where id = $1",
+          [current.id],
+        );
+        await db.query(
+          "update course_editorial_submissions set status = 'published', updated_at = now() where id = $1",
+          [previous.id],
+        );
+        await audit(db, current.id, actor.userId, "rollback", input.reason, current.content_digest, {
+          restoredReleaseId: previous.id, restoredDigest: previous.content_digest,
+        });
+        return { id: previous.id, status: "published", rolledBackReleaseId: current.id };
       });
     },
 
@@ -430,6 +509,12 @@ export function createCourseEditorialService(options: Readonly<{
   };
 }
 
+async function skillSlug(db: PoolClient, skillId: string): Promise<string> {
+  const row = await db.query<{ slug: string }>("select slug from skills where id = $1", [skillId]);
+  if (!row.rows[0]) incompatible("Course does not exist.");
+  return row.rows[0]!.slug;
+}
+
 async function loadCandidateForSubmission(
   db: PoolClient, submission: SubmissionRow,
 ): Promise<Candidate> {
@@ -441,7 +526,7 @@ async function loadCandidateForSubmission(
   if (candidate.skillId !== submission.skill_id ||
       candidate.pathId !== submission.path_id ||
       candidate.digest !== submission.content_digest ||
-      JSON.stringify(candidate.manifest) !== JSON.stringify(submission.version_manifest)) {
+      stableHash(candidate.manifest) !== stableHash(submission.version_manifest)) {
     incompatible("The draft changed since submission. Independent reviews are invalid; create a new immutable submission.");
   }
   return candidate;
