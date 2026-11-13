@@ -60,7 +60,9 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
               </span>
               <h2>{skill.title}</h2>
               <p>{skill.summary}</p>
-              <p>{skill.levelCount ?? 0} published levels · {skill.moduleCount ?? 0} modules</p>
+              <p>
+                {skill.levelCount ?? 0} published levels · {skill.moduleCount ?? 0} modules
+              </p>
               <div className={styles["cardLinks"]}>
                 <Link className={styles["primaryLink"]} href={`/en/learn/${skill.levelId}`}>
                   Start practice

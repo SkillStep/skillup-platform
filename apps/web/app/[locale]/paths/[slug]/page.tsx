@@ -90,7 +90,8 @@ export default async function PathPage({ params }: PageProps) {
               </span>
               <span>{skill.levelCount ?? 0} published practice levels</span>
               <span>
-                {skill.moduleCount ?? 0} modules · {skill.estimatedMinutes ?? 0} estimated practice minutes
+                {skill.moduleCount ?? 0} modules · {skill.estimatedMinutes ?? 0} estimated practice
+                minutes
               </span>
               <span>{skill.reviewCadence}</span>
             </div>

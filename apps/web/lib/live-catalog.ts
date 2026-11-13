@@ -62,7 +62,8 @@ function isPublishedCourse(value: unknown): value is PublishedCourse {
     Array.isArray(course["levels"]) &&
     course["levels"].length === course["levelCount"] &&
     course["levels"].every(isPublishedLevel) &&
-    new Set(course["levels"].map((item: PublicSkillLevel) => item.id)).size === course["levels"].length &&
+    new Set(course["levels"].map((item: PublicSkillLevel) => item.id)).size ===
+      course["levels"].length &&
     course["levels"][0]?.id === course["levelId"] &&
     course["levels"].reduce(
       (total: number, item: PublicSkillLevel) => total + item.estimatedMinutes,

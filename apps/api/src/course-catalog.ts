@@ -193,7 +193,10 @@ export function projectPublishedCourses(rows: readonly CatalogRow[]): readonly P
     levels: [...course.levels.values()],
     outcomes: [...course.outcomes].slice(0, 8),
     challengeTypes: [...course.challengeTypes],
-    estimatedMinutes: [...course.levels.values()].reduce((total, level) => total + level.estimatedMinutes, 0),
+    estimatedMinutes: [...course.levels.values()].reduce(
+      (total, level) => total + level.estimatedMinutes,
+      0,
+    ),
   }));
 }
 
