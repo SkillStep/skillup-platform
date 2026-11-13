@@ -323,12 +323,33 @@ async function setVersionStatuses(
 ): Promise<void> {
   for (const [key, table, stateColumn] of versionTables) {
     const targets = ids(manifest, key);
+    // Existing version triggers require genuine draft -> in_review -> approved ->
+    // published transitions. Every intermediate step remains inside this atomic
+    // transaction, after signed independent reviews were already persisted.
+    const isLegacy = key === "skill" || key === "path";
+    if (!isLegacy && from === "draft" && to === "published") {
+      for (const [before, after] of [
+        ["draft", "in_review"],
+        ["in_review", "approved"],
+      ] as const) {
+        const intermediate = await db.query(
+          `update ${table} set ${stateColumn} = $3
+             where id = any($1::uuid[]) and ${stateColumn} = $2`,
+          [targets, before, after],
+        );
+        if (intermediate.rowCount !== targets.length) {
+          incompatible("The frozen course version is incomplete or was changed during review.");
+        }
+      }
+    }
+    const sourceState = !isLegacy && from === "draft" && to === "published"
+      ? "approved" : from;
     const result = await db.query(
       `update ${table} set ${stateColumn} = $3,
          reviewed_at = case when $3 = 'published' then $4 else reviewed_at end,
          published_at = case when $3 = 'published' then now() else published_at end
        where id = any($1::uuid[]) and ${stateColumn} = $2`,
-      [targets, from, to, reviewedAt],
+      [targets, sourceState, to, reviewedAt],
     );
     if (result.rowCount !== targets.length) {
       incompatible("One or more frozen course versions have changed; publication was rolled back.");
@@ -676,6 +697,9 @@ export function createCourseEditorialService(
           new Date(),
           slug,
         );
+        // Explicit, transaction-local authorization is required by the
+        // migration's strict archived-version restoration trigger.
+        await db.query("select set_config('skillup.course_editorial_rollback', 'approved', true)");
         await setVersionStatuses(
           db,
           previous.version_manifest,
