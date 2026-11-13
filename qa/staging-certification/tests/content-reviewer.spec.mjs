@@ -61,3 +61,14 @@ test("content reviewer can enter the draft review endpoint without content publi
   );
   expect(response.status()).toBe(404);
 });
+
+test("course reviewer cannot submit or publish an AIFS course", async ({ request }) => {
+  const submit = await request.post("/api/v1/admin/course-drafts/qa-not-published/submit", {
+    data: { reason: "Reviewer must not be the content editor." },
+  });
+  expect(submit.status()).toBe(403);
+  const publish = await request.post("/api/v1/admin/course-submissions/" + randomUUID() + "/publish", {
+    data: { reason: "Distinct authorized publisher required.", stagingEvidenceUrl: "https://example.org/staging" },
+  });
+  expect(publish.status()).toBe(403);
+});
