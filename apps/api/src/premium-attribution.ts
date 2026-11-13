@@ -14,6 +14,16 @@ const ATTRIBUTION_STRING_KEYS = [
   "landingPath",
   /** Jazz HE vs NON-HE tag from landing URL (`he=1` / `he=0`). */
   "he",
+  "growthos_campaign_id",
+  "growthos_page_id",
+  "growthos_version_id",
+  "growthos_variant_id",
+  "growthos_variation_id",
+  "growthos_variation_version_id",
+  "growthos_package_id",
+  "growthos_package_code",
+  "growthos_session_id",
+  "growthos_test",
 ] as const;
 
 export type PremiumAttribution = Readonly<
@@ -44,6 +54,16 @@ export const PremiumAttributionInputSchema = z
     landing: OptionalAttributionString,
     landingPath: OptionalAttributionString,
     he: OptionalAttributionString,
+    growthos_campaign_id: OptionalAttributionString,
+    growthos_page_id: OptionalAttributionString,
+    growthos_version_id: OptionalAttributionString,
+    growthos_variant_id: OptionalAttributionString,
+    growthos_variation_id: OptionalAttributionString,
+    growthos_variation_version_id: OptionalAttributionString,
+    growthos_package_id: OptionalAttributionString,
+    growthos_package_code: OptionalAttributionString,
+    growthos_session_id: OptionalAttributionString,
+    growthos_test: OptionalAttributionString,
   })
   .strict();
 
