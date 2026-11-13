@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
+import { createRequire } from "node:module";
 
-import { Pool } from "pg";
+// This root-level smoke uses the database workspace's installed pg dependency.
+const requireDatabase = createRequire(new URL("../packages/database/package.json", import.meta.url));
+const { Pool } = requireDatabase("pg");
 
 import { createCourseEditorialService } from "../apps/api/src/course-editorial.ts";
 import {
