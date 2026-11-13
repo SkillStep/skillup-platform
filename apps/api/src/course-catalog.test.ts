@@ -47,6 +47,22 @@ describe("published-only course catalogue", () => {
       levelCount: 2,
       estimatedMinutes: 18,
       modules: ["Clean Data", "Useful Formulas"],
+      levels: [
+        {
+          id: "level-a",
+          title: "Review order records",
+          moduleId: "module-a",
+          moduleTitle: "Clean Data",
+          estimatedMinutes: 8,
+        },
+        {
+          id: "level-b",
+          title: "Use SUMIF",
+          moduleId: "module-b",
+          moduleTitle: "Useful Formulas",
+          estimatedMinutes: 10,
+        },
+      ],
       challengeTypes: ["Multiple choice", "Scenario decisions", "Fill in the blank"],
     });
     expect(JSON.stringify(courses)).not.toContain("correctOptionKeys");

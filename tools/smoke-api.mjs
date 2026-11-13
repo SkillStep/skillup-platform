@@ -109,8 +109,16 @@ try {
     );
   }
   for (const course of catalogue.courses) {
-    if (course.levelCount < 12 || course.moduleCount < 3 || !course.levelId) {
-      throw new Error(`Published course ${course.slug} lacks playable modules or levels.`);
+    if (
+      course.levelCount < 12 ||
+      course.moduleCount < 3 ||
+      !course.levelId ||
+      !Array.isArray(course.levels) ||
+      course.levels.length !== course.levelCount ||
+      course.levels[0]?.id !== course.levelId ||
+      course.levels.some((level) => !level.title || !level.moduleId || level.estimatedMinutes <= 0)
+    ) {
+      throw new Error(`Published course ${course.slug} lacks an accurate playable level map.`);
     }
   }
   const pilotCourse = catalogue.courses.find(

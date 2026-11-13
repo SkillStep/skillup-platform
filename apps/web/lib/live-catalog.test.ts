@@ -12,12 +12,28 @@ const example = {
   title: "Excel for Work",
   summary: "Practice real spreadsheet skills and create a reusable business tracker.",
   levelId: "b87c0957-ff8e-4fb1-8b5f-563dc47ee049",
-  levelCount: 24,
-  moduleCount: 4,
-  modules: ["Clean Data", "Formulas", "Charts", "Project"],
+  levelCount: 2,
+  moduleCount: 2,
+  modules: ["Clean Data", "Formulas"],
+  levels: [
+    {
+      id: "b87c0957-ff8e-4fb1-8b5f-563dc47ee049",
+      title: "Clean and check order records",
+      moduleId: "5134ab3e-c2ee-4cb3-b698-b5768a298d1d",
+      moduleTitle: "Clean Data",
+      estimatedMinutes: 8,
+    },
+    {
+      id: "73a1d24e-bced-4630-8fd2-92844f39e949",
+      title: "Calculate category totals",
+      moduleId: "ad9da431-0f46-4768-885f-f7b88ff9a8e1",
+      moduleTitle: "Formulas",
+      estimatedMinutes: 10,
+    },
+  ],
   outcomes: ["Calculate a category total accurately"],
   challengeTypes: ["Multiple choice", "Scenario decisions"],
-  estimatedMinutes: 180,
+  estimatedMinutes: 18,
 };
 
 describe("authoritative published catalogue projection", () => {
@@ -27,9 +43,9 @@ describe("authoritative published catalogue projection", () => {
     expect(courses[0]).toMatchObject({
       slug: "excel-for-work",
       status: "launch",
-      levelCount: 24,
-      moduleCount: 4,
-      estimatedMinutes: 180,
+      levelCount: 2,
+      moduleCount: 2,
+      estimatedMinutes: 18,
     });
     expect(courses[0]?.editorialNote).toBeNull();
   });
@@ -46,6 +62,25 @@ describe("authoritative published catalogue projection", () => {
     expect(courses).toHaveLength(1);
   });
 
+  it("rejects invented published-level counts, wrong IDs and duplicate level records", () => {
+    expect(projectPublishedPublicSkills({ courses: [{ ...example, levelCount: 3 }] })).toEqual([]);
+    expect(
+      projectPublishedPublicSkills({
+        courses: [
+          {
+            ...example,
+            levels: [{ ...example.levels[0], id: "unpublished-level" }, example.levels[1]],
+          },
+        ],
+      }),
+    ).toEqual([]);
+    expect(
+      projectPublishedPublicSkills({
+        courses: [{ ...example, levels: [example.levels[0], example.levels[0]] }],
+      }),
+    ).toEqual([]);
+  });
+
   it("fails closed when catalogue API cannot be reached", async () => {
     const fetcher = vi.fn().mockRejectedValue(new Error("offline"));
     expect(await loadPublishedPublicSkills(fetcher)).toEqual([]);
@@ -58,7 +93,11 @@ describe("authoritative published catalogue projection", () => {
       json: async () => ({ courses: [example] }),
     });
     const course = await loadPublishedPublicSkill("excel-for-work", fetcher);
-    expect(course?.levelCount).toBe(24);
+    expect(course?.levelCount).toBe(2);
+    expect(course?.levels?.map((level) => level.title)).toEqual([
+      "Clean and check order records",
+      "Calculate category totals",
+    ]);
     expect(await loadPublishedPublicSkill("unknown/course", fetcher)).toBeNull();
     expect(fetcher).toHaveBeenCalledTimes(1);
   });

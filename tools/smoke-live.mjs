@@ -180,6 +180,8 @@ if (!pilotPathHtml.includes("Use Evidence in Interview Answers")) {
   const excerpt = pilotPathHtml.slice(0, 3_000);
   throw new Error(`Pilot path lacks the expected module. Diagnostic HTML excerpt: ${excerpt}`);
 }
+requireContains(pilotPathHtml, "Published levels by module", "Pilot course progression");
+requireContains(pilotPathHtml, "/en/learn/", "Pilot published level links");
 requireContains(pilotPathHtml, '"@type":"Course"', "Pilot path course data");
 requirePublicCacheBoundary(pilotPath, "Pilot path");
 

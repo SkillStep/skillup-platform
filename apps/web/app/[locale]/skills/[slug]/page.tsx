@@ -73,6 +73,9 @@ export default async function SkillPage({ params }: PageProps) {
             <h1 id="skill-title">{skill.title}</h1>
             <p className={styles["detailSummary"]}>{skill.summary}</p>
             <div className={styles["detailMeta"]}>
+              <span>
+                {skill.levelCount ?? 0} playable levels across {skill.moduleCount ?? 0} modules
+              </span>
               <span>English launch content</span>
               <span>{skill.reviewCadence}</span>
             </div>

@@ -28,6 +28,14 @@ const readableChallengeTypes: Readonly<Record<string, string>> = {
   short_response: "Short-response practice",
 };
 
+export type PublishedCourseLevel = Readonly<{
+  id: string;
+  title: string;
+  moduleId: string;
+  moduleTitle: string;
+  estimatedMinutes: number;
+}>;
+
 export type PublishedCourse = Readonly<{
   slug: string;
   title: string;
@@ -37,6 +45,7 @@ export type PublishedCourse = Readonly<{
   levelCount: number;
   moduleCount: number;
   modules: readonly string[];
+  levels: readonly PublishedCourseLevel[];
   outcomes: readonly string[];
   challengeTypes: readonly string[];
   estimatedMinutes: number;
@@ -134,7 +143,7 @@ export function projectPublishedCourses(rows: readonly CatalogRow[]): readonly P
       summary: string;
       pathSlug: string;
       levelId: string;
-      levels: Map<string, number>;
+      levels: Map<string, PublishedCourseLevel>;
       modules: Map<string, string>;
       outcomes: Set<string>;
       challengeTypes: Set<string>;
@@ -158,7 +167,13 @@ export function projectPublishedCourses(rows: readonly CatalogRow[]): readonly P
       records.set(row.skill_slug, course);
     }
     if (!course.levels.has(row.level_id)) {
-      course.levels.set(row.level_id, row.level_minutes);
+      course.levels.set(row.level_id, {
+        id: row.level_id,
+        title: row.level_title,
+        moduleId: row.module_id,
+        moduleTitle: row.module_title,
+        estimatedMinutes: row.level_minutes,
+      });
     }
     course.modules.set(row.module_id, row.module_title);
     if (row.objective_statement) course.outcomes.add(row.objective_statement);
@@ -175,9 +190,13 @@ export function projectPublishedCourses(rows: readonly CatalogRow[]): readonly P
     levelCount: course.levels.size,
     moduleCount: course.modules.size,
     modules: [...course.modules.values()],
+    levels: [...course.levels.values()],
     outcomes: [...course.outcomes].slice(0, 8),
     challengeTypes: [...course.challengeTypes],
-    estimatedMinutes: [...course.levels.values()].reduce((total, minutes) => total + minutes, 0),
+    estimatedMinutes: [...course.levels.values()].reduce(
+      (total, level) => total + level.estimatedMinutes,
+      0,
+    ),
   }));
 }
 
