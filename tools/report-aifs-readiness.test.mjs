@@ -1,10 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {
-  buildAifsReadiness,
-  readAifsReadinessInputs,
-} from "./report-aifs-readiness.mjs";
+import { buildAifsReadiness, readAifsReadinessInputs } from "./report-aifs-readiness.mjs";
 
 const inputs = readAifsReadinessInputs();
 
@@ -31,10 +28,7 @@ test("reports no template coverage if any capstone file is missing", () => {
     ...inputs,
     capstoneSlugs: new Set([...inputs.capstoneSlugs].slice(1)),
   };
-  assert.throws(
-    () => buildAifsReadiness(changed),
-    /All 15 distinct draft capstone templates/,
-  );
+  assert.throws(() => buildAifsReadiness(changed), /All 15 distinct draft capstone templates/);
 });
 
 test("rejects counterfeit human review or content publication flags", () => {
@@ -60,8 +54,7 @@ test("rejects duplicate level briefs instead of reporting inflated content value
     outlines: inputs.outlines,
     excelModules: inputs.excelModules,
   });
-  changed.outlines[2].modules[0].levelTitles[1] =
-    changed.outlines[2].modules[0].levelTitles[0];
+  changed.outlines[2].modules[0].levelTitles[1] = changed.outlines[2].modules[0].levelTitles[0];
   assert.throws(
     () =>
       buildAifsReadiness({

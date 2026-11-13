@@ -1,10 +1,10 @@
 import { existsSync } from "node:fs";
 
-import { readCurriculumPlan, validateCurriculumBriefs } from "./validate-aifs-curriculum-briefs.mjs";
 import {
-  readExcelDraftModules,
-  validateExcelDraftModules,
-} from "./validate-aifs-excel-drafts.mjs";
+  readCurriculumPlan,
+  validateCurriculumBriefs,
+} from "./validate-aifs-curriculum-briefs.mjs";
+import { readExcelDraftModules, validateExcelDraftModules } from "./validate-aifs-excel-drafts.mjs";
 
 const root = new URL("../docs/product/course-expansion/", import.meta.url);
 
@@ -36,7 +36,9 @@ export function buildAifsReadiness({ manifest, outlines, excelModules, capstoneS
   ];
   if (errors.length) throw new Error(`AIFS content readiness source invalid: ${errors.join("; ")}`);
   if (!(capstoneSlugs instanceof Set) || capstoneSlugs.size !== 15) {
-    throw new Error("All 15 distinct draft capstone templates must exist before reporting readiness.");
+    throw new Error(
+      "All 15 distinct draft capstone templates must exist before reporting readiness.",
+    );
   }
   for (const slug of capstoneSlugs) {
     if (!manifest.courses.some((course) => course.slug === slug)) {
@@ -56,7 +58,9 @@ export function buildAifsReadiness({ manifest, outlines, excelModules, capstoneS
       throw new Error(`Publication and human review are not attested for ${course.slug}.`);
     }
     const excel = course.slug === "excel-google-sheets-work";
-    const authoredDraftLevels = excel ? excelModules.reduce((n, module) => n + module.levels.length, 0) : 0;
+    const authoredDraftLevels = excel
+      ? excelModules.reduce((n, module) => n + module.levels.length, 0)
+      : 0;
     const authoredDraftExercises = excel
       ? excelModules.reduce(
           (total, module) =>
@@ -86,7 +90,10 @@ export function buildAifsReadiness({ manifest, outlines, excelModules, capstoneS
     proposedLevelBriefs: courses.reduce((sum, course) => sum + course.levelBriefCount, 0),
     authoredDraftLevels: courses.reduce((sum, course) => sum + course.authoredDraftLevels, 0),
     authoredDraftExercises: courses.reduce((sum, course) => sum + course.authoredDraftExercises, 0),
-    minimumRequiredNewExercises: courses.reduce((sum, course) => sum + course.minimumExerciseTarget, 0),
+    minimumRequiredNewExercises: courses.reduce(
+      (sum, course) => sum + course.minimumExerciseTarget,
+      0,
+    ),
     minimumExercisesStillToAuthor: courses.reduce(
       (sum, course) => sum + course.remainingDraftExercises,
       0,
@@ -110,7 +117,8 @@ export function buildAifsReadiness({ manifest, outlines, excelModules, capstoneS
     plannedCourseTotalAfterFutureApproval: manifest.targets.totalCourses,
     baselinePublishedCoursesFromPlanningSource: manifest.sourceBaseline.existingCourses,
     baselineCurriculumLevelsFromPlanningSource: manifest.sourceBaseline.existingCurriculumLevels,
-    currentPublicationClaim: "No additional courses are authorized or verified as published by this report.",
+    currentPublicationClaim:
+      "No additional courses are authorized or verified as published by this report.",
     totals,
     courses,
   };
