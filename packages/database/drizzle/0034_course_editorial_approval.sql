@@ -78,8 +78,10 @@ create trigger course_submission_immutable before update on course_editorial_sub
 create or replace function enforce_editorial_state_transition() returns trigger as $$
 begin
   if new.state = old.state then return new; end if;
-  if old.state = 'archived' and new.state = 'published'
-     and current_setting('skillup.course_editorial_rollback', true) = 'approved' then
+  if current_setting('skillup.course_editorial_rollback', true) = 'approved'
+     and ((old.state = 'archived' and new.state = 'published')
+          or (tg_table_name = 'content_publication_records'
+              and old.state = 'superseded' and new.state = 'published')) then
     return new;
   end if;
   if not (
