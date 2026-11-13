@@ -88,7 +88,7 @@ describe("course draft editorial read model", () => {
     expect(query.mock.calls[0]?.[1]).toEqual(["excel-google-sheets-work"]);
     const sql = query.mock.calls[0]?.[0] as string;
     expect(sql).toContain("s.status = 'draft'");
-    expect(sql).toContain("cv.state = 'draft'");
+    expect(sql).toContain("and locale = 'en' and state = 'draft'");
     expect(sql).toContain("ce.private_evaluation");
     expect(sql).not.toContain("s.status = 'published'");
   });
