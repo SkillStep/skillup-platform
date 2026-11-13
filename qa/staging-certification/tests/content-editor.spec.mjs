@@ -56,17 +56,33 @@ test("content editor cannot inspect private course draft answer keys", async ({ 
   expect(response.status()).toBe(403);
 });
 
-test("course editor can inspect empty history but cannot sign reviews or publish", async ({ request }) => {
+test("course editor can inspect empty history but cannot sign reviews or publish", async ({
+  request,
+}) => {
   const slug = "qa-nonexistent-" + randomUUID().replaceAll("-", "");
   const history = await request.get("/api/v1/admin/course-drafts/" + slug + "/editorial");
   expect(history.status()).toBe(200);
   expect((await history.json()).submissions).toEqual([]);
-  const review = await request.post("/api/v1/admin/course-submissions/" + randomUUID() + "/review", {
-    data: { kind: "subject", decision: "approve", reason: "Separate reviewer identity is required.", checklist: {} },
-  });
+  const review = await request.post(
+    "/api/v1/admin/course-submissions/" + randomUUID() + "/review",
+    {
+      data: {
+        kind: "subject",
+        decision: "approve",
+        reason: "Separate reviewer identity is required.",
+        checklist: {},
+      },
+    },
+  );
   expect(review.status()).toBe(403);
-  const publish = await request.post("/api/v1/admin/course-submissions/" + randomUUID() + "/publish", {
-    data: { reason: "Publish role separation is mandatory.", stagingEvidenceUrl: "https://example.org/staging" },
-  });
+  const publish = await request.post(
+    "/api/v1/admin/course-submissions/" + randomUUID() + "/publish",
+    {
+      data: {
+        reason: "Publish role separation is mandatory.",
+        stagingEvidenceUrl: "https://example.org/staging",
+      },
+    },
+  );
   expect(publish.status()).toBe(403);
 });

@@ -21,12 +21,16 @@ const accessibility = { userId: users[2], roles: ["content_reviewer"] };
 const publisher = { userId: users[3], roles: ["publisher"] };
 const reason = "Independently verified fictional AIFS draft for PostgreSQL integration testing.";
 const subjectChecklist = {
-  facts_verified: true, answer_keys_verified: true,
-  source_rights_verified: true, assessments_verified: true,
+  facts_verified: true,
+  answer_keys_verified: true,
+  source_rights_verified: true,
+  assessments_verified: true,
 };
 const accessibilityChecklist = {
-  language_checked: true, keyboard_mobile_checked: true,
-  accessibility_checked: true, capstone_verified: true,
+  language_checked: true,
+  keyboard_mobile_checked: true,
+  accessibility_checked: true,
+  capstone_verified: true,
 };
 
 // The importer and every editorial action share ONE isolated PostgreSQL transaction.
@@ -67,14 +71,24 @@ try {
   assert.match(submitted.digest, /^[0-9a-f]{64}$/);
 
   await assert.rejects(
-    () => guarded.review({ ...editor, roles: ["content_editor", "content_reviewer"] },
-      submitted.id, { kind: "subject", decision: "approve", reason, checklist: subjectChecklist }),
+    () =>
+      guarded.review({ ...editor, roles: ["content_editor", "content_reviewer"] }, submitted.id, {
+        kind: "subject",
+        decision: "approve",
+        reason,
+        checklist: subjectChecklist,
+      }),
     (error) => error.statusCode === 409,
     "A submitter may not approve their own content even with reviewer privilege.",
   );
   await assert.rejects(
-    () => guarded.review(subject, submitted.id,
-      { kind: "subject", decision: "approve", reason, checklist: {} }),
+    () =>
+      guarded.review(subject, submitted.id, {
+        kind: "subject",
+        decision: "approve",
+        reason,
+        checklist: {},
+      }),
     (error) => error.statusCode === 409,
     "A reviewer cannot bypass mandatory human checklist evidence.",
   );
@@ -93,11 +107,18 @@ try {
   );
   assert(excelChallenge.rows.length === 1);
   const originalEvaluation = excelChallenge.rows[0].private_evaluation;
-  await client.query("update challenge_evaluations set private_evaluation = '{}'::jsonb where challenge_version_id = $1",
-    [excelChallenge.rows[0].challenge_version_id]);
+  await client.query(
+    "update challenge_evaluations set private_evaluation = '{}'::jsonb where challenge_version_id = $1",
+    [excelChallenge.rows[0].challenge_version_id],
+  );
   await assert.rejects(
-    () => guarded.review(subject, submitted.id,
-      { kind: "subject", decision: "approve", reason, checklist: subjectChecklist }),
+    () =>
+      guarded.review(subject, submitted.id, {
+        kind: "subject",
+        decision: "approve",
+        reason,
+        checklist: subjectChecklist,
+      }),
     (error) => error.statusCode === 409,
     "Altered private evaluator keys must invalidate the frozen submission.",
   );
@@ -105,26 +126,43 @@ try {
     "update challenge_evaluations set private_evaluation = $2::jsonb where challenge_version_id = $1",
     [excelChallenge.rows[0].challenge_version_id, JSON.stringify(originalEvaluation)],
   );
-  const first = await guarded.review(subject, submitted.id,
-    { kind: "subject", decision: "approve", reason, checklist: subjectChecklist });
+  const first = await guarded.review(subject, submitted.id, {
+    kind: "subject",
+    decision: "approve",
+    reason,
+    checklist: subjectChecklist,
+  });
   assert.equal(first.status, "submitted");
-  const second = await guarded.review(accessibility, submitted.id,
-    { kind: "accessibility", decision: "approve", reason, checklist: accessibilityChecklist });
+  const second = await guarded.review(accessibility, submitted.id, {
+    kind: "accessibility",
+    decision: "approve",
+    reason,
+    checklist: accessibilityChecklist,
+  });
   assert.equal(second.status, "approved");
 
   await assert.rejects(
-    () => guarded.publish(publisher, submitted.id, { reason, stagingEvidenceUrl: "https://example.org/qa" }),
+    () =>
+      guarded.publish(publisher, submitted.id, {
+        reason,
+        stagingEvidenceUrl: "https://example.org/qa",
+      }),
     (error) => error.statusCode === 403,
     "Default-disabled publisher authority must fail closed.",
   );
   await assert.rejects(
-    () => enabled.publish({ ...editor, roles: ["content_editor", "publisher"] },
-      submitted.id, { reason, stagingEvidenceUrl: "https://example.org/qa" }),
+    () =>
+      enabled.publish({ ...editor, roles: ["content_editor", "publisher"] }, submitted.id, {
+        reason,
+        stagingEvidenceUrl: "https://example.org/qa",
+      }),
     (error) => error.statusCode === 409,
     "Submitter and publisher must be distinct humans.",
   );
-  const released = await enabled.publish(publisher, submitted.id,
-    { reason, stagingEvidenceUrl: "https://github.com/SkillStep/skillup-platform/actions" });
+  const released = await enabled.publish(publisher, submitted.id, {
+    reason,
+    stagingEvidenceUrl: "https://github.com/SkillStep/skillup-platform/actions",
+  });
   assert.equal(released.status, "published");
   const status = await client.query(
     `select s.status,
@@ -153,14 +191,19 @@ try {
   assert(history[0].events.some((event) => event.action === "withdraw"));
 
   await assert.rejects(
-    () => client.query("update course_editorial_reviews set reason = 'tamper' where submission_id = $1",
-      [submitted.id]),
+    () =>
+      client.query(
+        "update course_editorial_reviews set reason = 'tamper' where submission_id = $1",
+        [submitted.id],
+      ),
     /append-only/,
     "Approval evidence cannot be rewritten or deleted.",
   );
   // The above PostgreSQL trigger intentionally invalidated the nested transaction.
   // The outer finally block always rolls the entire smoke fixture back.
-  console.info("AIFS editorial PostgreSQL smoke passed: 24 levels, 72 evaluations, four separate humans, fingerprint tamper rejection, disabled default, publishing, withdrawal, append-only evidence; full fixture rollback.");
+  console.info(
+    "AIFS editorial PostgreSQL smoke passed: 24 levels, 72 evaluations, four separate humans, fingerprint tamper rejection, disabled default, publishing, withdrawal, append-only evidence; full fixture rollback.",
+  );
 } finally {
   await client.query("rollback");
   client.release();
