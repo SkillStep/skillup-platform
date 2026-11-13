@@ -186,6 +186,40 @@ try {
   assert.equal(status.rows[0].status, "published");
   assert.equal(status.rows[0].exercises, 72);
 
+  // The protected version-state trigger rejects an archived -> published
+  // transition without publisher's explicit transaction-local rollback gate.
+  const protectedLevel = await client.query(
+    `select lv.id
+       from level_versions lv
+       join levels l on l.id = lv.level_id
+       join lessons les on les.id = l.lesson_id
+       join learning_modules m on m.id = les.module_id
+       join learning_paths p on p.id = m.learning_path_id
+      where p.slug = 'excel-google-sheets-work' and lv.state = 'published'
+      limit 1`,
+  );
+  const protectedLevelId = protectedLevel.rows[0]?.id;
+  assert(protectedLevelId);
+  await client.query("update level_versions set state = 'archived' where id = $1", [
+    protectedLevelId,
+  ]);
+  await client.query("savepoint guard_blocked_restore");
+  await assert.rejects(
+    () =>
+      client.query("update level_versions set state = 'published' where id = $1", [
+        protectedLevelId,
+      ]),
+    /Unsupported editorial transition/,
+    "An archived version must not be restored without guarded publisher authorization.",
+  );
+  await client.query("rollback to savepoint guard_blocked_restore");
+  await client.query(
+    "select set_config('skillup.course_editorial_rollback', 'approved', true)",
+  );
+  await client.query("update level_versions set state = 'published' where id = $1", [
+    protectedLevelId,
+  ]);
+
   await assert.rejects(
     () => enabled.rollback(publisher, submitted.id, { reason }),
     (error) => error.statusCode === 409,
