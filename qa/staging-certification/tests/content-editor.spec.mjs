@@ -48,3 +48,10 @@ test("content editor passes authorization before generation validation but canno
   });
   expect(publish.status()).toBe(403);
 });
+
+test("content editor cannot inspect private course draft answer keys", async ({ request }) => {
+  const response = await request.get(
+    `/api/v1/admin/course-drafts/qa-nonexistent-${randomUUID()}/review-packet`,
+  );
+  expect(response.status()).toBe(403);
+});
