@@ -25,7 +25,7 @@
     "format:check": "biome format .",
     "lint": "biome lint . --max-diagnostics=1000",
     "typecheck": "pnpm shared:build && pnpm -r --if-present typecheck",
-    "test": "pnpm shared:build && pnpm -r --if-present test && node tools/run-python-tests.mjs && pnpm catalog:plan:check && pnpm catalog:drafts:check && pnpm catalog:briefs:check && pnpm catalog:capstones:check && pnpm catalog:readiness:check",
+    "test": "pnpm shared:build && pnpm -r --if-present test && node tools/run-python-tests.mjs && pnpm catalog:plan:check && pnpm catalog:drafts:check && pnpm catalog:briefs:check && pnpm catalog:capstones:check && pnpm catalog:readiness:check && pnpm catalog:legacy-quality:audit",
     "build": "pnpm -r --if-present build",
     "check": "pnpm foundation:check && pnpm deployment:check && pnpm production:check && pnpm security:secrets && pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "container:build": "docker build --file infra/docker/api.Dockerfile --tag skillup-api:local . && docker build --file infra/docker/web.Dockerfile --tag skillup-web:local . && docker build --file infra/docker/ai-worker.Dockerfile --tag skillup-ai-worker:local .",
@@ -45,7 +45,8 @@
     "infra:up": "docker compose --env-file .env -f infra/compose.yaml up -d",
     "infra:down": "docker compose --env-file .env -f infra/compose.yaml down",
     "infra:reset": "docker compose --env-file .env -f infra/compose.yaml down -v",
-    "catalog:readiness:check": "node tools/report-aifs-readiness.mjs && node --test tools/report-aifs-readiness.test.mjs"
+    "catalog:readiness:check": "node tools/report-aifs-readiness.mjs && node --test tools/report-aifs-readiness.test.mjs",
+    "catalog:legacy-quality:audit": "node --import tsx tools/audit-existing-launch-courses.mjs && node --import tsx --test tools/audit-existing-launch-courses.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.11",
