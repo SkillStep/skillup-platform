@@ -46,7 +46,6 @@ export function LandingSubscribeCard({
   const [agree, setAgree] = useState(true);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const planCode = planCodeForPackage(campaign.package);
   const landingPath = returnPath ?? buildLandingPath(campaign);
   const bypass = checkoutMode === "premium_bypass";
 
@@ -71,6 +70,24 @@ export function LandingSubscribeCard({
     }
     if (!agree) {
       setMessage("Confirm the Terms and Conditions before continuing.");
+      return;
+    }
+
+    // GrowthOS can select a campaign package, but SkillUp always selects the
+    // authoritative payment-service plan. Unknown or conflicting codes fail
+    // closed rather than quietly charging the default monthly package.
+    const trackingCode = new URLSearchParams(window.location.search).get("growthos_package_code");
+    if (trackingCode && !["1", "2"].includes(trackingCode)) {
+      setMessage("This campaign package is not configured for SkillUp.");
+      return;
+    }
+    if (trackingCode && campaign.package !== "default" && campaign.package !== trackingCode) {
+      setMessage("The advertised package does not match the selected checkout plan.");
+      return;
+    }
+    const planCode = planCodeForPackage(trackingCode ?? campaign.package);
+    if (trackingCode && process.env.NEXT_PUBLIC_GROWTHOS_CHECKOUT_ENABLED !== "true") {
+      setMessage("Campaign checkout is paused until the advertised offer and SkillUp billing terms are approved.");
       return;
     }
 
