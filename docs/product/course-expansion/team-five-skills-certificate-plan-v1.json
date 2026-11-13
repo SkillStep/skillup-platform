@@ -242,15 +242,8 @@
   "deliveryIssues": {
     "epic": 261,
     "previewCatalogue": 262,
-    "newCourses": [
-      263,
-      264
-    ],
-    "reuseCourses": [
-      242,
-      244,
-      247
-    ],
+    "newCourses": [263, 264],
+    "reuseCourses": [242, 244, 247],
     "certificatePolicy": 265,
     "certificateModel": 266,
     "certificateIssuance": 267,
