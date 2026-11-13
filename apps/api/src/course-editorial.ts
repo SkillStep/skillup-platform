@@ -746,7 +746,7 @@ export function createCourseEditorialService(
                   ),'[]'::jsonb) as reviews,
                   coalesce((
                     select jsonb_agg(jsonb_build_object(
-                      'action',h.action,'actorId',h.actor_user_id,'reason',h.reason,
+                      'id',h.id,'action',h.action,'actorId',h.actor_user_id,'reason',h.reason,
                       'at',h.occurred_at,'metadata',h.metadata
                     ) order by h.id)
                     from course_editorial_events h where h.submission_id = e.id
