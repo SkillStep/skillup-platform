@@ -145,6 +145,7 @@ export default async function PricingPage({ params }: PageProps) {
         <MotionReveal variant="fade-right" durationMs={750}>
           <header className={styles["hero"]}>
             <p className="eyebrow">Clear, Pakistan-first pricing</p>
+            <h1>SkillUp Premium plans</h1>
             <p>
               Choose Monthly or Yearly. You will enter your JazzCash number on the next step, then
               complete verification on JazzCash.

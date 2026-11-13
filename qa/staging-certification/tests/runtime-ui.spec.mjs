@@ -58,7 +58,7 @@ test("critical public navigation survives refresh, back and forward", async ({ p
   await page.goForward();
   await expect(page).toHaveURL(/\/en\/pricing$/);
   await page.reload();
-  await expect(page.getByText(/(?:PKR|Rs)\s*599\s*\/\s*month/i).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*990\s*\/\s*month/i).first()).toBeVisible();
 });
 
 test("critical public pages do not emit uncaught page errors", async ({ page, request }) => {
