@@ -126,8 +126,8 @@ export default async function PathPage({ params }: PageProps) {
                 particular level may require signing in, completing prerequisites or having Premium.
               </p>
               <ol>
-                {skill.modules.map((module, index) => (
-                  <li key={`${index}-${module}`}>
+                {skill.modules.map((module) => (
+                  <li key={module}>
                     <strong>{module}</strong>
                     <ol>
                       {(skill.levels ?? [])
