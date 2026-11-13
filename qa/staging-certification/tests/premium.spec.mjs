@@ -14,7 +14,7 @@ test("pricing renders authoritative launch prices", async ({ page }) => {
   await page.goto("/en/pricing");
   await expect(page.getByRole("heading", { name: "SkillUp Premium Monthly" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "SkillUp Premium Yearly" })).toBeVisible();
-  await expect(page.getByText(/(?:PKR|Rs)\s*599/).first()).toBeVisible();
+  await expect(page.getByText(/(?:PKR|Rs)\s*990/).first()).toBeVisible();
   await expect(page.getByText(/(?:PKR|Rs)\s*4,999/).first()).toBeVisible();
 });
 
