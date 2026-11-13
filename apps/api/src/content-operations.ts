@@ -1049,7 +1049,7 @@ export function registerContentOperationsRoutes(
   });
 
   for (const action of ["withdraw", "rollback"] as const) {
-    app.post(`/v1/admin/course-submissions/:id/${action`, async (request) => {
+    app.post(`/v1/admin/course-submissions/:id/${action}`, async (request) => {
       requireTrustedRequestOrigin(request, options.config);
       const { admin } = await requireAdminRoles(request, options, ["publisher"]);
       const { id } = IdParamsSchema.parse(request.params);
