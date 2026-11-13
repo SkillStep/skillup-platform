@@ -229,12 +229,16 @@ export async function submitGrowthosConversion(
  * event and active entitlement can enter the outbox. A row holds no PII.
  * SKIP LOCKED leases and stable order ID support multi-instance operation.
  */
-export function createGrowthosConversionTask(input: Readonly<{
-  pool: Pool;
-  config: GrowthosBridgeConfig | null;
-  fetcher?: Fetcher;
-}>) {
-  return async (limit = 10): Promise<Readonly<{ queued: number; delivered: number; blocked: number; retry: number }>> => {
+export function createGrowthosConversionTask(
+  input: Readonly<{
+    pool: Pool;
+    config: GrowthosBridgeConfig | null;
+    fetcher?: Fetcher;
+  }>,
+) {
+  return async (
+    limit = 10,
+  ): Promise<Readonly<{ queued: number; delivered: number; blocked: number; retry: number }>> => {
     const config = input.config;
     if (!config) return { queued: 0, delivered: 0, blocked: 0, retry: 0 };
     const safeLimit = Math.min(10, Math.max(1, Math.floor(limit)));
@@ -269,8 +273,9 @@ export function createGrowthosConversionTask(input: Readonly<{
     );
     const counts = { queued: queued.rowCount ?? 0, delivered: 0, blocked: 0, retry: 0 };
     for (const item of claimed.rows) {
-      const [row] = (await input.pool.query<VerifiedSkillupOrder>(
-        `select o.id::text, o.status, p.code as plan_code, o.amount_minor, o.currency,
+      const [row] = (
+        await input.pool.query<VerifiedSkillupOrder>(
+          `select o.id::text, o.status, p.code as plan_code, o.amount_minor, o.currency,
                 o.completed_at, o.created_at, o.attribution
            from payment_orders o
            join commercial_plan_versions v on v.id=o.plan_version_id
@@ -282,15 +287,19 @@ export function createGrowthosConversionTask(input: Readonly<{
                where ev.order_id=o.id and ev.signature_verified=true
                  and ev.provider_status='000')
            limit 1`,
-        [item.order_id],
-      )).rows;
+          [item.order_id],
+        )
+      ).rows;
       const payload = row ? buildGrowthosConversion(row, config) : null;
       const outcome: ConversionOutcome = payload
         ? await submitGrowthosConversion(payload, config, input.fetcher)
         : { outcome: "blocked", httpStatus: null, reason: "ineligible_verified_order" };
-      const state = outcome.outcome === "retry"
-        ? item.attempts >= MAX_ATTEMPTS ? "failed" : "pending"
-        : outcome.outcome;
+      const state =
+        outcome.outcome === "retry"
+          ? item.attempts >= MAX_ATTEMPTS
+            ? "failed"
+            : "pending"
+          : outcome.outcome;
       const retrySeconds = [60, 300, 900, 3600][Math.min(item.attempts - 1, 3)] ?? 3600;
       await input.pool.query(
         `update growthos_conversion_outbox
@@ -298,8 +307,14 @@ export function createGrowthosConversionTask(input: Readonly<{
                lease_expires_at=null, delivered_at=case when $2='delivered' then now() else null end,
                last_http_status=$4, last_error_code=$5, updated_at=now()
            where order_id=$1 and status='processing' and attempts=$6`,
-        [item.order_id, state, state === "pending" ? retrySeconds : 0,
-          outcome.httpStatus, outcome.reason, item.attempts],
+        [
+          item.order_id,
+          state,
+          state === "pending" ? retrySeconds : 0,
+          outcome.httpStatus,
+          outcome.reason,
+          item.attempts,
+        ],
       );
       if (outcome.outcome === "delivered") counts.delivered++;
       else if (outcome.outcome === "blocked") counts.blocked++;
