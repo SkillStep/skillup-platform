@@ -1,4 +1,4 @@
-import { publicSkill, type PublicSkill } from "./public-catalog";
+import { publicSkill, type PublicSkill, type PublicSkillLevel } from "./public-catalog";
 
 type PublishedCourse = Readonly<{
   slug: string;
@@ -9,6 +9,7 @@ type PublishedCourse = Readonly<{
   levelCount: number;
   moduleCount: number;
   modules: readonly string[];
+  levels: readonly PublicSkillLevel[];
   outcomes: readonly string[];
   challengeTypes: readonly string[];
   estimatedMinutes: number;
@@ -17,6 +18,23 @@ type PublishedCourse = Readonly<{
 const apiBase = process.env["API_BASE_URL"] ?? "http://localhost:3001";
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const slug = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function isPublishedLevel(value: unknown): value is PublicSkillLevel {
+  if (!value || typeof value !== "object") return false;
+  const level = value as Record<string, unknown>;
+  return (
+    typeof level["id"] === "string" &&
+    uuid.test(level["id"]) &&
+    typeof level["title"] === "string" &&
+    level["title"].length >= 3 &&
+    typeof level["moduleId"] === "string" &&
+    uuid.test(level["moduleId"]) &&
+    typeof level["moduleTitle"] === "string" &&
+    level["moduleTitle"].length >= 3 &&
+    Number.isInteger(level["estimatedMinutes"]) &&
+    Number(level["estimatedMinutes"]) > 0
+  );
+}
 
 function isPublishedCourse(value: unknown): value is PublishedCourse {
   if (!value || typeof value !== "object") return false;
@@ -41,6 +59,15 @@ function isPublishedCourse(value: unknown): value is PublishedCourse {
     Array.isArray(course["modules"]) &&
     course["modules"].every((name: unknown) => typeof name === "string") &&
     course["modules"].length === course["moduleCount"] &&
+    Array.isArray(course["levels"]) &&
+    course["levels"].length === course["levelCount"] &&
+    course["levels"].every(isPublishedLevel) &&
+    new Set(course["levels"].map((item: PublicSkillLevel) => item.id)).size === course["levels"].length &&
+    course["levels"][0]?.id === course["levelId"] &&
+    course["levels"].reduce(
+      (total: number, item: PublicSkillLevel) => total + item.estimatedMinutes,
+      0,
+    ) === course["estimatedMinutes"] &&
     Array.isArray(course["outcomes"]) &&
     course["outcomes"].every((item: unknown) => typeof item === "string") &&
     Array.isArray(course["challengeTypes"]) &&
@@ -71,6 +98,7 @@ export function projectPublishedPublicSkills(data: unknown): readonly PublicSkil
       challengeTypes: candidate.challengeTypes,
       levelId: candidate.levelId,
       levelCount: candidate.levelCount,
+      levels: candidate.levels,
       moduleCount: candidate.moduleCount,
       estimatedMinutes: candidate.estimatedMinutes,
       reviewCadence:

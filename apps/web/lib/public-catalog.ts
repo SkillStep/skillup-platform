@@ -1,5 +1,13 @@
 export type PublicSkillStatus = "pilot" | "launch";
 
+export type PublicSkillLevel = Readonly<{
+  id: string;
+  title: string;
+  moduleId: string;
+  moduleTitle: string;
+  estimatedMinutes: number;
+}>;
+
 export type PublicSkill = Readonly<{
   slug: string;
   title: string;
@@ -11,6 +19,7 @@ export type PublicSkill = Readonly<{
   challengeTypes: readonly string[];
   levelId: string;
   levelCount?: number;
+  levels?: readonly PublicSkillLevel[];
   moduleCount?: number;
   estimatedMinutes?: number;
   reviewCadence: string;
