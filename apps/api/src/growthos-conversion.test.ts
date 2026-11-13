@@ -271,4 +271,37 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
     });
     expect(statements[3]).toContain("where order_id=$1 and status='processing'");
   });
+  it("uses a server-only Vercel automation bypass token only when configured", async () => {
+    const env = {
+      GROWTHOS_CONVERSION_ENABLED: "true",
+      GROWTHOS_CONVERSION_URL: cfg.url,
+      GROWTHOS_CONVERSION_SECRET: cfg.token,
+      GROWTHOS_BRAND_ID: brandId,
+      GROWTHOS_VERCEL_PROTECTION_BYPASS_SECRET: "b".repeat(32),
+    };
+    const protectedConfig = readGrowthosBridgeConfig(env, "staging");
+    expect(protectedConfig?.vercelProtectionBypassSecret).toBe("b".repeat(32));
+    expect(() =>
+      readGrowthosBridgeConfig(
+        { ...env, GROWTHOS_VERCEL_PROTECTION_BYPASS_SECRET: "invalid" },
+        "staging",
+      ),
+    ).toThrow(/automation bypass/i);
+    if (!protectedConfig) throw new Error("Expected a configured GrowthOS bridge");
+    const body = buildGrowthosConversion(order, protectedConfig);
+    if (!body) throw new Error("Expected a valid paid conversion");
+
+    const fetcher: typeof fetch = async (_url, init) => {
+      const headers = new Headers(init?.headers);
+      expect(headers.get("x-vercel-protection-bypass")).toBe("b".repeat(32));
+      expect(headers.get("authorization")).toBe(`Bearer ${cfg.token}`);
+      return new Response(JSON.stringify({ accepted: true }), { status: 201 });
+    };
+    expect(await submitGrowthosConversion(body, protectedConfig, fetcher)).toMatchObject({
+      outcome: "delivered",
+      httpStatus: 201,
+    });
+    expect(protectedConfig.vercelProtectionBypassSecret).not.toBe(cfg.token);
+  });
+
 });
