@@ -105,6 +105,7 @@ export function CourseDraftsConsole() {
   return (
     <section className={styles["section"]} aria-labelledby="draft-courses-heading">
       <h2 id="draft-courses-heading">Unpublished course inventory</h2>
+      <p><a href="/en/admin/course-editorial">Open the independent human-review and release console</a></p>
       <p role="status">{message}</p>
       <button className={styles["button"]} type="button" onClick={reload} disabled={loading}>
         {loading ? "Checking…" : "Refresh draft status"}
