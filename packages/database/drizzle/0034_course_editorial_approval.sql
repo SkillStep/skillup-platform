@@ -99,3 +99,50 @@ begin
   return new;
 end;
 $$ language plpgsql;
+
+-- 0002 also replaces the version trigger with a direct transition check.
+-- Preserve all its restrictions; archived -> published is explicitly gated.
+create or replace function protect_published_version_content() returns trigger as $$
+declare
+  old_content jsonb;
+  new_content jsonb;
+  transition_allowed boolean := false;
+begin
+  if tg_op = 'DELETE' then
+    if old.state = 'published' then
+      raise exception 'Published content version % cannot be deleted', old.id;
+    end if;
+    return old;
+  end if;
+  if old.state = 'published' then
+    old_content := to_jsonb(old) - array['state','scheduled_at'];
+    new_content := to_jsonb(new) - array['state','scheduled_at'];
+    if old_content is distinct from new_content then
+      raise exception 'Published content version % cannot be mutated; create a new version', old.id;
+    end if;
+  end if;
+  if new.state = old.state then return new; end if;
+  if old.state = 'archived' and new.state = 'published'
+     and current_setting('skillup.course_editorial_rollback', true) = 'approved' then
+    old_content := to_jsonb(old) - array['state','scheduled_at','published_at'];
+    new_content := to_jsonb(new) - array['state','scheduled_at','published_at'];
+    if old_content is distinct from new_content then
+      raise exception 'Restored course content % must match previously approved immutable version', old.id;
+    end if;
+    return new;
+  end if;
+  transition_allowed :=
+    (old.state = 'draft' and new.state in ('in_review','rejected','archived')) or
+    (old.state = 'in_review' and new.state in ('draft','approved','rejected')) or
+    (old.state = 'approved' and new.state in ('draft','scheduled','published','rejected')) or
+    (old.state = 'scheduled' and new.state in ('approved','published','archived')) or
+    (old.state = 'published' and new.state in ('superseded','archived')) or
+    (old.state = 'superseded' and new.state = 'archived') or
+    (old.state = 'rejected' and new.state in ('draft','archived'));
+  if not transition_allowed then
+    raise exception 'Unsupported editorial transition from % to % on %',
+      old.state, new.state, tg_table_name;
+  end if;
+  return new;
+end;
+$$ language plpgsql;
