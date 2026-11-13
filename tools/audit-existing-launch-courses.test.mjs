@@ -14,8 +14,16 @@ test("quantifies canonical launch boilerplate without treating the legacy pilot 
     includedAbove: false,
   });
   assert.equal(report.publicationAuthorized, false);
-  assert.equal(report.courses.every((course) => course.reviewState === "requires_independent_human_review"), true);
-  assert.equal(report.courses.flatMap((course) => course.levels).every((level) => level.templateGenerated === 3), true);
+  assert.equal(
+    report.courses.every((course) => course.reviewState === "requires_independent_human_review"),
+    true,
+  );
+  assert.equal(
+    report.courses
+      .flatMap((course) => course.levels)
+      .every((level) => level.templateGenerated === 3),
+    true,
+  );
 });
 
 test("handles empty scope without inventing reviewed courses", () => {
