@@ -200,7 +200,10 @@ if (workerSecret) {
 }
 
 const growthosBridgeConfig = readGrowthosBridgeConfig(process.env, config.APP_ENV);
-const growthosConversions = createGrowthosConversionTask({ pool: database.pool, config: growthosBridgeConfig });
+const growthosConversions = createGrowthosConversionTask({
+  pool: database.pool,
+  config: growthosBridgeConfig,
+});
 
 const maintenance = createMaintenanceRunner({
   intervalMs: (config.MAINTENANCE_INTERVAL_SECONDS ?? 60) * 1_000,
@@ -209,7 +212,9 @@ const maintenance = createMaintenanceRunner({
     error: (context, message) => app.log.error(context, message),
   },
   tasks: [
-    ...(growthosBridgeConfig ? [{ name: "growthos-verified-conversion-relay", run: () => growthosConversions(10) }] : []),
+    ...(growthosBridgeConfig
+      ? [{ name: "growthos-verified-conversion-relay", run: () => growthosConversions(10) }]
+      : []),
     ...(config.FEATURE_PAYMENT_SERVICE_ENABLED
       ? []
       : [
