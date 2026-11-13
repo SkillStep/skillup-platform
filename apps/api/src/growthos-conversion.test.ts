@@ -271,5 +271,4 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
     });
     expect(statements[3]).toContain("where order_id=$1 and status='processing'");
   });
-
 });
