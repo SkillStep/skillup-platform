@@ -86,7 +86,7 @@ export function LandingSubscribeCard({
       return;
     }
     const planCode = planCodeForPackage(trackingCode ?? campaign.package);
-    if (trackingCode && process.env.NEXT_PUBLIC_GROWTHOS_CHECKOUT_ENABLED !== "true") {
+    if (trackingCode && process.env["NEXT_PUBLIC_GROWTHOS_CHECKOUT_ENABLED"] !== "true") {
       setMessage(
         "Campaign checkout is paused until the advertised offer and SkillUp billing terms are approved.",
       );
