@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "documentStatus": "implementation_plan_only_no_publication",
+  "source": "Team brief: SkillUp 5 more skills and certificate.docx (13 Nov 2026), sections 1-12",
+  "basedOn": "catalog-plan-v1.json (15 proposed courses, 20 unique total with the five existing live paths)",
+  "baseline": {
+    "currentlyPublishedPaths": 5,
+    "previousPlannedAdditionalCourses": 15,
+    "previousLongTermUniqueTotal": 20,
+    "additionalTrulyNewCourses": 2,
+    "newLongTermUniqueTotal": 22,
+    "firstDiscoveryMilestoneTotalCards": 10,
+    "firstDiscoveryMilestonePublishedCards": 5,
+    "firstDiscoveryMilestoneComingSoonCards": 5
+  },
+  "publishedInitialSkills": [
+    {
+      "slug": "interview-workplace-communication",
+      "title": "Interview and Workplace Communication",
+      "canPlay": true
+    },
+    {
+      "slug": "practical-english-study-work",
+      "title": "Practical English for Study and Work",
+      "canPlay": true
+    },
+    {
+      "slug": "ai-tools-study-work",
+      "title": "AI Tools for Study and Work",
+      "canPlay": true
+    },
+    {
+      "slug": "freelancing-foundations",
+      "title": "Freelancing Foundations",
+      "canPlay": true
+    },
+    {
+      "slug": "digital-marketing-foundations",
+      "title": "Digital Marketing Foundations",
+      "canPlay": true
+    }
+  ],
+  "teamAdditions": [
+    {
+      "sortOrder": 6,
+      "canonicalDraftSlug": "prompt-engineering-generative-ai",
+      "proposedAliasSlug": null,
+      "existingDraftSlug": null,
+      "reuseExistingDraft": false,
+      "issueNumber": 263,
+      "title": "Prompt Engineering & Generative AI",
+      "description": "Learn to write effective AI prompts, improve responses and check AI-generated results for accuracy.",
+      "previewStatus": "coming_soon_nonplayable_until_approved",
+      "contentTarget": {
+        "modules": 4,
+        "levelsPerModule": 6,
+        "totalLevels": 24,
+        "minimumEvaluatedExercisesPerLevel": 3,
+        "minimumEvaluatedExercises": 72,
+        "capstones": 1
+      },
+      "modules": [
+        "Prompt Basics and Clear Instructions",
+        "Context, Constraints and Iteration",
+        "Output Evaluation and Fact-Checking",
+        "Reusable Prompt Toolkit Capstone"
+      ],
+      "publishedPreviewRule": "Only publish this exact card when preview title and description approved; no playable URL until independent CMS approvals and exact-SHA QA."
+    },
+    {
+      "sortOrder": 7,
+      "canonicalDraftSlug": "cybersecurity-digital-safety",
+      "proposedAliasSlug": null,
+      "existingDraftSlug": null,
+      "reuseExistingDraft": false,
+      "issueNumber": 264,
+      "title": "Cybersecurity & Digital Safety",
+      "description": "Learn to spot scams, recognize phishing attempts and protect accounts and personal information online.",
+      "previewStatus": "coming_soon_nonplayable_until_approved",
+      "contentTarget": {
+        "modules": 4,
+        "levelsPerModule": 6,
+        "totalLevels": 24,
+        "minimumEvaluatedExercisesPerLevel": 3,
+        "minimumEvaluatedExercises": 72,
+        "capstones": 1
+      },
+      "modules": [
+        "Recognizing Phishing and Scams",
+        "Passwords and Account Security",
+        "Privacy and Data Protection",
+        "Scam Response and Safety Capstone"
+      ],
+      "publishedPreviewRule": "Only publish this exact card when preview title and description approved; no playable URL until independent CMS approvals and exact-SHA QA."
+    },
+    {
+      "sortOrder": 8,
+      "canonicalDraftSlug": "data-analytics-dashboards",
+      "proposedAliasSlug": "data-analytics-decision-making",
+      "existingDraftSlug": "data-analytics-dashboards",
+      "reuseExistingDraft": true,
+      "issueNumber": 242,
+      "title": "Data Analytics & Decision Making",
+      "description": "Practice reading charts, finding patterns and using simple data to make better everyday decisions.",
+      "previewStatus": "coming_soon_nonplayable_until_approved",
+      "contentTarget": {
+        "modules": 4,
+        "levelsPerModule": 6,
+        "totalLevels": 24,
+        "minimumEvaluatedExercisesPerLevel": 3,
+        "minimumEvaluatedExercises": 72,
+        "capstones": 1
+      },
+      "modules": [
+        "Tables, questions and data quality",
+        "Charts, trends and meaningful metrics",
+        "Interpretation, uncertainty and comparing options",
+        "Data-backed decision memo and dashboard capstone"
+      ],
+      "publishedPreviewRule": "Only publish this exact card when preview title and description approved; no playable URL until independent CMS approvals and exact-SHA QA."
+    },
+    {
+      "sortOrder": 9,
+      "canonicalDraftSlug": "applied-ai-workflows",
+      "proposedAliasSlug": "ai-automation-no-code-tools",
+      "existingDraftSlug": "applied-ai-workflows",
+      "reuseExistingDraft": true,
+      "issueNumber": 244,
+      "title": "AI Automation & No-Code Tools",
+      "description": "Learn how simple workflows connect digital tools and automate repetitive tasks without advanced coding.",
+      "previewStatus": "coming_soon_nonplayable_until_approved",
+      "contentTarget": {
+        "modules": 4,
+        "levelsPerModule": 6,
+        "totalLevels": 24,
+        "minimumEvaluatedExercisesPerLevel": 3,
+        "minimumEvaluatedExercises": 72,
+        "capstones": 1
+      },
+      "modules": [
+        "Workflow opportunities and safe task boundaries",
+        "Triggers, actions and no-code connectors",
+        "Conditions, human approvals and privacy",
+        "Automation testing, recovery and capstone"
+      ],
+      "publishedPreviewRule": "Only publish this exact card when preview title and description approved; no playable URL until independent CMS approvals and exact-SHA QA."
+    },
+    {
+      "sortOrder": 10,
+      "canonicalDraftSlug": "sales-client-negotiation",
+      "proposedAliasSlug": "sales-negotiation-client-management",
+      "existingDraftSlug": "sales-client-negotiation",
+      "reuseExistingDraft": true,
+      "issueNumber": 247,
+      "title": "Sales, Negotiation & Client Management",
+      "description": "Build confidence in client conversations, handle objections and practice practical negotiation skills.",
+      "previewStatus": "coming_soon_nonplayable_until_approved",
+      "contentTarget": {
+        "modules": 4,
+        "levelsPerModule": 6,
+        "totalLevels": 24,
+        "minimumEvaluatedExercisesPerLevel": 3,
+        "minimumEvaluatedExercises": 72,
+        "capstones": 1
+      },
+      "modules": [
+        "Client discovery and active listening",
+        "Presenting offers and ethical objection handling",
+        "Fair negotiation, pricing and boundaries",
+        "Follow-up, client retention and conversation capstone"
+      ],
+      "publishedPreviewRule": "Only publish this exact card when preview title and description approved; no playable URL until independent CMS approvals and exact-SHA QA."
+    }
+  ],
+  "certificateScope": {
+    "initialEligibleSkills": [
+      {
+        "skillSlug": "interview-workplace-communication",
+        "certificateTitle": "Certificate of Completion — Interview and Workplace Communication"
+      },
+      {
+        "skillSlug": "practical-english-study-work",
+        "certificateTitle": "Certificate of Completion — Practical English for Study and Work"
+      },
+      {
+        "skillSlug": "ai-tools-study-work",
+        "certificateTitle": "Certificate of Completion — AI Tools for Study and Work"
+      },
+      {
+        "skillSlug": "freelancing-foundations",
+        "certificateTitle": "Certificate of Completion — Freelancing Foundations"
+      },
+      {
+        "skillSlug": "digital-marketing-foundations",
+        "certificateTitle": "Certificate of Completion — Digital Marketing Foundations"
+      },
+      {
+        "skillSlug": "prompt-engineering-generative-ai",
+        "certificateTitle": "Certificate of Completion — Prompt Engineering & Generative AI"
+      },
+      {
+        "skillSlug": "cybersecurity-digital-safety",
+        "certificateTitle": "Certificate of Completion — Cybersecurity & Digital Safety"
+      },
+      {
+        "skillSlug": "data-analytics-dashboards",
+        "certificateTitle": "Certificate of Completion — Data Analytics & Decision Making"
+      },
+      {
+        "skillSlug": "applied-ai-workflows",
+        "certificateTitle": "Certificate of Completion — AI Automation & No-Code Tools"
+      },
+      {
+        "skillSlug": "sales-client-negotiation",
+        "certificateTitle": "Certificate of Completion — Sales, Negotiation & Client Management"
+      }
+    ],
+    "totalDistinctCertificates": 10,
+    "singleSharedEngine": true,
+    "featureFlagDefault": "off",
+    "publicVerificationDefault": false,
+    "requiredCompletion": "100% required published versioned levels/challenges with real server-verified pass and approved capstone",
+    "requiredPolicyApprovals": [
+      "score_threshold",
+      "retry_policy",
+      "mandatory_exercise_definition",
+      "free_challenge_count",
+      "eligible_premium_plan",
+      "certificate_layout",
+      "certificate_legal_wording",
+      "historical_backfill",
+      "verification_consent",
+      "course_slug_aliases",
+      "release_order_and_date"
+    ],
+    "perAwardUniqueness": "learner_id + skill_id + approved_requirement_set_id; human re-certification policy unresolved",
+    "pdf": "A4 landscape, SkillUp purple, one template",
+    "legalFooter": "SkillUp educational completion certificate — not an accredited professional qualification.",
+    "noExtraCertificateFee": true,
+    "noPublicPII": true
+  },
+  "deliveryIssues": {
+    "epic": 261,
+    "previewCatalogue": 262,
+    "newCourses": [
+      263,
+      264
+    ],
+    "reuseCourses": [
+      242,
+      244,
+      247
+    ],
+    "certificatePolicy": 265,
+    "certificateModel": 266,
+    "certificateIssuance": 267,
+    "certificatePdf": 268,
+    "certificateFrontend": 269,
+    "certificateBackfill": 270,
+    "releaseQa": 271,
+    "preExistingWorkflow": 229,
+    "existingQuality": 226,
+    "premium": 231,
+    "learningExperience": 230
+  },
+  "safety": {
+    "noAutomaticReview": true,
+    "noAutomaticPublication": true,
+    "noProductionDeployment": true,
+    "noBillingChange": true,
+    "existingFiveImmutable": true
+  }
+}
