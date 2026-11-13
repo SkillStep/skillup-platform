@@ -116,7 +116,7 @@ try {
   assert(excelChallenge.rows.length === 1);
   const originalEvaluation = excelChallenge.rows[0].private_evaluation;
   await client.query(
-    "update challenge_evaluations set private_evaluation = '{\"correctOptionKeys\":[\"tampered\"]}'::jsonb where challenge_version_id = $1",
+    'update challenge_evaluations set private_evaluation = \'{"correctOptionKeys":["tampered"]}\'::jsonb where challenge_version_id = $1',
     [excelChallenge.rows[0].challenge_version_id],
   );
   await assert.rejects(
