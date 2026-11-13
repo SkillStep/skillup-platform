@@ -119,10 +119,23 @@ export function attributionFromLandingCampaign(
     (typeof window !== "undefined" && window.location
       ? new URLSearchParams(window.location.search ?? "").get("he")
       : null);
-  const growthos = typeof window !== "undefined" && window.location
-    ? new URLSearchParams(window.location.search ?? "") : null;
+  const growthos =
+    typeof window !== "undefined" && window.location
+      ? new URLSearchParams(window.location.search ?? "")
+      : null;
   const bridgeFields = Object.fromEntries(
-    ["growthos_campaign_id","growthos_page_id","growthos_version_id","growthos_variant_id","growthos_variation_id","growthos_variation_version_id","growthos_package_id","growthos_package_code","growthos_session_id","growthos_test"].map((key) => [key, growthos?.get(key)]),
+    [
+      "growthos_campaign_id",
+      "growthos_page_id",
+      "growthos_version_id",
+      "growthos_variant_id",
+      "growthos_variation_id",
+      "growthos_variation_version_id",
+      "growthos_package_id",
+      "growthos_package_code",
+      "growthos_session_id",
+      "growthos_test",
+    ].map((key) => [key, growthos?.get(key)]),
   );
   return buildPremiumAttribution({
     ...bridgeFields,
