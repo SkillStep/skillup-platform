@@ -10,6 +10,8 @@ export type GrowthosBridgeConfig = Readonly<{
   token: string;
   brandId: string;
   testTraffic: boolean;
+  /** Optional server-only Vercel Automation Bypass credential for protected staging. */
+  vercelProtectionBypassSecret?: string;
 }>;
 
 export type VerifiedSkillupOrder = Readonly<{
@@ -41,6 +43,10 @@ export function readGrowthosBridgeConfig(
   const rawUrl = env["GROWTHOS_CONVERSION_URL"];
   const token = env["GROWTHOS_CONVERSION_SECRET"] ?? "";
   const brandId = env["GROWTHOS_BRAND_ID"] ?? "";
+  const vercelBypass = env["GROWTHOS_VERCEL_PROTECTION_BYPASS_SECRET"];
+  if (vercelBypass && !/^[A-Za-z0-9]{32}$/.test(vercelBypass)) {
+    throw new Error("Invalid Vercel automation bypass credential configuration.");
+  }
   if (!rawUrl || token.length < 32 || !UUID.test(brandId)) {
     throw new Error("GrowthOS conversion endpoint, product UUID or server secret is missing.");
   }
@@ -57,7 +63,13 @@ export function readGrowthosBridgeConfig(
   ) {
     throw new Error("GrowthOS conversion URL must be an explicit HTTPS /api/conversions endpoint.");
   }
-  return { url: url.toString(), token, brandId, testTraffic: environment !== "production" };
+  return {
+    url: url.toString(),
+    token,
+    brandId,
+    testTraffic: environment !== "production",
+    ...(vercelBypass ? { vercelProtectionBypassSecret: vercelBypass } : {}),
+  };
 }
 
 const field = (value: Record<string, unknown>, key: string): string | null =>
@@ -187,6 +199,9 @@ export async function submitGrowthosConversion(
         authorization: `Bearer ${config.token}`,
         "content-type": "application/json",
         accept: "application/json",
+        ...(config.vercelProtectionBypassSecret
+          ? { "x-vercel-protection-bypass": config.vercelProtectionBypassSecret }
+          : {}),
       },
       body: JSON.stringify(body),
       redirect: "manual",
