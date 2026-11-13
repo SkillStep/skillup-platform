@@ -16,6 +16,9 @@ import {
 
 const url = process.env.DATABASE_URL;
 if (!url) throw new Error("AIFS reviewer smoke requires an explicit test DATABASE_URL.");
+if (!["test", "ci"].includes(process.env.APP_ENV ?? "")) {
+  throw new Error("AIFS editorial smoke refuses non-CI databases. Use APP_ENV=test only.");
+}
 
 const pool = new Pool({ connectionString: url, max: 1, allowExitOnIdle: true });
 const client = await pool.connect();
