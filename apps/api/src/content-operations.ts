@@ -462,7 +462,6 @@ export function createContentOperationsService(
       }));
     },
 
-
     // This worksheet deliberately contains private answer keys. It is *only* exposed
     // through the content_reviewer RBAC route below; never use it in public catalogue
     // projections or a role-shared admin inventory.
@@ -967,14 +966,18 @@ export function registerContentOperationsRoutes(
     return { courses: await options.contentService.listCourseDrafts() };
   });
 
-
   // Private exercise answer keys are returned only to independent content reviewers.
   // Drafts remain draft; this read-only endpoint cannot approve or publish.
   app.get("/v1/admin/course-drafts/:slug/review-packet", async (request, reply) => {
     await requireAdminRoles(request, options, ["content_reviewer"]);
-    const { slug } = z.object({
-      slug: z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120),
-    }).parse(request.params);
+    const { slug } = z
+      .object({
+        slug: z
+          .string()
+          .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+          .max(120),
+      })
+      .parse(request.params);
     reply.header("cache-control", "private, no-store");
     reply.header("x-robots-tag", "noindex, nofollow");
     return { packet: await options.contentService.getCourseDraftReviewPacket(slug) };
