@@ -54,21 +54,25 @@ describe("course draft editorial read model", () => {
   });
 
   it("creates a private, draft-only reviewer packet including exercise answer logic", async () => {
-    const query = vi.fn().mockResolvedValue({ rows: [{
-      course_slug: "excel-google-sheets-work",
-      course_title: "Excel & Google Sheets for Work",
-      module_slug: "useful-formulas",
-      module_title: "Useful Formulas",
-      level_slug: "calculate-totals",
-      level_title: "Calculate totals",
-      learning_objective: "Add up a sales list accurately.",
-      instructions: "Use SUM on a synthetic sample sales range.",
-      challenge_type: "multiple_choice",
-      challenge_prompt: "Which formula sums B2 through B8?",
-      explanation: "SUM adds the cell range.",
-      public_payload: { choices: ["SUM", "COUNT"] },
-      private_evaluation: { correctOptionKeys: ["a"] },
-    }] });
+    const query = vi.fn().mockResolvedValue({
+      rows: [
+        {
+          course_slug: "excel-google-sheets-work",
+          course_title: "Excel & Google Sheets for Work",
+          module_slug: "useful-formulas",
+          module_title: "Useful Formulas",
+          level_slug: "calculate-totals",
+          level_title: "Calculate totals",
+          learning_objective: "Add up a sales list accurately.",
+          instructions: "Use SUM on a synthetic sample sales range.",
+          challenge_type: "multiple_choice",
+          challenge_prompt: "Which formula sums B2 through B8?",
+          explanation: "SUM adds the cell range.",
+          public_payload: { choices: ["SUM", "COUNT"] },
+          private_evaluation: { correctOptionKeys: ["a"] },
+        },
+      ],
+    });
     const service = createContentOperationsService({
       pool: { query } as never,
       adminService: {} as never,
