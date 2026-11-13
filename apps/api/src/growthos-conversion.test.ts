@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 
 import {
   buildGrowthosConversion,
+  createGrowthosConversionTask,
   readGrowthosBridgeConfig,
   submitGrowthosConversion,
   type GrowthosBridgeConfig,
@@ -210,4 +211,65 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
       await submitGrowthosConversion(body, cfg, async () => new Response(null, { status: 302 })),
     ).toMatchObject({ outcome: "blocked", reason: "redirect_rejected" });
   });
+  it("never selects sandbox or unsigned events for a real conversion", async () => {
+    const statements: string[] = [];
+    const pool = {
+      query: async (sql: string) => {
+        statements.push(sql);
+        return { rowCount: 0, rows: [] };
+      },
+    } as unknown as Parameters<typeof createGrowthosConversionTask>[0]["pool"];
+    const run = createGrowthosConversionTask({ pool, config: cfg });
+    expect(await run()).toEqual({ queued: 0, delivered: 0, blocked: 0, retry: 0 });
+    expect(statements).toHaveLength(2);
+    const enqueue = statements[0] ?? "";
+    expect(enqueue).toContain("o.provider = 'jazzcash'");
+    expect(enqueue).toContain("ev.provider='jazzcash'");
+    expect(enqueue).toContain("ev.signature_verified=true");
+    expect(enqueue).toContain("ev.provider_status='000'");
+    expect(enqueue).toContain("e.status='active'");
+    expect(enqueue).toContain("on conflict (order_id) do nothing");
+  });
+
+  it("rechecks signed payment and entitlement before dispatching, then marks one order delivered", async () => {
+    const statements: string[] = [];
+    const payloads: unknown[] = [];
+    const pool = {
+      query: async (sql: string) => {
+        statements.push(sql);
+        if (sql.includes("insert into growthos_conversion_outbox")) {
+          return { rowCount: 1, rows: [] };
+        }
+        if (sql.includes("with due as")) {
+          return { rowCount: 1, rows: [{ order_id: order.id, attempts: 1 }] };
+        }
+        if (sql.includes("select o.id::text")) {
+          return { rowCount: 1, rows: [order] };
+        }
+        if (sql.includes("update growthos_conversion_outbox")) {
+          return { rowCount: 1, rows: [] };
+        }
+        throw new Error("Unexpected database statement");
+      },
+    } as unknown as Parameters<typeof createGrowthosConversionTask>[0]["pool"];
+    const fetcher: typeof fetch = async (_url, init) => {
+      payloads.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ accepted: true }), { status: 201 });
+    };
+    const run = createGrowthosConversionTask({ pool, config: cfg, fetcher });
+    expect(await run(1)).toEqual({ queued: 1, delivered: 1, blocked: 0, retry: 0 });
+    expect(statements[2]).toContain("o.provider='jazzcash'");
+    expect(statements[2]).toContain("ev.provider='jazzcash'");
+    expect(statements[2]).toContain("ev.signature_verified=true");
+    expect(statements[2]).toContain("e.status='active'");
+    expect(payloads).toHaveLength(1);
+    expect(payloads[0]).toMatchObject({
+      idempotencyKey: `skillup-${order.id}`,
+      value: 990,
+      currency: "PKR",
+      properties: { marketingConsent: false, testTraffic: true },
+    });
+    expect(statements[3]).toContain("where order_id=$1 and status='processing'");
+  });
+
 });
