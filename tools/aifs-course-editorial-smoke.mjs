@@ -79,15 +79,6 @@ try {
     "A reviewer cannot bypass mandatory human checklist evidence.",
   );
 
-  const challenge = await client.query(
-    "select challenge_version_id from challenge_evaluations limit 1",
-  );
-  const challengeId = challenge.rows[0]?.challenge_version_id;
-  assert(challengeId);
-  await client.query(
-    "update challenge_evaluations set private_evaluation = $2::jsonb where challenge_version_id = $1",
-    [challengeId, JSON.stringify({ altered: true })],
-  );
   // Only mutate an actual Excel challenge to verify the submission fingerprint.
   const excelChallenge = await client.query(
     `select ce.challenge_version_id, ce.private_evaluation
