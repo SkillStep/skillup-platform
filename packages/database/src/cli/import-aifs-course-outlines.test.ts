@@ -21,7 +21,9 @@ describe("14-course draft-only syllabus importer", () => {
       expect(entry.outline.publishedAt).toBeNull();
       expect(entry.outline.modules).toHaveLength(4);
       expect(entry.outline.modules.every((module) => module.levelTitles.length === 6)).toBe(true);
-      expect(entry.outline.modules.every((module) => module.reviewStatus === "subject_review_pending")).toBe(true);
+      expect(
+        entry.outline.modules.every((module) => module.reviewStatus === "subject_review_pending"),
+      ).toBe(true);
     }
   });
 
@@ -33,10 +35,9 @@ describe("14-course draft-only syllabus importer", () => {
   it("denies production, unknown environments and unacknowledged writes", () => {
     for (const appEnv of ["production", "prod", "preview", "testing", ""]) {
       expect(() =>
-        assertDraftOutlineImportPermission(
-          { APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" },
-          ["--apply-draft"],
-        ),
+        assertDraftOutlineImportPermission({ APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" }, [
+          "--apply-draft",
+        ]),
       ).toThrow("forbidden");
     }
     expect(() =>
@@ -47,18 +48,17 @@ describe("14-course draft-only syllabus importer", () => {
   it("permits explicitly authorized draft writes only to test/development/staging", () => {
     for (const appEnv of ["test", "development", "staging"]) {
       expect(
-        assertDraftOutlineImportPermission(
-          { APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" },
-          ["--apply-draft"],
-        ),
+        assertDraftOutlineImportPermission({ APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" }, [
+          "--apply-draft",
+        ]),
       ).toBe("apply_draft");
     }
   });
 
   it("rejects publishing flags and mixed import modes", () => {
     expect(() => assertDraftOutlineImportPermission({}, ["--publish"])).toThrow("Only");
-    expect(() =>
-      assertDraftOutlineImportPermission({}, ["--dry-run", "--apply-draft"]),
-    ).toThrow("Only");
+    expect(() => assertDraftOutlineImportPermission({}, ["--dry-run", "--apply-draft"])).toThrow(
+      "Only",
+    );
   });
 });

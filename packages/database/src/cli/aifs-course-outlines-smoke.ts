@@ -31,7 +31,9 @@ try {
     repeat.imported !== 0 ||
     repeat.alreadyImported !== 14
   ) {
-    throw new Error(`Draft import is not complete or idempotent: ${JSON.stringify({ initial, repeat })}`);
+    throw new Error(
+      `Draft import is not complete or idempotent: ${JSON.stringify({ initial, repeat })}`,
+    );
   }
 
   const state = await connection.query<{
@@ -103,7 +105,11 @@ try {
        join skill_categories s on s.id = sv.category_id
       where s.slug = 'life-skills'`,
   );
-  if (category.rows.length !== 1 || category.rows[0]?.state !== "draft" || category.rows[0]?.reviewed_at !== null) {
+  if (
+    category.rows.length !== 1 ||
+    category.rows[0]?.state !== "draft" ||
+    category.rows[0]?.reviewed_at !== null
+  ) {
     throw new Error("The newly proposed life-skills category must stay in unreviewed draft.");
   }
 
@@ -114,7 +120,10 @@ try {
       (select count(*)::int from skills where status = 'published') as published`,
     [plan.courses.map((entry) => entry.scope.slug)],
   );
-  if (after.rows[0]?.remaining !== 0 || after.rows[0]?.published !== publishedBefore.rows[0]?.count) {
+  if (
+    after.rows[0]?.remaining !== 0 ||
+    after.rows[0]?.published !== publishedBefore.rows[0]?.count
+  ) {
     throw new Error("Draft rollback left unintended rows or changed the published catalogue.");
   }
   console.info(

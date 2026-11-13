@@ -74,10 +74,13 @@ export function loadAndValidateDraftCourseOutlines(): ImportPlan {
     !Array.isArray(manifest.courses) ||
     manifest.courses.length !== 15
   ) {
-    throw new Error("The reviewed 15-course planning scope is required; auto-publication forbidden.");
+    throw new Error(
+      "The reviewed 15-course planning scope is required; auto-publication forbidden.",
+    );
   }
   const included = manifest.courses.filter((course) => course.slug !== "excel-google-sheets-work");
-  if (included.length !== 14) throw new Error("Expected 14 outlines (the Excel draft has its own importer).");
+  if (included.length !== 14)
+    throw new Error("Expected 14 outlines (the Excel draft has its own importer).");
 
   const seenCourses = new Set<string>();
   const outlineTexts: string[] = [];
@@ -140,7 +143,9 @@ export function loadAndValidateDraftCourseOutlines(): ImportPlan {
   });
   return {
     courses,
-    sha256: createHash("sha256").update([manifestText, ...outlineTexts].join("\n")).digest("hex"),
+    sha256: createHash("sha256")
+      .update([manifestText, ...outlineTexts].join("\n"))
+      .digest("hex"),
     moduleCount: 56,
     levelCount: 336,
   };
@@ -158,7 +163,9 @@ export function assertDraftOutlineImportPermission(
   }
   if (args[0] !== "--apply-draft") return "dry_run";
   if (!["test", "development", "staging"].includes(env["APP_ENV"] ?? "")) {
-    throw new Error("AIFS draft outline imports are forbidden in production or unknown environments.");
+    throw new Error(
+      "AIFS draft outline imports are forbidden in production or unknown environments.",
+    );
   }
   if (env["AIFS_ALLOW_DRAFT_IMPORT"] !== "yes") {
     throw new Error("AIFS_ALLOW_DRAFT_IMPORT=yes is required before any draft DB write.");
@@ -366,7 +373,9 @@ async function importOneDraft(
 export async function importDraftCourseOutlines(
   database: PoolClient,
   plan: ImportPlan,
-): Promise<Readonly<{ imported: number; alreadyImported: number; modules: number; levels: number }>> {
+): Promise<
+  Readonly<{ imported: number; alreadyImported: number; modules: number; levels: number }>
+> {
   if (plan.courses.length !== 14 || plan.moduleCount !== 56 || plan.levelCount !== 336) {
     throw new Error("Refusing incomplete 14-course draft outline plan.");
   }
@@ -403,7 +412,13 @@ export async function importDraftCourseOutlines(
     [plan.courses.map((entry) => entry.scope.slug)],
   );
   const totals = counts.rows[0];
-  if (!totals || totals.courses !== 14 || totals.modules !== 56 || totals.levels !== 336 || totals.published !== 0) {
+  if (
+    !totals ||
+    totals.courses !== 14 ||
+    totals.modules !== 56 ||
+    totals.levels !== 336 ||
+    totals.published !== 0
+  ) {
     throw new Error(`Unsafe or incomplete draft outline import: ${JSON.stringify(totals)}.`);
   }
   return { imported, alreadyImported, modules: totals.modules, levels: totals.levels };
