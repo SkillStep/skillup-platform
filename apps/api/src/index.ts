@@ -25,6 +25,7 @@ import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
 import { createGameplayService } from "./gameplay.js";
+import { createGrowthosConversionTask, readGrowthosBridgeConfig } from "./growthos-conversion.js";
 import { resolveJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
 import { ensureLearnerMigrationPasswords } from "./learner-password.js";
@@ -198,6 +199,12 @@ if (workerSecret) {
   });
 }
 
+const growthosBridgeConfig = readGrowthosBridgeConfig(process.env, config.APP_ENV);
+const growthosConversions = createGrowthosConversionTask({
+  pool: database.pool,
+  config: growthosBridgeConfig,
+});
+
 const maintenance = createMaintenanceRunner({
   intervalMs: (config.MAINTENANCE_INTERVAL_SECONDS ?? 60) * 1_000,
   logger: {
@@ -205,6 +212,9 @@ const maintenance = createMaintenanceRunner({
     error: (context, message) => app.log.error(context, message),
   },
   tasks: [
+    ...(growthosBridgeConfig
+      ? [{ name: "growthos-verified-conversion-relay", run: () => growthosConversions(10) }]
+      : []),
     ...(config.FEATURE_PAYMENT_SERVICE_ENABLED
       ? []
       : [
