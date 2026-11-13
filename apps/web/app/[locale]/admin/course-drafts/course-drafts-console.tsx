@@ -138,8 +138,8 @@ export function CourseDraftsConsole() {
                 : "Export reviewer-only draft packet"}
             </button>
             <p className={styles["meta"]}>
-              Restricted to content reviewers. The JSON includes confidential answer keys;
-              never publish, share publicly or use as evidence of completed human review.
+              Restricted to content reviewers. The JSON includes confidential answer keys; never
+              publish, share publicly or use as evidence of completed human review.
             </p>
           </li>
         ))}
