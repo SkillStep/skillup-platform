@@ -342,8 +342,7 @@ async function setVersionStatuses(
         }
       }
     }
-    const sourceState = !isLegacy && from === "draft" && to === "published"
-      ? "approved" : from;
+    const sourceState = !isLegacy && from === "draft" && to === "published" ? "approved" : from;
     const result = await db.query(
       `update ${table} set ${stateColumn} = $3,
          reviewed_at = case when $3 = 'published' then $4 else reviewed_at end,
