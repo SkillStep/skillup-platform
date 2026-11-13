@@ -239,6 +239,13 @@
       "when": 1793000000000,
       "tag": "0033_premium_monthly_price_update",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1794571200000,
+      "tag": "0034_course_editorial_approval",
+      "breakpoints": true
     }
   ]
 }
