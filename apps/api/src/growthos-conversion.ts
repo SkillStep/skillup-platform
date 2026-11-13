@@ -245,13 +245,16 @@ export function createGrowthosConversionTask(
     const queued = await input.pool.query(
       `insert into growthos_conversion_outbox(order_id)
          select o.id from payment_orders o
-         where o.status = 'succeeded' and o.completed_at is not null
+         where o.status = 'succeeded' and o.provider = 'jazzcash'
+           and o.completed_at is not null
            and o.attribution ? 'growthos_page_id'
            and o.attribution ? 'growthos_version_id'
            and o.attribution ? 'growthos_package_id'
            and o.attribution ? 'growthos_package_code'
            and exists (select 1 from entitlements e where e.source_order_id=o.id and e.status='active')
            and exists (select 1 from payment_events ev where ev.order_id=o.id
+               and ev.provider='jazzcash'
+               and ev.event_type in ('checkout_return', 'ipn', 'status_query')
                and ev.signature_verified=true and ev.provider_status='000')
          on conflict (order_id) do nothing`,
     );
@@ -280,12 +283,13 @@ export function createGrowthosConversionTask(
            from payment_orders o
            join commercial_plan_versions v on v.id=o.plan_version_id
            join commercial_plans p on p.id=v.plan_id
-           where o.id=$1 and o.status='succeeded'
+           where o.id=$1 and o.status='succeeded' and o.provider='jazzcash'
              and exists(select 1 from entitlements e
                where e.source_order_id=o.id and e.status='active')
              and exists(select 1 from payment_events ev
-               where ev.order_id=o.id and ev.signature_verified=true
-                 and ev.provider_status='000')
+               where ev.order_id=o.id and ev.provider='jazzcash'
+                 and ev.event_type in ('checkout_return', 'ipn', 'status_query')
+                 and ev.signature_verified=true and ev.provider_status='000')
            limit 1`,
           [item.order_id],
         )
