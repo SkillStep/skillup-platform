@@ -45,8 +45,16 @@ export function readGrowthosBridgeConfig(
     throw new Error("GrowthOS conversion endpoint, product UUID or server secret is missing.");
   }
   const url = new URL(rawUrl);
-  if (url.protocol !== "https:" || url.username || url.password || url.search || url.hash ||
-      url.pathname !== "/api/conversions" || !url.hostname || url.port) {
+  if (
+    url.protocol !== "https:" ||
+    url.username ||
+    url.password ||
+    url.search ||
+    url.hash ||
+    url.pathname !== "/api/conversions" ||
+    !url.hostname ||
+    url.port
+  ) {
     throw new Error("GrowthOS conversion URL must be an explicit HTTPS /api/conversions endpoint.");
   }
   return { url: url.toString(), token, brandId, testTraffic: environment !== "production" };
@@ -54,14 +62,21 @@ export function readGrowthosBridgeConfig(
 
 const field = (value: Record<string, unknown>, key: string): string | null =>
   typeof value[key] === "string" && value[key].trim()
-    ? (value[key] as string).trim().slice(0, 160) : null;
+    ? (value[key] as string).trim().slice(0, 160)
+    : null;
 
 const uuid = (value: string | null): string | null =>
   value && UUID.test(value) ? value.toLowerCase() : null;
 
 function source(value: string | null): string | null {
   const normalized = value?.toLowerCase() ?? null;
-  if (normalized === "m" || normalized === "meta" || normalized === "facebook" || normalized === "instagram") return "meta";
+  if (
+    normalized === "m" ||
+    normalized === "meta" ||
+    normalized === "facebook" ||
+    normalized === "instagram"
+  )
+    return "meta";
   if (normalized === "t" || normalized === "tiktok") return "tiktok";
   if (normalized === "google" || normalized === "organic") return normalized;
   return null;
@@ -79,12 +94,21 @@ export function buildGrowthosConversion(
   order: VerifiedSkillupOrder,
   config: GrowthosBridgeConfig,
 ): Readonly<Record<string, unknown>> | null {
-  if (order.status !== "succeeded" || order.currency !== "PKR" ||
-      !Number.isSafeInteger(order.amount_minor) || order.amount_minor <= 0 ||
-      !UUID.test(order.id) ||
-      !(order.completed_at instanceof Date) || Number.isNaN(order.completed_at.getTime()) ||
-      !(order.created_at instanceof Date) || Number.isNaN(order.created_at.getTime()) ||
-      !order.attribution || typeof order.attribution !== "object" || Array.isArray(order.attribution)) return null;
+  if (
+    order.status !== "succeeded" ||
+    order.currency !== "PKR" ||
+    !Number.isSafeInteger(order.amount_minor) ||
+    order.amount_minor <= 0 ||
+    !UUID.test(order.id) ||
+    !(order.completed_at instanceof Date) ||
+    Number.isNaN(order.completed_at.getTime()) ||
+    !(order.created_at instanceof Date) ||
+    Number.isNaN(order.created_at.getTime()) ||
+    !order.attribution ||
+    typeof order.attribution !== "object" ||
+    Array.isArray(order.attribution)
+  )
+    return null;
   const attribution = order.attribution as Record<string, unknown>;
   const pageId = uuid(field(attribution, "growthos_page_id"));
   const versionId = uuid(field(attribution, "growthos_version_id"));
@@ -95,25 +119,37 @@ export function buildGrowthosConversion(
   const campaignId = uuid(field(attribution, "growthos_campaign_id"));
   const variantId = uuid(field(attribution, "growthos_variant_id"));
   const sessionId = field(attribution, "growthos_session_id");
-  if (!pageId || !versionId || !packageId || !packageCode ||
-      (field(attribution, "growthos_variation_id") && !variationId) ||
-      (field(attribution, "growthos_variation_version_id") && !variationVersionId) ||
-      (field(attribution, "growthos_campaign_id") && !campaignId) ||
-      (field(attribution, "growthos_variant_id") && !variantId) ||
-      (variationVersionId && !variationId) || (variationId && variantId) ||
-      (sessionId && sessionId.length < 8) ||
-      !((packageCode === "1" && order.plan_code === "premium-monthly") ||
-        (packageCode === "2" && order.plan_code === "premium-yearly"))) return null;
+  if (
+    !pageId ||
+    !versionId ||
+    !packageId ||
+    !packageCode ||
+    (field(attribution, "growthos_variation_id") && !variationId) ||
+    (field(attribution, "growthos_variation_version_id") && !variationVersionId) ||
+    (field(attribution, "growthos_campaign_id") && !campaignId) ||
+    (field(attribution, "growthos_variant_id") && !variantId) ||
+    (variationVersionId && !variationId) ||
+    (variationId && variantId) ||
+    (sessionId && sessionId.length < 8) ||
+    !(
+      (packageCode === "1" && order.plan_code === "premium-monthly") ||
+      (packageCode === "2" && order.plan_code === "premium-yearly")
+    )
+  )
+    return null;
   const trafficSource = source(field(attribution, "utm_source") ?? field(attribution, "utm"));
   const rawCampaign = field(attribution, "utm_campaign");
-  const medium = field(attribution, "utm_medium") ??
+  const medium =
+    field(attribution, "utm_medium") ??
     (trafficSource === "meta" || trafficSource === "tiktok" ? "paid_social" : "organic");
-  const touch = trafficSource ? {
-    source: trafficSource,
-    medium,
-    campaign: rawCampaign,
-    capturedAt: order.created_at.toISOString(),
-  } : null;
+  const touch = trafficSource
+    ? {
+        source: trafficSource,
+        medium,
+        campaign: rawCampaign,
+        capturedAt: order.created_at.toISOString(),
+      }
+    : null;
   return {
     idempotencyKey: `skillup-${order.id}`,
     eventName: packageCode === "2" ? "purchase" : "subscription_started",
@@ -140,7 +176,8 @@ export function buildGrowthosConversion(
 }
 
 export async function submitGrowthosConversion(
-  body: Readonly<Record<string, unknown>>, config: GrowthosBridgeConfig,
+  body: Readonly<Record<string, unknown>>,
+  config: GrowthosBridgeConfig,
   fetcher: Fetcher = fetch,
 ): Promise<ConversionOutcome> {
   try {
@@ -161,14 +198,24 @@ export async function submitGrowthosConversion(
     }
     if (response.status === 200 || response.status === 201) {
       const result = (await response.json().catch(() => null)) as unknown;
-      if (result && typeof result === "object" && (result as { accepted?: unknown }).accepted === true) {
+      if (
+        result &&
+        typeof result === "object" &&
+        (result as { accepted?: unknown }).accepted === true
+      ) {
         return { outcome: "delivered", httpStatus: response.status, reason: null };
       }
       return { outcome: "retry", httpStatus: response.status, reason: "unconfirmed_response" };
     }
     return {
-      outcome: response.status === 400 || response.status === 401 || response.status === 403 ||
-        response.status === 404 || response.status === 422 ? "blocked" : "retry",
+      outcome:
+        response.status === 400 ||
+        response.status === 401 ||
+        response.status === 403 ||
+        response.status === 404 ||
+        response.status === 422
+          ? "blocked"
+          : "retry",
       httpStatus: response.status,
       reason: "callback_rejected",
     };
