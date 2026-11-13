@@ -213,9 +213,7 @@ try {
     "An archived version must not be restored without guarded publisher authorization.",
   );
   await client.query("rollback to savepoint guard_blocked_restore");
-  await client.query(
-    "select set_config('skillup.course_editorial_rollback', 'approved', true)",
-  );
+  await client.query("select set_config('skillup.course_editorial_rollback', 'approved', true)");
   await client.query("update level_versions set state = 'published' where id = $1", [
     protectedLevelId,
   ]);
