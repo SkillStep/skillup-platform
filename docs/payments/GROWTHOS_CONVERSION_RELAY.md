@@ -25,6 +25,7 @@
 - `GROWTHOS_CONVERSION_URL=https://<isolated-growthos-web-host>/api/conversions`.
 - `GROWTHOS_CONVERSION_SECRET=<same-new-server-only-brand-token>`.
 - `GROWTHOS_BRAND_ID=<staging-verified-skillup-brand-uuid>`.
+- `GROWTHOS_VERCEL_PROTECTION_BYPASS_SECRET=<32-character-automation-bypass>` only if GrowthOS staging is protected by Vercel Authentication. Generate a scoped automation bypass in the GrowthOS Web Vercel project, store it **only** in SkillUp server-side staging secrets, and keep the separate GrowthOS product bearer credential. Without this, Vercel returns `401 Protected deployment` before GrowthOS receives the request. A temporary `_vercel_share` URL/cookie is not suitable for unattended payment callbacks. Do not disable deployment protection.
 - Production requires `GROWTHOS_PRODUCTION_APPROVED=true` **in addition to** the main enable switch. The default remains disabled.
 - `NEXT_PUBLIC_GROWTHOS_CHECKOUT_ENABLED=false` on SkillUp Web until approved campaign price and actual charged subscription terms match. This is not a substitute for the existing payment provider's own enable/disable controls.
 
