@@ -30,7 +30,13 @@ jobs:
             apps/api/src/content-operations.ts \
             apps/api/src/course-editorial.ts \
             apps/web/app/'[locale]'/admin/course-editorial/course-editorial-console.tsx \
-            apps/web/app/'[locale]'/admin/course-editorial/page.tsx
+            apps/web/app/'[locale]'/admin/course-editorial/page.tsx \
+            apps/api/src/course-editorial.test.ts \
+            tools/aifs-course-editorial-smoke.mjs \
+            qa/staging-certification/tests/content-editor.spec.mjs \
+            qa/staging-certification/tests/content-reviewer.spec.mjs \
+            qa/staging-certification/tests/publisher.spec.mjs \
+            apps/web/app/'[locale]'/admin/course-drafts/course-drafts-console.tsx
       - name: Commit formatter output only to this feature branch
         run: |
           set -euo pipefail
@@ -38,7 +44,9 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           if ! git diff --quiet; then
             git add apps/api/src/content-operations.ts apps/api/src/course-editorial.ts
-            git add 'apps/web/app/[locale]/admin/course-editorial'
+            git add 'apps/web/app/[locale]/admin/course-editorial' 'apps/web/app/[locale]/admin/course-drafts/course-drafts-console.tsx'
+            git add apps/api/src/course-editorial.test.ts tools/aifs-course-editorial-smoke.mjs
+            git add qa/staging-certification/tests/content-editor.spec.mjs qa/staging-certification/tests/content-reviewer.spec.mjs qa/staging-certification/tests/publisher.spec.mjs
             git commit -m 'style(AIFS): apply pinned Biome formatter'
             git push origin HEAD:refs/heads/feat/aifs-human-course-approval-20261113
           fi
