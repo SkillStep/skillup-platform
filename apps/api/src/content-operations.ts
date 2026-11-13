@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { AdminIdentity, AdminService } from "./admin.js";
 import type { AuthService, AuthenticatedLearner } from "./auth.js";
 import type { ApiConfig } from "./config.js";
+import { type CourseEditorialService, createCourseEditorialService } from "./course-editorial.js";
 import {
   RequestAuthorizationError,
   requireAuthenticatedLearner,
@@ -79,6 +80,32 @@ const ContentPatchSchema = ContentEditableFieldsSchema.partial()
       });
     }
   });
+
+const CourseSlugParamsSchema = z.object({
+  slug: z
+    .string()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+    .max(120),
+});
+const EditorialReasonSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1000),
+  })
+  .strict();
+const EditorialReviewSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1500),
+    kind: z.enum(["subject", "accessibility"]),
+    decision: z.enum(["approve", "request_changes"]),
+    checklist: z.record(z.string(), z.boolean()),
+  })
+  .strict();
+const EditorialPublishSchema = z
+  .object({
+    reason: z.string().trim().min(12).max(1000),
+    stagingEvidenceUrl: z.url().startsWith("https://").max(500),
+  })
+  .strict();
 
 const PublicListQuerySchema = z.object({
   kind: KindSchema.optional(),
@@ -301,6 +328,7 @@ export type ContentOperationsService = Readonly<{
   ) => Promise<readonly Record<string, unknown>[]>;
   listCourseDrafts: () => Promise<readonly Record<string, unknown>[]>;
   getCourseDraftReviewPacket: (slug: string) => Promise<Record<string, unknown>>;
+  editorial: CourseEditorialService;
   create: (
     actor: AdminIdentity,
     input: z.infer<typeof ContentInputSchema>,
@@ -360,6 +388,12 @@ export function createContentOperationsService(
   const now = options.now ?? (() => new Date());
 
   return {
+    editorial: createCourseEditorialService({
+      pool: options.pool,
+      // Inactive by default even after a production code deployment. A human
+      // operator must explicitly enable staged publisher actions.
+      publishEnabled: process.env["AIFS_COURSE_PUBLISH_ENABLED"] === "yes",
+    }),
     listPublic: async (query) => {
       const result = await options.pool.query<ContentRow>(
         `select *
@@ -982,6 +1016,69 @@ export function registerContentOperationsRoutes(
     reply.header("x-robots-tag", "noindex, nofollow");
     return { packet: await options.contentService.getCourseDraftReviewPacket(slug) };
   });
+
+  // All authoring decisions use a database transaction, frozen fingerprint,
+  // real authenticated account and a non-overlapping server-authorized role.
+  app.get("/v1/admin/course-drafts/:slug/editorial", async (request, reply) => {
+    await requireAdminRoles(request, options, ["content_editor", "content_reviewer", "publisher"]);
+    const { slug } = CourseSlugParamsSchema.parse(request.params);
+    reply.header("cache-control", "private, no-store");
+    reply.header("x-robots-tag", "noindex, nofollow");
+    return { submissions: await options.contentService.editorial.history(slug) };
+  });
+
+  app.post("/v1/admin/course-drafts/:slug/submit", async (request, reply) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requireAdminRoles(request, options, ["content_editor"]);
+    const { slug } = CourseSlugParamsSchema.parse(request.params);
+    const submission = await options.contentService.editorial.submit(
+      admin,
+      slug,
+      EditorialReasonSchema.parse(request.body),
+    );
+    return reply.status(201).send({ submission });
+  });
+
+  app.post("/v1/admin/course-submissions/:id/review", async (request) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requireAdminRoles(request, options, ["content_reviewer"]);
+    const { id } = IdParamsSchema.parse(request.params);
+    return {
+      submission: await options.contentService.editorial.review(
+        admin,
+        id,
+        EditorialReviewSchema.parse(request.body),
+      ),
+    };
+  });
+
+  app.post("/v1/admin/course-submissions/:id/publish", async (request) => {
+    requireTrustedRequestOrigin(request, options.config);
+    const { admin } = await requireAdminRoles(request, options, ["publisher"]);
+    const { id } = IdParamsSchema.parse(request.params);
+    return {
+      submission: await options.contentService.editorial.publish(
+        admin,
+        id,
+        EditorialPublishSchema.parse(request.body),
+      ),
+    };
+  });
+
+  for (const action of ["withdraw", "rollback"] as const) {
+    app.post(`/v1/admin/course-submissions/:id/${action}`, async (request) => {
+      requireTrustedRequestOrigin(request, options.config);
+      const { admin } = await requireAdminRoles(request, options, ["publisher"]);
+      const { id } = IdParamsSchema.parse(request.params);
+      return {
+        submission: await options.contentService.editorial[action](
+          admin,
+          id,
+          EditorialReasonSchema.parse(request.body),
+        ),
+      };
+    });
+  }
 
   app.post("/v1/admin/content", async (request, reply) => {
     requireTrustedRequestOrigin(request, options.config);

@@ -56,3 +56,30 @@ test("publisher has no Premium reporting or export authority", async ({ request 
   expect(body.premium.canAdjustSubscriptions).toBe(false);
   expect(body.premium.canReconcilePayments).toBe(false);
 });
+
+test("course publisher cannot self-review and default release flag blocks publication", async ({
+  request,
+}) => {
+  const review = await request.post(
+    "/api/v1/admin/course-submissions/" + randomUUID() + "/review",
+    {
+      data: {
+        kind: "accessibility",
+        decision: "approve",
+        reason: "Independent reviewer required.",
+        checklist: {},
+      },
+    },
+  );
+  expect(review.status()).toBe(403);
+  const publish = await request.post(
+    "/api/v1/admin/course-submissions/" + randomUUID() + "/publish",
+    {
+      data: {
+        reason: "Explicit non-production publisher release gate is required.",
+        stagingEvidenceUrl: "https://example.org/staging",
+      },
+    },
+  );
+  expect(publish.status()).toBe(403);
+});

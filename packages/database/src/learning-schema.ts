@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import {
+  bigint,
   boolean,
   check,
   index,
@@ -12,7 +13,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 
-import { learningPaths, learningPathVersions, skills, skillVersions } from "./schema.js";
+import { learningPaths, learningPathVersions, skills, skillVersions, users } from "./schema.js";
 
 const editorialStates = [
   "draft",
@@ -607,3 +608,99 @@ export const learningPathVersionPublicationRecords = contentPublicationRecords;
 // These imports make the intended publication coverage explicit to the type system and Drizzle schema.
 void skillVersions;
 void learningPathVersions;
+
+export const courseEditorialSubmissions = pgTable(
+  "course_editorial_submissions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    skillId: uuid("skill_id")
+      .notNull()
+      .references(() => skills.id, { onDelete: "restrict" }),
+    pathId: uuid("path_id")
+      .notNull()
+      .references(() => learningPaths.id, { onDelete: "restrict" }),
+    contentDigest: text("content_digest").notNull(),
+    versionManifest: jsonb("version_manifest").$type<Record<string, unknown>>().notNull(),
+    submittedBy: uuid("submitted_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    reason: text("reason").notNull(),
+    status: text("status").notNull().default("submitted"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    publishedBy: uuid("published_by").references(() => users.id, { onDelete: "restrict" }),
+  },
+  (table) => [
+    index("course_editorial_skill_history").on(table.skillId, table.submittedAt),
+    index("course_editorial_review_queue").on(table.status, table.submittedAt),
+    uniqueIndex("course_editorial_one_active_submission")
+      .on(table.skillId)
+      .where(sql`${table.status} in ('submitted', 'approved')`),
+    check("course_editorial_digest_format", sql`${table.contentDigest} ~ '^[0-9a-f]{64}$'`),
+    check(
+      "course_editorial_manifest_object",
+      sql`jsonb_typeof(${table.versionManifest}) = 'object'`,
+    ),
+    check("course_editorial_reason_length", sql`char_length(${table.reason}) between 12 and 1000`),
+    check(
+      "course_editorial_status_allowed",
+      sql`${table.status} in ('submitted','changes_requested','approved','published','superseded','withdrawn')`,
+    ),
+  ],
+);
+
+export const courseEditorialReviews = pgTable(
+  "course_editorial_reviews",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => courseEditorialSubmissions.id, { onDelete: "restrict" }),
+    reviewKind: text("review_kind").notNull(),
+    decision: text("decision").notNull(),
+    reviewerUserId: uuid("reviewer_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    contentDigest: text("content_digest").notNull(),
+    checklist: jsonb("checklist").$type<Record<string, unknown>>().notNull(),
+    reason: text("reason").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("course_editorial_reviews_submission_id_review_kind_unique").on(
+      table.submissionId,
+      table.reviewKind,
+    ),
+    index("course_editorial_reviews_submission").on(table.submissionId),
+    check(
+      "course_editorial_review_kind_allowed",
+      sql`${table.reviewKind} in ('subject','accessibility')`,
+    ),
+    check(
+      "course_editorial_review_decision_allowed",
+      sql`${table.decision} in ('approve','request_changes')`,
+    ),
+  ],
+);
+
+export const courseEditorialEvents = pgTable(
+  "course_editorial_events",
+  {
+    id: bigint("id", { mode: "number" }).generatedAlwaysAsIdentity().primaryKey(),
+    submissionId: uuid("submission_id")
+      .notNull()
+      .references(() => courseEditorialSubmissions.id, { onDelete: "restrict" }),
+    actorUserId: uuid("actor_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
+    action: text("action").notNull(),
+    reason: text("reason").notNull(),
+    contentDigest: text("content_digest").notNull(),
+    metadata: jsonb("metadata").$type<Record<string, unknown>>().notNull().default({}),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("course_editorial_events_history").on(table.submissionId, table.occurredAt, table.id),
+  ],
+);
