@@ -20,7 +20,7 @@ type Submission = Readonly<{
   publishedAt: string | null;
   counts: { modules: number; levels: number; challenges: number };
   reviews: readonly Review[];
-  events: readonly { action: string; actorId: string; reason: string; at: string }[];
+  events: readonly { id: number; action: string; actorId: string; reason: string; at: string }[];
 }>;
 
 const subjectChecks = [
@@ -207,8 +207,8 @@ export function CourseEditorialConsole() {
           <details>
             <summary>Audit history</summary>
             <ul>
-              {chosen.events.map((item, index) => (
-                <li key={index}>
+              {chosen.events.map((item) => (
+                <li key={item.id}>
                   {item.at} · {item.action} · account {item.actorId} · {item.reason}
                 </li>
               ))}
