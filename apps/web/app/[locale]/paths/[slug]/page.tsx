@@ -88,6 +88,10 @@ export default async function PathPage({ params }: PageProps) {
               <span>
                 {skill.status === "pilot" ? "First reviewed pilot" : "Reviewed launch path"}
               </span>
+              <span>{skill.levelCount ?? 0} published practice levels</span>
+              <span>
+                {skill.moduleCount ?? 0} modules · {skill.estimatedMinutes ?? 0} estimated practice minutes
+              </span>
               <span>{skill.reviewCadence}</span>
             </div>
             <div className={styles["cardLinks"]}>
@@ -115,10 +119,26 @@ export default async function PathPage({ params }: PageProps) {
 
           <MotionReveal variant="fade-up" delayMs={100} durationMs={600}>
             <section className={styles["contentCard"]} aria-labelledby="path-structure-title">
-              <h2 id="path-structure-title">Path structure</h2>
+              <h2 id="path-structure-title">Published levels by module</h2>
+              <p>
+                The lessons below are published and have verified practice challenges. Starting a
+                particular level may require signing in, completing prerequisites or having Premium.
+              </p>
               <ol>
-                {skill.modules.map((module) => (
-                  <li key={module}>{module}</li>
+                {skill.modules.map((module, index) => (
+                  <li key={`${index}-${module}`}>
+                    <strong>{module}</strong>
+                    <ol>
+                      {(skill.levels ?? [])
+                        .filter((level) => level.moduleTitle === module)
+                        .map((level) => (
+                          <li key={level.id}>
+                            <Link href={`/en/learn/${level.id}`}>{level.title}</Link>{" "}
+                            <span>· {level.estimatedMinutes} min</span>
+                          </li>
+                        ))}
+                    </ol>
+                  </li>
                 ))}
               </ol>
             </section>
