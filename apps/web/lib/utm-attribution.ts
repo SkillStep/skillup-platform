@@ -18,6 +18,16 @@ const STRING_KEYS = [
   "landing",
   "landingPath",
   "he",
+  "growthos_campaign_id",
+  "growthos_page_id",
+  "growthos_version_id",
+  "growthos_variant_id",
+  "growthos_variation_id",
+  "growthos_variation_version_id",
+  "growthos_package_id",
+  "growthos_package_code",
+  "growthos_session_id",
+  "growthos_test",
 ] as const;
 
 export type PremiumAttribution = Readonly<{
@@ -33,6 +43,16 @@ export type PremiumAttribution = Readonly<{
   landing?: string;
   landingPath?: string;
   he?: string;
+  growthos_campaign_id?: string;
+  growthos_page_id?: string;
+  growthos_version_id?: string;
+  growthos_variant_id?: string;
+  growthos_variation_id?: string;
+  growthos_variation_version_id?: string;
+  growthos_package_id?: string;
+  growthos_package_code?: string;
+  growthos_session_id?: string;
+  growthos_test?: string;
 }>;
 
 type StoredAttribution = Readonly<{
@@ -99,9 +119,19 @@ export function attributionFromLandingCampaign(
     (typeof window !== "undefined" && window.location
       ? new URLSearchParams(window.location.search ?? "").get("he")
       : null);
+  const growthos = typeof window !== "undefined" && window.location
+    ? new URLSearchParams(window.location.search ?? "") : null;
+  const bridgeFields = Object.fromEntries(
+    ["growthos_campaign_id","growthos_page_id","growthos_version_id","growthos_variant_id","growthos_variation_id","growthos_variation_version_id","growthos_package_id","growthos_package_code","growthos_session_id","growthos_test"].map((key) => [key, growthos?.get(key)]),
+  );
   return buildPremiumAttribution({
-    utm: campaign.utm,
-    package: campaign.package,
+    ...bridgeFields,
+    utm: growthos?.get("utm") ?? campaign.utm,
+    utm_source: growthos?.get("utm_source") ?? undefined,
+    utm_medium: growthos?.get("utm_medium") ?? undefined,
+    utm_campaign: growthos?.get("utm_campaign") ?? undefined,
+    utm_content: growthos?.get("utm_content") ?? undefined,
+    package: growthos?.get("growthos_package_code") ?? campaign.package,
     parameter: campaign.parameter,
     payment: campaign.payment,
     landing: options.landing,
