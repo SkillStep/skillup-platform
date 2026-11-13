@@ -303,5 +303,4 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
     });
     expect(protectedConfig.vercelProtectionBypassSecret).not.toBe(cfg.token);
   });
-
 });
