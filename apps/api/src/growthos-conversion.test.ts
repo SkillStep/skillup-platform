@@ -167,7 +167,8 @@ describe("SkillUp authoritative GrowthOS checkout bridge", () => {
   });
 
   it("accepts verified 201 and duplicate 200; retries ambiguous or rate-limited responses", async () => {
-    const body = buildGrowthosConversion(order, cfg)!;
+    const body = buildGrowthosConversion(order, cfg);
+    if (!body) throw new Error("Expected a verified conversion payload");
     const accepted = vi.fn(
       async (_url: RequestInfo | URL, _init?: RequestInit) =>
         new Response(JSON.stringify({ accepted: true }), { status: 201 }),
