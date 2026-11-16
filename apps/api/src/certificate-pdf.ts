@@ -13,12 +13,17 @@ export type PrintableCertificate = Readonly<{
 }>;
 
 function pdfText(value: string): string {
-  if (!/^[\x20-\x7E]+$/.test(value)) {
+  if (!/^[\x20-\x7E\u2013\u2014]+$/.test(value)) {
     throw new Error(
       "The current English PDF font cannot faithfully represent this name. Contact support for a Unicode certificate.",
     );
   }
-  return value.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)")
+    .replaceAll("–", "\\226")
+    .replaceAll("—", "\\227");
 }
 
 function splitForDisplay(value: string, length: number): string[] {
@@ -43,7 +48,7 @@ function splitForDisplay(value: string, length: number): string[] {
 function centerText(y: number, value: string, size: number, bold = false): string {
   const escaped = pdfText(value);
   const estimatedWidth = value.length * size * (bold ? 0.54 : 0.49);
-  const x = Math.max(38, (595.28 - estimatedWidth) / 2);
+  const x = Math.max(38, (841.89 - estimatedWidth) / 2);
   return `BT /${bold ? "F2" : "F1"} ${size} Tf ${x.toFixed(2)} ${y} Td (${escaped}) Tj ET\n`;
 }
 
@@ -52,7 +57,7 @@ function pdfDocument(content: string): Buffer {
   const objects = [
     "<< /Type /Catalog /Pages 2 0 R >>",
     "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
-    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>",
+    "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 841.89 595.28] /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> /Contents 4 0 R >>",
     `<< /Length ${streamLength} >>\nstream\n${content}endstream`,
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
     "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
@@ -74,7 +79,7 @@ function pdfDocument(content: string): Buffer {
 
 export function renderSkillCertificatePdf(award: PrintableCertificate): Buffer {
   const fullTitle = award.title.replace(/^Certificate of Completion\s*[-—:]\s*/, "").trim();
-  const courseLines = splitForDisplay(fullTitle, 39);
+  const courseLines = splitForDisplay(fullTitle, 48);
   const personLines = splitForDisplay(award.learnerName, 28);
   pdfText(award.publicId);
   for (const value of [...courseLines, ...personLines]) pdfText(value);
@@ -92,42 +97,40 @@ export function renderSkillCertificatePdf(award: PrintableCertificate): Buffer {
     timeZone: "UTC",
   }).format(award.issuedAt);
 
-  // Native PDF drawing is deterministic, searchable, printable, and A4-sized.
+  // ISO A4 landscape: 841.89 x 595.28 pt. All text fits the printable frame.
   let stream = "";
-  stream += "q\n0.066 0.098 0.188 rg\n0 0 595.28 842 re f\n";
-  stream += "0.950 0.936 0.902 rg\n23 23 549.28 796 re f\n";
-  stream += "0.298 0.184 0.650 rg\n23 23 9 796 re f\n";
+  stream += "q\n0.066 0.098 0.188 rg\n0 0 841.89 595.28 re f\n";
+  stream += "0.950 0.936 0.902 rg\n22 22 797.89 551.28 re f\n";
+  stream += "0.298 0.184 0.650 rg\n22 22 9 551.28 re f\n";
   stream += "0.087 0.122 0.234 rg\n";
-  stream += centerText(738, "S K I L L U P", 22, true);
-  stream += centerText(700, "LEARN  /  PRACTISE  /  LEVEL UP", 10);
-  stream += "0.28 0.18 0.64 RG\n1.5 w\n107 676 m 488 676 l S\n";
+  stream += centerText(532, "S K I L L U P", 22, true);
+  stream += centerText(505, "LEARN  /  PRACTISE  /  LEVEL UP", 10);
+  stream += "0.28 0.18 0.64 RG\n1.5 w\n177 482 m 665 482 l S\n";
   stream += "0.087 0.122 0.234 rg\n";
-  stream += centerText(609, "CERTIFICATE", 31, true);
-  stream += centerText(572, "OF COMPLETION", 17);
-  stream += centerText(523, "This is awarded to", 12);
+  stream += centerText(439, "CERTIFICATE", 30, true);
+  stream += centerText(410, "OF COMPLETION", 16);
+  stream += centerText(370, "This certificate is awarded to", 11);
   for (const [i, person] of personLines.entries()) {
-    stream += centerText(472 - i * 31, person, 26, true);
+    stream += centerText(335 - i * 28, person, 25, true);
   }
-  stream += centerText(382, "For verified completion of the SkillUp course", 11);
+  stream += centerText(246, "Successfully completed the SkillUp learning path in", 11);
   for (const [i, title] of courseLines.entries()) {
-    stream += centerText(343 - i * 23, title, 17, true);
+    stream += centerText(218 - i * 22, title, 16, true);
   }
-  stream += "0.28 0.18 0.64 RG\n0.8 w\n105 248 m 489 248 l S\n";
+  stream += "0.28 0.18 0.64 RG\n0.8 w\n149 152 m 692 152 l S\n";
   stream += "0.087 0.122 0.234 rg\n";
-  stream += centerText(218, `Completed ${completed}`, 11);
-  stream += centerText(197, `Issued ${issued}`, 10);
+  stream += centerText(132, `Completed: ${completed}  |  Issued: ${issued}`, 10);
   stream += centerText(
-    155,
-    "Issued from server-verified learning and approved completion evidence.",
+    103,
+    "SkillUp educational completion certificate — not an accredited professional qualification.",
     9,
   );
+  stream += centerText(78, `Certificate ID: ${award.publicId}`, 9);
   stream += centerText(
-    137,
-    "SkillUp educational completion recognition; not an accredited qualification.",
-    8,
+    58,
+    "Certificate records are available privately in the learner's SkillUp account.",
+    9,
   );
-  stream += centerText(93, `Certificate ID: ${award.publicId}`, 9);
-  stream += centerText(71, "View your private certificate history in your SkillUp account.", 9);
   stream += "Q\n";
 
   return pdfDocument(stream);
