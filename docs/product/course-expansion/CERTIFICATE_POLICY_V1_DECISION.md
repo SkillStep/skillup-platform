@@ -56,7 +56,7 @@ They check **different evidence**, not two competing passing scores. The 80% thr
 | Revoked | Previously issued award with authorized reason, actor and immutable event history; no automatic reissue |
 | Re-certification | A later *separately approved* requirement-set version, with fresh evidence where required; never auto-issue or overwrite an old award |
 
-**Implementation note:** The existing capstone table enforces reviewer ≠ learner; code review must additionally verify **reviewer authorization and authentic evidence provenance** before a passed attestation can unblock issuance. This is a **P0 release security gap**, not an authorization for a random account to approve another person's work.
+**Implementation note:** The existing capstone table enforces reviewer ≠ learner. This policy PR additionally hardens `apps/api/src/certificates.ts` to require an active `content_reviewer` assignment, granted before the attestation and not expired/revoked at verification, before a capstone can qualify. The rolled-back PostgreSQL smoke verifies unauthorised and retroactive attestation failures. **Authentic review of each learner artifact** must still occur through a controlled human reviewer workflow; the presence of a role row alone cannot prove that the person examined the work.
 
 ## How to verify implementation against the existing repository
 
@@ -70,7 +70,7 @@ They check **different evidence**, not two competing passing scores. The 80% thr
 
 1. **Product owner:** Confirm the 80% per-level threshold, 100% challenge correctness, two tries per question/session, unlimited level replays, reviewed capstone, non-graded baseline/final tests, no separate fee and no public verification. Record named, authenticated approval of this specific policy version and digest in #265.
 2. **Legal/privacy:** Confirm the disclaimer and marketing claims, learner display-name limitation, account-privacy design, retention and revocation. Record actual signer/decision.
-3. **Backend/security:** Close the capstone-attestation reviewer authorization gap and forbid activation without genuine owner evidence. Do not set mock role/approval IDs.
+3. **Backend/security:** Verify the new authorized capstone-reviewer guard in exact-SHA CI, connect evidence attestation to a genuine human reviewer workflow, and forbid activation without genuine owner evidence. Do not set mock role/approval IDs.
 4. **Content team:** Review the five additional course drafts, protected final answer keys and capstones (PR #280 / #281); each release still requires separate genuine editor, two reviewers and publisher.
 5. **QA:** Exact-SHA tests for 79% failure / 80% acceptance, missing one correct challenge, capstone fail/approve, retries, Free/Premium/expired, concurrent duplicates, revoked awards, name rendering and cross-account PDF denial.
 6. **Release owner:** Activate the proper requirement set/flag only after all approvals, independent staging certification and an explicit production go/no-go. **No publication, activation, award issuance or production change is authorized by this PR alone.**
