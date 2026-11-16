@@ -42,9 +42,7 @@ export default async function UpcomingSkillPage({ params }: PageProps) {
         />
         <MotionReveal variant="fade-right" durationMs={700}>
           <section className={styles["detailHero"]} aria-labelledby="upcoming-title">
-            <span className={`${styles["status"]} ${styles["statusComingSoon"]}`}>
-              Coming soon
-            </span>
+            <span className={`${styles["status"]} ${styles["statusComingSoon"]}`}>Coming soon</span>
             <h1 id="upcoming-title">{preview.title}</h1>
             <p className={styles["detailSummary"]}>{preview.summary}</p>
             <p>
