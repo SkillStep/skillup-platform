@@ -171,6 +171,15 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
         }
         if (exerciseTypes.size !== 3)
           issues.push(`${id}: require three distinct evaluation formats.`);
+        const initialOptions = level.challenges[0]?.options;
+        const transferOptions = level.challenges[1]?.options;
+        if (initialOptions && transferOptions) {
+          const first = Object.values(initialOptions).map(normalize);
+          const second = Object.values(transferOptions).map(normalize);
+          if (first.some((choice) => second.includes(choice))) {
+            issues.push(`${id}: transfer scenario must have its own context-specific answer choices.`);
+          }
+        }
       }
     }
     if (levelTitles.size !== 24 || number !== 24)
