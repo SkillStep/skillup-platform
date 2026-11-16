@@ -44,6 +44,24 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
   projects: [
+    // Certificate layout runs against the real built web container with
+    // synthetic, intercepted API responses. No OTP, learner PII or staging
+    // deployment dependency: exercises Chromium layout at three viewports.
+    {
+      name: "certificates-qa-desktop",
+      testMatch: exactSpecs("certificates-viewport.spec.mjs"),
+      use: { ...devices["Desktop Chrome"] },
+    },
+    {
+      name: "certificates-qa-mobile",
+      testMatch: exactSpecs("certificates-viewport.spec.mjs"),
+      use: { ...devices["Pixel 7"] },
+    },
+    {
+      name: "certificates-qa-tablet",
+      testMatch: exactSpecs("certificates-viewport.spec.mjs"),
+      use: { ...devices["iPad Mini"], browserName: "chromium" },
+    },
     {
       name: "auth-setup",
       testMatch: exactSpecs("auth.setup.mjs"),
@@ -71,6 +89,7 @@ export default defineConfig({
         "account-ui.spec.mjs",
         "gameplay-negative.spec.mjs",
         "accessibility-learner.spec.mjs",
+        "certificates-authenticated.spec.mjs",
       ),
       use: {
         ...devices["Desktop Chrome"],
@@ -80,7 +99,7 @@ export default defineConfig({
     {
       name: "learner-mobile",
       dependencies: ["auth-setup"],
-      testMatch: exactSpecs("learner.spec.mjs", "premium.spec.mjs", "responsive.spec.mjs"),
+      testMatch: exactSpecs("learner.spec.mjs", "premium.spec.mjs", "responsive.spec.mjs", "certificates-authenticated.spec.mjs"),
       use: {
         ...devices["Pixel 7"],
         storageState: path.join(authRoot, "learner.json"),
