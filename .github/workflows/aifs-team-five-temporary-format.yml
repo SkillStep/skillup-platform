@@ -1,0 +1,47 @@
+name: Temporary AIFS gameplay QA formatter
+on:
+  push:
+    branches:
+      - feat/aifs-team-five-120-level-draft-courses-20261116
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'SkillStep/skillup-platform' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: true
+          ref: feat/aifs-team-five-120-level-draft-courses-20261116
+      - name: Node runtime
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Install pinned formatter
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Format new evaluator coverage and changed AIFS helpers
+        run: |
+          pnpm exec biome format --write \
+            packages/gameplay-engine/src/aifs-team-five-content-evaluations.test.ts \
+            tools/validate-aifs-team-five-assessments.mjs \
+            tools/import-aifs-team-five-drafts.mjs \
+            tools/validate-aifs-team-five-courses.mjs
+      - name: Commit pinned formatter corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            packages/gameplay-engine/src/aifs-team-five-content-evaluations.test.ts \
+            tools/validate-aifs-team-five-assessments.mjs \
+            tools/import-aifs-team-five-drafts.mjs \
+            tools/validate-aifs-team-five-courses.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "style(AIFS): format 400-item real evaluator test and helpers"
+            git push origin HEAD:feat/aifs-team-five-120-level-draft-courses-20261116
+          fi
