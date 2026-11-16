@@ -60,7 +60,10 @@ export type CertificateService = Readonly<{
 }>;
 
 const uuid = z.string().uuid();
-const slug = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(120);
+const slug = z
+  .string()
+  .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+  .max(120);
 
 function digest(value: unknown): string {
   return createHash("sha256").update(JSON.stringify(value)).digest("hex");
@@ -104,9 +107,12 @@ async function verifiedEvidence(
     completedAt: null,
     evidenceHash: "",
   };
-  if (!levels.length || !challenges.length ||
-      levels.length !== r.level_version_ids.length ||
-      challenges.length !== r.challenge_version_ids.length) {
+  if (
+    !levels.length ||
+    !challenges.length ||
+    levels.length !== r.level_version_ids.length ||
+    challenges.length !== r.challenge_version_ids.length
+  ) {
     return blank;
   }
 
@@ -176,9 +182,8 @@ async function verifiedEvidence(
   const capstonePassed = !r.required_capstone || capstone?.rows[0]?.decision === "passed";
   const levelCount = completed.rows.length;
   const challengeCount = passed.rows.length;
-  const good = levelCount === levels.length &&
-    challengeCount === challenges.length &&
-    capstonePassed;
+  const good =
+    levelCount === levels.length && challengeCount === challenges.length && capstonePassed;
   const dates = [
     ...completed.rows.map((row) => row.completed_at.getTime()),
     ...passed.rows.map((row) => row.evaluated_at.getTime()),
@@ -194,15 +199,17 @@ async function verifiedEvidence(
     capstoneRequired: r.required_capstone,
     capstonePassed,
     completedAt,
-    evidenceHash: good ? digest({
-      userId,
-      requirementId: r.id,
-      versionDigest: r.content_digest,
-      levelIds: levels,
-      challengeIds: challenges,
-      score: r.minimum_pass_percent,
-      evaluatedAt: completedAt?.toISOString(),
-    }) : "",
+    evidenceHash: good
+      ? digest({
+          userId,
+          requirementId: r.id,
+          versionDigest: r.content_digest,
+          levelIds: levels,
+          challengeIds: challenges,
+          score: r.minimum_pass_percent,
+          evaluatedAt: completedAt?.toISOString(),
+        })
+      : "",
   };
 }
 
@@ -307,31 +314,51 @@ export function createCertificateService(
 
     issue: async (learner, skillSlug) => {
       if (!options.issuanceEnabled) {
-        throw new CertificateError(403, "Certificate issuance requires approved completion policies and an explicitly enabled environment.");
+        throw new CertificateError(
+          403,
+          "Certificate issuance requires approved completion policies and an explicitly enabled environment.",
+        );
       }
       slug.parse(skillSlug);
       const name = learner.profile.displayName?.trim();
       if (!name || name.length < 2 || name.length > 60) {
-        throw new CertificateError(409, "A verified learner profile name is required before certificate issuance.");
+        throw new CertificateError(
+          409,
+          "A verified learner profile name is required before certificate issuance.",
+        );
       }
       const db = await options.pool.connect();
       try {
         await db.query("begin");
-        const locked = await db.query("select id from users where id = $1 and status = 'active' for update", [learner.id]);
+        const locked = await db.query(
+          "select id from users where id = $1 and status = 'active' for update",
+          [learner.id],
+        );
         if (!locked.rowCount) throw new CertificateError(403, "Learner account is not active.");
         const r = await policy(db, skillSlug);
-        if (!r) throw new CertificateError(409, "An independently approved completion policy and published course are required.");
+        if (!r)
+          throw new CertificateError(
+            409,
+            "An independently approved completion policy and published course are required.",
+          );
 
         const existing = await frozenAward(db, learner.id, r.skill_id, r.id);
         if (existing) {
-          if (existing.status === "revoked") throw new CertificateError(409, "This certificate has been revoked and cannot be reissued automatically.");
+          if (existing.status === "revoked")
+            throw new CertificateError(
+              409,
+              "This certificate has been revoked and cannot be reissued automatically.",
+            );
           await db.query("commit");
           return existing;
         }
 
         const evidence = await verifiedEvidence(db, learner.id, r);
         if (evidence.status !== "eligible" || !evidence.completedAt) {
-          throw new CertificateError(409, "All published mandatory challenges, passing levels and capstone evidence must be complete.");
+          throw new CertificateError(
+            409,
+            "All published mandatory challenges, passing levels and capstone evidence must be complete.",
+          );
         }
         const publicId = "SC-" + randomBytes(24).toString("base64url");
         const title = "Certificate of Completion — " + r.skill_title;
@@ -342,7 +369,16 @@ export function createCertificateService(
             values ($1,$2,$3,$4,$5,$6,$7,$8)
             on conflict (user_id,skill_id,requirement_set_id) do nothing
             returning id`,
-          [publicId, learner.id, r.skill_id, r.id, title, name, evidence.evidenceHash, evidence.completedAt],
+          [
+            publicId,
+            learner.id,
+            r.skill_id,
+            r.id,
+            title,
+            name,
+            evidence.evidenceHash,
+            evidence.completedAt,
+          ],
         );
         if (result.rows[0]) {
           await db.query(
@@ -358,7 +394,8 @@ export function createCertificateService(
           );
         }
         const award = await frozenAward(db, learner.id, r.skill_id, r.id);
-        if (!award || award.status !== "issued") throw new CertificateError(409, "No valid certificate award was recorded.");
+        if (!award || award.status !== "issued")
+          throw new CertificateError(409, "No valid certificate award was recorded.");
         await db.query("commit");
         return award;
       } catch (error) {

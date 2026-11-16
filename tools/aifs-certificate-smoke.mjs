@@ -4,7 +4,9 @@ import { createRequire } from "node:module";
 
 import { createCertificateService } from "../apps/api/src/certificates.ts";
 
-const requireDatabase = createRequire(new URL("../packages/database/package.json", import.meta.url));
+const requireDatabase = createRequire(
+  new URL("../packages/database/package.json", import.meta.url),
+);
 const { Pool } = requireDatabase("pg");
 
 if (process.env.APP_ENV !== "test" && process.env.APP_ENV !== "ci") {
@@ -13,7 +15,11 @@ if (process.env.APP_ENV !== "test" && process.env.APP_ENV !== "ci") {
 if (!process.env.DATABASE_URL) throw new Error("An explicit test DATABASE_URL is required.");
 
 const hash = (value) => createHash("sha256").update(String(value)).digest("hex");
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 1, allowExitOnIdle: true });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 1,
+  allowExitOnIdle: true,
+});
 const db = await pool.connect();
 const learnerId = randomUUID();
 const reviewerId = randomUUID();
@@ -61,7 +67,8 @@ try {
   assert.equal(initial.rows[0].n, 0, "Migration must not automatically issue certificates.");
 
   await db.query("insert into users(id,status) values ($1,'active'),($2,'active')", [
-    learnerId, reviewerId,
+    learnerId,
+    reviewerId,
   ]);
   const root = await db.query(
     `select s.id as skill_id, s.slug, sv.id as version_id
@@ -115,8 +122,7 @@ try {
        values ($1,$2,1,$3::uuid[],$4::uuid[],$5,100,true,true,
                'active',$6,now(),$7)
        returning id`,
-    [skill.skill_id, skill.version_id, versions, challengeIds, hash("policy"),
-      reviewerId, reason],
+    [skill.skill_id, skill.version_id, versions, challengeIds, hash("policy"), reviewerId, reason],
   );
   const requirementId = approved.rows[0].id;
   await mustRejectInSavepoint(
@@ -171,8 +177,13 @@ try {
            awarded_points,max_points,explanation)
           values ($1,$2,$3,$4,1,$5,$6,'{}'::jsonb,'correct',$7,$7,$8)`,
         [
-          sessionId, learnerId, challenge.challenge_id, challenge.version_id,
-          randomUUID(), hash(randomUUID()), challenge.points,
+          sessionId,
+          learnerId,
+          challenge.challenge_id,
+          challenge.version_id,
+          randomUUID(),
+          hash(randomUUID()),
+          challenge.points,
           "Test-only evaluated correct response.",
         ],
       );
@@ -203,8 +214,9 @@ try {
   );
   await mustRejectInSavepoint(
     () =>
-      db.query("update skill_capstone_attestations set reason = 'tampered' where id = $1",
-        [capstone.rows[0].id]),
+      db.query("update skill_capstone_attestations set reason = 'tampered' where id = $1", [
+        capstone.rows[0].id,
+      ]),
     /append-only/,
   );
 
@@ -223,8 +235,9 @@ try {
 
   await mustRejectInSavepoint(
     () =>
-      db.query("update skill_certificate_awards set learner_name = 'Tampered Name' where id = $1",
-        [first.id]),
+      db.query("update skill_certificate_awards set learner_name = 'Tampered Name' where id = $1", [
+        first.id,
+      ]),
     /Issued certificate evidence is immutable/,
   );
   const events = await db.query("select id from skill_certificate_events where award_id = $1", [

@@ -42,9 +42,9 @@ export const skillCompletionRequirementSets = pgTable(
       table.skillId,
       table.requirementVersion,
     ),
-    uniqueIndex("skill_completion_one_active_set").on(table.skillId).where(
-      sql`${table.status} = 'active'`,
-    ),
+    uniqueIndex("skill_completion_one_active_set")
+      .on(table.skillId)
+      .where(sql`${table.status} = 'active'`),
     index("skill_completion_requirements_version").on(table.skillVersionId, table.status),
     check("skill_completion_positive_version", sql`${table.requirementVersion} >= 1`),
     check("skill_completion_content_digest_format", sql`${table.contentDigest} ~ '^[0-9a-f]{64}$'`),
@@ -111,7 +111,10 @@ export const skillCertificateAwards = pgTable(
       table.requirementSetId,
     ),
     index("skill_certificate_user_history").on(table.userId, table.issuedAt),
-    check("skill_certificate_public_id_format", sql`${table.publicId} ~ '^SC-[A-Za-z0-9_-]{26,64}$'`),
+    check(
+      "skill_certificate_public_id_format",
+      sql`${table.publicId} ~ '^SC-[A-Za-z0-9_-]{26,64}$'`,
+    ),
   ],
 );
 
