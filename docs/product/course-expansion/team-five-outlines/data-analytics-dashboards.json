@@ -15,7 +15,7 @@
   "modules": [
     {
       "moduleNumber": 1,
-      "moduleTitle": "Tables, Questions and Data Quality",
+      "moduleTitle": "Tables, questions and data quality",
       "learningObjective": "Choose answerable questions and check small everyday data tables",
       "levelTitles": [
         "Read a Small Sales Table Accurately",
@@ -30,7 +30,7 @@
     },
     {
       "moduleNumber": 2,
-      "moduleTitle": "Charts, Trends and Meaningful Metrics",
+      "moduleTitle": "Charts, trends and meaningful metrics",
       "learningObjective": "Read fair charts, explain units and calculate simple changes without overclaiming",
       "levelTitles": [
         "Choose a Chart for a Monthly Trend",
@@ -45,7 +45,7 @@
     },
     {
       "moduleNumber": 3,
-      "moduleTitle": "Interpretation, Uncertainty and Comparing Options",
+      "moduleTitle": "Interpretation, uncertainty and comparing options",
       "learningObjective": "Compare outcomes, uncertainty and trade-offs before recommending actions",
       "levelTitles": [
         "Tell Correlation from a Supported Cause",
@@ -60,7 +60,7 @@
     },
     {
       "moduleNumber": 4,
-      "moduleTitle": "Data-Based Decision and Dashboard Capstone",
+      "moduleTitle": "Data-backed decision memo and dashboard capstone",
       "learningObjective": "Explain supported findings with evidence and a reversible recommendation",
       "levelTitles": [
         "Choose a Practical Business Decision",
