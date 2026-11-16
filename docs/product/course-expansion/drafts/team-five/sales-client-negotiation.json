@@ -49,14 +49,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Research an Appropriate Client Fit\" lesson in a different setting: a freelance video editor choosing which enquiries merit discovery calls. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a freelance video editor choosing which enquiries merit discovery calls. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Hide limitations until after payment",
-                "b": "Promise professional engineering certification without capability",
-                "c": "Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch"
+                "a": "Promise every enquiry delivery within twenty-four hours",
+                "b": "Qualify leads by checking video requirements, client objectives, footage rights and editing capacity",
+                "c": "Accept a specialist animation project without the required skills"
               },
-              "answer": "c",
-              "feedback": "A mismatch is not a sales opportunity to force. Recommended response: Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch."
+              "answer": "b",
+              "feedback": "Qualify leads by checking video requirements, client objectives, footage rights and editing capacity. A mismatch is not a sales opportunity to force."
             },
             {
               "type": "true_false",
@@ -89,14 +89,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Open a Respectful Discovery Conversation\" lesson in a different setting: a web consultant beginning a call with a potential school client. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a web consultant beginning a call with a potential school client. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Ask permission to understand their goals before recommending packages",
-                "b": "Demand a payment commitment before discussing needs",
-                "c": "Start with a five-minute monologue about agency awards"
+                "a": "Ask permission to explore the school's goals, current site issues and decision process",
+                "b": "Begin with an unbroken pitch about agency awards",
+                "c": "Demand the full contract signature before asking questions"
               },
               "answer": "a",
-              "feedback": "Respectful questions reveal genuine needs. Recommended response: Ask permission to understand their goals before recommending packages."
+              "feedback": "Ask permission to explore the school's goals, current site issues and decision process. Respectful questions reveal genuine needs."
             },
             {
               "type": "true_false",
@@ -129,14 +129,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Ask Specific Needs Questions\" lesson in a different setting: a consultancy clarifying what \"better reporting\" means to an operations manager. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a consultancy clarifying what \"better reporting\" means to an operations manager. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Assume the owner wants ten thousand followers",
-                "b": "Ask which customer action, channel and time window would count as progress",
-                "c": "Offer a fixed ad budget without asking about sales capacity"
+                "a": "Assume better reporting means new dashboard colors",
+                "b": "Quote a complete BI platform without checking required metrics",
+                "c": "Ask which report users, decisions, data sources and time window the client needs"
               },
-              "answer": "b",
-              "feedback": "The answer should shape the actual proposal. Recommended response: Ask which customer action, channel and time window would count as progress."
+              "answer": "c",
+              "feedback": "Ask which report users, decisions, data sources and time window the client needs. The answer should shape the actual proposal."
             },
             {
               "type": "true_false",
@@ -169,14 +169,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Confirm Decision Criteria\" lesson in a different setting: a café owner asking for content work before launch. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a café owner asking for content work before launch. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Ignore the event date until contract signature",
-                "b": "Promise to begin without discussing approval",
-                "c": "Confirm the approver, decision date, usable budget range and nonnegotiable deliverables"
+                "a": "Treat a vague interest message as acceptance of the most expensive package",
+                "b": "Confirm launch date, available assets, approvals and the actual campaign outcome before offering scope",
+                "c": "Commit to a launch date before seeing any product imagery"
               },
-              "answer": "c",
-              "feedback": "Timing, risk, authority and deliverables also matter. Recommended response: Confirm the approver, decision date, usable budget range and nonnegotiable deliverables."
+              "answer": "b",
+              "feedback": "Confirm launch date, available assets, approvals and the actual campaign outcome before offering scope. Timing, risk, authority and deliverables also matter."
             },
             {
               "type": "true_false",
@@ -209,14 +209,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Summarize a Client's Actual Request\" lesson in a different setting: a consultant following up after a nonprofit's planning call. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a consultant following up after a nonprofit's planning call. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Send a concise recap of six clips, photos, deadline and questions awaiting confirmation",
-                "b": "Describe an unrequested website rebuild as approved work",
-                "c": "Change the number of clips to ten without asking"
+                "a": "Send a factual recap distinguishing confirmed goals, suggested work and unresolved questions",
+                "b": "Present unrequested services as fully approved",
+                "c": "Invent the client's budget when drafting the recap"
               },
               "answer": "a",
-              "feedback": "Recaps prevent avoidable scope disputes. Recommended response: Send a concise recap of six clips, photos, deadline and questions awaiting confirmation."
+              "feedback": "Send a factual recap distinguishing confirmed goals, suggested work and unresolved questions. Recaps prevent avoidable scope disputes."
             },
             {
               "type": "true_false",
@@ -249,14 +249,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Checkpoint: Prepare a Discovery Script\" lesson in a different setting: a freelancer preparing a 15-minute introductory service call. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a freelancer preparing a 15-minute introductory service call. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Use only \"How big is your budget?\" as the consultation",
-                "b": "Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval",
-                "c": "Promise enrolment volumes before examining prior data"
+                "a": "Spend all fifteen minutes describing one's own portfolio",
+                "b": "Guarantee a sales return before knowing the prospect's market",
+                "c": "Prepare goals, qualification questions, scope boundaries and a specific next step for a short call"
               },
-              "answer": "b",
-              "feedback": "Discovery is not a memorized pressure pitch. Recommended response: Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval."
+              "answer": "c",
+              "feedback": "Prepare goals, qualification questions, scope boundaries and a specific next step for a short call. Discovery is not a memorized pressure pitch."
             },
             {
               "type": "true_false",
@@ -303,14 +303,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Describe Scope and Deliverables Clearly\" lesson in a different setting: a small media agency defining a four-video content package. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a small media agency defining a four-video content package. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Hide the need for brand assets from the client",
-                "b": "Assume unlimited content is included under vague wording",
-                "c": "Specify monthly assets, approval rounds, platform responsibilities and deliverable formats"
+                "a": "Add filming to the quote without obtaining pricing consent",
+                "b": "List exactly four edits, source-footage obligations, file formats, turnaround and revision limit",
+                "c": "Describe the package as unlimited full-service production"
               },
-              "answer": "c",
-              "feedback": "Outputs and responsibilities reduce ambiguity. Recommended response: Specify monthly assets, approval rounds, platform responsibilities and deliverable formats."
+              "answer": "b",
+              "feedback": "List exactly four edits, source-footage obligations, file formats, turnaround and revision limit. Outputs and responsibilities reduce ambiguity."
             },
             {
               "type": "true_false",
@@ -343,14 +343,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Estimate Effort and Dependencies\" lesson in a different setting: a graphic designer building a campaign calendar for a brand. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a graphic designer building a campaign calendar for a brand. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Show the image deadline and a dependent build milestone with review time",
-                "b": "Remove approvals from the schedule to appear faster",
-                "c": "Promise a finished site before the client can supply content"
+                "a": "Map content handover, shoot availability, brand approval and revision buffers on the calendar",
+                "b": "Promise publication before client-provided assets arrive",
+                "c": "Ignore the owner's scheduled review week"
               },
               "answer": "a",
-              "feedback": "Work cannot complete before required inputs and sign-offs. Recommended response: Show the image deadline and a dependent build milestone with review time."
+              "feedback": "Map content handover, shoot availability, brand approval and revision buffers on the calendar. Work cannot complete before required inputs and sign-offs."
             },
             {
               "type": "true_false",
@@ -383,14 +383,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Explain Pricing Assumptions\" lesson in a different setting: a content agency quoting a monthly retainer and paid media spend. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a content agency quoting a monthly retainer and paid media spend. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Describe the base fee as fully inclusive when it is not",
-                "b": "Label the shoot fee and make venue rental a visible optional cost",
-                "c": "Add an undisclosed production charge after acceptance"
+                "a": "Present the retainer as including unlimited advertising budget",
+                "b": "Add an undisclosed media fee after approval",
+                "c": "Separate agency retainer, tax assumptions, client ad spend and any optional production costs"
               },
-              "answer": "b",
-              "feedback": "Hidden costs undermine informed consent. Recommended response: Label the shoot fee and make venue rental a visible optional cost."
+              "answer": "c",
+              "feedback": "Separate agency retainer, tax assumptions, client ad spend and any optional production costs. Hidden costs undermine informed consent."
             },
             {
               "type": "true_false",
@@ -423,14 +423,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Compare Proposals Transparently\" lesson in a different setting: a marketing consultancy presenting a basic and premium scope. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a marketing consultancy presenting a basic and premium scope. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Invent features to make the cheaper option look inferior",
-                "b": "Call the larger package better without comparing fit",
-                "c": "Show both options with volume, turnaround, revisions, client inputs and exclusions"
+                "a": "Invent scarcity to pressure the buyer into upgrading",
+                "b": "Use one comparison table showing volumes, deliverables, turnaround, reviews and exclusions for both options",
+                "c": "Describe the premium option as better without explaining the difference"
               },
-              "answer": "c",
-              "feedback": "Clarity helps clients choose what they actually need. Recommended response: Show both options with volume, turnaround, revisions, client inputs and exclusions."
+              "answer": "b",
+              "feedback": "Use one comparison table showing volumes, deliverables, turnaround, reviews and exclusions for both options. Clarity helps clients choose what they actually need."
             },
             {
               "type": "true_false",
@@ -463,14 +463,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Specify Exclusions and Revision Limits\" lesson in a different setting: a video editor defining whether subtitles and extra formats are included. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a video editor defining whether subtitles and extra formats are included. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Explain the agreed revisions and offer a separately scoped reshoot estimate",
-                "b": "Reject all feedback even within the agreed rounds",
-                "c": "Claim the reshoot is free then surprise the client with charges"
+                "a": "Confirm whether subtitles and aspect-ratio exports are included and record any extra rate in advance",
+                "b": "Assume unlimited variants are included for free",
+                "c": "Charge for a promised included format after delivery"
               },
               "answer": "a",
-              "feedback": "Clear boundaries protect the relationship. Recommended response: Explain the agreed revisions and offer a separately scoped reshoot estimate."
+              "feedback": "Confirm whether subtitles and aspect-ratio exports are included and record any extra rate in advance. Clear boundaries protect the relationship."
             },
             {
               "type": "true_false",
@@ -503,14 +503,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Checkpoint: Write a Two-Option Offer\" lesson in a different setting: a retailer considering two launch content bundles. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a retailer considering two launch content bundles. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Advertise guaranteed bookings from either option",
-                "b": "Offer a compact and expanded content package with exact assets, review windows and exclusions",
-                "c": "Put every important detail in an unreadable footnote"
+                "a": "Promise guaranteed revenue in both package descriptions",
+                "b": "Hide third-party production costs in a footnote",
+                "c": "Offer two clearly scoped launch bundles with specific quantities, revisions, dependencies and exclusions"
               },
-              "answer": "b",
-              "feedback": "Transparency matters more than upselling. Recommended response: Offer a compact and expanded content package with exact assets, review windows and exclusions."
+              "answer": "c",
+              "feedback": "Offer two clearly scoped launch bundles with specific quantities, revisions, dependencies and exclusions. Transparency matters more than upselling."
             },
             {
               "type": "true_false",
@@ -557,14 +557,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Handle a Budget Concern Calmly\" lesson in a different setting: a designer negotiating an optional photography day. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a designer negotiating an optional photography day. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Promise the entire original scope at an unsustainable fee",
-                "b": "Pressure the client to borrow money immediately",
-                "c": "Ask which outcomes matter most and propose a smaller scope with its limitations explained"
+                "a": "Promise to include extra shooting for no fee without resource review",
+                "b": "Ask about the budget cap and offer photography as an optional separated deliverable or phased work",
+                "c": "Insist the client finance the full proposal immediately"
               },
-              "answer": "c",
-              "feedback": "Scope, timing and priorities may matter more than discounting. Recommended response: Ask which outcomes matter most and propose a smaller scope with its limitations explained."
+              "answer": "b",
+              "feedback": "Ask about the budget cap and offer photography as an optional separated deliverable or phased work. Scope, timing and priorities may matter more than discounting."
             },
             {
               "type": "true_false",
@@ -597,14 +597,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Respond to a Scope-Creep Request\" lesson in a different setting: a software consultancy asked to add new pages to an approved website scope. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a software consultancy asked to add new pages to an approved website scope. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Document the six extra edits and offer a change order with timeline impact",
-                "b": "Refuse the entire project instead of discussing options",
-                "c": "Do the extra work without updating any expectation"
+                "a": "Log additional website pages as a change request with revised effort, fees and launch effects",
+                "b": "Create the pages without notifying the client of the timeline impact",
+                "c": "Reject normal in-scope corrections while debating additions"
               },
               "answer": "a",
-              "feedback": "An agreed change order records the new trade-off. Recommended response: Document the six extra edits and offer a change order with timeline impact."
+              "feedback": "Log additional website pages as a change request with revised effort, fees and launch effects. An agreed change order records the new trade-off."
             },
             {
               "type": "true_false",
@@ -637,14 +637,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Explain a Realistic Deadline\" lesson in a different setting: a web studio planning a site launch after payment gateway approval. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a web studio planning a site launch after payment gateway approval. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Say yes while planning to miss the deadline",
-                "b": "Explain the production lead time and offer a feasible reduced scope or later delivery date",
-                "c": "Skip safety and quality checks without consent"
+                "a": "Guarantee launch before the gateway provider has responded",
+                "b": "Remove payment testing from the scope to keep the promised date",
+                "c": "Explain that payment integration approval is a dependency and give a conditional schedule"
               },
-              "answer": "b",
-              "feedback": "Overpromising creates reputational and operational harm. Recommended response: Explain the production lead time and offer a feasible reduced scope or later delivery date."
+              "answer": "c",
+              "feedback": "Explain that payment integration approval is a dependency and give a conditional schedule. Overpromising creates reputational and operational harm."
             },
             {
               "type": "true_false",
@@ -677,14 +677,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Avoid False Scarcity and Pressure\" lesson in a different setting: a consultancy writing a first-call follow-up. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a consultancy writing a first-call follow-up. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Tell the prospect the price doubles in an hour without approval",
-                "b": "Invent a competing buyer to force immediate payment",
-                "c": "Remove the false scarcity claim and explain any genuine booking deadline accurately"
+                "a": "Say the quote expires in one hour with no actual policy",
+                "b": "Use a neutral recap and any genuine capacity limitations without fabricated countdowns",
+                "c": "Claim one remaining slot when several are available"
               },
-              "answer": "c",
-              "feedback": "Pressure tactics can invalidate trust and informed choice. Recommended response: Remove the false scarcity claim and explain any genuine booking deadline accurately."
+              "answer": "b",
+              "feedback": "Use a neutral recap and any genuine capacity limitations without fabricated countdowns. Pressure tactics can invalidate trust and informed choice."
             },
             {
               "type": "true_false",
@@ -717,14 +717,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Know When to Decline a Bad Fit\" lesson in a different setting: a freelancer asked to impersonate a client's existing customers in testimonials. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a freelancer asked to impersonate a client's existing customers in testimonials. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "State the capability limit and refer the requirement to a qualified specialist",
-                "b": "Sign first and plan to outsource secretly",
-                "c": "Claim legal certification without expertise"
+                "a": "Decline the fake testimonial request and explain that only authorized genuine statements can be used",
+                "b": "Write invented customer reviews under other people's names",
+                "c": "Hide the deception from the client's legal team"
               },
               "answer": "a",
-              "feedback": "Credibility depends on accurate capability claims. Recommended response: State the capability limit and refer the requirement to a qualified specialist."
+              "feedback": "Decline the fake testimonial request and explain that only authorized genuine statements can be used. Credibility depends on accurate capability claims."
             },
             {
               "type": "true_false",
@@ -757,14 +757,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Checkpoint: Practice an Objection Response\" lesson in a different setting: a video agency answering concerns about approval turnaround. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a video agency answering concerns about approval turnaround. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Dismiss the concern as unimportant",
-                "b": "Ask which reports are confusing and show a simple sample plus proposed review call",
-                "c": "Promise a return on investment without assumptions"
+                "a": "Dismiss the concern and demand an immediate signature",
+                "b": "Guarantee unlimited same-day changes without capacity",
+                "c": "Ask which approval bottleneck concerns the client and show an achievable review-and-revision schedule"
               },
-              "answer": "b",
-              "feedback": "Consultative responses aim for clarity and fit. Recommended response: Ask which reports are confusing and show a simple sample plus proposed review call."
+              "answer": "c",
+              "feedback": "Ask which approval bottleneck concerns the client and show an achievable review-and-revision schedule. Consultative responses aim for clarity and fit."
             },
             {
               "type": "true_false",
@@ -811,14 +811,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Build a Consultative Sales Sequence\" lesson in a different setting: a creative studio formalizing its client onboarding pipeline. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a creative studio formalizing its client onboarding pipeline. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Skip discovery and send a contract to all leads",
-                "b": "Send daily aggressive messages to every unqualified contact",
-                "c": "Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up"
+                "a": "Skip the client's decision-maker and scope verification",
+                "b": "Create a documented journey from qualification to discovery, recap, offer and respectful follow-up",
+                "c": "Send the same contract to every unqualified contact"
               },
-              "answer": "c",
-              "feedback": "Consultation comes before a tailored recommendation. Recommended response: Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up."
+              "answer": "b",
+              "feedback": "Create a documented journey from qualification to discovery, recap, offer and respectful follow-up. Consultation comes before a tailored recommendation."
             },
             {
               "type": "true_false",
@@ -851,14 +851,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Prepare an Accurate Written Proposal\" lesson in a different setting: a small agency updating a pitch with new subcontractors. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a small agency updating a pitch with new subcontractors. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Replace it with authorized sample references and clearly state what the team can deliver",
-                "b": "Promise a proprietary tool that has not been built",
-                "c": "Leave copyrighted work uncredited as if it belongs to the agency"
+                "a": "Confirm subcontractor availability, asset usage rights and honestly described team capability",
+                "b": "Present subcontractor work as owned in-house without authorization",
+                "c": "Promise proprietary software features no one has built"
               },
               "answer": "a",
-              "feedback": "Evidence and rights support a trustworthy offer. Recommended response: Replace it with authorized sample references and clearly state what the team can deliver."
+              "feedback": "Confirm subcontractor availability, asset usage rights and honestly described team capability. Evidence and rights support a trustworthy offer."
             },
             {
               "type": "true_false",
@@ -891,14 +891,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Write a Practical Follow-up Message\" lesson in a different setting: a freelancer checking whether a client has reviewed a scope document. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a freelancer checking whether a client has reviewed a scope document. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Send repeated anonymous reminders every hour",
-                "b": "Send a short recap, the agreed quote and a question about decision timing",
-                "c": "Claim the offer has expired without a stated deadline"
+                "a": "Send five pressure reminders in the same day",
+                "b": "Invent a discount deadline that was never agreed",
+                "c": "Send a concise message about the actual shared proposal and ask whether a decision date is known"
               },
-              "answer": "b",
-              "feedback": "Respectful timing protects the relationship. Recommended response: Send a short recap, the agreed quote and a question about decision timing."
+              "answer": "c",
+              "feedback": "Send a concise message about the actual shared proposal and ask whether a decision date is known. Respectful timing protects the relationship."
             },
             {
               "type": "true_false",
@@ -931,14 +931,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Plan a Transparent Handover\" lesson in a different setting: a software team transferring a new client to project delivery. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a software team transferring a new client to project delivery. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Hide known deadline risks until launch day",
-                "b": "Ask the team to reconstruct commitments from memory",
-                "c": "Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely"
+                "a": "Withhold promised revisions to make the project seem simpler",
+                "b": "Transfer the accepted proposal, contacts, client approvals, dependencies and risks to the delivery owner",
+                "c": "Tell the developer to reconstruct the contract from chat fragments"
               },
-              "answer": "c",
-              "feedback": "Continuity reduces missed work and scope disputes. Recommended response: Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely."
+              "answer": "b",
+              "feedback": "Transfer the accepted proposal, contacts, client approvals, dependencies and risks to the delivery owner. Continuity reduces missed work and scope disputes."
             },
             {
               "type": "true_false",
@@ -971,14 +971,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Audit Claims and Commercial Terms\" lesson in a different setting: a consulting firm revising a two-option proposal before sending. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a consulting firm revising a two-option proposal before sending. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Clarify whether paid media is excluded and obtain the client's understanding before signature",
-                "b": "Mark testimonials as real without permission or evidence",
-                "c": "Leave the contradiction and clarify only after billing"
+                "a": "Cross-check price tables, paid add-ons, tax wording, revisions and stated performance claims for contradictions",
+                "b": "Leave two conflicting prices in the signed proposal",
+                "c": "Claim outcomes are guaranteed without any evidence or approved terms"
               },
               "answer": "a",
-              "feedback": "Truthful terms prevent avoidable disputes. Recommended response: Clarify whether paid media is excluded and obtain the client's understanding before signature."
+              "feedback": "Cross-check price tables, paid add-ons, tax wording, revisions and stated performance claims for contradictions. Truthful terms prevent avoidable disputes."
             },
             {
               "type": "true_false",
@@ -1011,14 +1011,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Apply the \"Capstone: Deliver a Client Offer Pack\" lesson in a different setting: a freelancer preparing a realistic proposal for a new service lead. Which next action is most appropriate?",
+              "prompt": "A consultant is advising a freelancer preparing a realistic proposal for a new service lead. Which action best protects a clear and ethical client relationship?",
               "options": {
-                "a": "Promise guaranteed sales without any measurement plan",
-                "b": "Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist",
-                "c": "Present unrequested services as already authorized"
+                "a": "Present fictional guaranteed sales figures as confirmed outcomes",
+                "b": "Submit only a price list without any requirements or delivery plan",
+                "c": "Provide discovery questions, two scoped offers, commercial assumptions, objection responses and a kickoff pack"
               },
-              "answer": "b",
-              "feedback": "A traceable pack demonstrates negotiation and relationship skills. Recommended response: Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist."
+              "answer": "c",
+              "feedback": "Provide discovery questions, two scoped offers, commercial assumptions, objection responses and a kickoff pack. A traceable pack demonstrates negotiation and relationship skills."
             },
             {
               "type": "true_false",
