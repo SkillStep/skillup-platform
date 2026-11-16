@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "policyId": "skillup-completion-certificate-policy",
+  "policyVersion": 1,
+  "status": "proposed_requires_product_owner_and_legal_approval",
+  "sourceIssue": "https://github.com/SkillStep/skillup-platform/issues/265",
+  "effectiveAt": null,
+  "ownerApproval": {
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidenceUrl": null,
+    "decision": "pending"
+  },
+  "legalApproval": {
+    "approvedBy": null,
+    "approvedAt": null,
+    "evidenceUrl": null,
+    "decision": "pending"
+  },
+  "releaseActivation": {
+    "enabled": false,
+    "publishCourses": false,
+    "issueCertificates": false,
+    "allowHistoricalBackfill": false,
+    "publicVerificationEnabled": false
+  },
+  "scope": {
+    "firstMilestoneSkills": 10,
+    "initiallyPublishedSkills": 5,
+    "additionalSkillsPendingPublication": 5,
+    "canonicalSkills": [
+      {
+        "skillSlug": "interview-workplace-communication",
+        "displayName": "Interview and Workplace Communication",
+        "certificateTitle": "Certificate of Completion — Interview and Workplace Communication"
+      },
+      {
+        "skillSlug": "practical-english-study-work",
+        "displayName": "Practical English for Study and Work",
+        "certificateTitle": "Certificate of Completion — Practical English for Study and Work"
+      },
+      {
+        "skillSlug": "ai-tools-study-work",
+        "displayName": "AI Tools for Study and Work",
+        "certificateTitle": "Certificate of Completion — AI Tools for Study and Work"
+      },
+      {
+        "skillSlug": "freelancing-foundations",
+        "displayName": "Freelancing Foundations",
+        "certificateTitle": "Certificate of Completion — Freelancing Foundations"
+      },
+      {
+        "skillSlug": "digital-marketing-foundations",
+        "displayName": "Digital Marketing Foundations",
+        "certificateTitle": "Certificate of Completion — Digital Marketing Foundations"
+      },
+      {
+        "skillSlug": "prompt-engineering-generative-ai",
+        "displayName": "Prompt Engineering & Generative AI",
+        "certificateTitle": "Certificate of Completion — Prompt Engineering & Generative AI"
+      },
+      {
+        "skillSlug": "cybersecurity-digital-safety",
+        "displayName": "Cybersecurity & Digital Safety",
+        "certificateTitle": "Certificate of Completion — Cybersecurity & Digital Safety"
+      },
+      {
+        "skillSlug": "data-analytics-dashboards",
+        "displayName": "Data Analytics & Decision Making",
+        "certificateTitle": "Certificate of Completion — Data Analytics & Decision Making"
+      },
+      {
+        "skillSlug": "applied-ai-workflows",
+        "displayName": "AI Automation & No-Code Tools",
+        "certificateTitle": "Certificate of Completion — AI Automation & No-Code Tools"
+      },
+      {
+        "skillSlug": "sales-client-negotiation",
+        "displayName": "Sales, Negotiation & Client Management",
+        "certificateTitle": "Certificate of Completion — Sales, Negotiation & Client Management"
+      }
+    ]
+  },
+  "mastery": {
+    "minimumPassPercentPerLevel": 80,
+    "coverageOfRequiredPublishedLevelVersionsPercent": 100,
+    "requiredPublishedChallengeVersionsCorrectAtLeastOncePercent": 100,
+    "levelPassSemantics": "At least one server-recorded completed session for each pinned required published level version with awarded_points*100 >= max_points*80; do not average across levels.",
+    "challengePassSemantics": "At least one server-evaluated correct attempt for every pinned required published challenge version, for the same account; incorrect, needs_review, skipped, draft and nonmatching versions do not count.",
+    "requiredSetSemantics": "A versioned requirement set must reference the reviewed and actually published skill version, all published level versions and every published challenge for those levels; missing/draft/archived content fails eligibility.",
+    "capstone": {
+      "required": true,
+      "decision": "passed",
+      "evidenceType": "authentic learner artifact plus digest and genuine independent authorized human reviewer",
+      "reviewerMustDifferFromLearner": true,
+      "reviewerRoleVerificationRequired": true,
+      "provisionalSelfScoreCannotAward": true
+    },
+    "baselineAndEndline": {
+      "diagnosticBaselineMandatoryForAward": false,
+      "finalKnowledgeAssessmentMandatoryForAward": false,
+      "launchStatus": "formative_draft_only",
+      "reason": "The new 40 baseline/endline draft questions are not integrated with a versioned examination schema; requiring them now would falsely award or lock original five skills.",
+      "futureChangeRequiresNewApprovedRequirementVersion": true
+    },
+    "noCredentialForMerelyViewingOrOpeningLesson": true,
+    "noRetroactiveCreditFromClientDisplayedProgress": true
+  },
+  "retakes": {
+    "allowed": true,
+    "attemptsPerChallengePerLevelSession": 2,
+    "additionalLevelSessions": "unlimited_without_daily_cooldown_under_existing_gameplay_service",
+    "persistAllAttempts": true,
+    "bestCompletedSessionCanSatisfyLevelScore": true,
+    "wrongResponsesMayBeRetriedOnlyWithinActualGameplayRules": true,
+    "noScoreResetOrDeletionOfHistoricalAttempts": true,
+    "capstoneRevisionAllowed": "resubmit_revised_artifact_and_obtain_a_new_human_attestation; latest_real_attestation_controls_eligibility",
+    "noAutomatedPassForUnreviewedCapstone": true
+  },
+  "eligibility": {
+    "isIndependentOfPlanAtMomentOfIssuance": true,
+    "freeCanAccessOnlyExplicitlyApprovedFreePlayableContent": true,
+    "premiumNeededForPremiumLockedContentWhenPlayed": true,
+    "doNotBackfillOrBypassAccessControl": true,
+    "mustBeActiveNonDeletedAccountToIssue": true,
+    "learnerName": "Current account profile display name, not government-verified identity; require 2-60 characters and renderable Unicode before issue.",
+    "oneCertificatePerLearnerSkillAndRequirementVersion": true,
+    "concurrentReplaysReturnSameAward": true,
+    "revokedAwardNeverAutomaticallyReissued": true,
+    "newCourseVersionRequiresNewRequirementVersionAndSeparateEvidence": true,
+    "historicalAwardsRemainAccessibleAfterExpiry": true,
+    "historicalClaimsOnlyAfterExplicitApprovedEvidenceAudit": true,
+    "noSeparateCertificateFee": true,
+    "noAutomaticNewAwardFromCourseRevision": true
+  },
+  "legalPrivacy": {
+    "exactCertificateDisclaimer": "SkillUp educational completion certificate — not an accredited professional qualification.",
+    "qualificationStatus": "non_accredited_educational_completion_only",
+    "prohibitedClaims": [
+      "accredited",
+      "government-recognized",
+      "professional licence",
+      "guaranteed employment",
+      "guaranteed salary",
+      "university degree",
+      "equivalent to a regulated professional qualification"
+    ],
+    "suggestedLearnerFacingNotice": "This certificate records completion of SkillUp learning activities. It is not an accredited professional qualification or a licence.",
+    "marketingMustNotClaimIndependentQualification": true,
+    "supportedLanguagesNow": [
+      "en"
+    ],
+    "nonLatinPdfNames": "must_preserve_name_or_fail_privately; do_not_silently_transliterate; add_unicode_renderer_before_nonlatin_release",
+    "certificatePrivacy": {
+      "ownerOnlyAuthenticatedPdf": true,
+      "publicVerification": false,
+      "publicIdentityLookup": false,
+      "shareableUnprotectedPdfRoute": false,
+      "exposeEmailAccountIdScoresAndAttemptHistory": false
+    },
+    "revocation": "authorized human reason, immutable audit, no silent reissue",
+    "validationPending": "Independent legal/privacy counsel to confirm exact wording, jurisdictions, data policies and marketing uses; not a claim that legal approval has occurred."
+  },
+  "versioning": {
+    "immutableFrozenApprovalDigest": true,
+    "requirementsStatusTransitions": [
+      "draft",
+      "approved",
+      "active",
+      "retired"
+    ],
+    "publishedOnlyEvidence": true,
+    "supersededAndWithdrawnCannotNewlyQualify": true,
+    "earnedAwardsRemainFrozenUnderTheirVersion": true,
+    "noAutomaticMigrationOrBackfill": true,
+    "samePolicyAllTen": true
+  },
+  "releaseConditions": [
+    "Product owner documents explicit approval of exact 80 percent, full required challenge coverage, two attempts per session and unlimited retakes.",
+    "Legal/privacy reviewer approves disclaimer, identity limitations and public verification OFF.",
+    "Subject and accessibility reviewers approve each published course and private assessment keys separately.",
+    "Authorized capstone reviewer identity/role is server verified; freeform learner/self-approval cannot create a passed attestation.",
+    "Exact-version requirement set matches all published levels/challenges and is activated only via auditable authorized policy approval.",
+    "Exact-SHA staging Free/Premium/expired, replay, ownership, capstone, scoring and Unicode tests pass.",
+    "Separate explicit production release authorization; issuance feature flags remain disabled until then."
+  ]
+}
