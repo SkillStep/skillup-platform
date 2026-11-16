@@ -54,3 +54,11 @@ test("missing lessons or exercise formats cannot pass content readiness", () => 
   assert.match(errors, /six-level contract/);
   assert.match(errors, /expected accessible MC/);
 });
+
+test("transfer case must not copy the introductory quiz answer choices", () => {
+  const mutated = structuredClone(courses);
+  mutated[0].modules[0].levels[0].challenges[1].options =
+    structuredClone(mutated[0].modules[0].levels[0].challenges[0].options);
+  const errors = validateTeamFiveCourseDrafts(mutated).issues.join(" ");
+  assert.match(errors, /context-specific answer choices/);
+});
