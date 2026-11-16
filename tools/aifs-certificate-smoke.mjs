@@ -239,7 +239,7 @@ try {
 
   const pdf = await enabled.downloadPdf(learnerId, first.id);
   assert(pdf.toString("ascii", 0, 8) === "%PDF-1.4");
-  assert(pdf.toString("ascii").includes("/MediaBox [0 0 595.28 841.89]"));
+  assert(pdf.toString("ascii").includes("/MediaBox [0 0 841.89 595.28]"));
   await assert.rejects(
     () => enabled.downloadPdf(reviewerId, first.id),
     (error) => error.statusCode === 404,
