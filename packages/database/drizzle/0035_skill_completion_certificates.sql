@@ -78,8 +78,8 @@ create index skill_certificate_user_history on skill_certificate_awards(user_id,
 
 create table skill_certificate_events (
   id bigint generated always as identity primary key,
-  award_id uuid not null references skill_certificate_awards(id) on delete cascade,
-  actor_user_id uuid not null references users(id) on delete restrict,
+  award_id uuid references skill_certificate_awards(id) on delete set null,
+  actor_user_id uuid references users(id) on delete set null,
   action text not null check(action in ('issued','revoked','verified_download')),
   reason text not null check(char_length(reason) between 12 and 1500),
   event_digest text not null check(event_digest ~ '^[0-9a-f]{64}$'),
