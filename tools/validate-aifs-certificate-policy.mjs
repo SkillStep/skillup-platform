@@ -171,6 +171,11 @@ export function validatePolicyRepositoryAlignment() {
     errors.push("Certificate eligibility no longer checks all mandatory correct challenges.");
   if (!api.includes("r.required_capstone") || !api.includes("capstonePassed"))
     errors.push("Certificate eligibility no longer requires an approved capstone.");
+  if (
+    !api.includes("roles.role = 'content_reviewer'") ||
+    !api.includes("roles.created_at <= a.verified_at") ||
+    !api.includes("reviewer_authorized")
+  ) errors.push("Capstone reviewer role and at-attestation authorization guard is missing.");
   if (!gameplay.includes("challenge.max_attempts") && !gameplay.includes("challenge_version_id, max_attempts")) {
     // The actual service writes 2 attempts when starting each published level.
     if (!gameplay.includes("max_attempts") || !gameplay.includes("2,")) {
