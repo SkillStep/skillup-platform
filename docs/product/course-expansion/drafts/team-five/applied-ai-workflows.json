@@ -541,7 +541,7 @@
           "teaching": "AI output may include invented facts that appear authoritative in a generated report. In a practical example, An AI-generated inventory summary mentions a supplier shortage not found in any source. The recommended workflow is to flag the shortage as unsupported and remove it until evidence exists. Avoid: publish it as a confirmed supplier update or invent a citation to make it look reliable.",
           "workedExample": "An AI-generated inventory summary mentions a supplier shortage not found in any source. Action: Flag the shortage as unsupported and remove it until evidence exists.",
           "commonMistake": "Publish it as a confirmed supplier update",
-          "remediation": "Source gaps must be explicit.",
+          "remediation": "A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported.",
           "hint": "Identify the option that follows this workflow principle: AI output may include invented facts that appear authoritative in a generated report.",
           "challenges": [
             {
@@ -570,7 +570,7 @@
               "type": "true_false",
               "prompt": "Evaluate this workflow statement for \"Recognize Unsupported AI Claims\": An unsupported generated explanation should be labelled as an assumption, not confirmed fact.",
               "answer": true,
-              "feedback": "Source gaps must be explicit."
+              "feedback": "A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported."
             }
           ]
         },
