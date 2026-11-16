@@ -1,0 +1,49 @@
+name: AIFS temporary certificate formatter
+on:
+  push:
+    branches: [feat/aifs-versioned-certificate-evidence-20261116]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: aifs-certificate-format
+  cancel-in-progress: true
+
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Apply pinned Biome to certificate implementation only
+        run: |
+          pnpm exec biome format --write \
+            apps/api/src/certificates.ts \
+            apps/api/src/certificates.test.ts \
+            apps/api/src/index.ts \
+            packages/database/src/certificates-schema.ts \
+            packages/database/src/index.ts \
+            packages/database/package.json \
+            tools/aifs-certificate-smoke.mjs
+      - name: Commit formatter output only to certificate branch
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet; then
+            git add apps/api/src/certificates.ts apps/api/src/certificates.test.ts
+            git add apps/api/src/index.ts packages/database/src/certificates-schema.ts
+            git add packages/database/src/index.ts packages/database/package.json
+            git add tools/aifs-certificate-smoke.mjs
+            git commit -m 'style(AIFS): format certificate evidence implementation'
+            git push origin HEAD:refs/heads/feat/aifs-versioned-certificate-evidence-20261116
+          fi
