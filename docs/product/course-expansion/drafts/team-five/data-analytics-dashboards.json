@@ -407,7 +407,7 @@
           "teaching": "Extreme values may be genuine events or errors and need investigation before exclusion. Worked example: Daily sales mostly sit near PKR 8,000 but one day reports PKR 80,000. The correct approach is to inspect that day's source transactions and note any promotion or data-entry error. Common errors include: delete the observation because it changes the average or assume the business grew tenfold permanently.",
           "workedExample": "Context: Daily sales mostly sit near PKR 8,000 but one day reports PKR 80,000. Applied technique: Inspect that day's source transactions and note any promotion or data-entry error.",
           "commonMistake": "Delete the observation because it changes the average",
-          "remediation": "Outliers can be important true events.",
+          "remediation": "Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors.",
           "hint": "Check that the action follows this data principle: Extreme values may be genuine events or errors and need investigation before exclusion.",
           "challenges": [
             {
@@ -436,7 +436,7 @@
               "type": "true_false",
               "prompt": "Is this statement about \"Check Outliers Against Sources\" correct? An outlier should be removed automatically whenever it increases variance.",
               "answer": false,
-              "feedback": "Outliers can be important true events."
+              "feedback": "Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors."
             }
           ]
         },
@@ -581,7 +581,7 @@
           "teaching": "A reader needs the metric name, unit, period and scale to interpret plotted values. Worked example: A dashboard chart shows 20, 30 and 40 without saying whether they mean rupees or customers. The correct approach is to label the vertical axis \"Orders (count)\" and show the reporting dates. Common errors include: assume readers know every unlabeled number or use the title \"Performance\" without identifying the KPI.",
           "workedExample": "Context: A dashboard chart shows 20, 30 and 40 without saying whether they mean rupees or customers. Applied technique: Label the vertical axis \"Orders (count)\" and show the reporting dates.",
           "commonMistake": "Assume readers know every unlabeled number",
-          "remediation": "Always disclose the measure and unit.",
+          "remediation": "Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately.",
           "hint": "Check that the action follows this data principle: A reader needs the metric name, unit, period and scale to interpret plotted values.",
           "challenges": [
             {
@@ -610,7 +610,7 @@
               "type": "true_false",
               "prompt": "Is this statement about \"Label Axes and Units Clearly\" correct? Numbers without units can be read as several different measures.",
               "answer": true,
-              "feedback": "Always disclose the measure and unit."
+              "feedback": "Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately."
             }
           ]
         },
