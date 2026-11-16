@@ -145,7 +145,11 @@ try {
   for (const [slug] of CANONICAL_SKILLS) {
     const status = await enabled.eligibility(learnerId, slug);
     if (slug !== skill.slug) {
-      assert.equal(status.status, "unavailable", "A passed skill cannot imply another skill passed.");
+      assert.equal(
+        status.status,
+        "unavailable",
+        "A passed skill cannot imply another skill passed.",
+      );
     }
   }
   const unfinished = await enabled.eligibility(learnerId, skill.slug);

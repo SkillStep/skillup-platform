@@ -99,7 +99,12 @@ export default defineConfig({
     {
       name: "learner-mobile",
       dependencies: ["auth-setup"],
-      testMatch: exactSpecs("learner.spec.mjs", "premium.spec.mjs", "responsive.spec.mjs", "certificates-authenticated.spec.mjs"),
+      testMatch: exactSpecs(
+        "learner.spec.mjs",
+        "premium.spec.mjs",
+        "responsive.spec.mjs",
+        "certificates-authenticated.spec.mjs",
+      ),
       use: {
         ...devices["Pixel 7"],
         storageState: path.join(authRoot, "learner.json"),

@@ -18,9 +18,14 @@ function harness({ total = 3, awardAnomalies = 0, policies = 1 } = {}) {
   const client = {
     async query(sql, params) {
       queries.push({ sql, params });
-      if (sql.includes("from skill_completion_requirement_sets r") && sql.includes("order by s.slug")) {
+      if (
+        sql.includes("from skill_completion_requirement_sets r") &&
+        sql.includes("order by s.slug")
+      ) {
         return {
-          rows: policies ? [{ slug: "interview-workplace-communication", level_version_ids: [ids[0]] }] : [],
+          rows: policies
+            ? [{ slug: "interview-workplace-communication", level_version_ids: [ids[0]] }]
+            : [],
         };
       }
       if (sql.includes("candidate_count")) {
@@ -34,13 +39,15 @@ function harness({ total = 3, awardAnomalies = 0, policies = 1 } = {}) {
       }
       if (sql.includes("from skill_certificate_awards a")) {
         return {
-          rows: [{
-            total_awards: 2,
-            issued_awards: 1,
-            revoked_awards: 1,
-            awards_from_prior_requirement_versions: 0,
-            frozen_evidence_anomalies: awardAnomalies,
-          }],
+          rows: [
+            {
+              total_awards: 2,
+              issued_awards: 1,
+              revoked_awards: 1,
+              awards_from_prior_requirement_versions: 0,
+              frozen_evidence_anomalies: awardAnomalies,
+            },
+          ],
         };
       }
       throw new Error("Unexpected audit query (fail closed).");
@@ -71,7 +78,10 @@ test("complete history scan counts verified eligibility, legacy-only progress an
   assert.equal(report.frozenAwards.revoked, 1);
   assert.equal(report.frozenAwardEvidenceAnomalies, 0);
   assert(!JSON.stringify(report).includes(ids[0]), "No private learner IDs can enter reports.");
-  assert(queries.every(({ sql }) => /^\s*select\b/i.test(sql)), "Audit must never write.");
+  assert(
+    queries.every(({ sql }) => /^\s*select\b/i.test(sql)),
+    "Audit must never write.",
+  );
 });
 
 test("full coverage means no silent 500-user sampling or truncated histories", async () => {

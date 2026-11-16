@@ -19,7 +19,11 @@ export function historyLimit(value = "") {
   return parsed;
 }
 
-export async function auditCertificateHistory(client, service, { limit = HISTORY_DEFAULT_LIMIT } = {}) {
+export async function auditCertificateHistory(
+  client,
+  service,
+  { limit = HISTORY_DEFAULT_LIMIT } = {},
+) {
   const policies = await client.query(
     `select s.slug, r.id, r.level_version_ids
        from skill_completion_requirement_sets r
@@ -78,7 +82,8 @@ export async function auditCertificateHistory(client, service, { limit = HISTORY
       if (!page.rows.length) break;
       for (const row of page.rows) {
         const eligibility = await service.eligibility(row.user_id, policy.slug);
-        if (!(eligibility.status in results)) throw new Error("Unexpected certificate eligibility status.");
+        if (!(eligibility.status in results))
+          throw new Error("Unexpected certificate eligibility status.");
         results[eligibility.status]++;
       }
       examined += page.rows.length;
@@ -136,14 +141,17 @@ export async function auditCertificateHistory(client, service, { limit = HISTORY
       total: Number(frozenAwards?.total_awards ?? 0),
       issued: Number(frozenAwards?.issued_awards ?? 0),
       revoked: Number(frozenAwards?.revoked_awards ?? 0),
-      fromPriorRequirementVersions: Number(frozenAwards?.awards_from_prior_requirement_versions ?? 0),
+      fromPriorRequirementVersions: Number(
+        frozenAwards?.awards_from_prior_requirement_versions ?? 0,
+      ),
     },
     results: totals,
-    certificationStatus: !coverageComplete || anomalies > 0
-      ? "REVIEW_REQUIRED"
-      : policies.rows.length === 0
-        ? "NO_ACTIVE_POLICY_CANNOT_CERTIFY"
-        : "AUDITED_NO_WRITES",
+    certificationStatus:
+      !coverageComplete || anomalies > 0
+        ? "REVIEW_REQUIRED"
+        : policies.rows.length === 0
+          ? "NO_ACTIVE_POLICY_CANNOT_CERTIFY"
+          : "AUDITED_NO_WRITES",
     note: "No user identifiers, names, phone numbers, emails, private answer keys or award IDs returned. No backfill or award issuance. Progress-only history is not credential evidence. Archived/revoked awards require independent legal/product review.",
   };
 }

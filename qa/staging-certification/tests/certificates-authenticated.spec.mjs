@@ -20,8 +20,12 @@ test("real authenticated learner sees only their private certificate inventory a
   await expect(page.getByRole("heading", { level: 1, name: "My Certificates" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Completion requirements" })).toBeVisible();
   await expect(page.getByRole("article")).toHaveCount(10);
-  await expect(page.getByRole("heading", { name: "Sign in to see your certificates" })).toHaveCount(0);
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  await expect(page.getByRole("heading", { name: "Sign in to see your certificates" })).toHaveCount(
+    0,
+  );
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth - window.innerWidth,
+  );
   expect(overflow).toBeLessThanOrEqual(2);
 
   for (const slug of [

@@ -18,7 +18,9 @@ if (!process.env.DATABASE_URL) {
   throw new Error("The staging/test DATABASE_URL must be configured.");
 }
 
-const requireDatabase = createRequire(new URL("../packages/database/package.json", import.meta.url));
+const requireDatabase = createRequire(
+  new URL("../packages/database/package.json", import.meta.url),
+);
 const { Pool } = requireDatabase("pg");
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
@@ -35,14 +37,20 @@ try {
   const report = await auditCertificateHistory(client, service, {
     limit: historyLimit(process.env.AIFS_CERTIFICATE_HISTORY_LIMIT),
   });
-  console.info(JSON.stringify({
-    ...report,
-    appEnv,
-    note: "No learner-identifying data printed. No awards issued or changed. Human approval required for any historical backfill. " + report.note,
-  }));
+  console.info(
+    JSON.stringify({
+      ...report,
+      appEnv,
+      note:
+        "No learner-identifying data printed. No awards issued or changed. Human approval required for any historical backfill. " +
+        report.note,
+    }),
+  );
   await client.query("rollback");
   if (!report.fullCoverageProven || report.frozenAwardEvidenceAnomalies > 0) {
-    throw new Error("History audit is incomplete or found frozen-award anomalies; see aggregate report.");
+    throw new Error(
+      "History audit is incomplete or found frozen-award anomalies; see aggregate report.",
+    );
   }
 } catch (error) {
   await client.query("rollback").catch(() => undefined);

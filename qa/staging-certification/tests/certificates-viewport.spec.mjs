@@ -12,7 +12,8 @@ const awards = [
   {
     id: "00000000-0000-4000-8000-000000000102",
     publicId: "SC-abcdefghijklmnopqrstuvwx01234568",
-    title: "Certificate of Completion — Comprehensive AI Automation & No-Code Tools for Community Entrepreneurship and Market Research",
+    title:
+      "Certificate of Completion — Comprehensive AI Automation & No-Code Tools for Community Entrepreneurship and Market Research",
     completedAt: "2026-10-20T12:00:00.000Z",
     issuedAt: "2026-10-21T12:00:00.000Z",
     status: "issued",
@@ -87,7 +88,9 @@ test("certificate privacy and sign-in are usable at this actual browser viewport
   const response = await page.goto("/en/certificates");
   expect(response?.ok()).toBeTruthy();
   await expect(page.getByRole("heading", { level: 1, name: "My Certificates" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Sign in to see your certificates" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sign in to see your certificates" }),
+  ).toBeVisible();
   const signIn = page.getByRole("link", { name: "Sign in", exact: true });
   await expect(signIn).toBeVisible();
   expect(await signIn.getAttribute("href")).toContain("/en/sign-in");
@@ -115,7 +118,9 @@ test("issued, long-title, revoked and 10 requirement cards remain accessible wit
     "/api/v1/me/certificates/00000000-0000-4000-8000-000000000101/pdf",
   );
   await expect(page.getByText("Unavailable due to revocation")).toBeVisible();
-  await expect(page.getByText("Certificate of Completion — Comprehensive AI Automation", { exact: false })).toBeVisible();
+  await expect(
+    page.getByText("Certificate of Completion — Comprehensive AI Automation", { exact: false }),
+  ).toBeVisible();
 
   const refresh = page.getByRole("button", { name: "Refresh" });
   await refresh.focus();
