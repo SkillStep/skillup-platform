@@ -138,7 +138,7 @@ export function validateTeamFiveAssessments(banks, courses) {
 if (process.argv[1]?.endsWith("validate-aifs-team-five-assessments.mjs")) {
   const result = validateTeamFiveAssessments(readTeamFiveAssessments(), readTeamFiveCourseDrafts());
   if (result.errors.length) {
-    result.errors.forEach((error) => console.error(`AIFS ASSESSMENT ERROR: ${error}`));
+    for (const error of result.errors) console.error(`AIFS ASSESSMENT ERROR: ${error}`);
     process.exitCode = 1;
   } else {
     console.info(
