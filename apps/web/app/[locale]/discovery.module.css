@@ -287,6 +287,24 @@
   color: #312e81;
 }
 
+.statusComingSoon {
+  background: #f1eefb;
+  color: #4c348b;
+  border: 1px solid #d8caff;
+}
+
+.disabledPractice {
+  align-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 0.8rem;
+  color: var(--ink-700);
+  cursor: not-allowed;
+  display: inline-flex;
+  font-weight: 700;
+  min-height: 46px;
+  padding: 0.7rem 0.9rem;
+}
+
 .cardLinks {
   align-items: center;
   display: flex;
