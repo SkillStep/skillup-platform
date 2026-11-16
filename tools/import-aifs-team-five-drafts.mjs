@@ -145,7 +145,7 @@ async function createNewDraftHierarchy(db, course, courseIndex, categoryId) {
         `insert into lesson_versions
           (id, lesson_id, module_version_id, version, locale, title, summary, estimated_minutes, state, index_policy)
           values ($1, $2, $3, 1, 'en', $4, $5, 8, 'draft', 'noindex')`,
-        [lessonVersionId, lessonId, moduleVersionId, level.title, level.teaching],
+        [lessonVersionId, lessonId, moduleVersionId, level.title, level.objective],
       );
       await db.query(
         "insert into levels (id, lesson_id, slug, sort_order) values ($1,$2,$3,1)",
@@ -289,7 +289,7 @@ async function writeDraftChallenges(db, course, currentLevels) {
         `update lesson_versions set summary = $2
            where id = $1 and state = 'draft' and reviewed_at is null
              and summary like 'Unreviewed lesson brief for %'`,
-        [row.lesson_version_id, level.teaching],
+        [row.lesson_version_id, level.objective],
       );
       if (lessonUpdate.rowCount !== 1) throw new Error(`${slug}: lesson draft changed concurrently.`);
       const levelUpdate = await db.query(
