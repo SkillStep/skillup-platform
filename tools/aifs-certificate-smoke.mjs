@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 
 import { createCertificateService } from "../apps/api/src/certificates.ts";
+import { CANONICAL_SKILLS } from "./validate-aifs-certificate-policy.mjs";
 import { auditCertificateHistory } from "./aifs-certificate-history-audit-core.mjs";
 
 const requireDatabase = createRequire(
@@ -140,6 +141,13 @@ try {
     "Default issuance must stay disabled even when a test policy is activated.",
   );
   assert.equal((await enabled.list(learnerId)).length, 0);
+  assert.equal(CANONICAL_SKILLS.length, 10);
+  for (const [slug] of CANONICAL_SKILLS) {
+    const status = await enabled.eligibility(learnerId, slug);
+    if (slug !== skill.slug) {
+      assert.equal(status.status, "unavailable", "A passed skill cannot imply another skill passed.");
+    }
+  }
   const unfinished = await enabled.eligibility(learnerId, skill.slug);
   assert.equal(unfinished.status, "incomplete");
   assert.equal(unfinished.completedLevels, 0);
