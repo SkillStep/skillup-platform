@@ -49,14 +49,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"List Repeatable Low-Risk Work Tasks\": a small café listing repeatable stock reporting tasks. Which proposed action is best?",
+              "prompt": "An automation designer is helping a small café listing repeatable stock reporting tasks. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Give an untested bot permission to delete the source spreadsheet",
-                "b": "Automate confidential hiring decisions without review",
-                "c": "Start with a reversible, low-risk registration summary using fictional records"
+                "a": "Automatically discard inventory records judged anomalous",
+                "b": "Start with an unattended bulk supplier-payment process",
+                "c": "Pilot a reversible weekly stock summary with defined inputs and a named reviewer"
               },
               "answer": "c",
-              "feedback": "Pilot scope should be bounded and recoverable. Best action: Start with a reversible, low-risk registration summary using fictional records."
+              "feedback": "Pilot a reversible weekly stock summary with defined inputs and a named reviewer. Pilot scope should be bounded and recoverable."
             },
             {
               "type": "true_false",
@@ -89,14 +89,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Recognize Tasks Needing Human Judgment\": a hospital office summarizing a fictional appointment reschedule. Which proposed action is best?",
+              "prompt": "An automation designer is helping a hospital office summarizing a fictional appointment reschedule. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Require authorized human confirmation of the decision and reasons before sending",
-                "b": "Hide the source notes from the person responsible",
-                "c": "Allow automatic rejection based on the generated tone"
+                "a": "Include patient clinical details in an open-channel summary",
+                "b": "Prepare a nonbinding reschedule summary for an authorized person to verify before contacting patients",
+                "c": "Automatically change appointment times for everyone without review"
               },
-              "answer": "a",
-              "feedback": "Accountability must remain with authorized people. Best action: Require authorized human confirmation of the decision and reasons before sending."
+              "answer": "b",
+              "feedback": "Prepare a nonbinding reschedule summary for an authorized person to verify before contacting patients. Accountability must remain with authorized people."
             },
             {
               "type": "true_false",
@@ -129,14 +129,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Define a Clear Workflow Outcome\": an operations assistant automating a weekly inventory report. Which proposed action is best?",
+              "prompt": "An automation designer is helping an operations assistant automating a weekly inventory report. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Ask for \"more productivity\" without any observable result",
-                "b": "Define a weekly summary draft due Friday with accurate shift counts and a named reviewer",
-                "c": "Measure success only by number of app integrations"
+                "a": "Define the Monday inventory summary, source records, exception rules and coordinator sign-off",
+                "b": "Measure success by the number of automations created",
+                "c": "Allow a report with no consistent date range or output format"
               },
-              "answer": "b",
-              "feedback": "Without a defined outcome, efficiency claims cannot be checked. Best action: Define a weekly summary draft due Friday with accurate shift counts and a named reviewer."
+              "answer": "a",
+              "feedback": "Define the Monday inventory summary, source records, exception rules and coordinator sign-off. Without a defined outcome, efficiency claims cannot be checked."
             },
             {
               "type": "true_false",
@@ -169,14 +169,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Identify Inputs and Access Requirements\": a coach summarizing anonymized appointment requests. Which proposed action is best?",
+              "prompt": "An automation designer is helping a coach summarizing anonymized appointment requests. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Copy customer passwords into the automation's notes",
-                "b": "Give the workflow administrator access to all company files",
-                "c": "Grant read access only to order status, date and ID fields needed for counts"
+                "a": "Grant the assistant full access to every client's files",
+                "b": "Copy appointment tokens into the instruction prompt",
+                "c": "Use anonymized appointment categories and minimum read-only access to produce the requested aggregate"
               },
               "answer": "c",
-              "feedback": "Least privilege protects unrelated information. Best action: Grant read access only to order status, date and ID fields needed for counts."
+              "feedback": "Use anonymized appointment categories and minimum read-only access to produce the requested aggregate. Least privilege protects unrelated information."
             },
             {
               "type": "true_false",
@@ -209,14 +209,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Estimate the Cost of a Bad Answer\": a payroll team reviewing a fictional expense classification. Which proposed action is best?",
+              "prompt": "An automation designer is helping a payroll team reviewing a fictional expense classification. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Require human verification of payment details and keep payouts outside the automation",
-                "b": "Ignore a mismatch because the invoice is formatted professionally",
-                "c": "Transfer money automatically when a model sounds certain"
+                "a": "Silently relabel ambiguous expenses to make totals look balanced",
+                "b": "Require a payroll specialist to verify uncertain classifications before any payment or tax effect",
+                "c": "Automatically submit reimbursements on an unverified label"
               },
-              "answer": "a",
-              "feedback": "Rare but costly errors still need strong controls. Best action: Require human verification of payment details and keep payouts outside the automation."
+              "answer": "b",
+              "feedback": "Require a payroll specialist to verify uncertain classifications before any payment or tax effect. Rare but costly errors still need strong controls."
             },
             {
               "type": "true_false",
@@ -249,14 +249,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Checkpoint: Select a Safe AI Workflow\": a business selecting one task for its first no-code pilot. Which proposed action is best?",
+              "prompt": "An automation designer is helping a business selecting one task for its first no-code pilot. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Use an opaque model to punish students without explanation",
-                "b": "Pilot an aggregate attendance summary with a human check rather than automatic disciplinary action",
-                "c": "Enable bulk deletion for faster cleanup"
+                "a": "Select a frequent reversible task with reliable records and easy manual verification",
+                "b": "Start with a workflow that permanently deletes customer accounts",
+                "c": "Choose the task that has the most connectors rather than measurable value"
               },
-              "answer": "b",
-              "feedback": "The first pilot should minimize harms and clarify responsibility. Best action: Pilot an aggregate attendance summary with a human check rather than automatic disciplinary action."
+              "answer": "a",
+              "feedback": "Select a frequent reversible task with reliable records and easy manual verification. The first pilot should minimize harms and clarify responsibility."
             },
             {
               "type": "true_false",
@@ -303,14 +303,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Write a Structured Task Brief\": a teacher configuring a feedback draft from anonymized survey answers. Which proposed action is best?",
+              "prompt": "An automation designer is helping a teacher configuring a feedback draft from anonymized survey answers. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Paste credentials into the prompt body",
-                "b": "Ask the model to invent tasks when the sheet is empty",
-                "c": "Specify permitted columns, date filter, output heading and explicit missing-field behavior"
+                "a": "Invent student comments to complete a feedback draft",
+                "b": "Put real respondent identifiers into a public prompt template",
+                "c": "Specify approved anonymous response fields, feedback format and what to do with missing answers"
               },
               "answer": "c",
-              "feedback": "Failure behavior belongs in the workflow contract. Best action: Specify permitted columns, date filter, output heading and explicit missing-field behavior."
+              "feedback": "Specify approved anonymous response fields, feedback format and what to do with missing answers. Failure behavior belongs in the workflow contract."
             },
             {
               "type": "true_false",
@@ -343,14 +343,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Specify Format and Quality Standards\": a shop creating a no-code weekly stock alert. Which proposed action is best?",
+              "prompt": "An automation designer is helping a shop creating a no-code weekly stock alert. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Require those exact fields and reject unknown statuses before writing",
-                "b": "Send free-form prose into numeric columns",
-                "c": "Allow the model to rename columns on every run"
+                "a": "Allow the model to guess reorder quantities without source limits",
+                "b": "Define low-stock threshold, numeric units, recipients and validation before sending alerts",
+                "c": "Send alerts from mixed text/numeric quantities without conversion"
               },
-              "answer": "a",
-              "feedback": "A clear contract prevents brittle integrations. Best action: Require those exact fields and reject unknown statuses before writing."
+              "answer": "b",
+              "feedback": "Define low-stock threshold, numeric units, recipients and validation before sending alerts. A clear contract prevents brittle integrations."
             },
             {
               "type": "true_false",
@@ -383,14 +383,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Add Relevant Context Without Secrets\": a community support bot drafting answers from an approved FAQ. Which proposed action is best?",
+              "prompt": "An automation designer is helping a community support bot drafting answers from an approved FAQ. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Embed the API key in the customer-facing prompt",
-                "b": "Supply the public policy text and a fictional case but use secure integration secrets storage",
-                "c": "Copy all historical private tickets into the example"
+                "a": "Pass only the authorized FAQ excerpt and question while keeping service credentials inside a secure connector",
+                "b": "Paste the bot's access token into a visitor-facing answer",
+                "c": "Give the bot permission to export unrelated private conversations"
               },
-              "answer": "b",
-              "feedback": "Secret management belongs in protected connector configuration. Best action: Supply the public policy text and a fictional case but use secure integration secrets storage."
+              "answer": "a",
+              "feedback": "Pass only the authorized FAQ excerpt and question while keeping service credentials inside a secure connector. Secret management belongs in protected connector configuration."
             },
             {
               "type": "true_false",
@@ -423,14 +423,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Break Complex Work into Verified Steps\": an operations team generating a daily incident summary from a form. Which proposed action is best?",
+              "prompt": "An automation designer is helping an operations team generating a daily incident summary from a form. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Silently skip records when validation fails",
-                "b": "Send emails immediately from unchecked free-text fields",
-                "c": "Separate intake validation, drafting, reviewer confirmation and email sending"
+                "a": "Automatically circulate unverified incident allegations",
+                "b": "Ignore malformed fields and report the batch as complete",
+                "c": "Validate form fields, generate an incident summary, then require owner review before any external send"
               },
               "answer": "c",
-              "feedback": "Side effects should occur only after the required checks. Best action: Separate intake validation, drafting, reviewer confirmation and email sending."
+              "feedback": "Validate form fields, generate an incident summary, then require owner review before any external send. Side effects should occur only after the required checks."
             },
             {
               "type": "true_false",
@@ -463,14 +463,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Design a Reusable Prompt Template\": a volunteer team adapting one reminder template weekly. Which proposed action is best?",
+              "prompt": "An automation designer is helping a volunteer team adapting one reminder template weekly. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Use placeholders for session name, time, venue and approved contact wording",
-                "b": "Let the automation guess the location when empty",
-                "c": "Write each prompt with hidden hardcoded dates"
+                "a": "Guess event venue and approval each time the template runs",
+                "b": "Use named variables for event, confirmed time, channel and audience and reject missing required details",
+                "c": "Hardcode last week's time into every future reminder"
               },
-              "answer": "a",
-              "feedback": "Named variables avoid accidental information mixing. Best action: Use placeholders for session name, time, venue and approved contact wording."
+              "answer": "b",
+              "feedback": "Use named variables for event, confirmed time, channel and audience and reject missing required details. Named variables avoid accidental information mixing."
             },
             {
               "type": "true_false",
@@ -503,14 +503,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Checkpoint: Improve a Reporting Prompt\": a warehouse producing a fictional weekly exception report. Which proposed action is best?",
+              "prompt": "An automation designer is helping a warehouse producing a fictional weekly exception report. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Generate summary totals without reading the tickets",
-                "b": "Request category counts, exceptions and a CSV-ready output checked against ticket IDs",
-                "c": "Allow invented support outcomes to fill missing statuses"
+                "a": "Reconcile source incident IDs and status counts, flag missing entries and output a consistent exception table",
+                "b": "Add fictional incidents to make an interesting report",
+                "c": "Let the workflow rename required output columns on every execution"
               },
-              "answer": "b",
-              "feedback": "Automated summaries can omit or double count events. Best action: Request category counts, exceptions and a CSV-ready output checked against ticket IDs."
+              "answer": "a",
+              "feedback": "Reconcile source incident IDs and status counts, flag missing entries and output a consistent exception table. Automated summaries can omit or double count events."
             },
             {
               "type": "true_false",
@@ -557,14 +557,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Recognize Unsupported AI Claims\": a client service manager reviewing an AI-written incident note. Which proposed action is best?",
+              "prompt": "An automation designer is helping a client service manager reviewing an AI-written incident note. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Invent a citation to make it look reliable",
-                "b": "Publish it as a confirmed supplier update",
-                "c": "Flag the shortage as unsupported and remove it until evidence exists"
+                "a": "Present generated causes as confirmed without checking records",
+                "b": "Invent a source reference to defend an uncertain statement",
+                "c": "Compare AI-written incident claims with the actual authorized case log and flag unsupported statements"
               },
               "answer": "c",
-              "feedback": "Source gaps must be explicit. Best action: Flag the shortage as unsupported and remove it until evidence exists."
+              "feedback": "Compare AI-written incident claims with the actual authorized case log and flag unsupported statements. A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported."
             },
             {
               "type": "true_false",
@@ -597,14 +597,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Verify Facts with Primary Sources\": a school administrator validating attendance totals against a register. Which proposed action is best?",
+              "prompt": "An automation designer is helping a school administrator validating attendance totals against a register. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Compare the claim against a verified payment ledger rather than the model's wording",
-                "b": "Use a customer chat excerpt as definitive bank settlement proof",
-                "c": "Mark the order as paid because the AI gave a date"
+                "a": "Use the AI's estimated class size instead of actual register counts",
+                "b": "Reconcile summary counts with the official attendance register before approval",
+                "c": "Mark every predicted student presence as fact"
               },
-              "answer": "a",
-              "feedback": "Authoritative records decide factual status. Best action: Compare the claim against a verified payment ledger rather than the model's wording."
+              "answer": "b",
+              "feedback": "Reconcile summary counts with the official attendance register before approval. Authoritative records decide factual status."
             },
             {
               "type": "true_false",
@@ -637,14 +637,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Protect Private Work Materials\": a finance analyst sharing a fictional departmental expense summary. Which proposed action is best?",
+              "prompt": "An automation designer is helping a finance analyst sharing a fictional departmental expense summary. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Send identifiable rota details to an open group",
-                "b": "Use aggregated coverage data and limit the output to authorized managers",
-                "c": "Grant the automation full mailbox export permissions"
+                "a": "Aggregate only authorized departmental totals and restrict the report to approved finance readers",
+                "b": "Post identifiable individual expense rows to a public channel",
+                "c": "Grant every employee admin access to the finance drive"
               },
-              "answer": "b",
-              "feedback": "Workflow automation inherits existing privacy obligations. Best action: Use aggregated coverage data and limit the output to authorized managers."
+              "answer": "a",
+              "feedback": "Aggregate only authorized departmental totals and restrict the report to approved finance readers. Workflow automation inherits existing privacy obligations."
             },
             {
               "type": "true_false",
@@ -677,14 +677,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Document Sources and Assumptions\": a campaign manager reviewing a draft weekly spending report. Which proposed action is best?",
+              "prompt": "An automation designer is helping a campaign manager reviewing a draft weekly spending report. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Discard the source references after generating the slide",
-                "b": "Present the assumed rate as an observed historical fact",
-                "c": "Store the input file name, period and explicitly labelled growth assumption alongside the draft"
+                "a": "Call an assumed growth factor a proven observed result",
+                "b": "Discard all input references when the draft chart is generated",
+                "c": "Record the exact spending period, source report and assumptions separately from derived projections"
               },
               "answer": "c",
-              "feedback": "Provenance enables reviewers to challenge the calculation. Best action: Store the input file name, period and explicitly labelled growth assumption alongside the draft."
+              "feedback": "Record the exact spending period, source report and assumptions separately from derived projections. Provenance enables reviewers to challenge the calculation."
             },
             {
               "type": "true_false",
@@ -717,14 +717,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Escalate Sensitive or High-Stakes Decisions\": a clinic office identifying a fictional urgent reschedule request. Which proposed action is best?",
+              "prompt": "An automation designer is helping a clinic office identifying a fictional urgent reschedule request. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Pause the workflow and request independent authorized verification",
-                "b": "Overwrite the old account without preserving the change history",
-                "c": "Send the payment because the amount is small"
+                "a": "Hide the urgency indicator so the report can finish",
+                "b": "Escalate a possible high-risk reschedule to authorized clinical staff before taking action",
+                "c": "Allow an unreviewed system to change an urgent appointment"
               },
-              "answer": "a",
-              "feedback": "Human escalation is a feature, not a failure. Best action: Pause the workflow and request independent authorized verification."
+              "answer": "b",
+              "feedback": "Escalate a possible high-risk reschedule to authorized clinical staff before taking action. Human escalation is a feature, not a failure."
             },
             {
               "type": "true_false",
@@ -757,14 +757,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Checkpoint: Audit an AI-Generated Report\": a nonprofit checking a generated donor-free activity report. Which proposed action is best?",
+              "prompt": "An automation designer is helping a nonprofit checking a generated donor-free activity report. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Accept the 42 because the writing is fluent",
-                "b": "Reconcile IDs, correct the figure and record the discrepancy before sending",
-                "c": "Remove the original file to avoid confusion"
+                "a": "Compare the generated activity counts with authorized source records and note each correction",
+                "b": "Approve numbers solely because the report sounds fluent",
+                "c": "Delete the input file to make mismatches harder to find"
               },
-              "answer": "b",
-              "feedback": "Automated reports require reconciliation. Best action: Reconcile IDs, correct the figure and record the discrepancy before sending."
+              "answer": "a",
+              "feedback": "Compare the generated activity counts with authorized source records and note each correction. Automated reports require reconciliation."
             },
             {
               "type": "true_false",
@@ -811,14 +811,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Map Human Review Checkpoints\": an HR team drafting but not sending interview scheduling emails. Which proposed action is best?",
+              "prompt": "An automation designer is helping an HR team drafting but not sending interview scheduling emails. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Use an unrecorded verbal approval as the only audit evidence",
-                "b": "Automatically publish the draft then ask for a review",
-                "c": "Require an editor to check claims and approve the exact version before scheduling"
+                "a": "Send every generated invitation as soon as its draft exists",
+                "b": "Allow the model to change a candidate's interview date without confirmation",
+                "c": "Draft candidate emails but require an authorized HR reviewer to approve each exact message before sending"
               },
               "answer": "c",
-              "feedback": "Approval must occur before side effects. Best action: Require an editor to check claims and approve the exact version before scheduling."
+              "feedback": "Draft candidate emails but require an authorized HR reviewer to approve each exact message before sending. Approval must occur before side effects."
             },
             {
               "type": "true_false",
@@ -851,14 +851,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Define Repeatable Inputs and Outputs\": a warehouse automation summarizing fictional receipts. Which proposed action is best?",
+              "prompt": "An automation designer is helping a warehouse automation summarizing fictional receipts. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Define the Monday schedule, date window, required fields, CSV output and exception handling",
-                "b": "Mix customer notes into a public dashboard without permission",
-                "c": "Let the time window vary unpredictably each run"
+                "a": "Write to the accounting ledger without validating source receipts",
+                "b": "Define receipt schema, trigger date range, error handling and a duplicate-safe export format",
+                "c": "Infer missing invoice totals from other rows"
               },
-              "answer": "a",
-              "feedback": "Determinism helps diagnose failures and drift. Best action: Define the Monday schedule, date window, required fields, CSV output and exception handling."
+              "answer": "b",
+              "feedback": "Define receipt schema, trigger date range, error handling and a duplicate-safe export format. Determinism helps diagnose failures and drift."
             },
             {
               "type": "true_false",
@@ -891,14 +891,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Write a Simple Quality Checklist\": a project coordinator reviewing a weekly automated tracker. Which proposed action is best?",
+              "prompt": "An automation designer is helping a project coordinator reviewing a weekly automated tracker. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Approve when the generated text sounds persuasive",
-                "b": "Check input count, missing-owner exceptions, status values and approved recipient list",
-                "c": "Use only a cosmetic spelling check"
+                "a": "Check missing owners, duplicate task IDs, approved status values and intended recipients",
+                "b": "Consider the output correct only because it is concise",
+                "c": "Skip past failure cases to keep the checklist short"
               },
-              "answer": "b",
-              "feedback": "Risk-focused checks catch recurring defects. Best action: Check input count, missing-owner exceptions, status values and approved recipient list."
+              "answer": "a",
+              "feedback": "Check missing owners, duplicate task IDs, approved status values and intended recipients. Risk-focused checks catch recurring defects."
             },
             {
               "type": "true_false",
@@ -931,14 +931,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Test a Workflow on Fictional Data\": an event coordinator building a no-code registration system. Which proposed action is best?",
+              "prompt": "An automation designer is helping an event coordinator building a no-code registration system. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Assume the connector never retries an event",
-                "b": "Use real confidential submissions for initial debugging",
-                "c": "Test duplicate delivery and use a stable event ID to avoid adding the same row twice"
+                "a": "Append a new record every time the same webhook retries",
+                "b": "Use real attendees' full private details in initial public tests",
+                "c": "Use stable registration event IDs and test normal, duplicate, invalid and retried submissions"
               },
               "answer": "c",
-              "feedback": "Retry-safe logic keeps a single business event from duplicating actions. Best action: Test duplicate delivery and use a stable event ID to avoid adding the same row twice."
+              "feedback": "Use stable registration event IDs and test normal, duplicate, invalid and retried submissions. Retry-safe logic keeps a single business event from duplicating actions."
             },
             {
               "type": "true_false",
@@ -971,14 +971,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Measure Corrections and Time Saved\": a small office measuring a supervised AI-assisted weekly process. Which proposed action is best?",
+              "prompt": "An automation designer is helping a small office measuring a supervised AI-assisted weekly process. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Report net time saved as 35 minutes and note corrected errors",
-                "b": "Ignore review time when assessing efficiency",
-                "c": "Claim 90 minutes saved because generation is instantaneous"
+                "a": "Ignore the cost of fixing errors when measuring benefit",
+                "b": "Compare the old manual time with automation, supervision and correction time using the same workload",
+                "c": "Claim the full previous work time as saved without subtracting review"
               },
-              "answer": "a",
-              "feedback": "Net savings = prior manual time minus automated handling and human review time. Best action: Report net time saved as 35 minutes and note corrected errors."
+              "answer": "b",
+              "feedback": "Compare the old manual time with automation, supervision and correction time using the same workload. Net savings = prior manual time minus automated handling and human review time."
             },
             {
               "type": "true_false",
@@ -1011,14 +1011,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Consider another use of \"Capstone: Document a Reviewed AI Process\": a school office preparing a repeatable attendance report for approval. Which proposed action is best?",
+              "prompt": "An automation designer is helping a school office preparing a repeatable attendance report for approval. Which workflow step is safest and most testable?",
               "options": {
-                "a": "Claim the design is deployed to real users without evidence",
-                "b": "Submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record",
-                "c": "Store an actual mailbox password inside the workflow diagram"
+                "a": "Document data input schema, duplicate handling, human approval, six test cases and an accountable owner",
+                "b": "Declare the untested process live because the diagram is polished",
+                "c": "Embed real school credentials in a published workflow map"
               },
-              "answer": "b",
-              "feedback": "A clear boundary prevents a draft prototype from being mistaken for a live controlled process. Best action: Submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record."
+              "answer": "a",
+              "feedback": "Document data input schema, duplicate handling, human approval, six test cases and an accountable owner. A clear boundary prevents a draft prototype from being mistaken for a live controlled process."
             },
             {
               "type": "true_false",
