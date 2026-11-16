@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "sales-client-negotiation",
+  "courseTitle": "Sales, Negotiation & Client Management",
+  "publicPreviewSummary": "Build confidence in client conversations, handle objections and practice practical negotiation skills.",
+  "existingDraftIdentityReused": true,
+  "issueNumber": 247,
+  "locale": "en",
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "humanSubjectReviewPending": true,
+  "capstone": "A fictional discovery-call script, two-option proposal, negotiation log and respectful follow-up playbook",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Client Discovery and Active Listening",
+      "learningObjective": "Understand real client needs and capture realistic decision criteria",
+      "levelTitles": [
+        "Prepare for a First Client Conversation",
+        "Ask Questions Before Presenting a Service",
+        "Listen for Unstated Client Concerns",
+        "Clarify Budget and Decision Timeline",
+        "Summarize Client Needs Without Assumptions",
+        "Checkpoint: Write a Discovery Call Summary"
+      ],
+      "exampleScenario": "Listen for Unstated Client Concerns",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Presenting Offers and Ethical Objection Handling",
+      "learningObjective": "Make transparent commercial proposals and respond respectfully",
+      "levelTitles": [
+        "Propose a Clear Scope and Deliverables",
+        "Explain Value Without Invented Promises",
+        "Respond to an Unclear Budget Objection",
+        "Distinguish an Objection from a Real Constraint",
+        "Offer Alternatives Without Pressuring the Client",
+        "Checkpoint: Present a Two-Option Offer"
+      ],
+      "exampleScenario": "Respond to an Unclear Budget Objection",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Fair Negotiation, Pricing and Boundaries",
+      "learningObjective": "Handle competing priorities with honest terms and clear limits",
+      "levelTitles": [
+        "Prepare Negotiable and Fixed Boundaries",
+        "Choose a Fair Concession in a Scenario",
+        "Handle a Competitor Price Comparison",
+        "Explain Payment Terms Without Ambiguity",
+        "Document a Respectful Disagreement",
+        "Checkpoint: Agree on a Transparent Next Step"
+      ],
+      "exampleScenario": "Handle a Competitor Price Comparison",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Follow-up, Client Retention and Conversation Capstone",
+      "learningObjective": "Manage post-sale communication, concerns and ongoing client trust",
+      "levelTitles": [
+        "Write a Useful Post-Meeting Follow-up",
+        "Record Next Steps and Client Ownership",
+        "Respond to a Delayed Client Decision",
+        "Handle a Complaint Without Defensiveness",
+        "Build a Practical Client Retention Reminder",
+        "Capstone: Deliver a Discovery-to-Retention Pack"
+      ],
+      "exampleScenario": "Respond to a Delayed Client Decision",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
