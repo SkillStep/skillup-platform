@@ -226,7 +226,7 @@ try {
   await db.query(
     `insert into skill_capstone_attestations
        (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
-       values ($1,$2,$3,'passed',$4,$5,now() - interval '1 day')`,
+       values ($1,$2,$3,'passed',$4,$5,now() - interval '3 days')`,
     [requirementId, learnerId, reviewerId, hash("unauthorized-capstone"), reason],
   );
   const unauthorized = await enabled.eligibility(learnerId, skill.slug);
@@ -237,8 +237,8 @@ try {
     reviewerId,
   ]);
   await db.query(
-    `insert into admin_role_assignments (user_id,role,reason)
-       values ($1,'content_reviewer',$2)`,
+    `insert into admin_role_assignments (user_id,role,reason,created_at)
+       values ($1,'content_reviewer',$2,now() - interval '2 days')`,
     [reviewerId, reason],
   );
   const retroactive = await enabled.eligibility(learnerId, skill.slug);
@@ -251,7 +251,7 @@ try {
   const capstone = await db.query(
     `insert into skill_capstone_attestations
        (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
-       values ($1,$2,$3,'passed',$4,$5,clock_timestamp()) returning id`,
+       values ($1,$2,$3,'passed',$4,$5,now() - interval '1 day') returning id`,
     [requirementId, learnerId, reviewerId, hash("capstone"), reason],
   );
   await mustRejectInSavepoint(
