@@ -2,15 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 
 import { createCertificateService } from "./certificates.js";
 
-const pool = {
+const poolMock = {
   connect: vi.fn(() => {
     throw new Error("The disabled certificate feature must not connect to PostgreSQL.");
   }),
   query: vi.fn(async () => ({ rows: [] })),
-} as never;
+};
 
 describe("certificate release boundary", () => {
-  const service = createCertificateService({ pool, issuanceEnabled: false });
+  const service = createCertificateService({ pool: poolMock as never, issuanceEnabled: false });
   const learner = {
     id: "e8007c13-8e30-432e-91b4-bb82ab3ae993",
     email: null,
@@ -29,7 +29,7 @@ describe("certificate release boundary", () => {
     await expect(service.issue(learner, "interview-workplace-communication")).rejects.toMatchObject(
       { statusCode: 403 },
     );
-    expect(pool.connect).not.toHaveBeenCalled();
+    expect(poolMock.connect).not.toHaveBeenCalled();
   });
 
   it("never invents a certificate for unknown active policy or disconnected database", async () => {
