@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "applied-ai-workflows",
+  "courseTitle": "AI Automation & No-Code Tools",
+  "publicPreviewSummary": "Learn how simple workflows connect digital tools and automate repetitive tasks without advanced coding.",
+  "existingDraftIdentityReused": true,
+  "issueNumber": 244,
+  "locale": "en",
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "humanSubjectReviewPending": true,
+  "capstone": "A simulated form-to-task workflow with a test matrix, failure handling and mandatory human approval",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Workflow opportunities and safe task boundaries",
+      "learningObjective": "Map safe automation candidates, triggers and human-controlled outcomes",
+      "levelTitles": [
+        "Map a Repetitive Task into Input and Outcome",
+        "Identify a Trigger Suitable for Automation",
+        "Decide Which Steps Must Remain Manual",
+        "Select a Privacy-Safe Fictional Dataset",
+        "Define an Error Budget for Simple Workflows",
+        "Checkpoint: Draw an Automation Process Map"
+      ],
+      "exampleScenario": "Decide Which Steps Must Remain Manual",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Triggers, actions and no-code connectors",
+      "learningObjective": "Connect and transform simulated event data with idempotent action semantics",
+      "levelTitles": [
+        "Connect a Simulated Form to a Spreadsheet",
+        "Choose an Action for a New Task Event",
+        "Map Fields Without Losing Important Data",
+        "Avoid Duplicate Outputs When a Trigger Repeats",
+        "Use a Safe Sandbox Instead of Credentials",
+        "Checkpoint: Model a Form-to-Task Automation"
+      ],
+      "exampleScenario": "Map Fields Without Losing Important Data",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Conditions, human approvals and privacy",
+      "learningObjective": "Apply branches, escalation, authorization and retry precautions",
+      "levelTitles": [
+        "Write Conditions for Different Workflows",
+        "Insert a Human Approval Before Sending",
+        "Protect Client Data in Automation Logs",
+        "Detect an Invalid or Missing Input",
+        "Plan a Retry Without Double-Processing",
+        "Checkpoint: Escalate a Failed Automation Safely"
+      ],
+      "exampleScenario": "Protect Client Data in Automation Logs",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Automation testing, recovery and capstone",
+      "learningObjective": "Test fictional automation failures and document a human override",
+      "levelTitles": [
+        "Create Positive and Negative Test Cases",
+        "Run a Dry Test with Synthetic Records",
+        "Audit Outputs Against Acceptance Criteria",
+        "Document Failure Recovery and Manual Override",
+        "Estimate Useful Savings Without Guarantees",
+        "Capstone: Deliver a Tested No-Code Workflow"
+      ],
+      "exampleScenario": "Audit Outputs Against Acceptance Criteria",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}

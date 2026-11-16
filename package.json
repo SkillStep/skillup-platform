@@ -15,7 +15,7 @@
     "dev:api": "pnpm shared:build && pnpm --filter @skillup/api dev",
     "catalog:plan:check": "node tools/validate-course-expansion-plan.mjs && node --test tools/validate-course-expansion-plan.test.mjs",
     "catalog:drafts:check": "node tools/validate-aifs-excel-drafts.mjs && node --test tools/validate-aifs-excel-drafts.test.mjs && node tools/compile-aifs-excel-drafts.mjs && node --test tools/compile-aifs-excel-drafts.test.mjs",
-    "catalog:briefs:check": "node tools/validate-aifs-curriculum-briefs.mjs && node --test tools/validate-aifs-curriculum-briefs.test.mjs",
+    "catalog:briefs:check": "node tools/validate-aifs-curriculum-briefs.mjs && node --test tools/validate-aifs-curriculum-briefs.test.mjs && pnpm catalog:team-five:check",
     "catalog:capstones:check": "node tools/validate-aifs-capstones.mjs && node --test tools/validate-aifs-capstones.test.mjs",
     "foundation:check": "node tools/validate-foundation.mjs && node tools/validate-boundaries.mjs && node tools/staging-qa-ssh-otp-bridge.mjs --self-test",
     "deployment:check": "node tools/validate-deployment.mjs",
@@ -46,7 +46,8 @@
     "infra:down": "docker compose --env-file .env -f infra/compose.yaml down",
     "infra:reset": "docker compose --env-file .env -f infra/compose.yaml down -v",
     "catalog:readiness:check": "node tools/report-aifs-readiness.mjs && node --test tools/report-aifs-readiness.test.mjs",
-    "catalog:legacy-quality:audit": "node --import tsx tools/audit-existing-launch-courses.mjs && node --import tsx --test tools/audit-existing-launch-courses.test.mjs"
+    "catalog:legacy-quality:audit": "node --import tsx tools/audit-existing-launch-courses.mjs && node --import tsx --test tools/audit-existing-launch-courses.test.mjs",
+    "catalog:team-five:check": "node tools/validate-team-five-outlines.mjs && node --test tools/validate-team-five-outlines.test.mjs"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.11",
