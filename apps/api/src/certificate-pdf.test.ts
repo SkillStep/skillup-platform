@@ -15,10 +15,12 @@ describe("private, immutable A4 certificate rendering", () => {
     const file = renderSkillCertificatePdf(sample);
     const content = file.toString("ascii");
     expect(file.subarray(0, 8).toString("ascii")).toBe("%PDF-1.4");
-    expect(content).toContain("/MediaBox [0 0 595.28 841.89]");
+    expect(content).toContain("/MediaBox [0 0 841.89 595.28]");
     expect(content).toContain("(Sample Learner)");
     expect(content).toContain("(CERTIFICATE)");
     expect(content).toContain("(OF COMPLETION)");
+    expect(content).toContain("(Successfully completed the SkillUp learning path in)");
+    expect(content).toContain("SkillUp educational completion certificate");
     expect(content).toContain("(Certificate ID: SC-jbaZBVzQlnysJKSwK0ZSm9hmrQ8BjXLJ)");
     expect(content).toContain("%%EOF");
     expect(content).toContain("/Count 1");
