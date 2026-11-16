@@ -23,7 +23,7 @@ export function readTeamFiveCourseDrafts() {
   );
 }
 
-export function validateTeamFiveCourseDrafts(courses, options = {}) {
+export function validateTeamFiveCourseDrafts(courses) {
   const issues = [];
   const stats = { courses: 0, modules: 0, levels: 0, challenges: 0, capstones: 0 };
   if (!Array.isArray(courses) || courses.length !== COURSE_IDENTITIES.length) {
