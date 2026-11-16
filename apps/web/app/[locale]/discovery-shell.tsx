@@ -25,6 +25,7 @@ export function PublicHeader(): ReactNode {
         <PremiumNavLink />
         <Link href="/en/unsubscribe">Unsubscribe</Link>
         <Link href="/en/progress">Your progress</Link>
+        <Link href="/en/certificates">My Certificates</Link>
         <ProfileNavLink />
         <AuthNavAction variant="desktop" />
       </nav>
@@ -36,6 +37,7 @@ export function PublicHeader(): ReactNode {
           <PremiumNavLink />
           <Link href="/en/unsubscribe">Unsubscribe</Link>
           <Link href="/en/progress">Your progress</Link>
+          <Link href="/en/certificates">My Certificates</Link>
           <ProfileNavLink />
           <AuthNavAction variant="mobile" />
         </nav>
