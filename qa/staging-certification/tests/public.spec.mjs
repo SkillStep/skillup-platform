@@ -78,3 +78,31 @@ test("private routes remain non-indexable and non-cacheable", async ({ request }
     expect(cacheControl.toLowerCase()).toContain("no-store");
   }
 });
+
+test("five upcoming courses are discoverable but never playable", async ({ page, request }) => {
+  const previewTitles = [
+    "Prompt Engineering & Generative AI",
+    "Cybersecurity & Digital Safety",
+    "Data Analytics & Decision Making",
+    "AI Automation & No-Code Tools",
+    "Sales, Negotiation & Client Management",
+  ];
+  await page.goto("/en/skills");
+  for (const title of previewTitles) {
+    const card = page.locator("article").filter({ has: page.getByRole("heading", { name: title }) });
+    await expect(card).toBeVisible();
+    await expect(card.getByText("Coming soon")).toBeVisible();
+    await expect(card.getByRole("link", { name: /Start practice/ })).toHaveCount(0);
+  }
+  const keyword = page.getByRole("searchbox");
+  await keyword.fill("phishing");
+  await expect(page.getByRole("heading", { name: "Cybersecurity & Digital Safety" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Prompt Engineering & Generative AI" })).toHaveCount(0);
+
+  const preview = await request.get("/en/skills/upcoming/cybersecurity-digital-safety");
+  expect(preview.status()).toBe(200);
+  expect(await preview.text()).toContain("Proposed learning path");
+  expect(await preview.text()).not.toContain("/en/learn/");
+  const noDraft = await request.get("/en/paths/cybersecurity-digital-safety");
+  expect(noDraft.status()).toBe(404);
+});
