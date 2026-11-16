@@ -7,6 +7,7 @@ import { z } from "zod";
 
 import type { AuthService, AuthenticatedLearner } from "./auth.js";
 import type { ApiConfig } from "./config.js";
+import { renderSkillCertificatePdf } from "./certificate-pdf.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 export class CertificateError extends Error {
@@ -57,6 +58,7 @@ export type CertificateService = Readonly<{
   list: (userId: string) => Promise<readonly CertificateSummary[]>;
   eligibility: (userId: string, skillSlug: string) => Promise<CertificateEligibility>;
   issue: (learner: AuthenticatedLearner, skillSlug: string) => Promise<CertificateSummary>;
+  downloadPdf: (userId: string, awardId: string) => Promise<Buffer>;
 }>;
 
 const uuid = z.string().uuid();
@@ -312,6 +314,54 @@ export function createCertificateService(
       };
     },
 
+    downloadPdf: async (userId, awardId) => {
+      uuid.parse(userId);
+      uuid.parse(awardId);
+      const result = await options.pool.query<{
+        id: string;
+        public_id: string;
+        certificate_title: string;
+        learner_name: string;
+        completed_at: Date;
+        issued_at: Date;
+      }>(
+        `select a.id, a.public_id, a.certificate_title, a.learner_name,
+                a.completed_at, a.issued_at
+           from skill_certificate_awards a
+           join users u on u.id = a.user_id and u.status = 'active'
+          where a.id = $1 and a.user_id = $2 and a.revoked_at is null
+          limit 1`,
+        [awardId, userId],
+      );
+      const row = result.rows[0];
+      if (!row) throw new CertificateError(404, "No issued certificate belongs to this account.");
+      let pdf: Buffer;
+      try {
+        pdf = renderSkillCertificatePdf({
+          publicId: row.public_id,
+          title: row.certificate_title,
+          learnerName: row.learner_name,
+          completedAt: row.completed_at,
+          issuedAt: row.issued_at,
+        });
+      } catch {
+        throw new CertificateError(422, "Your certificate needs a Unicode-compatible PDF. Please contact SkillUp support.");
+      }
+      const eventDigest = digest({
+        actor: userId,
+        certificate: row.id,
+        action: "verified_download",
+        at: new Date().toISOString(),
+      });
+      await options.pool.query(
+        `insert into skill_certificate_events
+            (award_id, actor_user_id, action, reason, event_digest)
+           values ($1, $2, 'verified_download', $3, $4)`,
+        [row.id, userId, "Certificate owner downloaded the verified, unrevoked A4 document.", eventDigest],
+      );
+      return pdf;
+    },
+
     issue: async (learner, skillSlug) => {
       if (!options.issuanceEnabled) {
         throw new CertificateError(
@@ -428,6 +478,18 @@ export function registerCertificateRoutes(
     const { skillSlug } = z.object({ skillSlug: slug }).parse(request.params);
     reply.header("cache-control", "private, no-store");
     return { eligibility: await options.service.eligibility(learner.id, skillSlug) };
+  });
+
+  app.get("/v1/me/certificates/:awardId/pdf", async (request, reply) => {
+    const learner = await requireAuthenticatedLearner(request, options.config, options.authService);
+    const { awardId } = z.object({ awardId: uuid }).parse(request.params);
+    const file = await options.service.downloadPdf(learner.id, awardId);
+    reply.header("cache-control", "private, no-store");
+    reply.header("x-robots-tag", "noindex, nofollow");
+    reply.header("content-type", "application/pdf");
+    reply.header("content-disposition", `attachment; filename="skillup-certificate-${awardId}.pdf"`);
+    reply.header("x-content-type-options", "nosniff");
+    return reply.send(file);
   });
 
   app.post("/v1/me/certificate-claims/:skillSlug", async (request, reply) => {
