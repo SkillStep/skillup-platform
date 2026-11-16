@@ -49,14 +49,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Translate a Business Concern into Data Questions\" skill to the following new task: a delivery shop evaluating more customer complaints. What is the most reliable approach?",
+              "prompt": "An analyst is helping a delivery shop evaluating more customer complaints. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Assume the decline is caused by rain without evidence",
-                "b": "Report the number of social likes as proof of walk-ins",
-                "c": "Ask how many unique orders each day this week compares with the prior four weeks"
+                "a": "Define whether the decision concerns complaint count, complaint rate or issue category and choose a fair time period",
+                "b": "Treat the loudest single complaint as proof every delivery failed",
+                "c": "Report social reactions as the number of resolved complaints"
               },
-              "answer": "c",
-              "feedback": "Defined questions anchor the dataset and avoid speculative explanations. Recommended approach: Ask how many unique orders each day this week compares with the prior four weeks."
+              "answer": "a",
+              "feedback": "Define whether the decision concerns complaint count, complaint rate or issue category and choose a fair time period. Defined questions anchor the dataset and avoid speculative explanations."
             },
             {
               "type": "true_false",
@@ -89,14 +89,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Define an Outcome Metric\" skill to the following new task: a small brand reviewing how many leads became orders. What is the most reliable approach?",
+              "prompt": "An analyst is helping a small brand reviewing how many leads became orders. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Measure confirmed paid registrations divided by qualified enquiries alongside enquiry count",
-                "b": "Count message impressions as lesson completions",
-                "c": "Treat every enquiry as a paying customer"
+                "a": "Treat every new lead as a completed paid order",
+                "b": "Report follower count instead of lead-to-order conversion",
+                "c": "Measure verified orders divided by qualified leads for the same reporting period"
               },
-              "answer": "a",
-              "feedback": "More enquiries may coexist with a lower paid conversion rate. Recommended approach: Measure confirmed paid registrations divided by qualified enquiries alongside enquiry count."
+              "answer": "c",
+              "feedback": "Measure verified orders divided by qualified leads for the same reporting period. More enquiries may coexist with a lower paid conversion rate."
             },
             {
               "type": "true_false",
@@ -129,14 +129,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Choose a Useful Comparison Period\" skill to the following new task: a school analyzing attendance before and after an exam week. What is the most reliable approach?",
+              "prompt": "An analyst is helping a school analyzing attendance before and after an exam week. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Declare sales rose because a six-day total exceeds a one-day total",
-                "b": "Compare like-for-like weeks or the same weekday and label the dates",
-                "c": "Ignore a holiday that affected hours"
+                "a": "Omit examination dates and claim attendance changes have one cause",
+                "b": "Compare equivalent school days or weeks and explain the exam-period difference",
+                "c": "Compare a full term with one afternoon without normalization"
               },
               "answer": "b",
-              "feedback": "Use comparable periods and explain calendar differences. Recommended approach: Compare like-for-like weeks or the same weekday and label the dates."
+              "feedback": "Compare equivalent school days or weeks and explain the exam-period difference. Use comparable periods and explain calendar differences."
             },
             {
               "type": "true_false",
@@ -169,14 +169,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Identify Missing Data Requirements\" skill to the following new task: an NGO estimating event turnout from ticket registrations. What is the most reliable approach?",
+              "prompt": "An analyst is helping an NGO estimating event turnout from ticket registrations. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Remove refunded orders without evidence",
-                "b": "Multiply all order counts by a guessed average price",
-                "c": "Request paid amounts, refunds and cancellations before reporting net sales"
+                "a": "Distinguish registrations from confirmed attendance and request check-in records before estimating turnout",
+                "b": "Claim all registered people attended without verification",
+                "c": "Add a guessed number of walk-ins to the registration total"
               },
-              "answer": "c",
-              "feedback": "Missing fields can change both totals and interpretations. Recommended approach: Request paid amounts, refunds and cancellations before reporting net sales."
+              "answer": "a",
+              "feedback": "Distinguish registrations from confirmed attendance and request check-in records before estimating turnout. Missing fields can change both totals and interpretations."
             },
             {
               "type": "true_false",
@@ -209,14 +209,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Avoid Vanity Metric Traps\" skill to the following new task: a retail campaign reporting shares without purchases. What is the most reliable approach?",
+              "prompt": "An analyst is helping a retail campaign reporting shares without purchases. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Report views alongside qualified visits and actual orders rather than claiming revenue impact",
-                "b": "Remove order data because views look impressive",
-                "c": "State that every view is a sale"
+                "a": "Assume that each shared post generated a completed sale",
+                "b": "Hide order results because the engagement numbers look better",
+                "c": "Report verified purchases or qualified visits alongside social shares and avoid revenue claims without sales evidence"
               },
-              "answer": "a",
-              "feedback": "Reach is not equivalent to actual business value. Recommended approach: Report views alongside qualified visits and actual orders rather than claiming revenue impact."
+              "answer": "c",
+              "feedback": "Report verified purchases or qualified visits alongside social shares and avoid revenue claims without sales evidence. Reach is not equivalent to actual business value."
             },
             {
               "type": "true_false",
@@ -249,14 +249,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Checkpoint: Write a KPI Brief\" skill to the following new task: a service business setting a weekly repeat-customer report. What is the most reliable approach?",
+              "prompt": "An analyst is helping a service business setting a weekly repeat-customer report. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Use the number of page designs made as the conversion metric",
-                "b": "Define checkout conversion as verified purchases divided by eligible sessions over comparable weeks",
-                "c": "Report a percentage without defining its denominator"
+                "a": "Report a percentage without explaining the eligible population",
+                "b": "Define repeat-customer count from unique customer identifiers, a seven-day period and an explicit denominator",
+                "c": "Count every order as a different returning customer"
               },
               "answer": "b",
-              "feedback": "Ambiguous metric definitions lead to inconsistent reporting. Recommended approach: Define checkout conversion as verified purchases divided by eligible sessions over comparable weeks."
+              "feedback": "Define repeat-customer count from unique customer identifiers, a seven-day period and an explicit denominator. Ambiguous metric definitions lead to inconsistent reporting."
             },
             {
               "type": "true_false",
@@ -303,14 +303,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Distinguish Numeric and Text Data\" skill to the following new task: a shop preparing a dataset with quantities typed as words. What is the most reliable approach?",
+              "prompt": "An analyst is helping a shop preparing a dataset with quantities typed as words. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Delete every row containing the currency label",
-                "b": "Add the text amounts by concatenating strings",
-                "c": "Parse and validate monetary amounts as numbers while retaining PKR as a unit"
+                "a": "Convert verified written quantities into numeric fields and flag uncertain words for source review",
+                "b": "Add the quantity strings as though they were numeric",
+                "c": "Delete every record whose quantity was originally typed as words"
               },
-              "answer": "c",
-              "feedback": "Text parsing and conversion must happen before aggregation. Recommended approach: Parse and validate monetary amounts as numbers while retaining PKR as a unit."
+              "answer": "a",
+              "feedback": "Convert verified written quantities into numeric fields and flag uncertain words for source review. Text parsing and conversion must happen before aggregation."
             },
             {
               "type": "true_false",
@@ -343,14 +343,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Identify Invalid Dates and Values\" skill to the following new task: a clinic reviewing fictional appointment timestamps. What is the most reliable approach?",
+              "prompt": "An analyst is helping a clinic reviewing fictional appointment timestamps. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Flag both rows for source correction and document the exceptions",
-                "b": "Change the negative count to zero without checking the source",
-                "c": "Treat February 31 as a real date"
+                "a": "Replace every invalid timestamp with today's date",
+                "b": "Sort unparsed dates as ordinary alphabetic text and trust the order",
+                "c": "Flag invalid or ambiguous timestamps and compare them with the clinic's original appointment register"
               },
-              "answer": "a",
-              "feedback": "Source validation prevents error propagation. Recommended approach: Flag both rows for source correction and document the exceptions."
+              "answer": "c",
+              "feedback": "Flag invalid or ambiguous timestamps and compare them with the clinic's original appointment register. Source validation prevents error propagation."
             },
             {
               "type": "true_false",
@@ -383,14 +383,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Detect True Versus False Duplicates\" skill to the following new task: a training center comparing repeated enrolment fees. What is the most reliable approach?",
+              "prompt": "An analyst is helping a training center comparing repeated enrolment fees. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Delete one because the totals match",
-                "b": "Use stable order identifiers and audit source events before deleting either",
-                "c": "Merge the orders under one invented customer ID"
+                "a": "Combine two students into one invented registration",
+                "b": "Use registration IDs and source events to determine whether matching fee entries are separate enrolments",
+                "c": "Delete one fee merely because the amount is identical"
               },
               "answer": "b",
-              "feedback": "A duplicate must be established from the business event and its key. Recommended approach: Use stable order identifiers and audit source events before deleting either."
+              "feedback": "Use registration IDs and source events to determine whether matching fee entries are separate enrolments. A duplicate must be established from the business event and its key."
             },
             {
               "type": "true_false",
@@ -423,14 +423,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Check Outliers Against Sources\" skill to the following new task: a warehouse reviewing a very large inventory movement. What is the most reliable approach?",
+              "prompt": "An analyst is helping a warehouse reviewing a very large inventory movement. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Assume the business grew tenfold permanently",
-                "b": "Delete the observation because it changes the average",
-                "c": "Inspect that day's source transactions and note any promotion or data-entry error"
+                "a": "Check the movement against the stock ledger and delivery documents before labeling it an outlier",
+                "b": "Remove the movement because it changes the average",
+                "c": "Assume the large amount is a permanent new daily baseline"
               },
-              "answer": "c",
-              "feedback": "Outliers can be important true events. Recommended approach: Inspect that day's source transactions and note any promotion or data-entry error."
+              "answer": "a",
+              "feedback": "Check the movement against the stock ledger and delivery documents before labeling it an outlier. Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors."
             },
             {
               "type": "true_false",
@@ -463,14 +463,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Reconcile Totals After Cleaning\" skill to the following new task: an event manager validating registrations after de-duplication. What is the most reliable approach?",
+              "prompt": "An analyst is helping an event manager validating registrations after de-duplication. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Reconcile unique order IDs and verified amounts with the source ledger after cleaning",
-                "b": "Hide removed rows to avoid questions",
-                "c": "Declare any lower total to be correct"
+                "a": "Accept any smaller total as proof duplicates were removed correctly",
+                "b": "Invent new registrations to replace deleted rows",
+                "c": "Reconcile unique registration IDs and source totals after each removal and preserve an exception log"
               },
-              "answer": "a",
-              "feedback": "Reconciliation reveals accidental record loss. Recommended approach: Reconcile unique order IDs and verified amounts with the source ledger after cleaning."
+              "answer": "c",
+              "feedback": "Reconcile unique registration IDs and source totals after each removal and preserve an exception log. Reconciliation reveals accidental record loss."
             },
             {
               "type": "true_false",
@@ -503,14 +503,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Checkpoint: Verify a Small Dataset\" skill to the following new task: a volunteer team checking fictional donation records. What is the most reliable approach?",
+              "prompt": "An analyst is helping a volunteer team checking fictional donation records. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Fill every blank with today's date",
-                "b": "Create an exception log, correct only confirmed records and reconcile totals against the source",
-                "c": "Publish a perfect completeness rate despite unresolved values"
+                "a": "Delete unmatched donation rows without checking receipts",
+                "b": "Record missing donor fields as exceptions and reconcile amounts with the original fictional donation log",
+                "c": "Fill all unknown donors with a guessed name"
               },
               "answer": "b",
-              "feedback": "Accuracy matters more than cosmetically complete cells. Recommended approach: Create an exception log, correct only confirmed records and reconcile totals against the source."
+              "feedback": "Record missing donor fields as exceptions and reconcile amounts with the original fictional donation log. Accuracy matters more than cosmetically complete cells."
             },
             {
               "type": "true_false",
@@ -557,14 +557,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Choose a Fair Comparison Chart\" skill to the following new task: a nonprofit comparing registrations by neighbourhood. What is the most reliable approach?",
+              "prompt": "An analyst is helping a nonprofit comparing registrations by neighbourhood. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Use a decorative 3D chart that distorts proportions",
-                "b": "Use a pie chart with unlabeled slices for each month and category",
-                "c": "Use a clearly labelled bar chart for discrete category comparisons"
+                "a": "Compare neighborhoods with a labeled bar chart, consistent geographic definitions and a zero baseline",
+                "b": "Use unlabeled 3D slices that conceal actual counts",
+                "c": "Combine two neighborhoods without disclosing the new grouping"
               },
-              "answer": "c",
-              "feedback": "A shared axis supports direct comparison. Recommended approach: Use a clearly labelled bar chart for discrete category comparisons."
+              "answer": "a",
+              "feedback": "Compare neighborhoods with a labeled bar chart, consistent geographic definitions and a zero baseline. A shared axis supports direct comparison."
             },
             {
               "type": "true_false",
@@ -597,14 +597,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Label Axes and Units Clearly\" skill to the following new task: a shop reporting PKR revenue on a weekly line chart. What is the most reliable approach?",
+              "prompt": "An analyst is helping a shop reporting PKR revenue on a weekly line chart. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Label the vertical axis \"Orders (count)\" and show the reporting dates",
-                "b": "Use the title \"Performance\" without identifying the KPI",
-                "c": "Assume readers know every unlabeled number"
+                "a": "Label the vertical axis only with the word Performance",
+                "b": "Plot revenue amounts without disclosing currency or time window",
+                "c": "Show dates on the horizontal axis and explicitly label the vertical axis Revenue (PKR)"
               },
-              "answer": "a",
-              "feedback": "Always disclose the measure and unit. Recommended approach: Label the vertical axis \"Orders (count)\" and show the reporting dates."
+              "answer": "c",
+              "feedback": "Show dates on the horizontal axis and explicitly label the vertical axis Revenue (PKR). Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately."
             },
             {
               "type": "true_false",
@@ -637,14 +637,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Compare Categories Without Distorting Scale\" skill to the following new task: a program manager comparing small completion-rate differences. What is the most reliable approach?",
+              "prompt": "An analyst is helping a program manager comparing small completion-rate differences. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Start the axis at 97 to make Store B look three times as tall",
-                "b": "Use a zero baseline for bar lengths and disclose the two-unit difference",
-                "c": "Use unequal bar widths without explanation"
+                "a": "Use different bar widths so one programme appears more successful",
+                "b": "Use a fair baseline and show the exact percentage-point difference between programme completion rates",
+                "c": "Truncate bar axes to make a small difference look enormous"
               },
               "answer": "b",
-              "feedback": "If showing percentage changes, explain the baseline separately. Recommended approach: Use a zero baseline for bar lengths and disclose the two-unit difference."
+              "feedback": "Use a fair baseline and show the exact percentage-point difference between programme completion rates. If showing percentage changes, explain the baseline separately."
             },
             {
               "type": "true_false",
@@ -677,14 +677,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Interpret a Trend with Context\" skill to the following new task: a local café reviewing orders after changing opening hours. What is the most reliable approach?",
+              "prompt": "An analyst is helping a local café reviewing orders after changing opening hours. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Delete other campaign dates from the timeline",
-                "b": "Claim the campaign caused every additional signup",
-                "c": "Report the rise and note simultaneous changes as alternative explanations"
+                "a": "Describe the before-and-after order change while noting the opening-hours change and other possible influences",
+                "b": "Claim the hours change caused every order fluctuation without controls",
+                "c": "Remove the earlier period to prevent comparison"
               },
-              "answer": "c",
-              "feedback": "Other changes may influence the outcome. Recommended approach: Report the rise and note simultaneous changes as alternative explanations."
+              "answer": "a",
+              "feedback": "Describe the before-and-after order change while noting the opening-hours change and other possible influences. Other changes may influence the outcome."
             },
             {
               "type": "true_false",
@@ -717,14 +717,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Describe Limitations and Missing Drivers\" skill to the following new task: a school reporting feedback from one class. What is the most reliable approach?",
+              "prompt": "An analyst is helping a school reporting feedback from one class. Which data step would produce the most defensible result?",
               "options": {
-                "a": "State the sample size and treat the pattern as exploratory rather than representative",
-                "b": "Omit dissatisfied responses to improve the average",
-                "c": "Present the result as a national estimate"
+                "a": "Claim the sample is representative of every school",
+                "b": "Remove the negative responses because they complicate the conclusion",
+                "c": "Disclose that feedback came from one class, the sample count and any participation bias"
               },
-              "answer": "a",
-              "feedback": "Limitations narrow the appropriate conclusion. Recommended approach: State the sample size and treat the pattern as exploratory rather than representative."
+              "answer": "c",
+              "feedback": "Disclose that feedback came from one class, the sample count and any participation bias. Limitations narrow the appropriate conclusion."
             },
             {
               "type": "true_false",
@@ -757,14 +757,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Checkpoint: Explain a Dashboard\" skill to the following new task: a service provider presenting leads and paid bookings together. What is the most reliable approach?",
+              "prompt": "An analyst is helping a service provider presenting leads and paid bookings together. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Claim sales increased 12 percent because visits increased",
-                "b": "Explain that visits grew while conversion may have fallen and propose checking checkout friction",
-                "c": "Hide the order series to keep the story positive"
+                "a": "Hide booking figures while presenting lead growth as revenue growth",
+                "b": "Report qualified leads and completed paid bookings separately and calculate the booking conversion rate",
+                "c": "Call every lead a completed booking"
               },
               "answer": "b",
-              "feedback": "Different metrics answer different questions. Recommended approach: Explain that visits grew while conversion may have fallen and propose checking checkout friction."
+              "feedback": "Report qualified leads and completed paid bookings separately and calculate the booking conversion rate. Different metrics answer different questions."
             },
             {
               "type": "true_false",
@@ -811,14 +811,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Select Three Meaningful KPIs\" skill to the following new task: a subscription service monitoring acquisition, activation and retention. What is the most reliable approach?",
+              "prompt": "An analyst is helping a subscription service monitoring acquisition, activation and retention. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Use three differently named versions of total orders",
-                "b": "Show logo impressions, number of team meetings and office temperature",
-                "c": "Track fulfilled orders, on-time delivery rate and verified customer complaints"
+                "a": "Track new eligible users, first successful activation and returning active users with defined windows",
+                "b": "Display three labels that all refer to total downloads",
+                "c": "Treat installation count as a direct measure of paid retention"
               },
-              "answer": "c",
-              "feedback": "Each KPI should inform a distinct part of the decision. Recommended approach: Track fulfilled orders, on-time delivery rate and verified customer complaints."
+              "answer": "a",
+              "feedback": "Track new eligible users, first successful activation and returning active users with defined windows. Each KPI should inform a distinct part of the decision."
             },
             {
               "type": "true_false",
@@ -851,14 +851,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Design a Readable Dashboard Layout\" skill to the following new task: a volunteer coordinator preparing a one-page report. What is the most reliable approach?",
+              "prompt": "An analyst is helping a volunteer coordinator preparing a one-page report. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Place the primary KPI, trend and exceptions in a clear readable sequence with labels",
-                "b": "Encode every category only by color",
-                "c": "Fit twelve tiny charts above the fold"
+                "a": "Show twelve tiny unlabeled charts on one mobile screen",
+                "b": "Use color alone to distinguish urgent exceptions",
+                "c": "Put the most important outcome first, follow with readable trend and exception notes, and label every chart"
               },
-              "answer": "a",
-              "feedback": "Accessible labels and layout matter on small devices. Recommended approach: Place the primary KPI, trend and exceptions in a clear readable sequence with labels."
+              "answer": "c",
+              "feedback": "Put the most important outcome first, follow with readable trend and exception notes, and label every chart. Accessible labels and layout matter on small devices."
             },
             {
               "type": "true_false",
@@ -891,14 +891,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Connect Charts to Accurate Source Tables\" skill to the following new task: a retailer validating an inventory turnover report. What is the most reliable approach?",
+              "prompt": "An analyst is helping a retailer validating an inventory turnover report. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Keep 150 because it was the earlier displayed number",
-                "b": "Recalculate fulfilled orders from delivered status and document the filter",
-                "c": "Delete cancelled rows from the master sheet to match the chart"
+                "a": "Delete excluded items from the underlying source without justification",
+                "b": "Recompute turnover from traceable inventory and sales records and document the exact calculation period",
+                "c": "Trust a graphic total that disagrees with the stock ledger"
               },
               "answer": "b",
-              "feedback": "Reproducibility is part of trust in analytics. Recommended approach: Recalculate fulfilled orders from delivered status and document the filter."
+              "feedback": "Recompute turnover from traceable inventory and sales records and document the exact calculation period. Reproducibility is part of trust in analytics."
             },
             {
               "type": "true_false",
@@ -931,14 +931,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Add Caveats to Summary Insights\" skill to the following new task: a tutoring service reporting incomplete month-end attendance. What is the most reliable approach?",
+              "prompt": "An analyst is helping a tutoring service reporting incomplete month-end attendance. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Invent weekend activity to fill the gap",
-                "b": "Label the two days as a representative seven-day average",
-                "c": "Say the result excludes weekends and defer a full-week conclusion"
+                "a": "Identify the missing month-end days and postpone claims about the full month's attendance",
+                "b": "Pretend the partial month represents the entire calendar",
+                "c": "Guess the attendance for every day that has not been recorded"
               },
-              "answer": "c",
-              "feedback": "A concise caveat can materially change the decision. Recommended approach: Say the result excludes weekends and defer a full-week conclusion."
+              "answer": "a",
+              "feedback": "Identify the missing month-end days and postpone claims about the full month's attendance. A concise caveat can materially change the decision."
             },
             {
               "type": "true_false",
@@ -971,14 +971,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Prioritize Actions Supported by Evidence\" skill to the following new task: a delivery team interpreting a spike in late deliveries. What is the most reliable approach?",
+              "prompt": "An analyst is helping a delivery team interpreting a spike in late deliveries. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Investigate failed payment steps and test an improvement while tracking completed checkout rate",
-                "b": "Claim the audience does not want the products",
-                "c": "Replace every product photo without investigating checkout"
+                "a": "Replace the marketing logo as the first response to lateness",
+                "b": "Assume a single driver caused the spike without investigation",
+                "c": "Check late-delivery records by route, timing and capacity, then test a remedy against on-time rate"
               },
-              "answer": "a",
-              "feedback": "Use observed gaps to guide tests, not unrelated redesign. Recommended approach: Investigate failed payment steps and test an improvement while tracking completed checkout rate."
+              "answer": "c",
+              "feedback": "Check late-delivery records by route, timing and capacity, then test a remedy against on-time rate. Use observed gaps to guide tests, not unrelated redesign."
             },
             {
               "type": "true_false",
@@ -1011,14 +1011,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Transfer the \"Capstone: Present an Operational Dashboard\" skill to the following new task: a fictional bakery owner reviewing fulfillment and customer satisfaction. What is the most reliable approach?",
+              "prompt": "An analyst is helping a fictional bakery owner reviewing fulfillment and customer satisfaction. Which data step would produce the most defensible result?",
               "options": {
-                "a": "Present a decorative chart without underlying calculations",
-                "b": "Create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action",
-                "c": "Hide exceptions to make the dashboard appear successful"
+                "a": "Build charts from unsourced headline numbers without a reproducible table",
+                "b": "Show fulfilled orders and revenue with defined statuses, source audit and limitations before recommending action",
+                "c": "Treat cancelled orders as delivered in fulfillment reports"
               },
               "answer": "b",
-              "feedback": "Auditable methods make the recommendation repeatable. Recommended approach: Create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action."
+              "feedback": "Show fulfilled orders and revenue with defined statuses, source audit and limitations before recommending action. Auditable methods make the recommendation repeatable."
             },
             {
               "type": "true_false",
