@@ -126,7 +126,11 @@ export function renderSkillCertificatePdf(award: PrintableCertificate): Buffer {
     9,
   );
   stream += centerText(78, `Certificate ID: ${award.publicId}`, 9);
-  stream += centerText(58, "Certificate records are available privately in the learner's SkillUp account.", 9);
+  stream += centerText(
+    58,
+    "Certificate records are available privately in the learner's SkillUp account.",
+    9,
+  );
   stream += "Q\n";
 
   return pdfDocument(stream);
