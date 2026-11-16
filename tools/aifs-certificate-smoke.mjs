@@ -212,10 +212,37 @@ try {
     /capstone_distinct_reviewer/,
   );
 
+  // Role-free review evidence must never unlock issuance, even when its
+  // reviewer is a different real user and the signed decision says "passed".
+  await db.query(
+    `insert into skill_capstone_attestations
+       (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
+       values ($1,$2,$3,'passed',$4,$5,now() - interval '1 day')`,
+    [requirementId, learnerId, reviewerId, hash("unauthorized-capstone"), reason],
+  );
+  const unauthorized = await enabled.eligibility(learnerId, skill.slug);
+  assert.equal(unauthorized.status, "incomplete", "A reviewer without a role cannot qualify.");
+
+  // In CI only, provision a real role row for the independent test reviewer.
+  await db.query("insert into admin_principals (user_id,status) values ($1,'active')", [
+    reviewerId,
+  ]);
+  await db.query(
+    `insert into admin_role_assignments (user_id,role,reason)
+       values ($1,'content_reviewer',$2)`,
+    [reviewerId, reason],
+  );
+  const retroactive = await enabled.eligibility(learnerId, skill.slug);
+  assert.equal(
+    retroactive.status,
+    "incomplete",
+    "A later role assignment cannot retroactively legitimize old capstone evidence.",
+  );
+
   const capstone = await db.query(
     `insert into skill_capstone_attestations
-       (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason)
-       values ($1,$2,$3,'passed',$4,$5) returning id`,
+       (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
+       values ($1,$2,$3,'passed',$4,$5,clock_timestamp()) returning id`,
     [requirementId, learnerId, reviewerId, hash("capstone"), reason],
   );
   await mustRejectInSavepoint(
@@ -292,7 +319,7 @@ try {
   );
 
   console.info(
-    `AIFS certificate PostgreSQL smoke passed: 79% rejected and 80% accepted on one required level; ${lv.rows.length} genuine test sessions, ${cv.rows.length} evaluated attempts, no issuance before capstone, exactly one idempotent award, account isolation, immutable evidence. Fixture rolled back.`,
+    `AIFS certificate PostgreSQL smoke passed: unauthorized/retroactive capstone rejected, authorized human role required; 79% rejected and 80% accepted on one required level; ${lv.rows.length} genuine test sessions, ${cv.rows.length} evaluated attempts, no issuance before capstone, exactly one idempotent award, account isolation, immutable evidence. Fixture rolled back.`,
   );
 } finally {
   await db.query("rollback");
