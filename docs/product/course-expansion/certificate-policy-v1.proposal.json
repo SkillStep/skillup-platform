@@ -147,9 +147,7 @@
     ],
     "suggestedLearnerFacingNotice": "This certificate records completion of SkillUp learning activities. It is not an accredited professional qualification or a licence.",
     "marketingMustNotClaimIndependentQualification": true,
-    "supportedLanguagesNow": [
-      "en"
-    ],
+    "supportedLanguagesNow": ["en"],
     "nonLatinPdfNames": "must_preserve_name_or_fail_privately; do_not_silently_transliterate; add_unicode_renderer_before_nonlatin_release",
     "certificatePrivacy": {
       "ownerOnlyAuthenticatedPdf": true,
@@ -163,12 +161,7 @@
   },
   "versioning": {
     "immutableFrozenApprovalDigest": true,
-    "requirementsStatusTransitions": [
-      "draft",
-      "approved",
-      "active",
-      "retired"
-    ],
+    "requirementsStatusTransitions": ["draft", "approved", "active", "retired"],
     "publishedOnlyEvidence": true,
     "supersededAndWithdrawnCannotNewlyQualify": true,
     "earnedAwardsRemainFrozenUnderTheirVersion": true,
