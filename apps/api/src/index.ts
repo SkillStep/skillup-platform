@@ -10,6 +10,7 @@ import { createAuthService } from "./auth.js";
 import { createCampaignDailyLogsEmailTask } from "./campaign-daily-logs-email.js";
 import { createCampaignDailyReportEmailTask } from "./campaign-daily-report-email.js";
 import { createCapabilityService } from "./capabilities.js";
+import { createCertificateService, registerCertificateRoutes } from "./certificates.js";
 import { createCommercialService } from "./commercial.js";
 import {
   createPublishedCourseCatalogService,
@@ -144,6 +145,16 @@ if (externalBilling) {
 
 registerPublishedCourseCatalogRoutes(app, {
   service: createPublishedCourseCatalogService({ pool: database.pool }),
+});
+
+registerCertificateRoutes(app, {
+  config,
+  authService,
+  service: createCertificateService({
+    pool: database.pool,
+    // Human-signed per-skill policies are required before this feature is enabled.
+    issuanceEnabled: process.env["SKILLUP_CERTIFICATE_ISSUANCE_ENABLED"] === "yes",
+  }),
 });
 
 registerRecommendationRoutes(app, {

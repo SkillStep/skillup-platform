@@ -1,6 +1,7 @@
 import { drizzle, type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 
+import * as certificateSchema from "./certificates-schema.js";
 import * as commercialOperationsSchema from "./commercial-operations-schema.js";
 import * as gameplaySchema from "./gameplay-schema.js";
 import * as learningSchema from "./learning-schema.js";
@@ -9,6 +10,7 @@ import * as baseSchema from "./schema.js";
 
 const schema = {
   ...baseSchema,
+  ...certificateSchema,
   ...learningSchema,
   ...gameplaySchema,
   ...progressSchema,
@@ -65,6 +67,7 @@ export function createDatabaseClient(options: DatabaseClientOptions): DatabaseCl
   };
 }
 
+export * from "./certificates-schema.js";
 export * from "./commercial-operations-schema.js";
 export * from "./gameplay-schema.js";
 export * from "./learning-schema.js";
