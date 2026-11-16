@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "prompt-engineering-generative-ai",
+  "courseTitle": "Prompt Engineering & Generative AI",
+  "publicPreviewSummary": "Learn to write effective AI prompts, improve responses and check AI-generated results for accuracy.",
+  "existingDraftIdentityReused": false,
+  "issueNumber": 263,
+  "locale": "en",
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "humanSubjectReviewPending": true,
+  "capstone": "A five-prompt reusable toolkit with synthetic test inputs, comparison outputs, source verification and error log",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Prompt Basics and Clear Instructions",
+      "learningObjective": "Write clear task prompts with audience, goal, context, and safe output boundaries",
+      "levelTitles": [
+        "What Problem Should a Prompt Solve",
+        "Distinguish an Instruction from Context",
+        "Specify the Audience and Desired Outcome",
+        "Describe the Input Without Exposing Secrets",
+        "Choose a Useful Answer Format",
+        "Checkpoint: Rewrite a Vague Study Prompt"
+      ],
+      "exampleScenario": "Specify the Audience and Desired Outcome",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Context, Constraints and Iteration",
+      "learningObjective": "Improve under-specified instructions with grounded examples and explicit conditions",
+      "levelTitles": [
+        "Add Relevant Constraints and Examples",
+        "Separate Must-Have from Optional Conditions",
+        "Ask a Focused Follow-Up for Missing Details",
+        "Compare Two Prompt Strategies Fairly",
+        "Revise After an Incomplete First Response",
+        "Checkpoint: Build a Reusable Prompt Template"
+      ],
+      "exampleScenario": "Ask a Focused Follow-Up for Missing Details",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Output Evaluation and Fact-Checking",
+      "learningObjective": "Independently verify calculations, sources, claims, and private information",
+      "levelTitles": [
+        "Spot a Confident but Unsupported AI Claim",
+        "Trace a Source Back to Its Origin",
+        "Verify Simple AI-Generated Calculations",
+        "Recognize Sensitive Data in Prompts",
+        "Explain Model Uncertainty to a Reader",
+        "Checkpoint: Audit an AI-Generated Summary"
+      ],
+      "exampleScenario": "Verify Simple AI-Generated Calculations",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Reusable Prompt Toolkit Capstone",
+      "learningObjective": "Test a reusable prompt collection on synthetic realistic tasks and explain its limitations",
+      "levelTitles": [
+        "Select Five Realistic Everyday Prompt Tasks",
+        "Write Acceptance Criteria for Each Output",
+        "Create Synthetic Inputs for Safe Testing",
+        "Collect Errors and Corrective Prompt Changes",
+        "Document Limitations and Human Review",
+        "Capstone: Deliver a Verified Prompt Toolkit"
+      ],
+      "exampleScenario": "Create Synthetic Inputs for Safe Testing",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
