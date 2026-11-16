@@ -345,7 +345,10 @@ export function createCertificateService(
           issuedAt: row.issued_at,
         });
       } catch {
-        throw new CertificateError(422, "Your certificate needs a Unicode-compatible PDF. Please contact SkillUp support.");
+        throw new CertificateError(
+          422,
+          "Your certificate needs a Unicode-compatible PDF. Please contact SkillUp support.",
+        );
       }
       const eventDigest = digest({
         actor: userId,
@@ -357,7 +360,12 @@ export function createCertificateService(
         `insert into skill_certificate_events
             (award_id, actor_user_id, action, reason, event_digest)
            values ($1, $2, 'verified_download', $3, $4)`,
-        [row.id, userId, "Certificate owner downloaded the verified, unrevoked A4 document.", eventDigest],
+        [
+          row.id,
+          userId,
+          "Certificate owner downloaded the verified, unrevoked A4 document.",
+          eventDigest,
+        ],
       );
       return pdf;
     },
@@ -487,7 +495,10 @@ export function registerCertificateRoutes(
     reply.header("cache-control", "private, no-store");
     reply.header("x-robots-tag", "noindex, nofollow");
     reply.header("content-type", "application/pdf");
-    reply.header("content-disposition", `attachment; filename="skillup-certificate-${awardId}.pdf"`);
+    reply.header(
+      "content-disposition",
+      `attachment; filename="skillup-certificate-${awardId}.pdf"`,
+    );
     reply.header("x-content-type-options", "nosniff");
     return reply.send(file);
   });

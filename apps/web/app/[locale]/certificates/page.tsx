@@ -25,8 +25,8 @@ export default async function CertificatesPage({ params }: PageProps) {
           <p className={styles["eyebrow"]}>Your learning achievements</p>
           <h1>My Certificates</h1>
           <p>
-            See verified completion for each skill. Certificates are available only
-            after published challenges, assessments and required human reviews are complete.
+            See verified completion for each skill. Certificates are available only after published
+            challenges, assessments and required human reviews are complete.
           </p>
         </header>
         <MyCertificates />

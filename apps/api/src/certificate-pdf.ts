@@ -14,7 +14,9 @@ export type PrintableCertificate = Readonly<{
 
 function pdfText(value: string): string {
   if (!/^[\x20-\x7E]+$/.test(value)) {
-    throw new Error("The current English PDF font cannot faithfully represent this name. Contact support for a Unicode certificate.");
+    throw new Error(
+      "The current English PDF font cannot faithfully represent this name. Contact support for a Unicode certificate.",
+    );
   }
   return value.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
 }
@@ -114,8 +116,16 @@ export function renderSkillCertificatePdf(award: PrintableCertificate): Buffer {
   stream += "0.087 0.122 0.234 rg\n";
   stream += centerText(218, `Completed ${completed}`, 11);
   stream += centerText(197, `Issued ${issued}`, 10);
-  stream += centerText(155, "Issued from server-verified learning and approved completion evidence.", 9);
-  stream += centerText(137, "SkillUp educational completion recognition; not an accredited qualification.", 8);
+  stream += centerText(
+    155,
+    "Issued from server-verified learning and approved completion evidence.",
+    9,
+  );
+  stream += centerText(
+    137,
+    "SkillUp educational completion recognition; not an accredited qualification.",
+    8,
+  );
   stream += centerText(93, `Certificate ID: ${award.publicId}`, 9);
   stream += centerText(71, "View your private certificate history in your SkillUp account.", 9);
   stream += "Q\n";

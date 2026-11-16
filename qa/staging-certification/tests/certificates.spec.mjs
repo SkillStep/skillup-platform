@@ -10,15 +10,15 @@ test("certificates are a private, non-indexable learner feature", async ({ page,
   );
   expect(details.status()).toBe(401);
 
-  const doc = await request.get(
-    "/api/v1/me/certificates/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/pdf",
-  );
+  const doc = await request.get("/api/v1/me/certificates/aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa/pdf");
   expect(doc.status()).toBe(401);
 
   const pageResponse = await page.goto("/en/certificates");
   expect(pageResponse?.ok()).toBeTruthy();
   await expect(page.getByRole("heading", { level: 1, name: "My Certificates" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Sign in to see your certificates" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sign in to see your certificates" }),
+  ).toBeVisible();
   expect((await page.locator("meta[name='robots']").getAttribute("content")) ?? "").toContain(
     "noindex",
   );

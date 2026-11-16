@@ -35,9 +35,9 @@ describe("private, immutable A4 certificate rendering", () => {
     expect(() => renderSkillCertificatePdf({ ...sample, learnerName: "علی خان" })).toThrow(
       /current English PDF font/,
     );
-    expect(() =>
-      renderSkillCertificatePdf({ ...sample, learnerName: "A".repeat(100) }),
-    ).toThrow(/too long/);
+    expect(() => renderSkillCertificatePdf({ ...sample, learnerName: "A".repeat(100) })).toThrow(
+      /too long/,
+    );
   });
 
   it("creates identical signed content for the same verified award snapshot", () => {

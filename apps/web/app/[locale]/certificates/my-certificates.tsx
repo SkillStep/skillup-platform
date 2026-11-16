@@ -144,7 +144,11 @@ export function MyCertificates() {
 
   return (
     <div className={styles["sections"]}>
-      {message ? <p role="status" className={styles["notice"]}>{message}</p> : null}
+      {message ? (
+        <p role="status" className={styles["notice"]}>
+          {message}
+        </p>
+      ) : null}
       <section className={styles["panel"]} aria-labelledby="earned-title">
         <div className={styles["sectionHead"]}>
           <h2 id="earned-title">Issued certificates</h2>
@@ -154,8 +158,8 @@ export function MyCertificates() {
         </div>
         {awards.length === 0 ? (
           <p>
-            No certificates have been issued yet. Complete a published course and its
-            required verified assessment to become eligible.
+            No certificates have been issued yet. Complete a published course and its required
+            verified assessment to become eligible.
           </p>
         ) : (
           <ul className={styles["awards"]}>
@@ -163,7 +167,10 @@ export function MyCertificates() {
               <li key={award.id} className={styles["award"]}>
                 <div>
                   <strong>{award.title}</strong>
-                  <p>{award.status === "revoked" ? "Revoked" : "Verified issued"} · Issued {date(award.issuedAt)}</p>
+                  <p>
+                    {award.status === "revoked" ? "Revoked" : "Verified issued"} · Issued{" "}
+                    {date(award.issuedAt)}
+                  </p>
                   <p className={styles["identifier"]}>{award.publicId}</p>
                 </div>
                 {award.status === "issued" ? (
@@ -185,23 +192,26 @@ export function MyCertificates() {
         <div className={styles["grid"]}>
           {skills.map(([slug, title]) => {
             const item = requirements[slug];
-            const label = item?.status === "earned"
-              ? "Certificate earned"
-              : item?.status === "eligible"
-                ? "Eligible for certificate"
-                : item?.status === "incomplete"
-                  ? "In progress"
-                  : "Requirements not yet approved";
+            const label =
+              item?.status === "earned"
+                ? "Certificate earned"
+                : item?.status === "eligible"
+                  ? "Eligible for certificate"
+                  : item?.status === "incomplete"
+                    ? "In progress"
+                    : "Requirements not yet approved";
             return (
               <article key={slug} className={styles["skill"]}>
                 <h3>{title}</h3>
                 <p className={styles["state"]}>{label}</p>
                 {item?.status === "incomplete" || item?.status === "eligible" ? (
                   <p>
-                    {item.completedLevels} of {item.requiredLevels} levels ·{" "}
-                    {item.passedChallenges} of {item.requiredChallenges} evaluated challenges
+                    {item.completedLevels} of {item.requiredLevels} levels · {item.passedChallenges}{" "}
+                    of {item.requiredChallenges} evaluated challenges
                     {item.capstoneRequired
-                      ? item.capstonePassed ? " · Capstone approved" : " · Capstone pending"
+                      ? item.capstonePassed
+                        ? " · Capstone approved"
+                        : " · Capstone pending"
                       : ""}
                   </p>
                 ) : null}
@@ -216,7 +226,9 @@ export function MyCertificates() {
                   </button>
                 ) : null}
                 {item?.status === "incomplete" ? (
-                  <Link href="/en/skills" className={styles["secondary"]}>Continue learning</Link>
+                  <Link href="/en/skills" className={styles["secondary"]}>
+                    Continue learning
+                  </Link>
                 ) : null}
               </article>
             );
