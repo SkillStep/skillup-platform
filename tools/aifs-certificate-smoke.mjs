@@ -237,6 +237,15 @@ try {
   assert.equal(await enabled.list(reviewerId).then((x) => x.length), 0);
   assert.equal((await enabled.eligibility(learnerId, skill.slug)).status, "earned");
 
+  const pdf = await enabled.downloadPdf(learnerId, first.id);
+  assert(pdf.toString("ascii", 0, 8) === "%PDF-1.4");
+  assert(pdf.toString("ascii").includes("/MediaBox [0 0 595.28 841.89]"));
+  await assert.rejects(
+    () => enabled.downloadPdf(reviewerId, first.id),
+    (error) => error.statusCode === 404,
+    "Other accounts must never download a learner's earned certificate.",
+  );
+
   await mustRejectInSavepoint(
     () =>
       db.query("update skill_certificate_awards set learner_name = 'Tampered Name' where id = $1", [
@@ -247,7 +256,7 @@ try {
   const events = await db.query("select id from skill_certificate_events where award_id = $1", [
     first.id,
   ]);
-  assert.equal(events.rows.length, 1);
+  assert.equal(events.rows.length, 2, "Issue and verified owner download must both be auditable.");
   await mustRejectInSavepoint(
     () => db.query("delete from skill_certificate_events where id = $1", [events.rows[0].id]),
     /append-only/,
