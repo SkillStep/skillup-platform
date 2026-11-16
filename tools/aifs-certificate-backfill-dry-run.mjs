@@ -47,9 +47,9 @@ try {
     }),
   );
   await client.query("rollback");
-  if (!report.fullCoverageProven || report.frozenAwardEvidenceAnomalies > 0) {
+  if (report.certificationStatus !== "AUDITED_NO_WRITES") {
     throw new Error(
-      "History audit is incomplete or found frozen-award anomalies; see aggregate report.",
+      "History audit cannot certify zero approved policies, incomplete scans or frozen-award anomalies; see aggregate report.",
     );
   }
 } catch (error) {
