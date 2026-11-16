@@ -15,7 +15,7 @@
   "modules": [
     {
       "moduleNumber": 1,
-      "moduleTitle": "Client Discovery and Active Listening",
+      "moduleTitle": "Client discovery and active listening",
       "learningObjective": "Understand real client needs and capture realistic decision criteria",
       "levelTitles": [
         "Prepare for a First Client Conversation",
@@ -30,7 +30,7 @@
     },
     {
       "moduleNumber": 2,
-      "moduleTitle": "Presenting Offers and Ethical Objection Handling",
+      "moduleTitle": "Presenting offers and ethical objection handling",
       "learningObjective": "Make transparent commercial proposals and respond respectfully",
       "levelTitles": [
         "Propose a Clear Scope and Deliverables",
@@ -45,7 +45,7 @@
     },
     {
       "moduleNumber": 3,
-      "moduleTitle": "Fair Negotiation, Pricing and Boundaries",
+      "moduleTitle": "Fair negotiation, pricing and boundaries",
       "learningObjective": "Handle competing priorities with honest terms and clear limits",
       "levelTitles": [
         "Prepare Negotiable and Fixed Boundaries",
@@ -60,7 +60,7 @@
     },
     {
       "moduleNumber": 4,
-      "moduleTitle": "Follow-up, Client Retention and Conversation Capstone",
+      "moduleTitle": "Follow-up, client retention and conversation capstone",
       "learningObjective": "Manage post-sale communication, concerns and ongoing client trust",
       "levelTitles": [
         "Write a Useful Post-Meeting Follow-up",
