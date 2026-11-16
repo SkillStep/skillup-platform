@@ -7,8 +7,13 @@ const fixtures = loadTeamFiveDrafts();
 
 test("five original team course outlines remain draft-only and collision-free", () => {
   assert.deepEqual(validateTeamFiveDrafts(fixtures.plan, fixtures.legacy, fixtures.outlines), []);
-  assert.equal(fixtures.outlines.reduce((total, course) =>
-    total + course.modules.reduce((n, m) => n + m.levelTitles.length, 0), 0), 120);
+  assert.equal(
+    fixtures.outlines.reduce(
+      (total, course) => total + course.modules.reduce((n, m) => n + m.levelTitles.length, 0),
+      0,
+    ),
+    120,
+  );
 });
 
 test("rejects invented approval or publication", () => {
