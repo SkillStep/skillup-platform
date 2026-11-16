@@ -49,14 +49,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: an online seller receiving a suspicious delivery failure email. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving an online seller receiving a suspicious delivery failure email. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Reply with a payment-card photo to prove identity",
-                "b": "Pay through the shortened link in the SMS",
-                "c": "Open the courier's known official app independently and inspect the real order status"
+                "a": "Send the seller's payment-card details to the sender",
+                "b": "Open the seller's known courier dashboard independently and check the shipment identifier",
+                "c": "Pay the unfamiliar email link before checking the delivery"
               },
-              "answer": "c",
-              "feedback": "Urgency is a pressure tactic and is not proof that the request is genuine. Recommended action: Open the courier's known official app independently and inspect the real order status."
+              "answer": "b",
+              "feedback": "Open the seller's known courier dashboard independently and check the shipment identifier. Urgency is a pressure tactic and is not proof that the request is genuine."
             },
             {
               "type": "true_false",
@@ -89,14 +89,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a learner receiving an unexpected scholarship confirmation link. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a learner receiving an unexpected scholarship confirmation link. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Check the bank's official contact channel without clicking the email link",
-                "b": "Type the password into the email reply",
-                "c": "Assume the logo confirms the sender"
+                "a": "Inspect the actual scholarship provider's official portal and confirm the message independently",
+                "b": "Submit the student password via the unknown confirmation link",
+                "c": "Trust the sender just because a university emblem is shown"
               },
               "answer": "a",
-              "feedback": "Visual branding can be copied; inspect trusted channels and real domain ownership. Recommended action: Check the bank's official contact channel without clicking the email link."
+              "feedback": "Inspect the actual scholarship provider's official portal and confirm the message independently. Visual branding can be copied; inspect trusted channels and real domain ownership."
             },
             {
               "type": "true_false",
@@ -129,14 +129,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a shop owner evaluating a supplier invoice attachment link. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a shop owner evaluating a supplier invoice attachment link. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Ignore the destination because the label says Student Login",
-                "b": "Navigate to the school portal using a saved verified bookmark instead",
-                "c": "Enter an OTP on the unfamiliar page"
+                "a": "Enter business credentials at the invoice's unfamiliar URL",
+                "b": "Trust the download link solely because the PDF filename looks legitimate",
+                "c": "Confirm the invoice directly with the established supplier contact and inspect the attachment safely"
               },
-              "answer": "b",
-              "feedback": "Display labels can disguise malicious destinations. Recommended action: Navigate to the school portal using a saved verified bookmark instead."
+              "answer": "c",
+              "feedback": "Confirm the invoice directly with the established supplier contact and inspect the attachment safely. Display labels can disguise malicious destinations."
             },
             {
               "type": "true_false",
@@ -169,14 +169,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: an employee receiving a payment request supposedly from the finance lead. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving an employee receiving a payment request supposedly from the finance lead. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Send the staff directory to the new number",
-                "b": "Buy the vouchers to preserve the relationship",
-                "c": "Confirm the request through the manager's established work channel before any purchase"
+                "a": "Authorize payment because the profile picture matches the finance lead",
+                "b": "Call the finance lead through a previously verified internal number before any transfer",
+                "c": "Use only the new phone number inside the unexpected message"
               },
-              "answer": "c",
-              "feedback": "Known communication routes help expose impersonation. Recommended action: Confirm the request through the manager's established work channel before any purchase."
+              "answer": "b",
+              "feedback": "Call the finance lead through a previously verified internal number before any transfer. Known communication routes help expose impersonation."
             },
             {
               "type": "true_false",
@@ -209,14 +209,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a student receiving an unsolicited login-support WhatsApp message. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a student receiving an unsolicited login-support WhatsApp message. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Do not share the OTP and contact support through the service's official help route",
-                "b": "Post the code in a public support forum",
-                "c": "Read the code aloud to finish the support call"
+                "a": "Do not share an unexpected one-time code and use the provider's legitimate help channel",
+                "b": "Forward the code to the WhatsApp support contact",
+                "c": "Disable all account protection to finish the support request"
               },
               "answer": "a",
-              "feedback": "Knowledge of a name does not authenticate the caller. Recommended action: Do not share the OTP and contact support through the service's official help route."
+              "feedback": "Do not share an unexpected one-time code and use the provider's legitimate help channel. Knowledge of a name does not authenticate the caller."
             },
             {
               "type": "true_false",
@@ -249,14 +249,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a family member asking how to respond to a suspicious job offer. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a family member asking how to respond to a suspicious job offer. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Transfer a small amount to test whether the prize is real",
-                "b": "Stop payment, preserve the message and report it through the platform or relevant official channel",
-                "c": "Forward the scam link to friends for them to click"
+                "a": "Pay a small application processing fee to establish credibility",
+                "b": "Send an identity-card photograph to the unknown recruiter",
+                "c": "Stop any fee payment, verify the employer independently and report the suspicious job message"
               },
-              "answer": "b",
-              "feedback": "An unexpected prize requiring upfront payment is a strong scam warning. Recommended action: Stop payment, preserve the message and report it through the platform or relevant official channel."
+              "answer": "c",
+              "feedback": "Stop any fee payment, verify the employer independently and report the suspicious job message. An unexpected prize requiring upfront payment is a strong scam warning."
             },
             {
               "type": "true_false",
@@ -303,14 +303,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a freelancer creating a separate login for a portfolio website. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a freelancer creating a separate login for a portfolio website. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Share one team password in a group chat",
-                "b": "Append \"1\" to the reused password everywhere",
-                "c": "Use a strong unique passphrase for each account and store it securely"
+                "a": "Put the portfolio administrator password in a public profile",
+                "b": "Create a unique strong password for the portfolio site and enable MFA where supported",
+                "c": "Reuse the freelancer's email password with an extra digit"
               },
-              "answer": "c",
-              "feedback": "Credential reuse permits attackers to try one exposed secret on other accounts. Recommended action: Use a strong unique passphrase for each account and store it securely."
+              "answer": "b",
+              "feedback": "Create a unique strong password for the portfolio site and enable MFA where supported. Credential reuse permits attackers to try one exposed secret on other accounts."
             },
             {
               "type": "true_false",
@@ -343,14 +343,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a remote worker receiving repeated unsolicited approval prompts. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a remote worker receiving repeated unsolicited approval prompts. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Deny the unexpected approval and investigate the sign-in activity through the official account settings",
-                "b": "Disable MFA because it caused inconvenience",
-                "c": "Approve the request to stop the notification"
+                "a": "Deny unsolicited MFA prompts and review the account's recent sign-in sessions",
+                "b": "Approve one prompt to stop the repeated notifications",
+                "c": "Share a recovery code with the caller who triggered the prompts"
               },
               "answer": "a",
-              "feedback": "Unexpected prompts may indicate an attacker already has a password. Recommended action: Deny the unexpected approval and investigate the sign-in activity through the official account settings."
+              "feedback": "Deny unsolicited MFA prompts and review the account's recent sign-in sessions. Unexpected prompts may indicate an attacker already has a password."
             },
             {
               "type": "true_false",
@@ -383,14 +383,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a student managing email, learning portal and cloud storage logins. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a student managing email, learning portal and cloud storage logins. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Keep all passwords on a public shared spreadsheet",
-                "b": "Use unique generated passwords and an approved password manager with strong account protection",
-                "c": "Email the manager's master password to staff"
+                "a": "Store passwords for all three sites in a public shared document",
+                "b": "Reuse the same easy password on learning and email portals",
+                "c": "Use a reputable password manager with unique passwords and a secured master account"
               },
-              "answer": "b",
-              "feedback": "The password manager must itself be secured and backed up appropriately. Recommended action: Use unique generated passwords and an approved password manager with strong account protection."
+              "answer": "c",
+              "feedback": "Use a reputable password manager with unique passwords and a secured master account. The password manager must itself be secured and backed up appropriately."
             },
             {
               "type": "true_false",
@@ -423,14 +423,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a small-business owner replacing a work phone. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a small-business owner replacing a work phone. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Photograph recovery codes and post them publicly",
-                "b": "Wait until the account is locked to invent recovery information",
-                "c": "Set up verified recovery methods and store recovery codes in a secure separate place"
+                "a": "Send backup codes to customers so the account can be restored",
+                "b": "Prepare secure recovery options before changing devices and protect backup codes",
+                "c": "Discard all recovery methods when replacing the old phone"
               },
-              "answer": "c",
-              "feedback": "Account recovery is easier when backups are established and protected in advance. Recommended action: Set up verified recovery methods and store recovery codes in a secure separate place."
+              "answer": "b",
+              "feedback": "Prepare secure recovery options before changing devices and protect backup codes. Account recovery is easier when backups are established and protected in advance."
             },
             {
               "type": "true_false",
@@ -463,14 +463,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a volunteer maintaining a shared work tablet. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a volunteer maintaining a shared work tablet. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Update through the official device settings or trusted app store after confirming the release",
-                "b": "Disable future updates to save storage",
-                "c": "Install the patch from the ad's file-sharing link"
+                "a": "Update the tablet from verified device/app settings and check which staff can install software",
+                "b": "Install a random patch linked in an unexpected advertisement",
+                "c": "Disable updates on the shared tablet permanently"
               },
               "answer": "a",
-              "feedback": "Updates should come from verified vendor-managed channels. Recommended action: Update through the official device settings or trusted app store after confirming the release."
+              "feedback": "Update the tablet from verified device/app settings and check which staff can install software. Updates should come from verified vendor-managed channels."
             },
             {
               "type": "true_false",
@@ -503,14 +503,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a community team onboarding a new admin account. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a community team onboarding a new admin account. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Reuse the social media password and skip MFA",
-                "b": "Generate a unique password, enable MFA and review recovery and session settings",
-                "c": "Share the login code with a collaborator"
+                "a": "Share a common administrator password in a group chat",
+                "b": "Allow anyone with the team link to change account recovery details",
+                "c": "Issue separate privileged access, enable MFA and document accountable recovery ownership"
               },
-              "answer": "b",
-              "feedback": "Layered controls reduce the impact of a single credential exposure. Recommended action: Generate a unique password, enable MFA and review recovery and session settings."
+              "answer": "c",
+              "feedback": "Issue separate privileged access, enable MFA and document accountable recovery ownership. Layered controls reduce the impact of a single credential exposure."
             },
             {
               "type": "true_false",
@@ -557,14 +557,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a trainee installing a flashlight utility on a phone. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a trainee installing a flashlight utility on a phone. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Upload the phone contact list to the developer",
-                "b": "Grant every permission because the app installed successfully",
-                "c": "Decline unrelated permissions and review whether the app remains appropriate to use"
+                "a": "Upload a full address book to prove the app is safe",
+                "b": "Decline contact access for a flashlight app and consider uninstalling if unjustified permissions persist",
+                "c": "Grant access to contacts and location for any new utility"
               },
-              "answer": "c",
-              "feedback": "Apply least privilege to personal device permissions. Recommended action: Decline unrelated permissions and review whether the app remains appropriate to use."
+              "answer": "b",
+              "feedback": "Decline contact access for a flashlight app and consider uninstalling if unjustified permissions persist. Apply least privilege to personal device permissions."
             },
             {
               "type": "true_false",
@@ -597,14 +597,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a seller asking for help with a shipping form. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a seller asking for help with a shipping form. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Redact unnecessary identifiers before sharing a question about the form",
-                "b": "Copy all document numbers into a group chat",
-                "c": "Post the original screenshot publicly for advice"
+                "a": "Redact real addresses, phone numbers and identifiers before seeking help with form formatting",
+                "b": "Publish a screenshot of the complete customer shipping form",
+                "c": "Copy the buyer's identity number into a public design template"
               },
               "answer": "a",
-              "feedback": "Identity and location details can enable unwanted contact or misuse. Recommended action: Redact unnecessary identifiers before sharing a question about the form."
+              "feedback": "Redact real addresses, phone numbers and identifiers before seeking help with form formatting. Identity and location details can enable unwanted contact or misuse."
             },
             {
               "type": "true_false",
@@ -637,14 +637,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a school sharing a draft event schedule with teachers. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a school sharing a draft event schedule with teachers. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Publish the link openly because the filename is obscure",
-                "b": "Change permissions to named authorized collaborators with the minimum required role",
-                "c": "Allow public editors to avoid approval requests"
+                "a": "Make it editable by anyone on the internet for convenience",
+                "b": "Publish the private class roster alongside the draft programme",
+                "c": "Share the event schedule with named teachers as viewers or editors according to duty"
               },
-              "answer": "b",
-              "feedback": "Link secrecy is not the same as access control. Recommended action: Change permissions to named authorized collaborators with the minimum required role."
+              "answer": "c",
+              "feedback": "Share the event schedule with named teachers as viewers or editors according to duty. Link secrecy is not the same as access control."
             },
             {
               "type": "true_false",
@@ -677,14 +677,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a traveler checking a billing account at a cafe. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a traveler checking a billing account at a cafe. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Turn off security warnings to finish quickly",
-                "b": "Assume the captive portal owns every account password",
-                "c": "Do not enter banking credentials and use a known trustworthy connection for sensitive access"
+                "a": "Disable browser certificate warnings to finish the login",
+                "b": "Use a verified secure connection or defer sensitive billing work on an untrusted hotspot",
+                "c": "Enter payment credentials into the hotspot's captive portal"
               },
-              "answer": "c",
-              "feedback": "A network's access page cannot legitimately authenticate unrelated financial services. Recommended action: Do not enter banking credentials and use a known trustworthy connection for sensitive access."
+              "answer": "b",
+              "feedback": "Use a verified secure connection or defer sensitive billing work on an untrusted hotspot. A network's access page cannot legitimately authenticate unrelated financial services."
             },
             {
               "type": "true_false",
@@ -717,14 +717,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a small shop protecting its weekly inventory records. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a small shop protecting its weekly inventory records. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Keep secure authorized backups and test recovery with non-sensitive sample files",
-                "b": "Copy confidential documents to an unmanaged public drive",
-                "c": "Wait for the laptop to fail before planning recovery"
+                "a": "Store authorized encrypted backups and verify a sample restore without exposing records",
+                "b": "Rely on one store computer as the only inventory copy",
+                "c": "Upload staff and sales records into an unrestricted anonymous file host"
               },
               "answer": "a",
-              "feedback": "Untested or publicly exposed backups may fail operationally or create new risks. Recommended action: Keep secure authorized backups and test recovery with non-sensitive sample files."
+              "feedback": "Store authorized encrypted backups and verify a sample restore without exposing records. Untested or publicly exposed backups may fail operationally or create new risks."
             },
             {
               "type": "true_false",
@@ -757,14 +757,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a youth club updating a digital signup sheet. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a youth club updating a digital signup sheet. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Store every passport scan forever in a shared folder",
-                "b": "Collect only needed fields, limit access and set a reasonable deletion or retention plan",
-                "c": "Publish volunteer phone numbers in a public roster"
+                "a": "Require every youth participant's passport scan for a simple activity signup",
+                "b": "Publish participant phone numbers in a public timetable",
+                "c": "Ask only necessary signup fields, restrict access and set an appropriate retention period"
               },
-              "answer": "b",
-              "feedback": "Data minimization lowers unnecessary exposure. Recommended action: Collect only needed fields, limit access and set a reasonable deletion or retention plan."
+              "answer": "c",
+              "feedback": "Ask only necessary signup fields, restrict access and set an appropriate retention period. Data minimization lowers unnecessary exposure."
             },
             {
               "type": "true_false",
@@ -811,14 +811,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a freelancer noticing unknown messages sent from a client email account. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a freelancer noticing unknown messages sent from a client email account. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Ignore the alert until the next month",
-                "b": "Reply to a random stranger offering account recovery for a fee",
-                "c": "Use the official account security page to change the password, revoke sessions and review recovery methods"
+                "a": "Pay a stranger to recover the mailbox using its password",
+                "b": "Use official email security settings to revoke unknown sessions and investigate forwarding rules",
+                "c": "Trust the unknown outgoing messages as harmless without investigation"
               },
-              "answer": "c",
-              "feedback": "Recovery should address the attacker’s persistence as well as the password. Recommended action: Use the official account security page to change the password, revoke sessions and review recovery methods."
+              "answer": "b",
+              "feedback": "Use official email security settings to revoke unknown sessions and investigate forwarding rules. Recovery should address the attacker’s persistence as well as the password."
             },
             {
               "type": "true_false",
@@ -851,14 +851,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a community moderator reviewing a fake donation request. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a community moderator reviewing a fake donation request. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Warn peers without reproducing a clickable malicious link and use the service's report mechanism",
-                "b": "Publicly accuse an unverified person by name",
-                "c": "Forward the original malicious URL to every student"
+                "a": "Preserve the fake donation evidence and report it without resharing an active malicious link",
+                "b": "Forward the clickable scam to every donor as a warning",
+                "c": "Publicly accuse a person based only on an unverified fake profile"
               },
               "answer": "a",
-              "feedback": "Warnings can describe the scam without amplifying access to it. Recommended action: Warn peers without reproducing a clickable malicious link and use the service's report mechanism."
+              "feedback": "Preserve the fake donation evidence and report it without resharing an active malicious link. Warnings can describe the scam without amplifying access to it."
             },
             {
               "type": "true_false",
@@ -891,14 +891,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a small business receiving a last-minute payment-account change. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a small business receiving a last-minute payment-account change. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Transfer immediately to avoid a late fee",
-                "b": "Confirm the change using a previously verified vendor contact before paying",
-                "c": "Use only the message's new callback number for verification"
+                "a": "Use only the replacement phone number provided in the suspicious invoice",
+                "b": "Rush the payment because the last-minute change sounds urgent",
+                "c": "Verify changed beneficiary details through a known supplier contact before approving payment"
               },
-              "answer": "b",
-              "feedback": "Invoice compromise frequently relies on believable-looking requests. Recommended action: Confirm the change using a previously verified vendor contact before paying."
+              "answer": "c",
+              "feedback": "Verify changed beneficiary details through a known supplier contact before approving payment. Invoice compromise frequently relies on believable-looking requests."
             },
             {
               "type": "true_false",
@@ -931,14 +931,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a manager explaining a temporary shared-file exposure to staff. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a manager explaining a temporary shared-file exposure to staff. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Publish all volunteer identities as proof of transparency",
-                "b": "Claim no information was affected before checking",
-                "c": "Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route"
+                "a": "Publish the full exposed document to prove transparency",
+                "b": "Restrict access, determine what information was exposed and notify authorized people with confirmed facts",
+                "c": "Announce that no data was affected without checking the file history"
               },
-              "answer": "c",
-              "feedback": "Accuracy and appropriate next actions matter more than unsupported reassurance. Recommended action: Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route."
+              "answer": "b",
+              "feedback": "Restrict access, determine what information was exposed and notify authorized people with confirmed facts. Accuracy and appropriate next actions matter more than unsupported reassurance."
             },
             {
               "type": "true_false",
@@ -971,14 +971,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a school coordinating response to a fictional phishing attempt. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a school coordinating response to a fictional phishing attempt. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Document who revokes sessions, secures accounts, assesses exposure and informs affected owners",
-                "b": "Include real login passwords in the printed playbook",
-                "c": "Assume everyone will know what to do under stress"
+                "a": "Write a school incident plan covering reporting, compromised-account containment and communication owners",
+                "b": "Respond by circulating actual passwords to every teacher",
+                "c": "Tell students to click the suspicious email so staff can count victims"
               },
               "answer": "a",
-              "feedback": "Store secrets securely and give authorized responders access through controlled processes. Recommended action: Document who revokes sessions, secures accounts, assesses exposure and informs affected owners."
+              "feedback": "Write a school incident plan covering reporting, compromised-account containment and communication owners. Store secrets securely and give authorized responders access through controlled processes."
             },
             {
               "type": "true_false",
@@ -1011,14 +1011,14 @@
             },
             {
               "type": "scenario",
-              "prompt": "Practice the same protective decision in a different scenario: a household planning device loss and account recovery steps. Which response offers the safest next step?",
+              "prompt": "Consider this fictional security incident involving a household planning device loss and account recovery steps. Which protective action best addresses the immediate risk?",
               "options": {
-                "a": "Produce only a generic slogan about online safety",
-                "b": "Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership",
-                "c": "Collect real volunteer ID documents as sample evidence"
+                "a": "Store every password on the unlocked family tablet",
+                "b": "Assume a missing device poses no risk without checking sessions",
+                "c": "Create a household checklist for device loss, protected recovery methods and trusted reporting channels"
               },
-              "answer": "b",
-              "feedback": "Concrete controls and review checks make the plan actionable. Recommended action: Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership."
+              "answer": "c",
+              "feedback": "Create a household checklist for device loss, protected recovery methods and trusted reporting channels. Concrete controls and review checks make the plan actionable."
             },
             {
               "type": "true_false",
