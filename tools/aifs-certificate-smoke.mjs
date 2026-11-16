@@ -150,17 +150,21 @@ try {
 
   // CI fixture uses genuine DB-backed level session and correct attempt records.
   // No model-generated review evidence, real users or production state is affected.
-  for (const level of lv.rows) {
+  for (const [levelIndex, level] of lv.rows.entries()) {
     const levelChallenges = cv.rows.filter((ch) => ch.level_version_id === level.version_id);
     const sum = levelChallenges.reduce((acc, c) => acc + c.points, 0);
     assert(sum > 0);
     const session = await db.query(
       `insert into level_play_sessions
        (user_id,level_id,level_version_id,state,current_challenge_ordinal,
-        awarded_points,max_points,expires_at,completed_at)
-       values ($1,$2,$3,'completed',$4,$5,$5,now()+interval '1 hour',now())
+        awarded_points,max_points,started_at,last_activity_at,expires_at,completed_at)
+       values ($1,$2,$3,'completed',$4,$5,$5,
+          now() - $6::int * interval '1 day',
+          now() - $6::int * interval '1 day' + interval '5 minutes',
+          now() - $6::int * interval '1 day' + interval '1 hour',
+          now() - $6::int * interval '1 day' + interval '5 minutes')
        returning id`,
-      [learnerId, level.level_id, level.version_id, levelChallenges.length, sum],
+      [learnerId, level.level_id, level.version_id, levelChallenges.length, sum, levelIndex + 1],
     );
     const sessionId = session.rows[0].id;
     for (const [i, challenge] of levelChallenges.entries()) {
