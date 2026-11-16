@@ -501,6 +501,35 @@
   white-space: nowrap;
 }
 
+/* The footer's original max-content columns forced the full page
+   56-62px wider than 320px phones and 768px tablets. Fit the menu inside
+   the available width instead of hiding the overflow (or its links). */
+@media (max-width: 900px) {
+  .siteFooter {
+    align-items: flex-start;
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .siteFooter nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    justify-content: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .siteFooter nav a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .siteFooter nav {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @media (max-width: 760px) {
   .desktopNav {
     display: none;
@@ -521,10 +550,7 @@
     grid-template-columns: 1fr;
   }
 
-  .siteFooter nav {
-    grid-template-columns: repeat(3, max-content);
-    justify-content: start;
-  }
+
 
   .policyToc ol {
     columns: 1;
