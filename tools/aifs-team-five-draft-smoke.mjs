@@ -1,17 +1,11 @@
 import assert from "node:assert/strict";
 
-import {
-  createDatabaseClient,
-  requireDatabaseUrl,
-} from "../packages/database/src/index.ts";
+import { createDatabaseClient, requireDatabaseUrl } from "../packages/database/src/index.ts";
 import {
   importDraftCourseOutlines,
   loadAndValidateDraftCourseOutlines,
 } from "../packages/database/src/cli/import-aifs-course-outlines.ts";
-import {
-  buildTeamFiveImportPlan,
-  importTeamFiveDrafts,
-} from "./import-aifs-team-five-drafts.mjs";
+import { buildTeamFiveImportPlan, importTeamFiveDrafts } from "./import-aifs-team-five-drafts.mjs";
 import { readTeamFiveCourseDrafts } from "./validate-aifs-team-five-courses.mjs";
 
 // In a real PostgreSQL CI database, prove draft import, reused course identity,

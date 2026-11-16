@@ -10,7 +10,13 @@ const courses = readTeamFiveCourseDrafts();
 test("five complete courses contain 120 original draft levels, 360 keyed challenges and five capstones", () => {
   const result = validateTeamFiveCourseDrafts(courses);
   assert.deepEqual(result.issues, []);
-  assert.deepEqual(result.stats, { courses: 5, modules: 20, levels: 120, challenges: 360, capstones: 5 });
+  assert.deepEqual(result.stats, {
+    courses: 5,
+    modules: 20,
+    levels: 120,
+    challenges: 360,
+    capstones: 5,
+  });
 });
 
 test("rejects manufactured human signoffs and accidental publish toggles", () => {

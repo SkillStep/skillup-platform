@@ -8,10 +8,7 @@ import {
 
 // Intentionally separate from production. Drafts are NOT publicly playable or approved.
 export function assertTeamFiveDraftImportPermission(env, args) {
-  if (
-    args.length > 1 ||
-    (args.length === 1 && !["--dry-run", "--apply-draft"].includes(args[0]))
-  ) {
+  if (args.length > 1 || (args.length === 1 && !["--dry-run", "--apply-draft"].includes(args[0]))) {
     throw new Error("Only --dry-run or --apply-draft is supported. Publishing is prohibited.");
   }
   if (args[0] !== "--apply-draft") return "dry_run";
@@ -38,7 +35,8 @@ export function stableTeamFiveId(value) {
 }
 
 const makeSlug = (value) =>
-  value.toLocaleLowerCase("en-US")
+  value
+    .toLocaleLowerCase("en-US")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-|-$/g, "")
     .slice(0, 80);
@@ -100,7 +98,9 @@ async function createNewDraftHierarchy(db, course, courseIndex, categoryId) {
        (id, learning_path_id, version, locale, title, summary, estimated_minutes, status)
        values ($1, $2, 1, 'en', $3, $4, 192, 'draft')`,
     [
-      pathVersionId, pathId, course.publicTitle,
+      pathVersionId,
+      pathId,
+      course.publicTitle,
       `A draft skills course with original instructional exercises and a practical capstone in ${course.publicTitle}. Publication requires independent human review.`,
     ],
   );
@@ -127,7 +127,10 @@ async function createNewDraftHierarchy(db, course, courseIndex, categoryId) {
         (id, module_id, learning_path_version_id, version, locale, title, summary, state, index_policy)
         values ($1, $2, $3, 1, 'en', $4, $5, 'draft', 'noindex')`,
       [
-        moduleVersionId, moduleId, pathVersionId, mod.moduleTitle,
+        moduleVersionId,
+        moduleId,
+        pathVersionId,
+        mod.moduleTitle,
         `Unreviewed educational unit: ${mod.moduleTitle}. Six practical exercises-based lessons; publication and source review pending.`,
       ],
     );
@@ -137,27 +140,36 @@ async function createNewDraftHierarchy(db, course, courseIndex, categoryId) {
       const levelId = stableTeamFiveId(`${slug}:level:${level.number}`);
       const levelVersionId = stableTeamFiveId(`${slug}:level:${level.number}:v1`);
       const levelSlug = makeSlug(level.title);
-      await db.query(
-        "insert into lessons (id, module_id, slug, sort_order) values ($1,$2,$3,$4)",
-        [lessonId, moduleId, `${levelSlug}-lesson`, (level.number - 1) % 6 + 1],
-      );
+      await db.query("insert into lessons (id, module_id, slug, sort_order) values ($1,$2,$3,$4)", [
+        lessonId,
+        moduleId,
+        `${levelSlug}-lesson`,
+        ((level.number - 1) % 6) + 1,
+      ]);
       await db.query(
         `insert into lesson_versions
           (id, lesson_id, module_version_id, version, locale, title, summary, estimated_minutes, state, index_policy)
           values ($1, $2, $3, 1, 'en', $4, $5, 8, 'draft', 'noindex')`,
         [lessonVersionId, lessonId, moduleVersionId, level.title, level.objective],
       );
-      await db.query(
-        "insert into levels (id, lesson_id, slug, sort_order) values ($1,$2,$3,1)",
-        [levelId, lessonId, levelSlug],
-      );
+      await db.query("insert into levels (id, lesson_id, slug, sort_order) values ($1,$2,$3,1)", [
+        levelId,
+        lessonId,
+        levelSlug,
+      ]);
       await db.query(
         `insert into level_versions
          (id, level_id, lesson_version_id, version, locale, title, public_summary,
           instructions, estimated_minutes, state, index_policy)
          values ($1, $2, $3, 1, 'en', $4, $5, $6, 8, 'draft', 'noindex')`,
-        [levelVersionId, levelId, lessonVersionId, level.title, level.objective,
-          `${level.teaching} Then complete three original exercises; use the worked example and hint if needed.`],
+        [
+          levelVersionId,
+          levelId,
+          lessonVersionId,
+          level.title,
+          level.objective,
+          `${level.teaching} Then complete three original exercises; use the worked example and hint if needed.`,
+        ],
       );
       await db.query(
         `insert into learning_objectives
@@ -166,7 +178,7 @@ async function createNewDraftHierarchy(db, course, courseIndex, categoryId) {
         [
           stableTeamFiveId(`${slug}:objective:${level.number}`),
           levelVersionId,
-          `AIFS_M${String(mod.moduleNumber).padStart(2, "0")}_L${String((level.number - 1) % 6 + 1).padStart(2, "0")}`,
+          `AIFS_M${String(mod.moduleNumber).padStart(2, "0")}_L${String(((level.number - 1) % 6) + 1).padStart(2, "0")}`,
           level.objective,
         ],
       );
@@ -212,15 +224,18 @@ async function verifyExistingDraftHierarchy(db, course, pathId) {
   const planned = course.modules.flatMap((mod) => mod.levels);
   if (
     levels.rows.length !== 24 ||
-    levels.rows.some((row, i) =>
-      row.title !== planned[i].title ||
-      row.level_state !== "draft" ||
-      row.lesson_state !== "draft" ||
-      row.level_reviewed !== null ||
-      row.lesson_reviewed !== null
+    levels.rows.some(
+      (row, i) =>
+        row.title !== planned[i].title ||
+        row.level_state !== "draft" ||
+        row.lesson_state !== "draft" ||
+        row.level_reviewed !== null ||
+        row.lesson_reviewed !== null,
     )
   ) {
-    throw new Error(`${course.courseSlug}: an existing reviewed/published or nonmatching syllabus cannot be modified.`);
+    throw new Error(
+      `${course.courseSlug}: an existing reviewed/published or nonmatching syllabus cannot be modified.`,
+    );
   }
   return levels.rows;
 }
@@ -242,8 +257,9 @@ async function preflightPriorDraft(db, course) {
 }
 
 async function priorChallengeRows(db, pathId) {
-  return (await db.query(
-    `select cv.prompt, cv.type, cv.state, ce.private_evaluation
+  return (
+    await db.query(
+      `select cv.prompt, cv.type, cv.state, ce.private_evaluation
        from learning_modules m
        join lessons les on les.module_id = m.id
        join levels lv on lv.lesson_id = les.id
@@ -252,8 +268,9 @@ async function priorChallengeRows(db, pathId) {
        join challenge_evaluations ce on ce.challenge_version_id = cv.id
        where m.learning_path_id = $1
        order by m.sort_order, les.sort_order, c.sort_order, cv.version`,
-    [pathId],
-  )).rows;
+      [pathId],
+    )
+  ).rows;
 }
 
 async function writeDraftChallenges(db, course, currentLevels) {
@@ -264,14 +281,18 @@ async function writeDraftChallenges(db, course, currentLevels) {
   if (existing.length > 0) {
     if (
       existing.length === 72 &&
-      existing.every((row, i) =>
-        row.state === "draft" &&
-        row.prompt === expected[i].prompt &&
-        row.type === expected[i].type &&
-        JSON.stringify(row.private_evaluation) === JSON.stringify(expectedPrivate(expected[i]))
+      existing.every(
+        (row, i) =>
+          row.state === "draft" &&
+          row.prompt === expected[i].prompt &&
+          row.type === expected[i].type &&
+          JSON.stringify(row.private_evaluation) === JSON.stringify(expectedPrivate(expected[i])),
       )
-    ) return "already_imported";
-    throw new Error(`${slug}: existing question versions conflict with this source; no silent overwrite.`);
+    )
+      return "already_imported";
+    throw new Error(
+      `${slug}: existing question versions conflict with this source; no silent overwrite.`,
+    );
   }
   const sourceRows = currentLevels.created
     ? await verifyExistingDraftHierarchy(db, course, currentLevels.pathId)
@@ -291,13 +312,17 @@ async function writeDraftChallenges(db, course, currentLevels) {
              and summary like 'Unreviewed lesson brief for %'`,
         [row.lesson_version_id, level.objective],
       );
-      if (lessonUpdate.rowCount !== 1) throw new Error(`${slug}: lesson draft changed concurrently.`);
+      if (lessonUpdate.rowCount !== 1)
+        throw new Error(`${slug}: lesson draft changed concurrently.`);
       const levelUpdate = await db.query(
         `update level_versions set public_summary = $2, instructions = $3
            where id = $1 and state = 'draft' and reviewed_at is null
              and public_summary like 'Draft-level learning goal:%'`,
-        [levelVersionId, level.objective,
-          `${level.teaching} Complete three practical exercises and review each explanation.`],
+        [
+          levelVersionId,
+          level.objective,
+          `${level.teaching} Complete three practical exercises and review each explanation.`,
+        ],
       );
       if (levelUpdate.rowCount !== 1) throw new Error(`${slug}: level draft changed concurrently.`);
       await db.query(
@@ -319,15 +344,25 @@ async function writeDraftChallenges(db, course, currentLevels) {
           instruction, explanation, public_payload, points, state)
          values ($1, $2, $3, 1, 'en', $4, $5, $6, $7, $8::jsonb, 10, 'draft')`,
         [
-          versionId, challengeId, levelVersionId, question.type, question.prompt,
-          question.type === "true_false" ? "Choose true or false." : "Choose the most accurate answer.",
+          versionId,
+          challengeId,
+          levelVersionId,
+          question.type,
+          question.prompt,
+          question.type === "true_false"
+            ? "Choose true or false."
+            : "Choose the most accurate answer.",
           question.feedback,
           JSON.stringify(question.type === "multiple_choice" ? { selectionLimit: 1 } : {}),
         ],
       );
-      const options = question.type === "true_false"
-        ? [["true", "True"], ["false", "False"]]
-        : Object.entries(question.options);
+      const options =
+        question.type === "true_false"
+          ? [
+              ["true", "True"],
+              ["false", "False"],
+            ]
+          : Object.entries(question.options);
       for (const [optionIndex, [key, label]] of options.entries()) {
         await db.query(
           `insert into challenge_answer_options
@@ -335,7 +370,10 @@ async function writeDraftChallenges(db, course, currentLevels) {
            values ($1, $2, $3, $4, $5)`,
           [
             stableTeamFiveId(`${slug}:option:${level.number}:${qi}:${key}`),
-            versionId, key, label, optionIndex + 1,
+            versionId,
+            key,
+            label,
+            optionIndex + 1,
           ],
         );
       }
@@ -367,23 +405,23 @@ export async function importTeamFiveDrafts(db, plan) {
     plan.levels !== 120 ||
     plan.challenges !== 360 ||
     plan.publicationAllowed !== false
-  ) throw new Error("Incomplete or unsafe five-course draft import plan.");
+  )
+    throw new Error("Incomplete or unsafe five-course draft import plan.");
   await db.query("select pg_advisory_xact_lock(hashtext($1))", ["aifs:team-five:full-drafts-v1"]);
   let imported = 0;
   let existing = 0;
   for (const [index, course] of plan.courses.entries()) {
     const pathId = await preflightPriorDraft(db, course);
-    const categorySlug = course.courseSlug === "sales-client-negotiation"
-      ? "business"
-      : "digital-skills";
+    const categorySlug =
+      course.courseSlug === "sales-client-negotiation" ? "business" : "digital-skills";
     const category = pathId
       ? null
       : await requireOne(
-        db,
-        "select id from skill_categories where slug = $1 for update",
-        [categorySlug],
-        `seeded ${categorySlug} category`,
-      );
+          db,
+          "select id from skill_categories where slug = $1 for update",
+          [categorySlug],
+          `seeded ${categorySlug} category`,
+        );
     const path = pathId
       ? { pathId, created: false, rows: await verifyExistingDraftHierarchy(db, course, pathId) }
       : await createNewDraftHierarchy(db, course, index, category.id);
@@ -410,9 +448,12 @@ export async function importTeamFiveDrafts(db, plan) {
   );
   const counts = verified.rows[0];
   if (
-    counts?.courses !== 5 || counts.levels !== 120 ||
-    counts.challenges !== 360 || counts.published !== 0
-  ) throw new Error(`Unsafe draft import: ${JSON.stringify(counts)}`);
+    counts?.courses !== 5 ||
+    counts.levels !== 120 ||
+    counts.challenges !== 360 ||
+    counts.published !== 0
+  )
+    throw new Error(`Unsafe draft import: ${JSON.stringify(counts)}`);
   return { imported, alreadyImported: existing, ...counts };
 }
 
@@ -420,11 +461,15 @@ async function main() {
   const mode = assertTeamFiveDraftImportPermission(process.env, process.argv.slice(2));
   const plan = buildTeamFiveImportPlan(readTeamFiveCourseDrafts());
   if (mode === "dry_run") {
-    console.info(`Dry-run: ${plan.courses.length} skills, ${plan.modules} modules, ${plan.levels} lessons, ${plan.challenges} evaluated drafts, ${plan.capstones} capstones; digest ${plan.sha256}; zero DB writes. PUBLIC repo keys must be independently re-keyed before any approval or release.`);
+    console.info(
+      `Dry-run: ${plan.courses.length} skills, ${plan.modules} modules, ${plan.levels} lessons, ${plan.challenges} evaluated drafts, ${plan.capstones} capstones; digest ${plan.sha256}; zero DB writes. PUBLIC repo keys must be independently re-keyed before any approval or release.`,
+    );
     return;
   }
   // Import TS DB runtime only after permission and dry-run validation.
-  const { createDatabaseClient, requireDatabaseUrl } = await import("../packages/database/src/index.ts");
+  const { createDatabaseClient, requireDatabaseUrl } = await import(
+    "../packages/database/src/index.ts"
+  );
   const client = createDatabaseClient({
     connectionString: requireDatabaseUrl(),
     applicationName: "skillup-aifs-team-five-draft-import",
@@ -435,7 +480,9 @@ async function main() {
     await db.query("begin");
     const result = await importTeamFiveDrafts(db, plan);
     await db.query("commit");
-    console.info(`Nonproduction draft import succeeded: ${JSON.stringify(result)}; zero published versions. All evaluator keys require independent protected replacement before release.`);
+    console.info(
+      `Nonproduction draft import succeeded: ${JSON.stringify(result)}; zero published versions. All evaluator keys require independent protected replacement before release.`,
+    );
   } catch (error) {
     await db.query("rollback");
     throw error;

@@ -23,10 +23,10 @@ test("five-course importer requires complete immutable draft content and refuses
 test("production, preview and unknown environment writes are refused", () => {
   for (const appEnv of ["production", "prod", "preview", "testing", ""]) {
     assert.throws(
-      () => assertTeamFiveDraftImportPermission(
-        { APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" },
-        ["--apply-draft"],
-      ),
+      () =>
+        assertTeamFiveDraftImportPermission({ APP_ENV: appEnv, AIFS_ALLOW_DRAFT_IMPORT: "yes" }, [
+          "--apply-draft",
+        ]),
       /forbidden/,
     );
   }
@@ -40,10 +40,9 @@ test("dry-run is the default and an explicit second acknowledgment is required",
     /AIFS_ALLOW_DRAFT_IMPORT=yes/,
   );
   assert.equal(
-    assertTeamFiveDraftImportPermission(
-      { APP_ENV: "staging", AIFS_ALLOW_DRAFT_IMPORT: "yes" },
-      ["--apply-draft"],
-    ),
+    assertTeamFiveDraftImportPermission({ APP_ENV: "staging", AIFS_ALLOW_DRAFT_IMPORT: "yes" }, [
+      "--apply-draft",
+    ]),
     "apply_draft",
   );
   assert.throws(() => assertTeamFiveDraftImportPermission({}, ["--publish"]), /Only/);
@@ -69,8 +68,5 @@ test("rejects edited, partial or incorrectly signed-off content before opening t
   const changed = structuredClone(readTeamFiveCourseDrafts());
   changed[0].modules[0].levels[0].challenges.pop();
   changed[1].subjectReviewedBy = "fabricated";
-  assert.throws(
-    () => buildTeamFiveImportPlan(changed),
-    /Unreviewable AI-first content/,
-  );
+  assert.throws(() => buildTeamFiveImportPlan(changed), /Unreviewable AI-first content/);
 });

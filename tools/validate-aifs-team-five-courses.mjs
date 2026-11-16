@@ -8,12 +8,12 @@ export const COURSE_IDENTITIES = Object.freeze([
   ["applied-ai-workflows", "AI Automation & No-Code Tools"],
   ["sales-client-negotiation", "Sales, Negotiation & Client Management"],
 ]);
-const existingOutlineRoot = new URL(
-  "../docs/product/course-expansion/outlines/",
-  import.meta.url,
-);
+const existingOutlineRoot = new URL("../docs/product/course-expansion/outlines/", import.meta.url);
 const normalize = (value) =>
-  value.toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, " ").trim();
+  value
+    .toLocaleLowerCase("en-US")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 const cleanText = (value, min, max) =>
   typeof value === "string" && value.trim() === value && value.length >= min && value.length <= max;
 
@@ -47,7 +47,8 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
       course.publishedAt !== null ||
       course.sourceKind !== "internal_editorial" ||
       course.sourceReviewRequired !== true
-    ) issues.push(`${slug}: identity or human-review / publication safeguards invalid.`);
+    )
+      issues.push(`${slug}: identity or human-review / publication safeguards invalid.`);
     if (slugs.has(slug)) issues.push(`Duplicate course identity: ${slug}`);
     slugs.add(slug);
     if (!Array.isArray(course.modules) || course.modules.length !== 4) {
@@ -59,7 +60,8 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
       typeof course.capstoneFile !== "string" ||
       !/^capstones\/[a-z0-9-]+\.md$/.test(course.capstoneFile) ||
       !existsSync(new URL(course.capstoneFile || "MISSING", root))
-    ) issues.push(`${slug}: missing required practical capstone.`);
+    )
+      issues.push(`${slug}: missing required practical capstone.`);
     else {
       const content = readFileSync(new URL(course.capstoneFile, root), "utf8");
       if (
@@ -67,11 +69,16 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
         !/rubric/i.test(content) ||
         !/fictional|synthetic/i.test(content) ||
         !/review/i.test(content)
-      ) issues.push(`${slug}: capstone must include synthetic data, rubric and review boundary.`);
+      )
+        issues.push(`${slug}: capstone must include synthetic data, rubric and review boundary.`);
       stats.capstones++;
     }
     let aligned = null;
-    if (["data-analytics-dashboards", "applied-ai-workflows", "sales-client-negotiation"].includes(slug)) {
+    if (
+      ["data-analytics-dashboards", "applied-ai-workflows", "sales-client-negotiation"].includes(
+        slug,
+      )
+    ) {
       aligned = JSON.parse(readFileSync(new URL(`${slug}.json`, existingOutlineRoot), "utf8"));
     }
     let number = 0;
@@ -103,7 +110,11 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
         number++;
         stats.levels++;
         const id = `${slug}/level-${number}`;
-        if (level.number !== number || !cleanText(level.title, 12, 120) || levelTitles.has(normalize(level.title))) {
+        if (
+          level.number !== number ||
+          !cleanText(level.title, 12, 120) ||
+          levelTitles.has(normalize(level.title))
+        ) {
           issues.push(`${id}: wrong sequence, title or duplicate.`);
         }
         levelTitles.add(normalize(level.title));
@@ -139,31 +150,45 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
           if (promptIndex.has(questionKey)) issues.push(`${questionId}: duplicated prompt.`);
           promptIndex.add(questionKey);
           if (challenge.type === "true_false") {
-            if (typeof challenge.answer !== "boolean") issues.push(`${questionId}: missing boolean key.`);
+            if (typeof challenge.answer !== "boolean")
+              issues.push(`${questionId}: missing boolean key.`);
             if (challenge.answer === true) tfTrue++;
             else tfFalse++;
-            if (challenge.options !== undefined) issues.push(`${questionId}: true/false must not have answer options.`);
+            if (challenge.options !== undefined)
+              issues.push(`${questionId}: true/false must not have answer options.`);
           } else {
             const opts = challenge.options;
             if (
-              !opts || typeof opts !== "object" ||
+              !opts ||
+              typeof opts !== "object" ||
               Object.keys(opts).sort().join(",") !== "a,b,c" ||
               !["a", "b", "c"].includes(challenge.answer) ||
               !Object.values(opts).every((v) => cleanText(v, 12, 500)) ||
               new Set(Object.values(opts).map(normalize)).size !== 3
-            ) issues.push(`${questionId}: invalid private key or ambiguous answer options.`);
+            )
+              issues.push(`${questionId}: invalid private key or ambiguous answer options.`);
           }
         }
-        if (exerciseTypes.size !== 3) issues.push(`${id}: require three distinct evaluation formats.`);
+        if (exerciseTypes.size !== 3)
+          issues.push(`${id}: require three distinct evaluation formats.`);
       }
     }
-    if (levelTitles.size !== 24 || number !== 24) issues.push(`${slug}: must contain 24 unique levels.`);
+    if (levelTitles.size !== 24 || number !== 24)
+      issues.push(`${slug}: must contain 24 unique levels.`);
     if (tfTrue < 2 || tfFalse < 2) {
       issues.push(`${slug}: true/false assessment must test positive and negative claims.`);
     }
   }
-  if (stats.courses !== 5 || stats.modules !== 20 || stats.levels !== 120 || stats.challenges !== 360 || stats.capstones !== 5) {
-    issues.push(`Expected 5 courses, 20 modules, 120 levels, 360 exercises, 5 capstones; saw ${JSON.stringify(stats)}.`);
+  if (
+    stats.courses !== 5 ||
+    stats.modules !== 20 ||
+    stats.levels !== 120 ||
+    stats.challenges !== 360 ||
+    stats.capstones !== 5
+  ) {
+    issues.push(
+      `Expected 5 courses, 20 modules, 120 levels, 360 exercises, 5 capstones; saw ${JSON.stringify(stats)}.`,
+    );
   }
   return { issues, stats };
 }
@@ -174,6 +199,8 @@ if (process.argv[1]?.endsWith("validate-aifs-team-five-courses.mjs")) {
     for (const issue of result.issues) console.error(`AIFS FIVE-SKILL ERROR: ${issue}`);
     process.exitCode = 1;
   } else {
-    console.info("AIFS five-skill drafts validated: 5 courses, 20 modules, 120 levels, 360 keyed exercises and 5 capstones. Human review pending; PUBLIC-REPO ANSWER KEYS NOT ELIGIBLE FOR RELEASE.");
+    console.info(
+      "AIFS five-skill drafts validated: 5 courses, 20 modules, 120 levels, 360 keyed exercises and 5 capstones. Human review pending; PUBLIC-REPO ANSWER KEYS NOT ELIGIBLE FOR RELEASE.",
+    );
   }
 }
