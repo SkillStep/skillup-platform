@@ -1,0 +1,53 @@
+name: Temporary AIFS certificate QA pinned formatting
+on:
+  push:
+    branches:
+      - feat/aifs-certificate-qa-mobile-history-20261116
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'SkillStep/skillup-platform' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout QA branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: true
+          ref: feat/aifs-certificate-qa-mobile-history-20261116
+      - name: Node
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Locked formatter
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Apply pinned Biome only to this PR's source files
+        run: |
+          pnpm exec biome format --write \
+            tools/aifs-certificate-history-audit-core.mjs \
+            tools/aifs-certificate-history-audit-core.test.mjs \
+            tools/aifs-certificate-backfill-dry-run.mjs \
+            tools/aifs-certificate-smoke.mjs \
+            qa/staging-certification/tests/certificates-viewport.spec.mjs \
+            qa/staging-certification/tests/certificates-authenticated.spec.mjs \
+            qa/staging-certification/playwright.config.mjs
+      - name: Commit formatter corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            tools/aifs-certificate-history-audit-core.mjs \
+            tools/aifs-certificate-history-audit-core.test.mjs \
+            tools/aifs-certificate-backfill-dry-run.mjs \
+            tools/aifs-certificate-smoke.mjs \
+            qa/staging-certification/tests/certificates-viewport.spec.mjs \
+            qa/staging-certification/tests/certificates-authenticated.spec.mjs \
+            qa/staging-certification/playwright.config.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "style(AIFS): format certificate history and mobile QA with pinned Biome"
+            git push origin HEAD:feat/aifs-certificate-qa-mobile-history-20261116
+          fi
