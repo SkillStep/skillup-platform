@@ -89,7 +89,9 @@ test("five upcoming courses are discoverable but never playable", async ({ page,
   ];
   await page.goto("/en/skills");
   for (const title of previewTitles) {
-    const card = page.locator("article").filter({ has: page.getByRole("heading", { name: title }) });
+    const card = page
+      .locator("article")
+      .filter({ has: page.getByRole("heading", { name: title }) });
     await expect(card).toBeVisible();
     await expect(card.getByText("Coming soon")).toBeVisible();
     await expect(card.getByRole("link", { name: /Start practice/ })).toHaveCount(0);
@@ -97,7 +99,9 @@ test("five upcoming courses are discoverable but never playable", async ({ page,
   const keyword = page.getByRole("searchbox");
   await keyword.fill("phishing");
   await expect(page.getByRole("heading", { name: "Cybersecurity & Digital Safety" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Prompt Engineering & Generative AI" })).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Prompt Engineering & Generative AI" }),
+  ).toHaveCount(0);
 
   const preview = await request.get("/en/skills/upcoming/cybersecurity-digital-safety");
   expect(preview.status()).toBe(200);
