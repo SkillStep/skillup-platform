@@ -3,6 +3,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 
 import { createCertificateService } from "../apps/api/src/certificates.ts";
+import { auditCertificateHistory } from "./aifs-certificate-history-audit-core.mjs";
 
 const requireDatabase = createRequire(
   new URL("../packages/database/package.json", import.meta.url),
@@ -282,11 +283,24 @@ try {
   const eligible = await enabled.eligibility(learnerId, skill.slug);
   assert.equal(eligible.status, "eligible");
   assert.equal(eligible.completedLevels, lv.rows.length);
+  const historicalBefore = await auditCertificateHistory(db, enabled);
+  assert.equal(historicalBefore.policyCount, 1);
+  assert.equal(historicalBefore.fullCoverageProven, true);
+  assert.equal(historicalBefore.frozenAwardEvidenceAnomalies, 0);
+  assert.equal(historicalBefore.results[0].eligibleButNotIssued, 1);
+  assert.equal(historicalBefore.results[0].alreadyIssued, 0);
+  assert.equal(historicalBefore.certificationStatus, "AUDITED_NO_WRITES");
   const first = await enabled.issue(fakeLearner, skill.slug);
   assert.equal(first.status, "issued");
   assert.match(first.publicId, /^SC-[A-Za-z0-9_-]{32}$/);
   const repeated = await enabled.issue(fakeLearner, skill.slug);
   assert.equal(repeated.id, first.id);
+  const historyAfter = await auditCertificateHistory(db, enabled);
+  assert.equal(historyAfter.results[0].eligibleButNotIssued, 0);
+  assert.equal(historyAfter.results[0].alreadyIssued, 1);
+  assert.equal(historyAfter.frozenAwards.total, 1);
+  assert.equal(historyAfter.frozenAwards.issued, 1);
+  assert.equal(historyAfter.frozenAwardEvidenceAnomalies, 0);
   const list = await enabled.list(learnerId);
   assert.equal(list.length, 1);
   assert.equal(list[0].id, first.id);
