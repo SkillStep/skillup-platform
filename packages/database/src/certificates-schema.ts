@@ -122,12 +122,8 @@ export const skillCertificateEvents = pgTable(
   "skill_certificate_events",
   {
     id: bigint("id", { mode: "number" }).generatedAlwaysAsIdentity().primaryKey(),
-    awardId: uuid("award_id")
-      .notNull()
-      .references(() => skillCertificateAwards.id, { onDelete: "cascade" }),
-    actorUserId: uuid("actor_user_id")
-      .notNull()
-      .references(() => users.id, { onDelete: "restrict" }),
+    awardId: uuid("award_id").references(() => skillCertificateAwards.id, { onDelete: "set null" }),
+    actorUserId: uuid("actor_user_id").references(() => users.id, { onDelete: "set null" }),
     action: text("action").notNull(),
     reason: text("reason").notNull(),
     eventDigest: text("event_digest").notNull(),
