@@ -741,7 +741,7 @@
           "teaching": "Before using a generated answer, verify factual claims, privacy, format and suitability for the task. Worked example: A generated tourism brochure includes unconfirmed hotel prices and invented opening times. A strong response is to identify unverified claims, check official sources and correct the copy before distribution. Avoid the tempting alternatives: send it directly to print because it reads smoothly; or remove all notes about sources to save time.",
           "workedExample": "Situation: A generated tourism brochure includes unconfirmed hotel prices and invented opening times. Recommended response: Identify unverified claims, check official sources and correct the copy before distribution.",
           "commonMistake": "Send it directly to print because it reads smoothly",
-          "remediation": "Fluency is not a reliability test.",
+          "remediation": "A polished writing style is not evidence. Independently verify every factual claim against its underlying source before publication.",
           "hint": "Look for the option that follows this principle: Before using a generated answer, verify factual claims, privacy, format and suitability for the task.",
           "challenges": [
             {
@@ -770,7 +770,7 @@
               "type": "true_false",
               "prompt": "Consider this claim about \"Checkpoint: Audit an AI Answer\": A polished writing style proves the claims in a generated document are true.",
               "answer": false,
-              "feedback": "Fluency is not a reliability test."
+              "feedback": "A polished writing style is not evidence. Independently verify every factual claim against its underlying source before publication."
             }
           ]
         }
