@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "prompt-engineering-generative-ai",
+  "publicTitle": "Prompt Engineering & Generative AI",
+  "canonicalSlug": "prompt-engineering-generative-ai",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "subjectReviewedBy": null,
+  "languageReviewedBy": null,
+  "publisherId": null,
+  "publishedAt": null,
+  "sourceKind": "internal_editorial",
+  "sourceReviewRequired": true,
+  "capstoneFile": "capstones/prompt-engineering-generative-ai.md",
+  "modules": [
+    {
+      "schemaVersion": 1,
+      "courseSlug": "prompt-engineering-generative-ai",
+      "locale": "en",
+      "moduleNumber": 1,
+      "moduleTitle": "Prompt Basics and Clear Instructions",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 1,
+          "title": "Set a Goal Before Writing a Prompt",
+          "objective": "Use the principles of set a goal before writing a prompt to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "A prompt should name the task and the decision or artifact it supports, not merely name a topic. Worked example: A student needs a revision plan for three biology chapters before Friday. A strong response is to ask for a three-day revision timetable with chapter names and a self-test at the end. Avoid the tempting alternatives: write only \"biology\" and expect a useful study plan; or ask the model to guess the examination questions.",
+          "workedExample": "Situation: A student needs a revision plan for three biology chapters before Friday. Recommended response: Ask for a three-day revision timetable with chapter names and a self-test at the end.",
+          "commonMistake": "Write only \"biology\" and expect a useful study plan",
+          "remediation": "A stated output can be compared against the task's actual needs.",
+          "hint": "Look for the option that follows this principle: A prompt should name the task and the decision or artifact it supports, not merely name a topic.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Set a Goal Before Writing a Prompt\", consider this specific situation: A student needs a revision plan for three biology chapters before Friday. Which response best meets the task?",
+              "options": {
+                "a": "Ask for a three-day revision timetable with chapter names and a self-test at the end",
+                "b": "Write only \"biology\" and expect a useful study plan",
+                "c": "Ask the model to guess the examination questions"
+              },
+              "answer": "a",
+              "feedback": "A prompt should name the task and the decision or artifact it supports, not merely name a topic. In this case, ask for a three-day revision timetable with chapter names and a self-test at the end."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Set a Goal Before Writing a Prompt\" skill to another setting: a shop owner requesting a product-description draft for a named item. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Ask the model to guess the examination questions",
+                "b": "Write only \"biology\" and expect a useful study plan",
+                "c": "Ask for a three-day revision timetable with chapter names and a self-test at the end"
+              },
+              "answer": "c",
+              "feedback": "A prompt should name the task and the decision or artifact it supports, not merely name a topic. The strongest action is to ask for a three-day revision timetable with chapter names and a self-test at the end."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Set a Goal Before Writing a Prompt\": A prompt that names a concrete deliverable is easier to evaluate than a one-word topic.",
+              "answer": true,
+              "feedback": "A stated output can be compared against the task's actual needs."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "Identify the Intended Audience",
+          "objective": "Use the principles of identify the intended audience to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Vocabulary and examples should match the reader's experience, language and purpose. Worked example: A student is preparing an explanation for classmates who have never studied accounting. A strong response is to request an introductory explanation with a simple shop example and definitions for new terms. Avoid the tempting alternatives: use advanced jargon without explaining it; or assume every reader has the same background.",
+          "workedExample": "Situation: A student is preparing an explanation for classmates who have never studied accounting. Recommended response: Request an introductory explanation with a simple shop example and definitions for new terms.",
+          "commonMistake": "Use advanced jargon without explaining it",
+          "remediation": "Unexplained terms make the result less useful for its intended readers.",
+          "hint": "Look for the option that follows this principle: Vocabulary and examples should match the reader's experience, language and purpose.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Identify the Intended Audience\", consider this specific situation: A student is preparing an explanation for classmates who have never studied accounting. Which response best meets the task?",
+              "options": {
+                "a": "Use advanced jargon without explaining it",
+                "b": "Assume every reader has the same background",
+                "c": "Request an introductory explanation with a simple shop example and definitions for new terms"
+              },
+              "answer": "c",
+              "feedback": "Vocabulary and examples should match the reader's experience, language and purpose. In this case, request an introductory explanation with a simple shop example and definitions for new terms."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Identify the Intended Audience\" skill to another setting: an NGO drafting guidance for first-time volunteers. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Use advanced jargon without explaining it",
+                "b": "Request an introductory explanation with a simple shop example and definitions for new terms",
+                "c": "Assume every reader has the same background"
+              },
+              "answer": "b",
+              "feedback": "Vocabulary and examples should match the reader's experience, language and purpose. The strongest action is to request an introductory explanation with a simple shop example and definitions for new terms."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Identify the Intended Audience\": A message for beginners should deliberately include unexplained specialist terms.",
+              "answer": false,
+              "feedback": "Unexplained terms make the result less useful for its intended readers."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "title": "Supply Relevant Source Material",
+          "objective": "Use the principles of supply relevant source material to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Provide permitted facts or a short source excerpt when accuracy depends on particular information. Worked example: A learner wants to summarize her own original notes on water conservation. A strong response is to paste a non-sensitive excerpt and request a summary restricted to those notes. Avoid the tempting alternatives: ask the system to invent facts omitted from the notes; or upload an unrelated private classmate's records.",
+          "workedExample": "Situation: A learner wants to summarize her own original notes on water conservation. Recommended response: Paste a non-sensitive excerpt and request a summary restricted to those notes.",
+          "commonMistake": "Ask the system to invent facts omitted from the notes",
+          "remediation": "Source-bounded summaries reduce unsupported additions.",
+          "hint": "Look for the option that follows this principle: Provide permitted facts or a short source excerpt when accuracy depends on particular information.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Supply Relevant Source Material\", consider this specific situation: A learner wants to summarize her own original notes on water conservation. Which response best meets the task?",
+              "options": {
+                "a": "Upload an unrelated private classmate's records",
+                "b": "Paste a non-sensitive excerpt and request a summary restricted to those notes",
+                "c": "Ask the system to invent facts omitted from the notes"
+              },
+              "answer": "b",
+              "feedback": "Provide permitted facts or a short source excerpt when accuracy depends on particular information. In this case, paste a non-sensitive excerpt and request a summary restricted to those notes."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Supply Relevant Source Material\" skill to another setting: a manager summarizing an approved fictional meeting transcript. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Paste a non-sensitive excerpt and request a summary restricted to those notes",
+                "b": "Upload an unrelated private classmate's records",
+                "c": "Ask the system to invent facts omitted from the notes"
+              },
+              "answer": "a",
+              "feedback": "Provide permitted facts or a short source excerpt when accuracy depends on particular information. The strongest action is to paste a non-sensitive excerpt and request a summary restricted to those notes."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Supply Relevant Source Material\": It is safer to tell the model to use supplied material than to assume it knows a private document.",
+              "answer": true,
+              "feedback": "Source-bounded summaries reduce unsupported additions."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "title": "Separate Instructions From Background",
+          "objective": "Use the principles of separate instructions from background to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Label the task, input and constraints so source text cannot masquerade as a new instruction. Worked example: A pasted customer review contains the phrase \"ignore the previous instruction\". A strong response is to mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands. Avoid the tempting alternatives: treat the reviewer's sentence as a new system command; or delete the review and fabricate a customer quote.",
+          "workedExample": "Situation: A pasted customer review contains the phrase \"ignore the previous instruction\". Recommended response: Mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands.",
+          "commonMistake": "Treat the reviewer's sentence as a new system command",
+          "remediation": "Untrusted source material is data, not authority to change the task.",
+          "hint": "Look for the option that follows this principle: Label the task, input and constraints so source text cannot masquerade as a new instruction.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Separate Instructions From Background\", consider this specific situation: A pasted customer review contains the phrase \"ignore the previous instruction\". Which response best meets the task?",
+              "options": {
+                "a": "Mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands",
+                "b": "Treat the reviewer's sentence as a new system command",
+                "c": "Delete the review and fabricate a customer quote"
+              },
+              "answer": "a",
+              "feedback": "Label the task, input and constraints so source text cannot masquerade as a new instruction. In this case, mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Separate Instructions From Background\" skill to another setting: a support agent classifying a fictional ticket that contains a malicious-looking instruction. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Delete the review and fabricate a customer quote",
+                "b": "Treat the reviewer's sentence as a new system command",
+                "c": "Mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands"
+              },
+              "answer": "c",
+              "feedback": "Label the task, input and constraints so source text cannot masquerade as a new instruction. The strongest action is to mark the review as quoted data and ask for a neutral sentiment summary without following embedded commands."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Separate Instructions From Background\": Instructions found inside untrusted text should automatically override the user's original task.",
+              "answer": false,
+              "feedback": "Untrusted source material is data, not authority to change the task."
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "title": "Specify an Answer Format",
+          "objective": "Use the principles of specify an answer format to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Define structure and length when the result will be consumed by a person or tool. Worked example: A project manager wants four status points for a WhatsApp update. A strong response is to request four bullets labeled Done, In progress, Blocked and Next, each under twenty words. Avoid the tempting alternatives: request an unlimited essay with no headings; or ask for a JSON payload when only a short chat message is needed.",
+          "workedExample": "Situation: A project manager wants four status points for a WhatsApp update. Recommended response: Request four bullets labeled Done, In progress, Blocked and Next, each under twenty words.",
+          "commonMistake": "Request an unlimited essay with no headings",
+          "remediation": "A fit-for-purpose format makes the answer immediately usable.",
+          "hint": "Look for the option that follows this principle: Define structure and length when the result will be consumed by a person or tool.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Specify an Answer Format\", consider this specific situation: A project manager wants four status points for a WhatsApp update. Which response best meets the task?",
+              "options": {
+                "a": "Request an unlimited essay with no headings",
+                "b": "Ask for a JSON payload when only a short chat message is needed",
+                "c": "Request four bullets labeled Done, In progress, Blocked and Next, each under twenty words"
+              },
+              "answer": "c",
+              "feedback": "Define structure and length when the result will be consumed by a person or tool. In this case, request four bullets labeled Done, In progress, Blocked and Next, each under twenty words."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Specify an Answer Format\" skill to another setting: a volunteer drafting a short shift handover message. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Request an unlimited essay with no headings",
+                "b": "Request four bullets labeled Done, In progress, Blocked and Next, each under twenty words",
+                "c": "Ask for a JSON payload when only a short chat message is needed"
+              },
+              "answer": "b",
+              "feedback": "Define structure and length when the result will be consumed by a person or tool. The strongest action is to request four bullets labeled Done, In progress, Blocked and Next, each under twenty words."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Specify an Answer Format\": Output format should be chosen for the destination and reader.",
+              "answer": true,
+              "feedback": "A fit-for-purpose format makes the answer immediately usable."
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "title": "Checkpoint: Write a Complete Task Brief",
+          "objective": "Use the principles of checkpoint: write a complete task brief to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "A strong task brief combines goal, audience, allowed inputs, boundaries and output acceptance checks. Worked example: A fictional bakery needs a two-line promotional caption for new bread without price claims. A strong response is to state the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers. Avoid the tempting alternatives: request a viral caption with invented discounts; or give the model only the shop's name.",
+          "workedExample": "Situation: A fictional bakery needs a two-line promotional caption for new bread without price claims. Recommended response: State the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers.",
+          "commonMistake": "Request a viral caption with invented discounts",
+          "remediation": "Checking length, claims and accuracy is part of the brief.",
+          "hint": "Look for the option that follows this principle: A strong task brief combines goal, audience, allowed inputs, boundaries and output acceptance checks.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Checkpoint: Write a Complete Task Brief\", consider this specific situation: A fictional bakery needs a two-line promotional caption for new bread without price claims. Which response best meets the task?",
+              "options": {
+                "a": "Give the model only the shop's name",
+                "b": "State the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers",
+                "c": "Request a viral caption with invented discounts"
+              },
+              "answer": "b",
+              "feedback": "A strong task brief combines goal, audience, allowed inputs, boundaries and output acceptance checks. In this case, state the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Checkpoint: Write a Complete Task Brief\" skill to another setting: a student preparing a clean summary of an approved public article. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "State the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers",
+                "b": "Give the model only the shop's name",
+                "c": "Request a viral caption with invented discounts"
+              },
+              "answer": "a",
+              "feedback": "A strong task brief combines goal, audience, allowed inputs, boundaries and output acceptance checks. The strongest action is to state the audience, new bread facts, two-line limit, warm tone and prohibition on unverified offers."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Checkpoint: Write a Complete Task Brief\": A good prompt can omit acceptance criteria because any generated result is automatically fit for publication.",
+              "answer": false,
+              "feedback": "Checking length, claims and accuracy is part of the brief."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "prompt-engineering-generative-ai",
+      "locale": "en",
+      "moduleNumber": 2,
+      "moduleTitle": "Context, Constraints and Iteration",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 7,
+          "title": "Prioritize Constraints",
+          "objective": "Use the principles of prioritize constraints to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Constraints should express what must be included, what must be excluded and what to do when input is missing. Worked example: A CV assistant is asked to rewrite an experience section without inventing employment dates. A strong response is to require preserving supplied facts and flag missing dates rather than guessing. Avoid the tempting alternatives: add plausible jobs and dates to make the CV attractive; or ignore the candidate's existing achievements.",
+          "workedExample": "Situation: A CV assistant is asked to rewrite an experience section without inventing employment dates. Recommended response: Require preserving supplied facts and flag missing dates rather than guessing.",
+          "commonMistake": "Add plausible jobs and dates to make the CV attractive",
+          "remediation": "Explicit missing-data behavior prevents fabricated claims.",
+          "hint": "Look for the option that follows this principle: Constraints should express what must be included, what must be excluded and what to do when input is missing.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Prioritize Constraints\", consider this specific situation: A CV assistant is asked to rewrite an experience section without inventing employment dates. Which response best meets the task?",
+              "options": {
+                "a": "Require preserving supplied facts and flag missing dates rather than guessing",
+                "b": "Add plausible jobs and dates to make the CV attractive",
+                "c": "Ignore the candidate's existing achievements"
+              },
+              "answer": "a",
+              "feedback": "Constraints should express what must be included, what must be excluded and what to do when input is missing. In this case, require preserving supplied facts and flag missing dates rather than guessing."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Prioritize Constraints\" skill to another setting: a recruiter drafting a job summary from an authorized role description. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Ignore the candidate's existing achievements",
+                "b": "Add plausible jobs and dates to make the CV attractive",
+                "c": "Require preserving supplied facts and flag missing dates rather than guessing"
+              },
+              "answer": "c",
+              "feedback": "Constraints should express what must be included, what must be excluded and what to do when input is missing. The strongest action is to require preserving supplied facts and flag missing dates rather than guessing."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Prioritize Constraints\": When facts are absent, instructing the model to say \"not provided\" is preferable to invention.",
+              "answer": true,
+              "feedback": "Explicit missing-data behavior prevents fabricated claims."
+            }
+          ]
+        },
+        {
+          "number": 8,
+          "title": "Choose Helpful Examples",
+          "objective": "Use the principles of choose helpful examples to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "One short input-output example can clarify the intended style and level of detail. Worked example: A team wants ticket summaries such as \"Issue; impact; next action\". A strong response is to show a fictional ticket and a correctly formatted three-field summary. Avoid the tempting alternatives: provide an unrelated poem as the only example; or show private real customer details in the example.",
+          "workedExample": "Situation: A team wants ticket summaries such as \"Issue; impact; next action\". Recommended response: Show a fictional ticket and a correctly formatted three-field summary.",
+          "commonMistake": "Provide an unrelated poem as the only example",
+          "remediation": "Synthetic examples demonstrate format without exposing personal information.",
+          "hint": "Look for the option that follows this principle: One short input-output example can clarify the intended style and level of detail.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Choose Helpful Examples\", consider this specific situation: A team wants ticket summaries such as \"Issue; impact; next action\". Which response best meets the task?",
+              "options": {
+                "a": "Provide an unrelated poem as the only example",
+                "b": "Show private real customer details in the example",
+                "c": "Show a fictional ticket and a correctly formatted three-field summary"
+              },
+              "answer": "c",
+              "feedback": "One short input-output example can clarify the intended style and level of detail. In this case, show a fictional ticket and a correctly formatted three-field summary."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Choose Helpful Examples\" skill to another setting: a school office standardizing parent enquiry summaries. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Provide an unrelated poem as the only example",
+                "b": "Show a fictional ticket and a correctly formatted three-field summary",
+                "c": "Show private real customer details in the example"
+              },
+              "answer": "b",
+              "feedback": "One short input-output example can clarify the intended style and level of detail. The strongest action is to show a fictional ticket and a correctly formatted three-field summary."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Choose Helpful Examples\": An example should use private identifiable customer data to be realistic.",
+              "answer": false,
+              "feedback": "Synthetic examples demonstrate format without exposing personal information."
+            }
+          ]
+        },
+        {
+          "number": 9,
+          "title": "Control Tone Without Changing Facts",
+          "objective": "Use the principles of control tone without changing facts to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Style instructions can change phrasing, but must not change the underlying evidence or promise. Worked example: A refund policy states seven calendar days and the team wants friendlier wording. A strong response is to ask for a warm tone while preserving the seven-day policy and every exception. Avoid the tempting alternatives: change seven days to thirty days to sound kinder; or remove all exceptions without permission.",
+          "workedExample": "Situation: A refund policy states seven calendar days and the team wants friendlier wording. Recommended response: Ask for a warm tone while preserving the seven-day policy and every exception.",
+          "commonMistake": "Change seven days to thirty days to sound kinder",
+          "remediation": "Stylistic revision must preserve substantive meaning.",
+          "hint": "Look for the option that follows this principle: Style instructions can change phrasing, but must not change the underlying evidence or promise.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Control Tone Without Changing Facts\", consider this specific situation: A refund policy states seven calendar days and the team wants friendlier wording. Which response best meets the task?",
+              "options": {
+                "a": "Remove all exceptions without permission",
+                "b": "Ask for a warm tone while preserving the seven-day policy and every exception",
+                "c": "Change seven days to thirty days to sound kinder"
+              },
+              "answer": "b",
+              "feedback": "Style instructions can change phrasing, but must not change the underlying evidence or promise. In this case, ask for a warm tone while preserving the seven-day policy and every exception."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Control Tone Without Changing Facts\" skill to another setting: a clinic rewriting general appointment instructions in plain language. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Ask for a warm tone while preserving the seven-day policy and every exception",
+                "b": "Remove all exceptions without permission",
+                "c": "Change seven days to thirty days to sound kinder"
+              },
+              "answer": "a",
+              "feedback": "Style instructions can change phrasing, but must not change the underlying evidence or promise. The strongest action is to ask for a warm tone while preserving the seven-day policy and every exception."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Control Tone Without Changing Facts\": Tone editing should never silently alter a policy deadline.",
+              "answer": true,
+              "feedback": "Stylistic revision must preserve substantive meaning."
+            }
+          ]
+        },
+        {
+          "number": 10,
+          "title": "Break Large Tasks Into Parts",
+          "objective": "Use the principles of break large tasks into parts to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "For complex requests, isolate planning, drafting and verification stages, with checkpoints between them. Worked example: A freelancer must turn meeting notes into a project proposal. A strong response is to extract confirmed requirements first, then draft scope, then verify exclusions against the notes. Avoid the tempting alternatives: ask for a final contract immediately without reviewing assumptions; or let the model invent the client's budget.",
+          "workedExample": "Situation: A freelancer must turn meeting notes into a project proposal. Recommended response: Extract confirmed requirements first, then draft scope, then verify exclusions against the notes.",
+          "commonMistake": "Ask for a final contract immediately without reviewing assumptions",
+          "remediation": "Decomposition improves review opportunities but does not replace checking.",
+          "hint": "Look for the option that follows this principle: For complex requests, isolate planning, drafting and verification stages, with checkpoints between them.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Break Large Tasks Into Parts\", consider this specific situation: A freelancer must turn meeting notes into a project proposal. Which response best meets the task?",
+              "options": {
+                "a": "Extract confirmed requirements first, then draft scope, then verify exclusions against the notes",
+                "b": "Ask for a final contract immediately without reviewing assumptions",
+                "c": "Let the model invent the client's budget"
+              },
+              "answer": "a",
+              "feedback": "For complex requests, isolate planning, drafting and verification stages, with checkpoints between them. In this case, extract confirmed requirements first, then draft scope, then verify exclusions against the notes."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Break Large Tasks Into Parts\" skill to another setting: an operations team creating a recurring weekly report. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Let the model invent the client's budget",
+                "b": "Ask for a final contract immediately without reviewing assumptions",
+                "c": "Extract confirmed requirements first, then draft scope, then verify exclusions against the notes"
+              },
+              "answer": "c",
+              "feedback": "For complex requests, isolate planning, drafting and verification stages, with checkpoints between them. The strongest action is to extract confirmed requirements first, then draft scope, then verify exclusions against the notes."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Break Large Tasks Into Parts\": Splitting work into stages always guarantees a correct final answer.",
+              "answer": false,
+              "feedback": "Decomposition improves review opportunities but does not replace checking."
+            }
+          ]
+        },
+        {
+          "number": 11,
+          "title": "Ask for Clarifying Assumptions",
+          "objective": "Use the principles of ask for clarifying assumptions to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "When key information is absent, require explicit assumptions or a question instead of confident guessing. Worked example: A client requests an advertisement without supplying platform or target audience. A strong response is to ask what channel and audience to use, or label any tentative assumption before drafting. Avoid the tempting alternatives: invent demographics and claim they were approved; or assume a high-spend media budget without evidence.",
+          "workedExample": "Situation: A client requests an advertisement without supplying platform or target audience. Recommended response: Ask what channel and audience to use, or label any tentative assumption before drafting.",
+          "commonMistake": "Invent demographics and claim they were approved",
+          "remediation": "Clearly marked uncertainty is safer than invented business facts.",
+          "hint": "Look for the option that follows this principle: When key information is absent, require explicit assumptions or a question instead of confident guessing.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Ask for Clarifying Assumptions\", consider this specific situation: A client requests an advertisement without supplying platform or target audience. Which response best meets the task?",
+              "options": {
+                "a": "Invent demographics and claim they were approved",
+                "b": "Assume a high-spend media budget without evidence",
+                "c": "Ask what channel and audience to use, or label any tentative assumption before drafting"
+              },
+              "answer": "c",
+              "feedback": "When key information is absent, require explicit assumptions or a question instead of confident guessing. In this case, ask what channel and audience to use, or label any tentative assumption before drafting."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Ask for Clarifying Assumptions\" skill to another setting: a shop owner developing a product FAQ with missing warranty terms. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Invent demographics and claim they were approved",
+                "b": "Ask what channel and audience to use, or label any tentative assumption before drafting",
+                "c": "Assume a high-spend media budget without evidence"
+              },
+              "answer": "b",
+              "feedback": "When key information is absent, require explicit assumptions or a question instead of confident guessing. The strongest action is to ask what channel and audience to use, or label any tentative assumption before drafting."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Ask for Clarifying Assumptions\": A prompt can require unresolved claims to be marked for confirmation.",
+              "answer": true,
+              "feedback": "Clearly marked uncertainty is safer than invented business facts."
+            }
+          ]
+        },
+        {
+          "number": 12,
+          "title": "Checkpoint: Improve a Weak Prompt",
+          "objective": "Use the principles of checkpoint: improve a weak prompt to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Improve a generic request by adding real context, constraints, acceptance criteria and a checking step. Worked example: A learner writes \"make a business plan\" for a fictional tutoring service. A strong response is to specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions. Avoid the tempting alternatives: keep the vague prompt and accept unsupported numbers; or ask for guaranteed monthly profits.",
+          "workedExample": "Situation: A learner writes \"make a business plan\" for a fictional tutoring service. Recommended response: Specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions.",
+          "commonMistake": "Keep the vague prompt and accept unsupported numbers",
+          "remediation": "Specificity improves relevance but cannot guarantee factual accuracy.",
+          "hint": "Look for the option that follows this principle: Improve a generic request by adding real context, constraints, acceptance criteria and a checking step.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Checkpoint: Improve a Weak Prompt\", consider this specific situation: A learner writes \"make a business plan\" for a fictional tutoring service. Which response best meets the task?",
+              "options": {
+                "a": "Ask for guaranteed monthly profits",
+                "b": "Specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions",
+                "c": "Keep the vague prompt and accept unsupported numbers"
+              },
+              "answer": "b",
+              "feedback": "Improve a generic request by adding real context, constraints, acceptance criteria and a checking step. In this case, specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Checkpoint: Improve a Weak Prompt\" skill to another setting: a local creator revising a prompt for five original reel concepts. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions",
+                "b": "Ask for guaranteed monthly profits",
+                "c": "Keep the vague prompt and accept unsupported numbers"
+              },
+              "answer": "a",
+              "feedback": "Improve a generic request by adding real context, constraints, acceptance criteria and a checking step. The strongest action is to specify tutoring audience, service scope, known costs, a one-page format and a list of assumptions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Checkpoint: Improve a Weak Prompt\": Adding detailed context removes the need for human fact-checking.",
+              "answer": false,
+              "feedback": "Specificity improves relevance but cannot guarantee factual accuracy."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "prompt-engineering-generative-ai",
+      "locale": "en",
+      "moduleNumber": 3,
+      "moduleTitle": "Output Evaluation and Fact-Checking",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 13,
+          "title": "Recognize Hallucinated References",
+          "objective": "Use the principles of recognize hallucinated references to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Generated citations, names or URLs must be checked against sources before reuse. Worked example: A response provides a study with an impressive journal title but no verifiable DOI. A strong response is to mark the citation unverified and locate the real publication through an authoritative index. Avoid the tempting alternatives: publish the reference because it sounds academic; or invent a DOI that matches the journal style.",
+          "workedExample": "Situation: A response provides a study with an impressive journal title but no verifiable DOI. Recommended response: Mark the citation unverified and locate the real publication through an authoritative index.",
+          "commonMistake": "Publish the reference because it sounds academic",
+          "remediation": "References need independent verification.",
+          "hint": "Look for the option that follows this principle: Generated citations, names or URLs must be checked against sources before reuse.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Recognize Hallucinated References\", consider this specific situation: A response provides a study with an impressive journal title but no verifiable DOI. Which response best meets the task?",
+              "options": {
+                "a": "Mark the citation unverified and locate the real publication through an authoritative index",
+                "b": "Publish the reference because it sounds academic",
+                "c": "Invent a DOI that matches the journal style"
+              },
+              "answer": "a",
+              "feedback": "Generated citations, names or URLs must be checked against sources before reuse. In this case, mark the citation unverified and locate the real publication through an authoritative index."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Recognize Hallucinated References\" skill to another setting: a consultant verifying statistics in a market summary. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Invent a DOI that matches the journal style",
+                "b": "Publish the reference because it sounds academic",
+                "c": "Mark the citation unverified and locate the real publication through an authoritative index"
+              },
+              "answer": "c",
+              "feedback": "Generated citations, names or URLs must be checked against sources before reuse. The strongest action is to mark the citation unverified and locate the real publication through an authoritative index."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Recognize Hallucinated References\": A plausible-looking citation is not itself evidence that a source exists.",
+              "answer": true,
+              "feedback": "References need independent verification."
+            }
+          ]
+        },
+        {
+          "number": 14,
+          "title": "Check Numeric Results Independently",
+          "objective": "Use the principles of check numeric results independently to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Use a separate calculation or spreadsheet to verify figures that affect a decision. Worked example: An AI estimates margin from PKR 10,000 revenue and PKR 7,000 costs. A strong response is to calculate (10000 minus 7000) divided by 10000 equals 30 percent independently. Avoid the tempting alternatives: assume any percentage in fluent prose is correct; or round expenses down without documenting it.",
+          "workedExample": "Situation: An AI estimates margin from PKR 10,000 revenue and PKR 7,000 costs. Recommended response: Calculate (10000 minus 7000) divided by 10000 equals 30 percent independently.",
+          "commonMistake": "Assume any percentage in fluent prose is correct",
+          "remediation": "Numerical outputs can be mistaken even when the explanation sounds certain.",
+          "hint": "Look for the option that follows this principle: Use a separate calculation or spreadsheet to verify figures that affect a decision.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Check Numeric Results Independently\", consider this specific situation: An AI estimates margin from PKR 10,000 revenue and PKR 7,000 costs. Which response best meets the task?",
+              "options": {
+                "a": "Assume any percentage in fluent prose is correct",
+                "b": "Round expenses down without documenting it",
+                "c": "Calculate (10000 minus 7000) divided by 10000 equals 30 percent independently"
+              },
+              "answer": "c",
+              "feedback": "Use a separate calculation or spreadsheet to verify figures that affect a decision. In this case, calculate (10000 minus 7000) divided by 10000 equals 30 percent independently."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Check Numeric Results Independently\" skill to another setting: a retail team checking a discount calculation before a campaign. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Assume any percentage in fluent prose is correct",
+                "b": "Calculate (10000 minus 7000) divided by 10000 equals 30 percent independently",
+                "c": "Round expenses down without documenting it"
+              },
+              "answer": "b",
+              "feedback": "Use a separate calculation or spreadsheet to verify figures that affect a decision. The strongest action is to calculate (10000 minus 7000) divided by 10000 equals 30 percent independently."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Check Numeric Results Independently\": A model's confidently stated arithmetic needs no independent verification.",
+              "answer": false,
+              "feedback": "Numerical outputs can be mistaken even when the explanation sounds certain."
+            }
+          ]
+        },
+        {
+          "number": 15,
+          "title": "Distinguish Facts From Suggestions",
+          "objective": "Use the principles of distinguish facts from suggestions to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Classify statements as supplied facts, reasonable options or unverified predictions. Worked example: A model says a new product will double sales next month without data. A strong response is to label it as an unsupported prediction and request evidence or scenario assumptions. Avoid the tempting alternatives: describe doubled sales as confirmed; or delete uncertainty while retaining the claim.",
+          "workedExample": "Situation: A model says a new product will double sales next month without data. Recommended response: Label it as an unsupported prediction and request evidence or scenario assumptions.",
+          "commonMistake": "Describe doubled sales as confirmed",
+          "remediation": "Suggestions must not be misrepresented as measured outcomes.",
+          "hint": "Look for the option that follows this principle: Classify statements as supplied facts, reasonable options or unverified predictions.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Distinguish Facts From Suggestions\", consider this specific situation: A model says a new product will double sales next month without data. Which response best meets the task?",
+              "options": {
+                "a": "Delete uncertainty while retaining the claim",
+                "b": "Label it as an unsupported prediction and request evidence or scenario assumptions",
+                "c": "Describe doubled sales as confirmed"
+              },
+              "answer": "b",
+              "feedback": "Classify statements as supplied facts, reasonable options or unverified predictions. In this case, label it as an unsupported prediction and request evidence or scenario assumptions."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Distinguish Facts From Suggestions\" skill to another setting: a team reviewing suggested customer acquisition tactics. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Label it as an unsupported prediction and request evidence or scenario assumptions",
+                "b": "Delete uncertainty while retaining the claim",
+                "c": "Describe doubled sales as confirmed"
+              },
+              "answer": "a",
+              "feedback": "Classify statements as supplied facts, reasonable options or unverified predictions. The strongest action is to label it as an unsupported prediction and request evidence or scenario assumptions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Distinguish Facts From Suggestions\": A recommendation can be useful while still being uncertain.",
+              "answer": true,
+              "feedback": "Suggestions must not be misrepresented as measured outcomes."
+            }
+          ]
+        },
+        {
+          "number": 16,
+          "title": "Verify Dates and Current Policies",
+          "objective": "Use the principles of verify dates and current policies to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Time-sensitive information should be checked against a dated official source before publication. Worked example: A generated message states an application deadline that might have changed. A strong response is to verify the deadline on the responsible organization's official page and record the checked date. Avoid the tempting alternatives: assume last year's deadline still applies; or use a social rumor without any cross-check.",
+          "workedExample": "Situation: A generated message states an application deadline that might have changed. Recommended response: Verify the deadline on the responsible organization's official page and record the checked date.",
+          "commonMistake": "Assume last year's deadline still applies",
+          "remediation": "Time-sensitive information can change and should be rechecked.",
+          "hint": "Look for the option that follows this principle: Time-sensitive information should be checked against a dated official source before publication.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Verify Dates and Current Policies\", consider this specific situation: A generated message states an application deadline that might have changed. Which response best meets the task?",
+              "options": {
+                "a": "Verify the deadline on the responsible organization's official page and record the checked date",
+                "b": "Assume last year's deadline still applies",
+                "c": "Use a social rumor without any cross-check"
+              },
+              "answer": "a",
+              "feedback": "Time-sensitive information should be checked against a dated official source before publication. In this case, verify the deadline on the responsible organization's official page and record the checked date."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Verify Dates and Current Policies\" skill to another setting: a learner reviewing current university registration requirements. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Use a social rumor without any cross-check",
+                "b": "Assume last year's deadline still applies",
+                "c": "Verify the deadline on the responsible organization's official page and record the checked date"
+              },
+              "answer": "c",
+              "feedback": "Time-sensitive information should be checked against a dated official source before publication. The strongest action is to verify the deadline on the responsible organization's official page and record the checked date."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Verify Dates and Current Policies\": Cached model knowledge always reflects today's official deadlines.",
+              "answer": false,
+              "feedback": "Time-sensitive information can change and should be rechecked."
+            }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Protect Confidential Inputs",
+          "objective": "Use the principles of protect confidential inputs to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Share only information authorized for the tool and minimize identifiable or sensitive details. Worked example: A freelancer wants feedback on a client invoice containing phone numbers and bank details. A strong response is to replace identifiers with fictional values and use only non-sensitive invoice fields. Avoid the tempting alternatives: paste the full invoice into an unapproved public tool; or include a customer's account credentials to improve context.",
+          "workedExample": "Situation: A freelancer wants feedback on a client invoice containing phone numbers and bank details. Recommended response: Replace identifiers with fictional values and use only non-sensitive invoice fields.",
+          "commonMistake": "Paste the full invoice into an unapproved public tool",
+          "remediation": "Use a synthetic or minimized record instead of exposing confidential data.",
+          "hint": "Look for the option that follows this principle: Share only information authorized for the tool and minimize identifiable or sensitive details.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Protect Confidential Inputs\", consider this specific situation: A freelancer wants feedback on a client invoice containing phone numbers and bank details. Which response best meets the task?",
+              "options": {
+                "a": "Paste the full invoice into an unapproved public tool",
+                "b": "Include a customer's account credentials to improve context",
+                "c": "Replace identifiers with fictional values and use only non-sensitive invoice fields"
+              },
+              "answer": "c",
+              "feedback": "Share only information authorized for the tool and minimize identifiable or sensitive details. In this case, replace identifiers with fictional values and use only non-sensitive invoice fields."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Protect Confidential Inputs\" skill to another setting: a teacher assessing a sample grade-report format. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Paste the full invoice into an unapproved public tool",
+                "b": "Replace identifiers with fictional values and use only non-sensitive invoice fields",
+                "c": "Include a customer's account credentials to improve context"
+              },
+              "answer": "b",
+              "feedback": "Share only information authorized for the tool and minimize identifiable or sensitive details. The strongest action is to replace identifiers with fictional values and use only non-sensitive invoice fields."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Protect Confidential Inputs\": Anonymization can reduce unnecessary exposure when an example does not need real identities.",
+              "answer": true,
+              "feedback": "Use a synthetic or minimized record instead of exposing confidential data."
+            }
+          ]
+        },
+        {
+          "number": 18,
+          "title": "Checkpoint: Audit an AI Answer",
+          "objective": "Use the principles of checkpoint: audit an ai answer to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Before using a generated answer, verify factual claims, privacy, format and suitability for the task. Worked example: A generated tourism brochure includes unconfirmed hotel prices and invented opening times. A strong response is to identify unverified claims, check official sources and correct the copy before distribution. Avoid the tempting alternatives: send it directly to print because it reads smoothly; or remove all notes about sources to save time.",
+          "workedExample": "Situation: A generated tourism brochure includes unconfirmed hotel prices and invented opening times. Recommended response: Identify unverified claims, check official sources and correct the copy before distribution.",
+          "commonMistake": "Send it directly to print because it reads smoothly",
+          "remediation": "Fluency is not a reliability test.",
+          "hint": "Look for the option that follows this principle: Before using a generated answer, verify factual claims, privacy, format and suitability for the task.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Checkpoint: Audit an AI Answer\", consider this specific situation: A generated tourism brochure includes unconfirmed hotel prices and invented opening times. Which response best meets the task?",
+              "options": {
+                "a": "Remove all notes about sources to save time",
+                "b": "Identify unverified claims, check official sources and correct the copy before distribution",
+                "c": "Send it directly to print because it reads smoothly"
+              },
+              "answer": "b",
+              "feedback": "Before using a generated answer, verify factual claims, privacy, format and suitability for the task. In this case, identify unverified claims, check official sources and correct the copy before distribution."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Checkpoint: Audit an AI Answer\" skill to another setting: a startup auditing an AI-written client proposal. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Identify unverified claims, check official sources and correct the copy before distribution",
+                "b": "Remove all notes about sources to save time",
+                "c": "Send it directly to print because it reads smoothly"
+              },
+              "answer": "a",
+              "feedback": "Before using a generated answer, verify factual claims, privacy, format and suitability for the task. The strongest action is to identify unverified claims, check official sources and correct the copy before distribution."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Checkpoint: Audit an AI Answer\": A polished writing style proves the claims in a generated document are true.",
+              "answer": false,
+              "feedback": "Fluency is not a reliability test."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "prompt-engineering-generative-ai",
+      "locale": "en",
+      "moduleNumber": 4,
+      "moduleTitle": "Reusable Prompt Toolkit Capstone",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 19,
+          "title": "Build Reusable Prompt Variables",
+          "objective": "Use the principles of build reusable prompt variables to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "A template should make variable fields explicit and avoid mixing instructions with private data. Worked example: A team writes similar service replies for different fictional products. A strong response is to use placeholders for product, issue, policy excerpt and desired tone. Avoid the tempting alternatives: hardcode one real customer's email in every template; or require the model to infer missing refund terms.",
+          "workedExample": "Situation: A team writes similar service replies for different fictional products. Recommended response: Use placeholders for product, issue, policy excerpt and desired tone.",
+          "commonMistake": "Hardcode one real customer's email in every template",
+          "remediation": "Explicit variables clarify which information changes each run.",
+          "hint": "Look for the option that follows this principle: A template should make variable fields explicit and avoid mixing instructions with private data.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Build Reusable Prompt Variables\", consider this specific situation: A team writes similar service replies for different fictional products. Which response best meets the task?",
+              "options": {
+                "a": "Use placeholders for product, issue, policy excerpt and desired tone",
+                "b": "Hardcode one real customer's email in every template",
+                "c": "Require the model to infer missing refund terms"
+              },
+              "answer": "a",
+              "feedback": "A template should make variable fields explicit and avoid mixing instructions with private data. In this case, use placeholders for product, issue, policy excerpt and desired tone."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Build Reusable Prompt Variables\" skill to another setting: a sales assistant using an approved FAQ template across products. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Require the model to infer missing refund terms",
+                "b": "Hardcode one real customer's email in every template",
+                "c": "Use placeholders for product, issue, policy excerpt and desired tone"
+              },
+              "answer": "c",
+              "feedback": "A template should make variable fields explicit and avoid mixing instructions with private data. The strongest action is to use placeholders for product, issue, policy excerpt and desired tone."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Build Reusable Prompt Variables\": Named placeholders help make repeatable prompts easier to inspect and reuse.",
+              "answer": true,
+              "feedback": "Explicit variables clarify which information changes each run."
+            }
+          ]
+        },
+        {
+          "number": 20,
+          "title": "Design a Verification Checklist",
+          "objective": "Use the principles of design a verification checklist to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Choose observable checks for accuracy, safety and formatting rather than judging whether text feels good. Worked example: A weekly news summary needs a final editor review. A strong response is to check facts against sources, identify dates, review quotes, check tone and confirm required sections. Avoid the tempting alternatives: approve it solely because it is short; or assume numbered sections prove factual correctness.",
+          "workedExample": "Situation: A weekly news summary needs a final editor review. Recommended response: Check facts against sources, identify dates, review quotes, check tone and confirm required sections.",
+          "commonMistake": "Approve it solely because it is short",
+          "remediation": "A content checklist must cover factual, legal and reader risks.",
+          "hint": "Look for the option that follows this principle: Choose observable checks for accuracy, safety and formatting rather than judging whether text feels good.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Design a Verification Checklist\", consider this specific situation: A weekly news summary needs a final editor review. Which response best meets the task?",
+              "options": {
+                "a": "Approve it solely because it is short",
+                "b": "Assume numbered sections prove factual correctness",
+                "c": "Check facts against sources, identify dates, review quotes, check tone and confirm required sections"
+              },
+              "answer": "c",
+              "feedback": "Choose observable checks for accuracy, safety and formatting rather than judging whether text feels good. In this case, check facts against sources, identify dates, review quotes, check tone and confirm required sections."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Design a Verification Checklist\" skill to another setting: a community manager checking a generated social announcement. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Approve it solely because it is short",
+                "b": "Check facts against sources, identify dates, review quotes, check tone and confirm required sections",
+                "c": "Assume numbered sections prove factual correctness"
+              },
+              "answer": "b",
+              "feedback": "Choose observable checks for accuracy, safety and formatting rather than judging whether text feels good. The strongest action is to check facts against sources, identify dates, review quotes, check tone and confirm required sections."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Design a Verification Checklist\": A checklist that checks only word count is sufficient for factual news content.",
+              "answer": false,
+              "feedback": "A content checklist must cover factual, legal and reader risks."
+            }
+          ]
+        },
+        {
+          "number": 21,
+          "title": "Compare Prompt Variants Fairly",
+          "objective": "Use the principles of compare prompt variants fairly to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Evaluate prompt changes using the same input and criteria so results are comparable. Worked example: Two prompts draft replies to one fictional delayed delivery case. A strong response is to use the same case and score each output for accuracy, empathy and policy compliance. Avoid the tempting alternatives: use different customer complaints and compare only length; or treat the response with more adjectives as better.",
+          "workedExample": "Situation: Two prompts draft replies to one fictional delayed delivery case. Recommended response: Use the same case and score each output for accuracy, empathy and policy compliance.",
+          "commonMistake": "Use different customer complaints and compare only length",
+          "remediation": "Otherwise differences may come from the test input.",
+          "hint": "Look for the option that follows this principle: Evaluate prompt changes using the same input and criteria so results are comparable.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Compare Prompt Variants Fairly\", consider this specific situation: Two prompts draft replies to one fictional delayed delivery case. Which response best meets the task?",
+              "options": {
+                "a": "Treat the response with more adjectives as better",
+                "b": "Use the same case and score each output for accuracy, empathy and policy compliance",
+                "c": "Use different customer complaints and compare only length"
+              },
+              "answer": "b",
+              "feedback": "Evaluate prompt changes using the same input and criteria so results are comparable. In this case, use the same case and score each output for accuracy, empathy and policy compliance."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Compare Prompt Variants Fairly\" skill to another setting: a school office testing two announcement prompts. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Use the same case and score each output for accuracy, empathy and policy compliance",
+                "b": "Treat the response with more adjectives as better",
+                "c": "Use different customer complaints and compare only length"
+              },
+              "answer": "a",
+              "feedback": "Evaluate prompt changes using the same input and criteria so results are comparable. The strongest action is to use the same case and score each output for accuracy, empathy and policy compliance."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Compare Prompt Variants Fairly\": A controlled comparison should hold its source case and scoring criteria constant.",
+              "answer": true,
+              "feedback": "Otherwise differences may come from the test input."
+            }
+          ]
+        },
+        {
+          "number": 22,
+          "title": "Record Failure Cases",
+          "objective": "Use the principles of record failure cases to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "Keep synthetic examples of wrong answers and record how the prompt was improved. Worked example: A summary repeatedly changes item quantities when paraphrasing purchase orders. A strong response is to record the error, add a quantity-preservation check and retest on a fictional order. Avoid the tempting alternatives: hide failures from reviewers; or stop checking because the second answer sounds better.",
+          "workedExample": "Situation: A summary repeatedly changes item quantities when paraphrasing purchase orders. Recommended response: Record the error, add a quantity-preservation check and retest on a fictional order.",
+          "commonMistake": "Hide failures from reviewers",
+          "remediation": "Documented failures prevent repeated mistakes.",
+          "hint": "Look for the option that follows this principle: Keep synthetic examples of wrong answers and record how the prompt was improved.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Record Failure Cases\", consider this specific situation: A summary repeatedly changes item quantities when paraphrasing purchase orders. Which response best meets the task?",
+              "options": {
+                "a": "Record the error, add a quantity-preservation check and retest on a fictional order",
+                "b": "Hide failures from reviewers",
+                "c": "Stop checking because the second answer sounds better"
+              },
+              "answer": "a",
+              "feedback": "Keep synthetic examples of wrong answers and record how the prompt was improved. In this case, record the error, add a quantity-preservation check and retest on a fictional order."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Record Failure Cases\" skill to another setting: a coordinator testing an AI-generated shift summary. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Stop checking because the second answer sounds better",
+                "b": "Hide failures from reviewers",
+                "c": "Record the error, add a quantity-preservation check and retest on a fictional order"
+              },
+              "answer": "c",
+              "feedback": "Keep synthetic examples of wrong answers and record how the prompt was improved. The strongest action is to record the error, add a quantity-preservation check and retest on a fictional order."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Record Failure Cases\": A useful error log lists the failed check and the corrective prompt revision.",
+              "answer": true,
+              "feedback": "Documented failures prevent repeated mistakes."
+            }
+          ]
+        },
+        {
+          "number": 23,
+          "title": "Test Across More Than One Example",
+          "objective": "Use the principles of test across more than one example to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "A reusable prompt should be evaluated on normal, missing-data and unusual cases. Worked example: A categorization prompt works on one easy support ticket but may fail on mixed issues. A strong response is to test a routine ticket, an ambiguous ticket and a ticket missing a key field. Avoid the tempting alternatives: publish after the first successful example; or use private customer tickets as test data by default.",
+          "workedExample": "Situation: A categorization prompt works on one easy support ticket but may fail on mixed issues. Recommended response: Test a routine ticket, an ambiguous ticket and a ticket missing a key field.",
+          "commonMistake": "Publish after the first successful example",
+          "remediation": "Coverage must include representative edge cases.",
+          "hint": "Look for the option that follows this principle: A reusable prompt should be evaluated on normal, missing-data and unusual cases.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Test Across More Than One Example\", consider this specific situation: A categorization prompt works on one easy support ticket but may fail on mixed issues. Which response best meets the task?",
+              "options": {
+                "a": "Publish after the first successful example",
+                "b": "Use private customer tickets as test data by default",
+                "c": "Test a routine ticket, an ambiguous ticket and a ticket missing a key field"
+              },
+              "answer": "c",
+              "feedback": "A reusable prompt should be evaluated on normal, missing-data and unusual cases. In this case, test a routine ticket, an ambiguous ticket and a ticket missing a key field."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Test Across More Than One Example\" skill to another setting: a volunteer coordinator checking a message classifier. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Publish after the first successful example",
+                "b": "Test a routine ticket, an ambiguous ticket and a ticket missing a key field",
+                "c": "Use private customer tickets as test data by default"
+              },
+              "answer": "b",
+              "feedback": "A reusable prompt should be evaluated on normal, missing-data and unusual cases. The strongest action is to test a routine ticket, an ambiguous ticket and a ticket missing a key field."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Test Across More Than One Example\": One successful synthetic example is enough to prove a prompt works in every situation.",
+              "answer": false,
+              "feedback": "Coverage must include representative edge cases."
+            }
+          ]
+        },
+        {
+          "number": 24,
+          "title": "Capstone: Deliver a Five-Prompt Toolkit",
+          "objective": "Use the principles of capstone: deliver a five-prompt toolkit to make a reliable choice in a realistic learner or workplace task.",
+          "teaching": "An effective prompt toolkit includes clear inputs, verified outputs, reusable templates and a transparent failure log. Worked example: A fictional NGO needs reusable prompts for volunteer scheduling and report summaries. A strong response is to deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist. Avoid the tempting alternatives: submit five vague one-line requests without testing; or claim independent certification of the model's accuracy.",
+          "workedExample": "Situation: A fictional NGO needs reusable prompts for volunteer scheduling and report summaries. Recommended response: Deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist.",
+          "commonMistake": "Submit five vague one-line requests without testing",
+          "remediation": "Evaluation evidence is part of a practical deliverable.",
+          "hint": "Look for the option that follows this principle: An effective prompt toolkit includes clear inputs, verified outputs, reusable templates and a transparent failure log.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For the lesson \"Capstone: Deliver a Five-Prompt Toolkit\", consider this specific situation: A fictional NGO needs reusable prompts for volunteer scheduling and report summaries. Which response best meets the task?",
+              "options": {
+                "a": "Claim independent certification of the model's accuracy",
+                "b": "Deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist",
+                "c": "Submit five vague one-line requests without testing"
+              },
+              "answer": "b",
+              "feedback": "An effective prompt toolkit includes clear inputs, verified outputs, reusable templates and a transparent failure log. In this case, deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Transfer the \"Capstone: Deliver a Five-Prompt Toolkit\" skill to another setting: a school administrator checking a reusable prompt pack. Which action most closely follows the safe, useful approach?",
+              "options": {
+                "a": "Deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist",
+                "b": "Claim independent certification of the model's accuracy",
+                "c": "Submit five vague one-line requests without testing"
+              },
+              "answer": "a",
+              "feedback": "An effective prompt toolkit includes clear inputs, verified outputs, reusable templates and a transparent failure log. The strongest action is to deliver five distinct prompt templates, two test inputs per template and a source/privacy verification checklist."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim about \"Capstone: Deliver a Five-Prompt Toolkit\": A finished prompt toolkit should record tests and limitations, not just list five prompts.",
+              "answer": true,
+              "feedback": "Evaluation evidence is part of a practical deliverable."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
