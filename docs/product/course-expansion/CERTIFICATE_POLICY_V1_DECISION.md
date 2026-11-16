@@ -64,7 +64,7 @@ They check **different evidence**, not two competing passing scores. The 80% thr
 - `apps/api/src/gameplay.ts` creates the **two-attempt** per-challenge session limit; new sessions after completion/expiry support retakes.
 - `packages/database/src/certificates-schema.ts` has versioned required level/challenge IDs, score threshold, retries flag, distinct capstone reviewer, unique award per learner/skill/requirements version and audited award events.
 - `apps/api/src/certificate-pdf.ts` contains the **exact** A4 footer. `tools/aifs-certificate-smoke.mjs` verifies issued certificate owner isolation, concurrency-safe identity and default-disabled issuance in rolled-back CI.
-- All v1 parameters are authored as **proposal-only**. They are not a SQL migration, approved requirement row or runtime configuration. `AIFS_CERTIFICATE_ISSUANCE_ENABLED` (verify the deployment's exact variable name in configuration before promotion) must remain disabled.
+- All v1 parameters are authored as **proposal-only**. They are not a SQL migration, approved requirement row or runtime configuration. `SKILLUP_CERTIFICATE_ISSUANCE_ENABLED=yes` (as read by `apps/api/src/index.ts`) must remain disabled.
 
 ## Owner / legal acceptance and activation steps
 
