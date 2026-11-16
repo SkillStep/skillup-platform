@@ -135,10 +135,6 @@ test("320px narrow mobile width has no forced sideways scrolling or inaccessible
   await page.goto("/en/certificates");
   await expect(page.getByRole("article")).toHaveCount(10);
   await noHorizontalOverflow(page);
-  for (const action of page.getByRole("link", { name: "Download A4 PDF" }).all()) {
-    // no-op: handles async locator API in a browser, not an assertion
-    void action;
-  }
   const box = await page.getByRole("link", { name: "Download A4 PDF" }).first().boundingBox();
   expect(box).not.toBeNull();
   expect(box.x).toBeGreaterThanOrEqual(0);
