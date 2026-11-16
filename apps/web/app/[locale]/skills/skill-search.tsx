@@ -102,10 +102,7 @@ export function SkillSearch({ skills }: Readonly<{ skills: readonly PublicSkill[
               <p>{skill.summary}</p>
               <p>Planned learning path · Content not yet playable</p>
               <div className={styles["cardLinks"]}>
-                <span
-                  className={styles["disabledPractice"]}
-                  aria-label="Practice not yet available"
-                >
+                <span className={styles["disabledPractice"]}>
                   Start practice unavailable
                 </span>
                 <Link
