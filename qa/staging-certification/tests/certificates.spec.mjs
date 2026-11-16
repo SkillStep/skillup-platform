@@ -18,7 +18,7 @@ test("certificates are a private, non-indexable learner feature", async ({ page,
   const pageResponse = await page.goto("/en/certificates");
   expect(pageResponse?.ok()).toBeTruthy();
   await expect(page.getByRole("heading", { level: 1, name: "My Certificates" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in to see your certificates" })).toBeVisible();
   expect((await page.locator("meta[name='robots']").getAttribute("content")) ?? "").toContain(
     "noindex",
   );
