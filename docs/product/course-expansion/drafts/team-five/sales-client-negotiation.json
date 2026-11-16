@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "sales-client-negotiation",
+  "publicTitle": "Sales, Negotiation & Client Management",
+  "canonicalSlug": "sales-client-negotiation",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "subjectReviewedBy": null,
+  "languageReviewedBy": null,
+  "publisherId": null,
+  "publishedAt": null,
+  "sourceKind": "internal_editorial",
+  "sourceReviewRequired": true,
+  "capstoneFile": "capstones/sales-negotiation-client-management.md",
+  "modules": [
+    {
+      "schemaVersion": 1,
+      "courseSlug": "sales-client-negotiation",
+      "locale": "en",
+      "moduleNumber": 1,
+      "moduleTitle": "Needs Discovery",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 1,
+          "title": "Research an Appropriate Client Fit",
+          "objective": "Practice research an appropriate client fit in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A suitable lead is one whose actual needs match the offered service and capacity. Worked example: A small design agency discovers a prospect needs an audited construction blueprint, outside its services. The appropriate response is to explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch. Avoid promise professional engineering certification without capability and hide limitations until after payment.",
+          "workedExample": "Client context: A small design agency discovers a prospect needs an audited construction blueprint, outside its services. Example decision: Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch.",
+          "commonMistake": "Promise professional engineering certification without capability",
+          "remediation": "A mismatch is not a sales opportunity to force.",
+          "hint": "Use this business principle: A suitable lead is one whose actual needs match the offered service and capacity.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Research an Appropriate Client Fit\", a realistic client situation occurs: A small design agency discovers a prospect needs an audited construction blueprint, outside its services. Which response matches good sales practice?",
+              "options": {
+                "a": "Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch",
+                "b": "Promise professional engineering certification without capability",
+                "c": "Hide limitations until after payment"
+              },
+              "answer": "a",
+              "feedback": "A suitable lead is one whose actual needs match the offered service and capacity. Recommended response: Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Research an Appropriate Client Fit\" lesson in a different setting: a freelance video editor choosing which enquiries merit discovery calls. Which next action is most appropriate?",
+              "options": {
+                "a": "Hide limitations until after payment",
+                "b": "Promise professional engineering certification without capability",
+                "c": "Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch"
+              },
+              "answer": "c",
+              "feedback": "A mismatch is not a sales opportunity to force. Recommended response: Explain the service boundary and refer to a suitable qualified provider instead of selling a mismatch."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Research an Appropriate Client Fit\": Researching fit before pitching can protect both a buyer's budget and a seller's reputation.",
+              "answer": true,
+              "feedback": "A mismatch is not a sales opportunity to force."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "Open a Respectful Discovery Conversation",
+          "objective": "Practice open a respectful discovery conversation in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A consultation should gain permission, explain purpose and invite the client's priorities. Worked example: A client attends a first call about improving a small restaurant's social posts. The appropriate response is to ask permission to understand their goals before recommending packages. Avoid start with a five-minute monologue about agency awards and demand a payment commitment before discussing needs.",
+          "workedExample": "Client context: A client attends a first call about improving a small restaurant's social posts. Example decision: Ask permission to understand their goals before recommending packages.",
+          "commonMistake": "Start with a five-minute monologue about agency awards",
+          "remediation": "Respectful questions reveal genuine needs.",
+          "hint": "Use this business principle: A consultation should gain permission, explain purpose and invite the client's priorities.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Open a Respectful Discovery Conversation\", a realistic client situation occurs: A client attends a first call about improving a small restaurant's social posts. Which response matches good sales practice?",
+              "options": {
+                "a": "Demand a payment commitment before discussing needs",
+                "b": "Ask permission to understand their goals before recommending packages",
+                "c": "Start with a five-minute monologue about agency awards"
+              },
+              "answer": "b",
+              "feedback": "A consultation should gain permission, explain purpose and invite the client's priorities. Recommended response: Ask permission to understand their goals before recommending packages."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Open a Respectful Discovery Conversation\" lesson in a different setting: a web consultant beginning a call with a potential school client. Which next action is most appropriate?",
+              "options": {
+                "a": "Ask permission to understand their goals before recommending packages",
+                "b": "Demand a payment commitment before discussing needs",
+                "c": "Start with a five-minute monologue about agency awards"
+              },
+              "answer": "a",
+              "feedback": "Respectful questions reveal genuine needs. Recommended response: Ask permission to understand their goals before recommending packages."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Open a Respectful Discovery Conversation\": An effective discovery call requires dominating the conversation to establish authority.",
+              "answer": false,
+              "feedback": "Respectful questions reveal genuine needs."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "title": "Ask Specific Needs Questions",
+          "objective": "Practice ask specific needs questions in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Open questions and practical follow-ups uncover constraints better than vague satisfaction ratings. Worked example: A shop owner says they want \"more online growth\" but cannot define success. The appropriate response is to ask which customer action, channel and time window would count as progress. Avoid assume the owner wants ten thousand followers and offer a fixed ad budget without asking about sales capacity.",
+          "workedExample": "Client context: A shop owner says they want \"more online growth\" but cannot define success. Example decision: Ask which customer action, channel and time window would count as progress.",
+          "commonMistake": "Assume the owner wants ten thousand followers",
+          "remediation": "The answer should shape the actual proposal.",
+          "hint": "Use this business principle: Open questions and practical follow-ups uncover constraints better than vague satisfaction ratings.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Ask Specific Needs Questions\", a realistic client situation occurs: A shop owner says they want \"more online growth\" but cannot define success. Which response matches good sales practice?",
+              "options": {
+                "a": "Assume the owner wants ten thousand followers",
+                "b": "Offer a fixed ad budget without asking about sales capacity",
+                "c": "Ask which customer action, channel and time window would count as progress"
+              },
+              "answer": "c",
+              "feedback": "Open questions and practical follow-ups uncover constraints better than vague satisfaction ratings. Recommended response: Ask which customer action, channel and time window would count as progress."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Ask Specific Needs Questions\" lesson in a different setting: a consultancy clarifying what \"better reporting\" means to an operations manager. Which next action is most appropriate?",
+              "options": {
+                "a": "Assume the owner wants ten thousand followers",
+                "b": "Ask which customer action, channel and time window would count as progress",
+                "c": "Offer a fixed ad budget without asking about sales capacity"
+              },
+              "answer": "b",
+              "feedback": "The answer should shape the actual proposal. Recommended response: Ask which customer action, channel and time window would count as progress."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Ask Specific Needs Questions\": Specific questions can expose the underlying business outcome behind a vague request.",
+              "answer": true,
+              "feedback": "The answer should shape the actual proposal."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "title": "Confirm Decision Criteria",
+          "objective": "Practice confirm decision criteria in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Before proposing, identify budget boundaries, schedule, approval roles and expected results. Worked example: A client says the project must be approved by a partner and ready before a planned event. The appropriate response is to confirm the approver, decision date, usable budget range and nonnegotiable deliverables. Avoid promise to begin without discussing approval and ignore the event date until contract signature.",
+          "workedExample": "Client context: A client says the project must be approved by a partner and ready before a planned event. Example decision: Confirm the approver, decision date, usable budget range and nonnegotiable deliverables.",
+          "commonMistake": "Promise to begin without discussing approval",
+          "remediation": "Timing, risk, authority and deliverables also matter.",
+          "hint": "Use this business principle: Before proposing, identify budget boundaries, schedule, approval roles and expected results.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Confirm Decision Criteria\", a realistic client situation occurs: A client says the project must be approved by a partner and ready before a planned event. Which response matches good sales practice?",
+              "options": {
+                "a": "Confirm the approver, decision date, usable budget range and nonnegotiable deliverables",
+                "b": "Promise to begin without discussing approval",
+                "c": "Ignore the event date until contract signature"
+              },
+              "answer": "a",
+              "feedback": "Before proposing, identify budget boundaries, schedule, approval roles and expected results. Recommended response: Confirm the approver, decision date, usable budget range and nonnegotiable deliverables."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Confirm Decision Criteria\" lesson in a different setting: a café owner asking for content work before launch. Which next action is most appropriate?",
+              "options": {
+                "a": "Ignore the event date until contract signature",
+                "b": "Promise to begin without discussing approval",
+                "c": "Confirm the approver, decision date, usable budget range and nonnegotiable deliverables"
+              },
+              "answer": "c",
+              "feedback": "Timing, risk, authority and deliverables also matter. Recommended response: Confirm the approver, decision date, usable budget range and nonnegotiable deliverables."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Confirm Decision Criteria\": Price alone is the only relevant factor in every buyer's decision.",
+              "answer": false,
+              "feedback": "Timing, risk, authority and deliverables also matter."
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "title": "Summarize a Client's Actual Request",
+          "objective": "Practice summarize a client's actual request in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A written recap should separate confirmed requirements from suggestions and assumptions. Worked example: After discovery, a manager hears \"six edited clips and product photos within two weeks\". The appropriate response is to send a concise recap of six clips, photos, deadline and questions awaiting confirmation. Avoid change the number of clips to ten without asking and describe an unrequested website rebuild as approved work.",
+          "workedExample": "Client context: After discovery, a manager hears \"six edited clips and product photos within two weeks\". Example decision: Send a concise recap of six clips, photos, deadline and questions awaiting confirmation.",
+          "commonMistake": "Change the number of clips to ten without asking",
+          "remediation": "Recaps prevent avoidable scope disputes.",
+          "hint": "Use this business principle: A written recap should separate confirmed requirements from suggestions and assumptions.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Summarize a Client's Actual Request\", a realistic client situation occurs: After discovery, a manager hears \"six edited clips and product photos within two weeks\". Which response matches good sales practice?",
+              "options": {
+                "a": "Describe an unrequested website rebuild as approved work",
+                "b": "Send a concise recap of six clips, photos, deadline and questions awaiting confirmation",
+                "c": "Change the number of clips to ten without asking"
+              },
+              "answer": "b",
+              "feedback": "A written recap should separate confirmed requirements from suggestions and assumptions. Recommended response: Send a concise recap of six clips, photos, deadline and questions awaiting confirmation."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Summarize a Client's Actual Request\" lesson in a different setting: a consultant following up after a nonprofit's planning call. Which next action is most appropriate?",
+              "options": {
+                "a": "Send a concise recap of six clips, photos, deadline and questions awaiting confirmation",
+                "b": "Describe an unrequested website rebuild as approved work",
+                "c": "Change the number of clips to ten without asking"
+              },
+              "answer": "a",
+              "feedback": "Recaps prevent avoidable scope disputes. Recommended response: Send a concise recap of six clips, photos, deadline and questions awaiting confirmation."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Summarize a Client's Actual Request\": A requirements recap should identify open questions rather than present assumptions as decisions.",
+              "answer": true,
+              "feedback": "Recaps prevent avoidable scope disputes."
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "title": "Checkpoint: Prepare a Discovery Script",
+          "objective": "Practice checkpoint: prepare a discovery script in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A discovery guide should progress from goals to current situation, constraints and agreed next step. Worked example: A fictional tutoring academy seeks help getting more qualified admission enquiries. The appropriate response is to prepare questions on audience, channels, enquiry quality, response capacity, timing and approval. Avoid use only \"How big is your budget?\" as the consultation and promise enrolment volumes before examining prior data.",
+          "workedExample": "Client context: A fictional tutoring academy seeks help getting more qualified admission enquiries. Example decision: Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval.",
+          "commonMistake": "Use only \"How big is your budget?\" as the consultation",
+          "remediation": "Discovery is not a memorized pressure pitch.",
+          "hint": "Use this business principle: A discovery guide should progress from goals to current situation, constraints and agreed next step.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Prepare a Discovery Script\", a realistic client situation occurs: A fictional tutoring academy seeks help getting more qualified admission enquiries. Which response matches good sales practice?",
+              "options": {
+                "a": "Use only \"How big is your budget?\" as the consultation",
+                "b": "Promise enrolment volumes before examining prior data",
+                "c": "Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval"
+              },
+              "answer": "c",
+              "feedback": "A discovery guide should progress from goals to current situation, constraints and agreed next step. Recommended response: Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Checkpoint: Prepare a Discovery Script\" lesson in a different setting: a freelancer preparing a 15-minute introductory service call. Which next action is most appropriate?",
+              "options": {
+                "a": "Use only \"How big is your budget?\" as the consultation",
+                "b": "Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval",
+                "c": "Promise enrolment volumes before examining prior data"
+              },
+              "answer": "b",
+              "feedback": "Discovery is not a memorized pressure pitch. Recommended response: Prepare questions on audience, channels, enquiry quality, response capacity, timing and approval."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Checkpoint: Prepare a Discovery Script\": A good script leaves space for client answers and a confirmed next step.",
+              "answer": true,
+              "feedback": "Discovery is not a memorized pressure pitch."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "sales-client-negotiation",
+      "locale": "en",
+      "moduleNumber": 2,
+      "moduleTitle": "Proposal and Pricing",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 7,
+          "title": "Describe Scope and Deliverables Clearly",
+          "objective": "Practice describe scope and deliverables clearly in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Deliverables should specify quantities, formats, channels, timing and who provides input. Worked example: A package lists \"social media management\" but says nothing about posts or revisions. The appropriate response is to specify monthly assets, approval rounds, platform responsibilities and deliverable formats. Avoid assume unlimited content is included under vague wording and hide the need for brand assets from the client.",
+          "workedExample": "Client context: A package lists \"social media management\" but says nothing about posts or revisions. Example decision: Specify monthly assets, approval rounds, platform responsibilities and deliverable formats.",
+          "commonMistake": "Assume unlimited content is included under vague wording",
+          "remediation": "Outputs and responsibilities reduce ambiguity.",
+          "hint": "Use this business principle: Deliverables should specify quantities, formats, channels, timing and who provides input.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Describe Scope and Deliverables Clearly\", a realistic client situation occurs: A package lists \"social media management\" but says nothing about posts or revisions. Which response matches good sales practice?",
+              "options": {
+                "a": "Specify monthly assets, approval rounds, platform responsibilities and deliverable formats",
+                "b": "Assume unlimited content is included under vague wording",
+                "c": "Hide the need for brand assets from the client"
+              },
+              "answer": "a",
+              "feedback": "Deliverables should specify quantities, formats, channels, timing and who provides input. Recommended response: Specify monthly assets, approval rounds, platform responsibilities and deliverable formats."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Describe Scope and Deliverables Clearly\" lesson in a different setting: a small media agency defining a four-video content package. Which next action is most appropriate?",
+              "options": {
+                "a": "Hide the need for brand assets from the client",
+                "b": "Assume unlimited content is included under vague wording",
+                "c": "Specify monthly assets, approval rounds, platform responsibilities and deliverable formats"
+              },
+              "answer": "c",
+              "feedback": "Outputs and responsibilities reduce ambiguity. Recommended response: Specify monthly assets, approval rounds, platform responsibilities and deliverable formats."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Describe Scope and Deliverables Clearly\": A statement of work becomes clearer when it identifies outputs rather than only activities.",
+              "answer": true,
+              "feedback": "Outputs and responsibilities reduce ambiguity."
+            }
+          ]
+        },
+        {
+          "number": 8,
+          "title": "Estimate Effort and Dependencies",
+          "objective": "Practice estimate effort and dependencies in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Schedules should account for input collection, approvals, production and revisions. Worked example: A site requires client-provided product images before pages can be built. The appropriate response is to show the image deadline and a dependent build milestone with review time. Avoid promise a finished site before the client can supply content and remove approvals from the schedule to appear faster.",
+          "workedExample": "Client context: A site requires client-provided product images before pages can be built. Example decision: Show the image deadline and a dependent build milestone with review time.",
+          "commonMistake": "Promise a finished site before the client can supply content",
+          "remediation": "Work cannot complete before required inputs and sign-offs.",
+          "hint": "Use this business principle: Schedules should account for input collection, approvals, production and revisions.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Estimate Effort and Dependencies\", a realistic client situation occurs: A site requires client-provided product images before pages can be built. Which response matches good sales practice?",
+              "options": {
+                "a": "Remove approvals from the schedule to appear faster",
+                "b": "Show the image deadline and a dependent build milestone with review time",
+                "c": "Promise a finished site before the client can supply content"
+              },
+              "answer": "b",
+              "feedback": "Schedules should account for input collection, approvals, production and revisions. Recommended response: Show the image deadline and a dependent build milestone with review time."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Estimate Effort and Dependencies\" lesson in a different setting: a graphic designer building a campaign calendar for a brand. Which next action is most appropriate?",
+              "options": {
+                "a": "Show the image deadline and a dependent build milestone with review time",
+                "b": "Remove approvals from the schedule to appear faster",
+                "c": "Promise a finished site before the client can supply content"
+              },
+              "answer": "a",
+              "feedback": "Work cannot complete before required inputs and sign-offs. Recommended response: Show the image deadline and a dependent build milestone with review time."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Estimate Effort and Dependencies\": Dependencies can change a delivery date even when the production estimate is accurate.",
+              "answer": true,
+              "feedback": "Work cannot complete before required inputs and sign-offs."
+            }
+          ]
+        },
+        {
+          "number": 9,
+          "title": "Explain Pricing Assumptions",
+          "objective": "Practice explain pricing assumptions in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "An ethical quote makes scope, units, taxes, payment timing and exclusions understandable. Worked example: A fictional shoot costs PKR 40,000 before separately priced venue hire. The appropriate response is to label the shoot fee and make venue rental a visible optional cost. Avoid describe the base fee as fully inclusive when it is not and add an undisclosed production charge after acceptance.",
+          "workedExample": "Client context: A fictional shoot costs PKR 40,000 before separately priced venue hire. Example decision: Label the shoot fee and make venue rental a visible optional cost.",
+          "commonMistake": "Describe the base fee as fully inclusive when it is not",
+          "remediation": "Hidden costs undermine informed consent.",
+          "hint": "Use this business principle: An ethical quote makes scope, units, taxes, payment timing and exclusions understandable.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Explain Pricing Assumptions\", a realistic client situation occurs: A fictional shoot costs PKR 40,000 before separately priced venue hire. Which response matches good sales practice?",
+              "options": {
+                "a": "Describe the base fee as fully inclusive when it is not",
+                "b": "Add an undisclosed production charge after acceptance",
+                "c": "Label the shoot fee and make venue rental a visible optional cost"
+              },
+              "answer": "c",
+              "feedback": "An ethical quote makes scope, units, taxes, payment timing and exclusions understandable. Recommended response: Label the shoot fee and make venue rental a visible optional cost."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Explain Pricing Assumptions\" lesson in a different setting: a content agency quoting a monthly retainer and paid media spend. Which next action is most appropriate?",
+              "options": {
+                "a": "Describe the base fee as fully inclusive when it is not",
+                "b": "Label the shoot fee and make venue rental a visible optional cost",
+                "c": "Add an undisclosed production charge after acceptance"
+              },
+              "answer": "b",
+              "feedback": "Hidden costs undermine informed consent. Recommended response: Label the shoot fee and make venue rental a visible optional cost."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Explain Pricing Assumptions\": A transparent price should distinguish service fees from third-party expenses.",
+              "answer": true,
+              "feedback": "Hidden costs undermine informed consent."
+            }
+          ]
+        },
+        {
+          "number": 10,
+          "title": "Compare Proposals Transparently",
+          "objective": "Practice compare proposals transparently in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Package choices should use a consistent set of comparison criteria and disclose limitations. Worked example: A client compares four short videos versus eight videos with an extra review cycle. The appropriate response is to show both options with volume, turnaround, revisions, client inputs and exclusions. Avoid call the larger package better without comparing fit and invent features to make the cheaper option look inferior.",
+          "workedExample": "Client context: A client compares four short videos versus eight videos with an extra review cycle. Example decision: Show both options with volume, turnaround, revisions, client inputs and exclusions.",
+          "commonMistake": "Call the larger package better without comparing fit",
+          "remediation": "Clarity helps clients choose what they actually need.",
+          "hint": "Use this business principle: Package choices should use a consistent set of comparison criteria and disclose limitations.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Compare Proposals Transparently\", a realistic client situation occurs: A client compares four short videos versus eight videos with an extra review cycle. Which response matches good sales practice?",
+              "options": {
+                "a": "Show both options with volume, turnaround, revisions, client inputs and exclusions",
+                "b": "Call the larger package better without comparing fit",
+                "c": "Invent features to make the cheaper option look inferior"
+              },
+              "answer": "a",
+              "feedback": "Package choices should use a consistent set of comparison criteria and disclose limitations. Recommended response: Show both options with volume, turnaround, revisions, client inputs and exclusions."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Compare Proposals Transparently\" lesson in a different setting: a marketing consultancy presenting a basic and premium scope. Which next action is most appropriate?",
+              "options": {
+                "a": "Invent features to make the cheaper option look inferior",
+                "b": "Call the larger package better without comparing fit",
+                "c": "Show both options with volume, turnaround, revisions, client inputs and exclusions"
+              },
+              "answer": "c",
+              "feedback": "Clarity helps clients choose what they actually need. Recommended response: Show both options with volume, turnaround, revisions, client inputs and exclusions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Compare Proposals Transparently\": Different packages are easier to evaluate when compared against the same criteria.",
+              "answer": true,
+              "feedback": "Clarity helps clients choose what they actually need."
+            }
+          ]
+        },
+        {
+          "number": 11,
+          "title": "Specify Exclusions and Revision Limits",
+          "objective": "Practice specify exclusions and revision limits in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Contracts should identify out-of-scope work and a fair method for handling changes. Worked example: A monthly design package includes two revision rounds but a client requests a full campaign reshoot. The appropriate response is to explain the agreed revisions and offer a separately scoped reshoot estimate. Avoid claim the reshoot is free then surprise the client with charges and reject all feedback even within the agreed rounds.",
+          "workedExample": "Client context: A monthly design package includes two revision rounds but a client requests a full campaign reshoot. Example decision: Explain the agreed revisions and offer a separately scoped reshoot estimate.",
+          "commonMistake": "Claim the reshoot is free then surprise the client with charges",
+          "remediation": "Clear boundaries protect the relationship.",
+          "hint": "Use this business principle: Contracts should identify out-of-scope work and a fair method for handling changes.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Specify Exclusions and Revision Limits\", a realistic client situation occurs: A monthly design package includes two revision rounds but a client requests a full campaign reshoot. Which response matches good sales practice?",
+              "options": {
+                "a": "Reject all feedback even within the agreed rounds",
+                "b": "Explain the agreed revisions and offer a separately scoped reshoot estimate",
+                "c": "Claim the reshoot is free then surprise the client with charges"
+              },
+              "answer": "b",
+              "feedback": "Contracts should identify out-of-scope work and a fair method for handling changes. Recommended response: Explain the agreed revisions and offer a separately scoped reshoot estimate."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Specify Exclusions and Revision Limits\" lesson in a different setting: a video editor defining whether subtitles and extra formats are included. Which next action is most appropriate?",
+              "options": {
+                "a": "Explain the agreed revisions and offer a separately scoped reshoot estimate",
+                "b": "Reject all feedback even within the agreed rounds",
+                "c": "Claim the reshoot is free then surprise the client with charges"
+              },
+              "answer": "a",
+              "feedback": "Clear boundaries protect the relationship. Recommended response: Explain the agreed revisions and offer a separately scoped reshoot estimate."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Specify Exclusions and Revision Limits\": Revision limits should be stated before work begins and applied consistently.",
+              "answer": true,
+              "feedback": "Clear boundaries protect the relationship."
+            }
+          ]
+        },
+        {
+          "number": 12,
+          "title": "Checkpoint: Write a Two-Option Offer",
+          "objective": "Practice checkpoint: write a two-option offer in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Two offers should solve the same client goal at different levels of scope without imaginary savings. Worked example: A small clinic needs appointment explainer content and only modest production capacity. The appropriate response is to offer a compact and expanded content package with exact assets, review windows and exclusions. Avoid advertise guaranteed bookings from either option and put every important detail in an unreadable footnote.",
+          "workedExample": "Client context: A small clinic needs appointment explainer content and only modest production capacity. Example decision: Offer a compact and expanded content package with exact assets, review windows and exclusions.",
+          "commonMistake": "Advertise guaranteed bookings from either option",
+          "remediation": "Transparency matters more than upselling.",
+          "hint": "Use this business principle: Two offers should solve the same client goal at different levels of scope without imaginary savings.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Write a Two-Option Offer\", a realistic client situation occurs: A small clinic needs appointment explainer content and only modest production capacity. Which response matches good sales practice?",
+              "options": {
+                "a": "Advertise guaranteed bookings from either option",
+                "b": "Put every important detail in an unreadable footnote",
+                "c": "Offer a compact and expanded content package with exact assets, review windows and exclusions"
+              },
+              "answer": "c",
+              "feedback": "Two offers should solve the same client goal at different levels of scope without imaginary savings. Recommended response: Offer a compact and expanded content package with exact assets, review windows and exclusions."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Checkpoint: Write a Two-Option Offer\" lesson in a different setting: a retailer considering two launch content bundles. Which next action is most appropriate?",
+              "options": {
+                "a": "Advertise guaranteed bookings from either option",
+                "b": "Offer a compact and expanded content package with exact assets, review windows and exclusions",
+                "c": "Put every important detail in an unreadable footnote"
+              },
+              "answer": "b",
+              "feedback": "Transparency matters more than upselling. Recommended response: Offer a compact and expanded content package with exact assets, review windows and exclusions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Checkpoint: Write a Two-Option Offer\": Two clear offers can help a client trade scope against budget without pressure.",
+              "answer": true,
+              "feedback": "Transparency matters more than upselling."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "sales-client-negotiation",
+      "locale": "en",
+      "moduleNumber": 3,
+      "moduleTitle": "Objections and Boundaries",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 13,
+          "title": "Handle a Budget Concern Calmly",
+          "objective": "Practice handle a budget concern calmly in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "When price is challenged, investigate the constraint and explore legitimate scope changes. Worked example: A client says a PKR 100,000 quote exceeds the available budget. The appropriate response is to ask which outcomes matter most and propose a smaller scope with its limitations explained. Avoid pressure the client to borrow money immediately and promise the entire original scope at an unsustainable fee.",
+          "workedExample": "Client context: A client says a PKR 100,000 quote exceeds the available budget. Example decision: Ask which outcomes matter most and propose a smaller scope with its limitations explained.",
+          "commonMistake": "Pressure the client to borrow money immediately",
+          "remediation": "Scope, timing and priorities may matter more than discounting.",
+          "hint": "Use this business principle: When price is challenged, investigate the constraint and explore legitimate scope changes.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Handle a Budget Concern Calmly\", a realistic client situation occurs: A client says a PKR 100,000 quote exceeds the available budget. Which response matches good sales practice?",
+              "options": {
+                "a": "Ask which outcomes matter most and propose a smaller scope with its limitations explained",
+                "b": "Pressure the client to borrow money immediately",
+                "c": "Promise the entire original scope at an unsustainable fee"
+              },
+              "answer": "a",
+              "feedback": "When price is challenged, investigate the constraint and explore legitimate scope changes. Recommended response: Ask which outcomes matter most and propose a smaller scope with its limitations explained."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Handle a Budget Concern Calmly\" lesson in a different setting: a designer negotiating an optional photography day. Which next action is most appropriate?",
+              "options": {
+                "a": "Promise the entire original scope at an unsustainable fee",
+                "b": "Pressure the client to borrow money immediately",
+                "c": "Ask which outcomes matter most and propose a smaller scope with its limitations explained"
+              },
+              "answer": "c",
+              "feedback": "Scope, timing and priorities may matter more than discounting. Recommended response: Ask which outcomes matter most and propose a smaller scope with its limitations explained."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Handle a Budget Concern Calmly\": A budget objection should always be answered with a deeper discount without changing work.",
+              "answer": false,
+              "feedback": "Scope, timing and priorities may matter more than discounting."
+            }
+          ]
+        },
+        {
+          "number": 14,
+          "title": "Respond to a Scope-Creep Request",
+          "objective": "Practice respond to a scope-creep request in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Unplanned deliverables should be assessed against agreed scope, timeline and fair pricing. Worked example: A client adds six video edits after approving a contract for four. The appropriate response is to document the six extra edits and offer a change order with timeline impact. Avoid do the extra work without updating any expectation and refuse the entire project instead of discussing options.",
+          "workedExample": "Client context: A client adds six video edits after approving a contract for four. Example decision: Document the six extra edits and offer a change order with timeline impact.",
+          "commonMistake": "Do the extra work without updating any expectation",
+          "remediation": "An agreed change order records the new trade-off.",
+          "hint": "Use this business principle: Unplanned deliverables should be assessed against agreed scope, timeline and fair pricing.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Respond to a Scope-Creep Request\", a realistic client situation occurs: A client adds six video edits after approving a contract for four. Which response matches good sales practice?",
+              "options": {
+                "a": "Refuse the entire project instead of discussing options",
+                "b": "Document the six extra edits and offer a change order with timeline impact",
+                "c": "Do the extra work without updating any expectation"
+              },
+              "answer": "b",
+              "feedback": "Unplanned deliverables should be assessed against agreed scope, timeline and fair pricing. Recommended response: Document the six extra edits and offer a change order with timeline impact."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Respond to a Scope-Creep Request\" lesson in a different setting: a software consultancy asked to add new pages to an approved website scope. Which next action is most appropriate?",
+              "options": {
+                "a": "Document the six extra edits and offer a change order with timeline impact",
+                "b": "Refuse the entire project instead of discussing options",
+                "c": "Do the extra work without updating any expectation"
+              },
+              "answer": "a",
+              "feedback": "An agreed change order records the new trade-off. Recommended response: Document the six extra edits and offer a change order with timeline impact."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Respond to a Scope-Creep Request\": A documented change request can preserve trust while protecting delivery commitments.",
+              "answer": true,
+              "feedback": "An agreed change order records the new trade-off."
+            }
+          ]
+        },
+        {
+          "number": 15,
+          "title": "Explain a Realistic Deadline",
+          "objective": "Practice explain a realistic deadline in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Delivery dates should include known dependencies, review buffers and uncertainty. Worked example: A client asks for ten complex edited videos by tomorrow despite a three-day footage handoff. The appropriate response is to explain the production lead time and offer a feasible reduced scope or later delivery date. Avoid say yes while planning to miss the deadline and skip safety and quality checks without consent.",
+          "workedExample": "Client context: A client asks for ten complex edited videos by tomorrow despite a three-day footage handoff. Example decision: Explain the production lead time and offer a feasible reduced scope or later delivery date.",
+          "commonMistake": "Say yes while planning to miss the deadline",
+          "remediation": "Overpromising creates reputational and operational harm.",
+          "hint": "Use this business principle: Delivery dates should include known dependencies, review buffers and uncertainty.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Explain a Realistic Deadline\", a realistic client situation occurs: A client asks for ten complex edited videos by tomorrow despite a three-day footage handoff. Which response matches good sales practice?",
+              "options": {
+                "a": "Say yes while planning to miss the deadline",
+                "b": "Skip safety and quality checks without consent",
+                "c": "Explain the production lead time and offer a feasible reduced scope or later delivery date"
+              },
+              "answer": "c",
+              "feedback": "Delivery dates should include known dependencies, review buffers and uncertainty. Recommended response: Explain the production lead time and offer a feasible reduced scope or later delivery date."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Explain a Realistic Deadline\" lesson in a different setting: a web studio planning a site launch after payment gateway approval. Which next action is most appropriate?",
+              "options": {
+                "a": "Say yes while planning to miss the deadline",
+                "b": "Explain the production lead time and offer a feasible reduced scope or later delivery date",
+                "c": "Skip safety and quality checks without consent"
+              },
+              "answer": "b",
+              "feedback": "Overpromising creates reputational and operational harm. Recommended response: Explain the production lead time and offer a feasible reduced scope or later delivery date."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Explain a Realistic Deadline\": A credible deadline can account for dependencies and avoid unsupported certainty.",
+              "answer": true,
+              "feedback": "Overpromising creates reputational and operational harm."
+            }
+          ]
+        },
+        {
+          "number": 16,
+          "title": "Avoid False Scarcity and Pressure",
+          "objective": "Practice avoid false scarcity and pressure in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Urgency claims must reflect real capacity or expiry, not invented threats. Worked example: A proposal says \"only one slot left\" but the team has open capacity all month. The appropriate response is to remove the false scarcity claim and explain any genuine booking deadline accurately. Avoid invent a competing buyer to force immediate payment and tell the prospect the price doubles in an hour without approval.",
+          "workedExample": "Client context: A proposal says \"only one slot left\" but the team has open capacity all month. Example decision: Remove the false scarcity claim and explain any genuine booking deadline accurately.",
+          "commonMistake": "Invent a competing buyer to force immediate payment",
+          "remediation": "Pressure tactics can invalidate trust and informed choice.",
+          "hint": "Use this business principle: Urgency claims must reflect real capacity or expiry, not invented threats.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Avoid False Scarcity and Pressure\", a realistic client situation occurs: A proposal says \"only one slot left\" but the team has open capacity all month. Which response matches good sales practice?",
+              "options": {
+                "a": "Remove the false scarcity claim and explain any genuine booking deadline accurately",
+                "b": "Invent a competing buyer to force immediate payment",
+                "c": "Tell the prospect the price doubles in an hour without approval"
+              },
+              "answer": "a",
+              "feedback": "Urgency claims must reflect real capacity or expiry, not invented threats. Recommended response: Remove the false scarcity claim and explain any genuine booking deadline accurately."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Avoid False Scarcity and Pressure\" lesson in a different setting: a consultancy writing a first-call follow-up. Which next action is most appropriate?",
+              "options": {
+                "a": "Tell the prospect the price doubles in an hour without approval",
+                "b": "Invent a competing buyer to force immediate payment",
+                "c": "Remove the false scarcity claim and explain any genuine booking deadline accurately"
+              },
+              "answer": "c",
+              "feedback": "Pressure tactics can invalidate trust and informed choice. Recommended response: Remove the false scarcity claim and explain any genuine booking deadline accurately."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Avoid False Scarcity and Pressure\": Manufactured urgency is a professional way to secure informed client consent.",
+              "answer": false,
+              "feedback": "Pressure tactics can invalidate trust and informed choice."
+            }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Know When to Decline a Bad Fit",
+          "objective": "Practice know when to decline a bad fit in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "An ethical seller may decline work that exceeds ability, conflicts with rules or harms the client. Worked example: A prospect asks a small content team to guarantee statutory financial audit compliance. The appropriate response is to state the capability limit and refer the requirement to a qualified specialist. Avoid claim legal certification without expertise and sign first and plan to outsource secretly.",
+          "workedExample": "Client context: A prospect asks a small content team to guarantee statutory financial audit compliance. Example decision: State the capability limit and refer the requirement to a qualified specialist.",
+          "commonMistake": "Claim legal certification without expertise",
+          "remediation": "Credibility depends on accurate capability claims.",
+          "hint": "Use this business principle: An ethical seller may decline work that exceeds ability, conflicts with rules or harms the client.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Know When to Decline a Bad Fit\", a realistic client situation occurs: A prospect asks a small content team to guarantee statutory financial audit compliance. Which response matches good sales practice?",
+              "options": {
+                "a": "Sign first and plan to outsource secretly",
+                "b": "State the capability limit and refer the requirement to a qualified specialist",
+                "c": "Claim legal certification without expertise"
+              },
+              "answer": "b",
+              "feedback": "An ethical seller may decline work that exceeds ability, conflicts with rules or harms the client. Recommended response: State the capability limit and refer the requirement to a qualified specialist."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Know When to Decline a Bad Fit\" lesson in a different setting: a freelancer asked to impersonate a client's existing customers in testimonials. Which next action is most appropriate?",
+              "options": {
+                "a": "State the capability limit and refer the requirement to a qualified specialist",
+                "b": "Sign first and plan to outsource secretly",
+                "c": "Claim legal certification without expertise"
+              },
+              "answer": "a",
+              "feedback": "Credibility depends on accurate capability claims. Recommended response: State the capability limit and refer the requirement to a qualified specialist."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Know When to Decline a Bad Fit\": Turning down an unsuitable project can be the correct business decision.",
+              "answer": true,
+              "feedback": "Credibility depends on accurate capability claims."
+            }
+          ]
+        },
+        {
+          "number": 18,
+          "title": "Checkpoint: Practice an Objection Response",
+          "objective": "Practice checkpoint: practice an objection response in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A good response acknowledges the concern, clarifies it, explains evidence and offers a next step. Worked example: A client worries that monthly reporting will not be understandable to their team. The appropriate response is to ask which reports are confusing and show a simple sample plus proposed review call. Avoid dismiss the concern as unimportant and promise a return on investment without assumptions.",
+          "workedExample": "Client context: A client worries that monthly reporting will not be understandable to their team. Example decision: Ask which reports are confusing and show a simple sample plus proposed review call.",
+          "commonMistake": "Dismiss the concern as unimportant",
+          "remediation": "Consultative responses aim for clarity and fit.",
+          "hint": "Use this business principle: A good response acknowledges the concern, clarifies it, explains evidence and offers a next step.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Practice an Objection Response\", a realistic client situation occurs: A client worries that monthly reporting will not be understandable to their team. Which response matches good sales practice?",
+              "options": {
+                "a": "Dismiss the concern as unimportant",
+                "b": "Promise a return on investment without assumptions",
+                "c": "Ask which reports are confusing and show a simple sample plus proposed review call"
+              },
+              "answer": "c",
+              "feedback": "A good response acknowledges the concern, clarifies it, explains evidence and offers a next step. Recommended response: Ask which reports are confusing and show a simple sample plus proposed review call."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Checkpoint: Practice an Objection Response\" lesson in a different setting: a video agency answering concerns about approval turnaround. Which next action is most appropriate?",
+              "options": {
+                "a": "Dismiss the concern as unimportant",
+                "b": "Ask which reports are confusing and show a simple sample plus proposed review call",
+                "c": "Promise a return on investment without assumptions"
+              },
+              "answer": "b",
+              "feedback": "Consultative responses aim for clarity and fit. Recommended response: Ask which reports are confusing and show a simple sample plus proposed review call."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Checkpoint: Practice an Objection Response\": Handling objections requires listening to the buyer's actual risk, not defeating the buyer in debate.",
+              "answer": true,
+              "feedback": "Consultative responses aim for clarity and fit."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "sales-client-negotiation",
+      "locale": "en",
+      "moduleNumber": 4,
+      "moduleTitle": "Sales Conversation Capstone",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 19,
+          "title": "Build a Consultative Sales Sequence",
+          "objective": "Practice build a consultative sales sequence in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A sales sequence should move from research and discovery through proposal, decision and respectful follow-up. Worked example: A local B2B service provider needs a process for inbound qualified leads. The appropriate response is to write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up. Avoid send daily aggressive messages to every unqualified contact and skip discovery and send a contract to all leads.",
+          "workedExample": "Client context: A local B2B service provider needs a process for inbound qualified leads. Example decision: Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up.",
+          "commonMistake": "Send daily aggressive messages to every unqualified contact",
+          "remediation": "Consultation comes before a tailored recommendation.",
+          "hint": "Use this business principle: A sales sequence should move from research and discovery through proposal, decision and respectful follow-up.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Build a Consultative Sales Sequence\", a realistic client situation occurs: A local B2B service provider needs a process for inbound qualified leads. Which response matches good sales practice?",
+              "options": {
+                "a": "Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up",
+                "b": "Send daily aggressive messages to every unqualified contact",
+                "c": "Skip discovery and send a contract to all leads"
+              },
+              "answer": "a",
+              "feedback": "A sales sequence should move from research and discovery through proposal, decision and respectful follow-up. Recommended response: Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Build a Consultative Sales Sequence\" lesson in a different setting: a creative studio formalizing its client onboarding pipeline. Which next action is most appropriate?",
+              "options": {
+                "a": "Skip discovery and send a contract to all leads",
+                "b": "Send daily aggressive messages to every unqualified contact",
+                "c": "Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up"
+              },
+              "answer": "c",
+              "feedback": "Consultation comes before a tailored recommendation. Recommended response: Write a sequence with qualification questions, recap, two-option offer, consent and a spaced follow-up."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Build a Consultative Sales Sequence\": An orderly process makes client decisions and next actions more predictable.",
+              "answer": true,
+              "feedback": "Consultation comes before a tailored recommendation."
+            }
+          ]
+        },
+        {
+          "number": 20,
+          "title": "Prepare an Accurate Written Proposal",
+          "objective": "Practice prepare an accurate written proposal in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Proposal claims should match actual production capacity, rights, fees and deliverables. Worked example: A draft pitch includes a photographer's work that the agency does not own. The appropriate response is to replace it with authorized sample references and clearly state what the team can deliver. Avoid leave copyrighted work uncredited as if it belongs to the agency and promise a proprietary tool that has not been built.",
+          "workedExample": "Client context: A draft pitch includes a photographer's work that the agency does not own. Example decision: Replace it with authorized sample references and clearly state what the team can deliver.",
+          "commonMistake": "Leave copyrighted work uncredited as if it belongs to the agency",
+          "remediation": "Evidence and rights support a trustworthy offer.",
+          "hint": "Use this business principle: Proposal claims should match actual production capacity, rights, fees and deliverables.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Prepare an Accurate Written Proposal\", a realistic client situation occurs: A draft pitch includes a photographer's work that the agency does not own. Which response matches good sales practice?",
+              "options": {
+                "a": "Promise a proprietary tool that has not been built",
+                "b": "Replace it with authorized sample references and clearly state what the team can deliver",
+                "c": "Leave copyrighted work uncredited as if it belongs to the agency"
+              },
+              "answer": "b",
+              "feedback": "Proposal claims should match actual production capacity, rights, fees and deliverables. Recommended response: Replace it with authorized sample references and clearly state what the team can deliver."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Prepare an Accurate Written Proposal\" lesson in a different setting: a small agency updating a pitch with new subcontractors. Which next action is most appropriate?",
+              "options": {
+                "a": "Replace it with authorized sample references and clearly state what the team can deliver",
+                "b": "Promise a proprietary tool that has not been built",
+                "c": "Leave copyrighted work uncredited as if it belongs to the agency"
+              },
+              "answer": "a",
+              "feedback": "Evidence and rights support a trustworthy offer. Recommended response: Replace it with authorized sample references and clearly state what the team can deliver."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Prepare an Accurate Written Proposal\": A persuasive proposal still requires truthful assets and capability statements.",
+              "answer": true,
+              "feedback": "Evidence and rights support a trustworthy offer."
+            }
+          ]
+        },
+        {
+          "number": 21,
+          "title": "Write a Practical Follow-up Message",
+          "objective": "Practice write a practical follow-up message in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "Follow-ups should reference the agreed discussion and give an easy action without pressure. Worked example: A prospect requested the final quote by Tuesday and needs internal approval. The appropriate response is to send a short recap, the agreed quote and a question about decision timing. Avoid send repeated anonymous reminders every hour and claim the offer has expired without a stated deadline.",
+          "workedExample": "Client context: A prospect requested the final quote by Tuesday and needs internal approval. Example decision: Send a short recap, the agreed quote and a question about decision timing.",
+          "commonMistake": "Send repeated anonymous reminders every hour",
+          "remediation": "Respectful timing protects the relationship.",
+          "hint": "Use this business principle: Follow-ups should reference the agreed discussion and give an easy action without pressure.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Write a Practical Follow-up Message\", a realistic client situation occurs: A prospect requested the final quote by Tuesday and needs internal approval. Which response matches good sales practice?",
+              "options": {
+                "a": "Send repeated anonymous reminders every hour",
+                "b": "Claim the offer has expired without a stated deadline",
+                "c": "Send a short recap, the agreed quote and a question about decision timing"
+              },
+              "answer": "c",
+              "feedback": "Follow-ups should reference the agreed discussion and give an easy action without pressure. Recommended response: Send a short recap, the agreed quote and a question about decision timing."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Write a Practical Follow-up Message\" lesson in a different setting: a freelancer checking whether a client has reviewed a scope document. Which next action is most appropriate?",
+              "options": {
+                "a": "Send repeated anonymous reminders every hour",
+                "b": "Send a short recap, the agreed quote and a question about decision timing",
+                "c": "Claim the offer has expired without a stated deadline"
+              },
+              "answer": "b",
+              "feedback": "Respectful timing protects the relationship. Recommended response: Send a short recap, the agreed quote and a question about decision timing."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Write a Practical Follow-up Message\": A follow-up that restates the next decision is more useful than repeated generic nudges.",
+              "answer": true,
+              "feedback": "Respectful timing protects the relationship."
+            }
+          ]
+        },
+        {
+          "number": 22,
+          "title": "Plan a Transparent Handover",
+          "objective": "Practice plan a transparent handover in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A signed project needs clear contacts, deliverables, access, dependencies and issue escalation. Worked example: A media campaign moves from business development to an operations manager. The appropriate response is to share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely. Avoid ask the team to reconstruct commitments from memory and hide known deadline risks until launch day.",
+          "workedExample": "Client context: A media campaign moves from business development to an operations manager. Example decision: Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely.",
+          "commonMistake": "Ask the team to reconstruct commitments from memory",
+          "remediation": "Continuity reduces missed work and scope disputes.",
+          "hint": "Use this business principle: A signed project needs clear contacts, deliverables, access, dependencies and issue escalation.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Plan a Transparent Handover\", a realistic client situation occurs: A media campaign moves from business development to an operations manager. Which response matches good sales practice?",
+              "options": {
+                "a": "Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely",
+                "b": "Ask the team to reconstruct commitments from memory",
+                "c": "Hide known deadline risks until launch day"
+              },
+              "answer": "a",
+              "feedback": "A signed project needs clear contacts, deliverables, access, dependencies and issue escalation. Recommended response: Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Plan a Transparent Handover\" lesson in a different setting: a software team transferring a new client to project delivery. Which next action is most appropriate?",
+              "options": {
+                "a": "Hide known deadline risks until launch day",
+                "b": "Ask the team to reconstruct commitments from memory",
+                "c": "Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely"
+              },
+              "answer": "c",
+              "feedback": "Continuity reduces missed work and scope disputes. Recommended response: Share the agreed scope, client approvals, asset checklist, timeline and responsible owners securely."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Plan a Transparent Handover\": A good handover preserves agreed promises and open dependencies for the delivery team.",
+              "answer": true,
+              "feedback": "Continuity reduces missed work and scope disputes."
+            }
+          ]
+        },
+        {
+          "number": 23,
+          "title": "Audit Claims and Commercial Terms",
+          "objective": "Practice audit claims and commercial terms in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A final review should reconcile quotes, contract wording, third-party costs and proof of claims. Worked example: A proposal states \"all fees included\" while separately listing unpriced advertising spend. The appropriate response is to clarify whether paid media is excluded and obtain the client's understanding before signature. Avoid leave the contradiction and clarify only after billing and mark testimonials as real without permission or evidence.",
+          "workedExample": "Client context: A proposal states \"all fees included\" while separately listing unpriced advertising spend. Example decision: Clarify whether paid media is excluded and obtain the client's understanding before signature.",
+          "commonMistake": "Leave the contradiction and clarify only after billing",
+          "remediation": "Truthful terms prevent avoidable disputes.",
+          "hint": "Use this business principle: A final review should reconcile quotes, contract wording, third-party costs and proof of claims.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Audit Claims and Commercial Terms\", a realistic client situation occurs: A proposal states \"all fees included\" while separately listing unpriced advertising spend. Which response matches good sales practice?",
+              "options": {
+                "a": "Mark testimonials as real without permission or evidence",
+                "b": "Clarify whether paid media is excluded and obtain the client's understanding before signature",
+                "c": "Leave the contradiction and clarify only after billing"
+              },
+              "answer": "b",
+              "feedback": "A final review should reconcile quotes, contract wording, third-party costs and proof of claims. Recommended response: Clarify whether paid media is excluded and obtain the client's understanding before signature."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Audit Claims and Commercial Terms\" lesson in a different setting: a consulting firm revising a two-option proposal before sending. Which next action is most appropriate?",
+              "options": {
+                "a": "Clarify whether paid media is excluded and obtain the client's understanding before signature",
+                "b": "Mark testimonials as real without permission or evidence",
+                "c": "Leave the contradiction and clarify only after billing"
+              },
+              "answer": "a",
+              "feedback": "Truthful terms prevent avoidable disputes. Recommended response: Clarify whether paid media is excluded and obtain the client's understanding before signature."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Audit Claims and Commercial Terms\": Commercial claims should be checked for contradictions before client acceptance.",
+              "answer": true,
+              "feedback": "Truthful terms prevent avoidable disputes."
+            }
+          ]
+        },
+        {
+          "number": 24,
+          "title": "Capstone: Deliver a Client Offer Pack",
+          "objective": "Practice capstone: deliver a client offer pack in a realistic client relationship using ethical, evidence-based decisions.",
+          "teaching": "A complete client pack includes discovery notes, scoped options, transparent pricing assumptions, objection responses and handover. Worked example: A fictional bakery asks a small creative agency for a four-week content programme. The appropriate response is to deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist. Avoid promise guaranteed sales without any measurement plan and present unrequested services as already authorized.",
+          "workedExample": "Client context: A fictional bakery asks a small creative agency for a four-week content programme. Example decision: Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist.",
+          "commonMistake": "Promise guaranteed sales without any measurement plan",
+          "remediation": "A traceable pack demonstrates negotiation and relationship skills.",
+          "hint": "Use this business principle: A complete client pack includes discovery notes, scoped options, transparent pricing assumptions, objection responses and handover.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Capstone: Deliver a Client Offer Pack\", a realistic client situation occurs: A fictional bakery asks a small creative agency for a four-week content programme. Which response matches good sales practice?",
+              "options": {
+                "a": "Promise guaranteed sales without any measurement plan",
+                "b": "Present unrequested services as already authorized",
+                "c": "Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist"
+              },
+              "answer": "c",
+              "feedback": "A complete client pack includes discovery notes, scoped options, transparent pricing assumptions, objection responses and handover. Recommended response: Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Apply the \"Capstone: Deliver a Client Offer Pack\" lesson in a different setting: a freelancer preparing a realistic proposal for a new service lead. Which next action is most appropriate?",
+              "options": {
+                "a": "Promise guaranteed sales without any measurement plan",
+                "b": "Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist",
+                "c": "Present unrequested services as already authorized"
+              },
+              "answer": "b",
+              "feedback": "A traceable pack demonstrates negotiation and relationship skills. Recommended response: Deliver a discovery script, two scoped packages, assumptions, objection response, follow-up and kickoff checklist."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Consider this claim in the context of \"Capstone: Deliver a Client Offer Pack\": A capstone offer should separate confirmed requirements from recommendations and exclusions.",
+              "answer": true,
+              "feedback": "A traceable pack demonstrates negotiation and relationship skills."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
