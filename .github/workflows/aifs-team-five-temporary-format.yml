@@ -1,0 +1,51 @@
+name: Temporary AIFS course branch formatter
+on:
+  push:
+    branches:
+      - feat/aifs-team-five-120-level-draft-courses-20261116
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'SkillStep/skillup-platform' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Check out exact feature branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: true
+          ref: feat/aifs-team-five-120-level-draft-courses-20261116
+      - name: Node runtime
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Install formatter from locked dependencies
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Format six new source files only
+        run: |
+          pnpm exec biome format --write \
+            tools/aifs-team-five-draft-smoke.mjs \
+            tools/compile-aifs-team-five-drafts.mjs \
+            tools/import-aifs-team-five-drafts.mjs \
+            tools/import-aifs-team-five-drafts.test.mjs \
+            tools/validate-aifs-team-five-courses.mjs \
+            tools/validate-aifs-team-five-courses.test.mjs
+      - name: Commit formatter-only changes to feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            tools/aifs-team-five-draft-smoke.mjs \
+            tools/compile-aifs-team-five-drafts.mjs \
+            tools/import-aifs-team-five-drafts.mjs \
+            tools/import-aifs-team-five-drafts.test.mjs \
+            tools/validate-aifs-team-five-courses.mjs \
+            tools/validate-aifs-team-five-courses.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "style(AIFS): apply pinned Biome formatting to five-course tools"
+            git push origin HEAD:feat/aifs-team-five-120-level-draft-courses-20261116
+          fi
