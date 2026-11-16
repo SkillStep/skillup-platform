@@ -13,12 +13,17 @@ export type PrintableCertificate = Readonly<{
 }>;
 
 function pdfText(value: string): string {
-  if (!/^[\x20-\x7E]+$/.test(value)) {
+  if (!/^[\x20-\x7E\u2013\u2014]+$/.test(value)) {
     throw new Error(
       "The current English PDF font cannot faithfully represent this name. Contact support for a Unicode certificate.",
     );
   }
-  return value.replaceAll("\\", "\\\\").replaceAll("(", "\\(").replaceAll(")", "\\)");
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("(", "\\(")
+    .replaceAll(")", "\\)")
+    .replaceAll("–", "\\226")
+    .replaceAll("—", "\\227");
 }
 
 function splitForDisplay(value: string, length: number): string[] {
