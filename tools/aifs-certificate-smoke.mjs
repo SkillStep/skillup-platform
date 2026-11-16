@@ -119,7 +119,7 @@ try {
        (skill_id,skill_version_id,requirement_version,level_version_ids,
         challenge_version_ids,content_digest,minimum_pass_percent,
         required_capstone,retries_allowed,status,approved_by,approved_at,approval_reason)
-       values ($1,$2,1,$3::uuid[],$4::uuid[],$5,100,true,true,
+       values ($1,$2,1,$3::uuid[],$4::uuid[],$5,80,true,true,
                'active',$6,now(),$7)
        returning id`,
     [skill.skill_id, skill.version_id, versions, challengeIds, hash("policy"), reviewerId, reason],
@@ -150,6 +150,7 @@ try {
 
   // CI fixture uses genuine DB-backed level session and correct attempt records.
   // No model-generated review evidence, real users or production state is affected.
+  let boundarySessionId = null;
   for (const [levelIndex, level] of lv.rows.entries()) {
     const levelChallenges = cv.rows.filter((ch) => ch.level_version_id === level.version_id);
     const sum = levelChallenges.reduce((acc, c) => acc + c.points, 0);
@@ -167,6 +168,7 @@ try {
       [learnerId, level.level_id, level.version_id, levelChallenges.length, sum, levelIndex + 1],
     );
     const sessionId = session.rows[0].id;
+    if (levelIndex === 0) boundarySessionId = sessionId;
     for (const [i, challenge] of levelChallenges.entries()) {
       await db.query(
         `insert into level_session_challenges
@@ -224,8 +226,35 @@ try {
     /append-only/,
   );
 
+  // An otherwise completed learner with every correct challenge must still fail
+  // when just one level's best completed score is below the proposed 80% threshold.
+  assert(boundarySessionId, "A qualifying test session must exist.");
+  const reduced = await db.query(
+    `update level_play_sessions
+        set awarded_points = floor(max_points * 0.79)::int
+      where id = $1 returning awarded_points, max_points`,
+    [boundarySessionId],
+  );
+  assert(reduced.rows[0].awarded_points * 100 < reduced.rows[0].max_points * 80);
+  const belowThreshold = await enabled.eligibility(learnerId, skill.slug);
+  assert.equal(belowThreshold.status, "incomplete", "79% cannot qualify for a certificate.");
+  assert.equal(belowThreshold.completedLevels, lv.rows.length - 1);
+  assert.equal(belowThreshold.passedChallenges, cv.rows.length);
+  await assert.rejects(
+    () => enabled.issue(fakeLearner, skill.slug),
+    (error) => error.statusCode === 409,
+  );
+  const raised = await db.query(
+    `update level_play_sessions
+        set awarded_points = ceil(max_points * 0.80)::int
+      where id = $1 returning awarded_points, max_points`,
+    [boundarySessionId],
+  );
+  assert(raised.rows[0].awarded_points * 100 >= raised.rows[0].max_points * 80);
+
   const eligible = await enabled.eligibility(learnerId, skill.slug);
   assert.equal(eligible.status, "eligible");
+  assert.equal(eligible.completedLevels, lv.rows.length);
   const first = await enabled.issue(fakeLearner, skill.slug);
   assert.equal(first.status, "issued");
   assert.match(first.publicId, /^SC-[A-Za-z0-9_-]{32}$/);
@@ -263,7 +292,7 @@ try {
   );
 
   console.info(
-    `AIFS certificate PostgreSQL smoke passed: ${lv.rows.length} genuine test sessions, ${cv.rows.length} evaluated attempts, no issuance before capstone, exactly one idempotent award, account isolation, immutable evidence. Fixture rolled back.`,
+    `AIFS certificate PostgreSQL smoke passed: 79% rejected and 80% accepted on one required level; ${lv.rows.length} genuine test sessions, ${cv.rows.length} evaluated attempts, no issuance before capstone, exactly one idempotent award, account isolation, immutable evidence. Fixture rolled back.`,
   );
 } finally {
   await db.query("rollback");
