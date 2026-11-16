@@ -65,9 +65,13 @@ export function validateTeamFiveDrafts(plan, legacy, outlines) {
     const courseTitles = new Set();
     for (const [index, m] of outline.modules.entries()) {
       const plannedTitle = addition.modules[index];
-      if (m?.moduleTitle !== plannedTitle || m.moduleNumber !== index + 1 ||
-          typeof m.learningObjective !== "string" || m.learningObjective.length < 45 ||
-          m.reviewStatus !== "subject_review_pending") {
+      if (
+        m?.moduleTitle !== plannedTitle ||
+        m.moduleNumber !== index + 1 ||
+        typeof m.learningObjective !== "string" ||
+        m.learningObjective.length < 45 ||
+        m.reviewStatus !== "subject_review_pending"
+      ) {
         errors.push(`Course ${slug}: module ${index + 1} does not match its unreviewed scope.`);
       }
       if (!Array.isArray(m.levelTitles) || m.levelTitles.length !== 6) {
@@ -75,8 +79,12 @@ export function validateTeamFiveDrafts(plan, legacy, outlines) {
         continue;
       }
       for (const raw of m.levelTitles) {
-        if (typeof raw !== "string" || raw.length < 20 || raw.length > 110 ||
-            /^(step|lesson|level|module)\s+[0-9]/i.test(raw)) {
+        if (
+          typeof raw !== "string" ||
+          raw.length < 20 ||
+          raw.length > 110 ||
+          /^(step|lesson|level|module)\s+[0-9]/i.test(raw)
+        ) {
           errors.push(`Course ${slug} has a generic or invalid level title.`);
           continue;
         }
