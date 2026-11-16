@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "cybersecurity-digital-safety",
+  "publicTitle": "Cybersecurity & Digital Safety",
+  "canonicalSlug": "cybersecurity-digital-safety",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "subjectReviewedBy": null,
+  "languageReviewedBy": null,
+  "publisherId": null,
+  "publishedAt": null,
+  "sourceKind": "internal_editorial",
+  "sourceReviewRequired": true,
+  "capstoneFile": "capstones/cybersecurity-digital-safety.md",
+  "modules": [
+    {
+      "schemaVersion": 1,
+      "courseSlug": "cybersecurity-digital-safety",
+      "locale": "en",
+      "moduleNumber": 1,
+      "moduleTitle": "Recognizing Phishing and Scams",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 1,
+          "title": "Spot Urgency in Phishing Messages",
+          "objective": "Apply spot urgency in phishing messages to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Fraudulent messages often create unnecessary urgency to prevent independent checks. Worked example: A fictional SMS says \"Your parcel is blocked; pay within ten minutes or it will be destroyed\". A safer response is to open the courier's known official app independently and inspect the real order status. Unsafe alternatives include: pay through the shortened link in the SMS or reply with a payment-card photo to prove identity.",
+          "workedExample": "Situation: A fictional SMS says \"Your parcel is blocked; pay within ten minutes or it will be destroyed\". Action: Open the courier's known official app independently and inspect the real order status.",
+          "commonMistake": "Pay through the shortened link in the SMS",
+          "remediation": "Urgency is a pressure tactic and is not proof that the request is genuine.",
+          "hint": "Check whether the response follows this rule: Fraudulent messages often create unnecessary urgency to prevent independent checks.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Spot Urgency in Phishing Messages\", consider this fictional incident: A fictional SMS says \"Your parcel is blocked; pay within ten minutes or it will be destroyed\". What should the person do?",
+              "options": {
+                "a": "Open the courier's known official app independently and inspect the real order status",
+                "b": "Pay through the shortened link in the SMS",
+                "c": "Reply with a payment-card photo to prove identity"
+              },
+              "answer": "a",
+              "feedback": "Fraudulent messages often create unnecessary urgency to prevent independent checks. Recommended action: Open the courier's known official app independently and inspect the real order status."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: an online seller receiving a suspicious delivery failure email. Which response offers the safest next step?",
+              "options": {
+                "a": "Reply with a payment-card photo to prove identity",
+                "b": "Pay through the shortened link in the SMS",
+                "c": "Open the courier's known official app independently and inspect the real order status"
+              },
+              "answer": "c",
+              "feedback": "Urgency is a pressure tactic and is not proof that the request is genuine. Recommended action: Open the courier's known official app independently and inspect the real order status."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Spot Urgency in Phishing Messages\": Threatening countdowns are a reason to independently verify a message before acting.",
+              "answer": true,
+              "feedback": "Urgency is a pressure tactic and is not proof that the request is genuine."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "Inspect Sender and Domain Clues",
+          "objective": "Apply inspect sender and domain clues to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A familiar logo is not proof of identity; the actual sender and destination matter. Worked example: A fake bank notice arrives from security@bank-help-example.invalid with a copied brand mark. A safer response is to check the bank's official contact channel without clicking the email link. Unsafe alternatives include: assume the logo confirms the sender or type the password into the email reply.",
+          "workedExample": "Situation: A fake bank notice arrives from security@bank-help-example.invalid with a copied brand mark. Action: Check the bank's official contact channel without clicking the email link.",
+          "commonMistake": "Assume the logo confirms the sender",
+          "remediation": "Visual branding can be copied; inspect trusted channels and real domain ownership.",
+          "hint": "Check whether the response follows this rule: A familiar logo is not proof of identity; the actual sender and destination matter.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Inspect Sender and Domain Clues\", consider this fictional incident: A fake bank notice arrives from security@bank-help-example.invalid with a copied brand mark. What should the person do?",
+              "options": {
+                "a": "Type the password into the email reply",
+                "b": "Check the bank's official contact channel without clicking the email link",
+                "c": "Assume the logo confirms the sender"
+              },
+              "answer": "b",
+              "feedback": "A familiar logo is not proof of identity; the actual sender and destination matter. Recommended action: Check the bank's official contact channel without clicking the email link."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a learner receiving an unexpected scholarship confirmation link. Which response offers the safest next step?",
+              "options": {
+                "a": "Check the bank's official contact channel without clicking the email link",
+                "b": "Type the password into the email reply",
+                "c": "Assume the logo confirms the sender"
+              },
+              "answer": "a",
+              "feedback": "Visual branding can be copied; inspect trusted channels and real domain ownership. Recommended action: Check the bank's official contact channel without clicking the email link."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Inspect Sender and Domain Clues\": A brand logo alone authenticates the email sender and payment destination.",
+              "answer": false,
+              "feedback": "Visual branding can be copied; inspect trusted channels and real domain ownership."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "title": "Recognize Suspicious Link Targets",
+          "objective": "Apply recognize suspicious link targets to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "The destination of a link may differ from its display text and can hide lookalike domains. Worked example: A fictional university portal button is labelled \"Student Login\" but points to an unrelated test address. A safer response is to navigate to the school portal using a saved verified bookmark instead. Unsafe alternatives include: ignore the destination because the label says Student Login or enter an OTP on the unfamiliar page.",
+          "workedExample": "Situation: A fictional university portal button is labelled \"Student Login\" but points to an unrelated test address. Action: Navigate to the school portal using a saved verified bookmark instead.",
+          "commonMistake": "Ignore the destination because the label says Student Login",
+          "remediation": "Display labels can disguise malicious destinations.",
+          "hint": "Check whether the response follows this rule: The destination of a link may differ from its display text and can hide lookalike domains.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Recognize Suspicious Link Targets\", consider this fictional incident: A fictional university portal button is labelled \"Student Login\" but points to an unrelated test address. What should the person do?",
+              "options": {
+                "a": "Ignore the destination because the label says Student Login",
+                "b": "Enter an OTP on the unfamiliar page",
+                "c": "Navigate to the school portal using a saved verified bookmark instead"
+              },
+              "answer": "c",
+              "feedback": "The destination of a link may differ from its display text and can hide lookalike domains. Recommended action: Navigate to the school portal using a saved verified bookmark instead."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a shop owner evaluating a supplier invoice attachment link. Which response offers the safest next step?",
+              "options": {
+                "a": "Ignore the destination because the label says Student Login",
+                "b": "Navigate to the school portal using a saved verified bookmark instead",
+                "c": "Enter an OTP on the unfamiliar page"
+              },
+              "answer": "b",
+              "feedback": "Display labels can disguise malicious destinations. Recommended action: Navigate to the school portal using a saved verified bookmark instead."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Recognize Suspicious Link Targets\": A familiar-looking link label is enough to verify where a link goes.",
+              "answer": false,
+              "feedback": "Display labels can disguise malicious destinations."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "title": "Check Impersonation Claims",
+          "objective": "Apply check impersonation claims to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Attackers can impersonate authority figures through social messages and reused profile images. Worked example: A message claiming to be a manager asks for urgent vouchers from a new number. A safer response is to confirm the request through the manager's established work channel before any purchase. Unsafe alternatives include: buy the vouchers to preserve the relationship or send the staff directory to the new number.",
+          "workedExample": "Situation: A message claiming to be a manager asks for urgent vouchers from a new number. Action: Confirm the request through the manager's established work channel before any purchase.",
+          "commonMistake": "Buy the vouchers to preserve the relationship",
+          "remediation": "Known communication routes help expose impersonation.",
+          "hint": "Check whether the response follows this rule: Attackers can impersonate authority figures through social messages and reused profile images.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Check Impersonation Claims\", consider this fictional incident: A message claiming to be a manager asks for urgent vouchers from a new number. What should the person do?",
+              "options": {
+                "a": "Confirm the request through the manager's established work channel before any purchase",
+                "b": "Buy the vouchers to preserve the relationship",
+                "c": "Send the staff directory to the new number"
+              },
+              "answer": "a",
+              "feedback": "Attackers can impersonate authority figures through social messages and reused profile images. Recommended action: Confirm the request through the manager's established work channel before any purchase."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: an employee receiving a payment request supposedly from the finance lead. Which response offers the safest next step?",
+              "options": {
+                "a": "Send the staff directory to the new number",
+                "b": "Buy the vouchers to preserve the relationship",
+                "c": "Confirm the request through the manager's established work channel before any purchase"
+              },
+              "answer": "c",
+              "feedback": "Known communication routes help expose impersonation. Recommended action: Confirm the request through the manager's established work channel before any purchase."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Check Impersonation Claims\": A new phone number claiming to be your manager should be checked independently.",
+              "answer": true,
+              "feedback": "Known communication routes help expose impersonation."
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "title": "Protect One-Time Codes",
+          "objective": "Apply protect one-time codes to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "An authentication OTP is a sensitive login factor and should not be forwarded to a stranger. Worked example: A caller claiming to provide technical support asks for the six-digit sign-in code just received. A safer response is to do not share the OTP and contact support through the service's official help route. Unsafe alternatives include: read the code aloud to finish the support call or post the code in a public support forum.",
+          "workedExample": "Situation: A caller claiming to provide technical support asks for the six-digit sign-in code just received. Action: Do not share the OTP and contact support through the service's official help route.",
+          "commonMistake": "Read the code aloud to finish the support call",
+          "remediation": "Knowledge of a name does not authenticate the caller.",
+          "hint": "Check whether the response follows this rule: An authentication OTP is a sensitive login factor and should not be forwarded to a stranger.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Protect One-Time Codes\", consider this fictional incident: A caller claiming to provide technical support asks for the six-digit sign-in code just received. What should the person do?",
+              "options": {
+                "a": "Post the code in a public support forum",
+                "b": "Do not share the OTP and contact support through the service's official help route",
+                "c": "Read the code aloud to finish the support call"
+              },
+              "answer": "b",
+              "feedback": "An authentication OTP is a sensitive login factor and should not be forwarded to a stranger. Recommended action: Do not share the OTP and contact support through the service's official help route."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a student receiving an unsolicited login-support WhatsApp message. Which response offers the safest next step?",
+              "options": {
+                "a": "Do not share the OTP and contact support through the service's official help route",
+                "b": "Post the code in a public support forum",
+                "c": "Read the code aloud to finish the support call"
+              },
+              "answer": "a",
+              "feedback": "Knowledge of a name does not authenticate the caller. Recommended action: Do not share the OTP and contact support through the service's official help route."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Protect One-Time Codes\": An OTP is safe to share when a caller knows your full name.",
+              "answer": false,
+              "feedback": "Knowledge of a name does not authenticate the caller."
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "title": "Checkpoint: Triage a Suspected Scam",
+          "objective": "Apply checkpoint: triage a suspected scam to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A safe first response preserves evidence, avoids interaction and uses independent reporting channels. Worked example: A pretend online store asks for an advance transfer to release a prize never entered. A safer response is to stop payment, preserve the message and report it through the platform or relevant official channel. Unsafe alternatives include: transfer a small amount to test whether the prize is real or forward the scam link to friends for them to click.",
+          "workedExample": "Situation: A pretend online store asks for an advance transfer to release a prize never entered. Action: Stop payment, preserve the message and report it through the platform or relevant official channel.",
+          "commonMistake": "Transfer a small amount to test whether the prize is real",
+          "remediation": "An unexpected prize requiring upfront payment is a strong scam warning.",
+          "hint": "Check whether the response follows this rule: A safe first response preserves evidence, avoids interaction and uses independent reporting channels.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Checkpoint: Triage a Suspected Scam\", consider this fictional incident: A pretend online store asks for an advance transfer to release a prize never entered. What should the person do?",
+              "options": {
+                "a": "Transfer a small amount to test whether the prize is real",
+                "b": "Forward the scam link to friends for them to click",
+                "c": "Stop payment, preserve the message and report it through the platform or relevant official channel"
+              },
+              "answer": "c",
+              "feedback": "A safe first response preserves evidence, avoids interaction and uses independent reporting channels. Recommended action: Stop payment, preserve the message and report it through the platform or relevant official channel."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a family member asking how to respond to a suspicious job offer. Which response offers the safest next step?",
+              "options": {
+                "a": "Transfer a small amount to test whether the prize is real",
+                "b": "Stop payment, preserve the message and report it through the platform or relevant official channel",
+                "c": "Forward the scam link to friends for them to click"
+              },
+              "answer": "b",
+              "feedback": "An unexpected prize requiring upfront payment is a strong scam warning. Recommended action: Stop payment, preserve the message and report it through the platform or relevant official channel."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Checkpoint: Triage a Suspected Scam\": A person should pay a small verification fee before deciding whether a lottery message is real.",
+              "answer": false,
+              "feedback": "An unexpected prize requiring upfront payment is a strong scam warning."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "cybersecurity-digital-safety",
+      "locale": "en",
+      "moduleNumber": 2,
+      "moduleTitle": "Passwords and Account Security",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 7,
+          "title": "Create Long Unique Passphrases",
+          "objective": "Apply create long unique passphrases to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Accounts need independent high-entropy secrets; reuse exposes multiple sites to one breach. Worked example: A learner uses the same eight-character password for email and online shopping. A safer response is to use a strong unique passphrase for each account and store it securely. Unsafe alternatives include: append \"1\" to the reused password everywhere or share one team password in a group chat.",
+          "workedExample": "Situation: A learner uses the same eight-character password for email and online shopping. Action: Use a strong unique passphrase for each account and store it securely.",
+          "commonMistake": "Append \"1\" to the reused password everywhere",
+          "remediation": "Credential reuse permits attackers to try one exposed secret on other accounts.",
+          "hint": "Check whether the response follows this rule: Accounts need independent high-entropy secrets; reuse exposes multiple sites to one breach.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Create Long Unique Passphrases\", consider this fictional incident: A learner uses the same eight-character password for email and online shopping. What should the person do?",
+              "options": {
+                "a": "Use a strong unique passphrase for each account and store it securely",
+                "b": "Append \"1\" to the reused password everywhere",
+                "c": "Share one team password in a group chat"
+              },
+              "answer": "a",
+              "feedback": "Accounts need independent high-entropy secrets; reuse exposes multiple sites to one breach. Recommended action: Use a strong unique passphrase for each account and store it securely."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a freelancer creating a separate login for a portfolio website. Which response offers the safest next step?",
+              "options": {
+                "a": "Share one team password in a group chat",
+                "b": "Append \"1\" to the reused password everywhere",
+                "c": "Use a strong unique passphrase for each account and store it securely"
+              },
+              "answer": "c",
+              "feedback": "Credential reuse permits attackers to try one exposed secret on other accounts. Recommended action: Use a strong unique passphrase for each account and store it securely."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Create Long Unique Passphrases\": Reusing the same password across services increases the impact of a single leak.",
+              "answer": true,
+              "feedback": "Credential reuse permits attackers to try one exposed secret on other accounts."
+            }
+          ]
+        },
+        {
+          "number": 8,
+          "title": "Understand Multi-Factor Authentication",
+          "objective": "Apply understand multi-factor authentication to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "MFA adds a second check, but fake approval requests and recovery methods still require care. Worked example: An account receives an unexpected push approval request while its owner is offline. A safer response is to deny the unexpected approval and investigate the sign-in activity through the official account settings. Unsafe alternatives include: approve the request to stop the notification or disable MFA because it caused inconvenience.",
+          "workedExample": "Situation: An account receives an unexpected push approval request while its owner is offline. Action: Deny the unexpected approval and investigate the sign-in activity through the official account settings.",
+          "commonMistake": "Approve the request to stop the notification",
+          "remediation": "Unexpected prompts may indicate an attacker already has a password.",
+          "hint": "Check whether the response follows this rule: MFA adds a second check, but fake approval requests and recovery methods still require care.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Understand Multi-Factor Authentication\", consider this fictional incident: An account receives an unexpected push approval request while its owner is offline. What should the person do?",
+              "options": {
+                "a": "Disable MFA because it caused inconvenience",
+                "b": "Deny the unexpected approval and investigate the sign-in activity through the official account settings",
+                "c": "Approve the request to stop the notification"
+              },
+              "answer": "b",
+              "feedback": "MFA adds a second check, but fake approval requests and recovery methods still require care. Recommended action: Deny the unexpected approval and investigate the sign-in activity through the official account settings."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a remote worker receiving repeated unsolicited approval prompts. Which response offers the safest next step?",
+              "options": {
+                "a": "Deny the unexpected approval and investigate the sign-in activity through the official account settings",
+                "b": "Disable MFA because it caused inconvenience",
+                "c": "Approve the request to stop the notification"
+              },
+              "answer": "a",
+              "feedback": "Unexpected prompts may indicate an attacker already has a password. Recommended action: Deny the unexpected approval and investigate the sign-in activity through the official account settings."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Understand Multi-Factor Authentication\": Any MFA push notification should be approved automatically if it uses the correct app.",
+              "answer": false,
+              "feedback": "Unexpected prompts may indicate an attacker already has a password."
+            }
+          ]
+        },
+        {
+          "number": 9,
+          "title": "Use Password Managers Safely",
+          "objective": "Apply use password managers safely to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A reputable password manager can help generate and store unique credentials without exposing a master secret. Worked example: A shop has ten different online service accounts and staff keep forgetting passwords. A safer response is to use unique generated passwords and an approved password manager with strong account protection. Unsafe alternatives include: keep all passwords on a public shared spreadsheet or email the manager's master password to staff.",
+          "workedExample": "Situation: A shop has ten different online service accounts and staff keep forgetting passwords. Action: Use unique generated passwords and an approved password manager with strong account protection.",
+          "commonMistake": "Keep all passwords on a public shared spreadsheet",
+          "remediation": "The password manager must itself be secured and backed up appropriately.",
+          "hint": "Check whether the response follows this rule: A reputable password manager can help generate and store unique credentials without exposing a master secret.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Use Password Managers Safely\", consider this fictional incident: A shop has ten different online service accounts and staff keep forgetting passwords. What should the person do?",
+              "options": {
+                "a": "Keep all passwords on a public shared spreadsheet",
+                "b": "Email the manager's master password to staff",
+                "c": "Use unique generated passwords and an approved password manager with strong account protection"
+              },
+              "answer": "c",
+              "feedback": "A reputable password manager can help generate and store unique credentials without exposing a master secret. Recommended action: Use unique generated passwords and an approved password manager with strong account protection."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a student managing email, learning portal and cloud storage logins. Which response offers the safest next step?",
+              "options": {
+                "a": "Keep all passwords on a public shared spreadsheet",
+                "b": "Use unique generated passwords and an approved password manager with strong account protection",
+                "c": "Email the manager's master password to staff"
+              },
+              "answer": "b",
+              "feedback": "The password manager must itself be secured and backed up appropriately. Recommended action: Use unique generated passwords and an approved password manager with strong account protection."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Use Password Managers Safely\": A password manager eliminates the need to protect its own account and recovery methods.",
+              "answer": false,
+              "feedback": "The password manager must itself be secured and backed up appropriately."
+            }
+          ]
+        },
+        {
+          "number": 10,
+          "title": "Plan Account Recovery",
+          "objective": "Apply plan account recovery to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Recovery contacts and backup codes should be configured before an account is inaccessible. Worked example: A student changes phones and loses access to the old authenticator app. A safer response is to set up verified recovery methods and store recovery codes in a secure separate place. Unsafe alternatives include: wait until the account is locked to invent recovery information or photograph recovery codes and post them publicly.",
+          "workedExample": "Situation: A student changes phones and loses access to the old authenticator app. Action: Set up verified recovery methods and store recovery codes in a secure separate place.",
+          "commonMistake": "Wait until the account is locked to invent recovery information",
+          "remediation": "Account recovery is easier when backups are established and protected in advance.",
+          "hint": "Check whether the response follows this rule: Recovery contacts and backup codes should be configured before an account is inaccessible.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Plan Account Recovery\", consider this fictional incident: A student changes phones and loses access to the old authenticator app. What should the person do?",
+              "options": {
+                "a": "Set up verified recovery methods and store recovery codes in a secure separate place",
+                "b": "Wait until the account is locked to invent recovery information",
+                "c": "Photograph recovery codes and post them publicly"
+              },
+              "answer": "a",
+              "feedback": "Recovery contacts and backup codes should be configured before an account is inaccessible. Recommended action: Set up verified recovery methods and store recovery codes in a secure separate place."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a small-business owner replacing a work phone. Which response offers the safest next step?",
+              "options": {
+                "a": "Photograph recovery codes and post them publicly",
+                "b": "Wait until the account is locked to invent recovery information",
+                "c": "Set up verified recovery methods and store recovery codes in a secure separate place"
+              },
+              "answer": "c",
+              "feedback": "Account recovery is easier when backups are established and protected in advance. Recommended action: Set up verified recovery methods and store recovery codes in a secure separate place."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Plan Account Recovery\": Recovery methods should be reviewed and secured before losing the primary device.",
+              "answer": true,
+              "feedback": "Account recovery is easier when backups are established and protected in advance."
+            }
+          ]
+        },
+        {
+          "number": 11,
+          "title": "Keep Devices and Apps Updated",
+          "objective": "Apply keep devices and apps updated to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Security updates can fix known weaknesses and should come from legitimate distribution channels. Worked example: A phone shows a pending operating-system update while an unfamiliar website offers an \"instant patch\" download. A safer response is to update through the official device settings or trusted app store after confirming the release. Unsafe alternatives include: install the patch from the ad's file-sharing link or disable future updates to save storage.",
+          "workedExample": "Situation: A phone shows a pending operating-system update while an unfamiliar website offers an \"instant patch\" download. Action: Update through the official device settings or trusted app store after confirming the release.",
+          "commonMistake": "Install the patch from the ad's file-sharing link",
+          "remediation": "Updates should come from verified vendor-managed channels.",
+          "hint": "Check whether the response follows this rule: Security updates can fix known weaknesses and should come from legitimate distribution channels.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Keep Devices and Apps Updated\", consider this fictional incident: A phone shows a pending operating-system update while an unfamiliar website offers an \"instant patch\" download. What should the person do?",
+              "options": {
+                "a": "Disable future updates to save storage",
+                "b": "Update through the official device settings or trusted app store after confirming the release",
+                "c": "Install the patch from the ad's file-sharing link"
+              },
+              "answer": "b",
+              "feedback": "Security updates can fix known weaknesses and should come from legitimate distribution channels. Recommended action: Update through the official device settings or trusted app store after confirming the release."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a volunteer maintaining a shared work tablet. Which response offers the safest next step?",
+              "options": {
+                "a": "Update through the official device settings or trusted app store after confirming the release",
+                "b": "Disable future updates to save storage",
+                "c": "Install the patch from the ad's file-sharing link"
+              },
+              "answer": "a",
+              "feedback": "Updates should come from verified vendor-managed channels. Recommended action: Update through the official device settings or trusted app store after confirming the release."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Keep Devices and Apps Updated\": An unsolicited website download is the preferred way to install a phone's security update.",
+              "answer": false,
+              "feedback": "Updates should come from verified vendor-managed channels."
+            }
+          ]
+        },
+        {
+          "number": 12,
+          "title": "Checkpoint: Secure a New Account",
+          "objective": "Apply checkpoint: secure a new account to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A basic setup includes unique credentials, MFA, verified recovery and a sign-in review. Worked example: A first-time freelancer creates an account for sending client proposals. A safer response is to generate a unique password, enable MFA and review recovery and session settings. Unsafe alternatives include: reuse the social media password and skip MFA or share the login code with a collaborator.",
+          "workedExample": "Situation: A first-time freelancer creates an account for sending client proposals. Action: Generate a unique password, enable MFA and review recovery and session settings.",
+          "commonMistake": "Reuse the social media password and skip MFA",
+          "remediation": "Layered controls reduce the impact of a single credential exposure.",
+          "hint": "Check whether the response follows this rule: A basic setup includes unique credentials, MFA, verified recovery and a sign-in review.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Checkpoint: Secure a New Account\", consider this fictional incident: A first-time freelancer creates an account for sending client proposals. What should the person do?",
+              "options": {
+                "a": "Reuse the social media password and skip MFA",
+                "b": "Share the login code with a collaborator",
+                "c": "Generate a unique password, enable MFA and review recovery and session settings"
+              },
+              "answer": "c",
+              "feedback": "A basic setup includes unique credentials, MFA, verified recovery and a sign-in review. Recommended action: Generate a unique password, enable MFA and review recovery and session settings."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a community team onboarding a new admin account. Which response offers the safest next step?",
+              "options": {
+                "a": "Reuse the social media password and skip MFA",
+                "b": "Generate a unique password, enable MFA and review recovery and session settings",
+                "c": "Share the login code with a collaborator"
+              },
+              "answer": "b",
+              "feedback": "Layered controls reduce the impact of a single credential exposure. Recommended action: Generate a unique password, enable MFA and review recovery and session settings."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Checkpoint: Secure a New Account\": An account with a unique password and properly configured MFA is safer than one with a reused password.",
+              "answer": true,
+              "feedback": "Layered controls reduce the impact of a single credential exposure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "cybersecurity-digital-safety",
+      "locale": "en",
+      "moduleNumber": 3,
+      "moduleTitle": "Privacy and Data Protection",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 13,
+          "title": "Limit Unnecessary App Permissions",
+          "objective": "Apply limit unnecessary app permissions to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Mobile apps should receive only permissions needed for their legitimate features. Worked example: A simple calculator app requests permanent access to contacts and precise location. A safer response is to decline unrelated permissions and review whether the app remains appropriate to use. Unsafe alternatives include: grant every permission because the app installed successfully or upload the phone contact list to the developer.",
+          "workedExample": "Situation: A simple calculator app requests permanent access to contacts and precise location. Action: Decline unrelated permissions and review whether the app remains appropriate to use.",
+          "commonMistake": "Grant every permission because the app installed successfully",
+          "remediation": "Apply least privilege to personal device permissions.",
+          "hint": "Check whether the response follows this rule: Mobile apps should receive only permissions needed for their legitimate features.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Limit Unnecessary App Permissions\", consider this fictional incident: A simple calculator app requests permanent access to contacts and precise location. What should the person do?",
+              "options": {
+                "a": "Decline unrelated permissions and review whether the app remains appropriate to use",
+                "b": "Grant every permission because the app installed successfully",
+                "c": "Upload the phone contact list to the developer"
+              },
+              "answer": "a",
+              "feedback": "Mobile apps should receive only permissions needed for their legitimate features. Recommended action: Decline unrelated permissions and review whether the app remains appropriate to use."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a trainee installing a flashlight utility on a phone. Which response offers the safest next step?",
+              "options": {
+                "a": "Upload the phone contact list to the developer",
+                "b": "Grant every permission because the app installed successfully",
+                "c": "Decline unrelated permissions and review whether the app remains appropriate to use"
+              },
+              "answer": "c",
+              "feedback": "Apply least privilege to personal device permissions. Recommended action: Decline unrelated permissions and review whether the app remains appropriate to use."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Limit Unnecessary App Permissions\": Permissions can be reviewed and limited without deleting the entire phone account.",
+              "answer": true,
+              "feedback": "Apply least privilege to personal device permissions."
+            }
+          ]
+        },
+        {
+          "number": 14,
+          "title": "Identify Sensitive Personal Data",
+          "objective": "Apply identify sensitive personal data to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Personal identifiers and financial information should not be pasted into casual online tools or public posts. Worked example: A student shares a screenshot of a scholarship form containing an ID number and home address. A safer response is to redact unnecessary identifiers before sharing a question about the form. Unsafe alternatives include: post the original screenshot publicly for advice or copy all document numbers into a group chat.",
+          "workedExample": "Situation: A student shares a screenshot of a scholarship form containing an ID number and home address. Action: Redact unnecessary identifiers before sharing a question about the form.",
+          "commonMistake": "Post the original screenshot publicly for advice",
+          "remediation": "Identity and location details can enable unwanted contact or misuse.",
+          "hint": "Check whether the response follows this rule: Personal identifiers and financial information should not be pasted into casual online tools or public posts.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Identify Sensitive Personal Data\", consider this fictional incident: A student shares a screenshot of a scholarship form containing an ID number and home address. What should the person do?",
+              "options": {
+                "a": "Copy all document numbers into a group chat",
+                "b": "Redact unnecessary identifiers before sharing a question about the form",
+                "c": "Post the original screenshot publicly for advice"
+              },
+              "answer": "b",
+              "feedback": "Personal identifiers and financial information should not be pasted into casual online tools or public posts. Recommended action: Redact unnecessary identifiers before sharing a question about the form."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a seller asking for help with a shipping form. Which response offers the safest next step?",
+              "options": {
+                "a": "Redact unnecessary identifiers before sharing a question about the form",
+                "b": "Copy all document numbers into a group chat",
+                "c": "Post the original screenshot publicly for advice"
+              },
+              "answer": "a",
+              "feedback": "Identity and location details can enable unwanted contact or misuse. Recommended action: Redact unnecessary identifiers before sharing a question about the form."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Identify Sensitive Personal Data\": A person's home address and identity number are harmless public details in every context.",
+              "answer": false,
+              "feedback": "Identity and location details can enable unwanted contact or misuse."
+            }
+          ]
+        },
+        {
+          "number": 15,
+          "title": "Review File Sharing Access",
+          "objective": "Apply review file sharing access to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A share link can grant more access than intended and should have an appropriate audience and expiry. Worked example: A workplace document is accidentally set to \"anyone with the link can edit\". A safer response is to change permissions to named authorized collaborators with the minimum required role. Unsafe alternatives include: publish the link openly because the filename is obscure or allow public editors to avoid approval requests.",
+          "workedExample": "Situation: A workplace document is accidentally set to \"anyone with the link can edit\". Action: Change permissions to named authorized collaborators with the minimum required role.",
+          "commonMistake": "Publish the link openly because the filename is obscure",
+          "remediation": "Link secrecy is not the same as access control.",
+          "hint": "Check whether the response follows this rule: A share link can grant more access than intended and should have an appropriate audience and expiry.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Review File Sharing Access\", consider this fictional incident: A workplace document is accidentally set to \"anyone with the link can edit\". What should the person do?",
+              "options": {
+                "a": "Publish the link openly because the filename is obscure",
+                "b": "Allow public editors to avoid approval requests",
+                "c": "Change permissions to named authorized collaborators with the minimum required role"
+              },
+              "answer": "c",
+              "feedback": "A share link can grant more access than intended and should have an appropriate audience and expiry. Recommended action: Change permissions to named authorized collaborators with the minimum required role."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a school sharing a draft event schedule with teachers. Which response offers the safest next step?",
+              "options": {
+                "a": "Publish the link openly because the filename is obscure",
+                "b": "Change permissions to named authorized collaborators with the minimum required role",
+                "c": "Allow public editors to avoid approval requests"
+              },
+              "answer": "b",
+              "feedback": "Link secrecy is not the same as access control. Recommended action: Change permissions to named authorized collaborators with the minimum required role."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Review File Sharing Access\": An unguessable file URL always means an internet-wide editable document is private.",
+              "answer": false,
+              "feedback": "Link secrecy is not the same as access control."
+            }
+          ]
+        },
+        {
+          "number": 16,
+          "title": "Use Safer Public Wi-Fi Habits",
+          "objective": "Apply use safer public wi-fi habits to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "On shared networks, avoid unnecessary sensitive actions and check the legitimacy of sign-in pages. Worked example: An airport network presents a login page asking for a banking password. A safer response is to do not enter banking credentials and use a known trustworthy connection for sensitive access. Unsafe alternatives include: assume the captive portal owns every account password or turn off security warnings to finish quickly.",
+          "workedExample": "Situation: An airport network presents a login page asking for a banking password. Action: Do not enter banking credentials and use a known trustworthy connection for sensitive access.",
+          "commonMistake": "Assume the captive portal owns every account password",
+          "remediation": "A network's access page cannot legitimately authenticate unrelated financial services.",
+          "hint": "Check whether the response follows this rule: On shared networks, avoid unnecessary sensitive actions and check the legitimacy of sign-in pages.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Use Safer Public Wi-Fi Habits\", consider this fictional incident: An airport network presents a login page asking for a banking password. What should the person do?",
+              "options": {
+                "a": "Do not enter banking credentials and use a known trustworthy connection for sensitive access",
+                "b": "Assume the captive portal owns every account password",
+                "c": "Turn off security warnings to finish quickly"
+              },
+              "answer": "a",
+              "feedback": "On shared networks, avoid unnecessary sensitive actions and check the legitimacy of sign-in pages. Recommended action: Do not enter banking credentials and use a known trustworthy connection for sensitive access."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a traveler checking a billing account at a cafe. Which response offers the safest next step?",
+              "options": {
+                "a": "Turn off security warnings to finish quickly",
+                "b": "Assume the captive portal owns every account password",
+                "c": "Do not enter banking credentials and use a known trustworthy connection for sensitive access"
+              },
+              "answer": "c",
+              "feedback": "A network's access page cannot legitimately authenticate unrelated financial services. Recommended action: Do not enter banking credentials and use a known trustworthy connection for sensitive access."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Use Safer Public Wi-Fi Habits\": A public Wi-Fi landing page should never need the password for an unrelated bank account.",
+              "answer": true,
+              "feedback": "A network's access page cannot legitimately authenticate unrelated financial services."
+            }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Understand Backups and Device Loss",
+          "objective": "Apply understand backups and device loss to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Backups reduce data loss, but access control and restoration tests still matter. Worked example: A freelancer stores all client-approved files only on one aging laptop. A safer response is to keep secure authorized backups and test recovery with non-sensitive sample files. Unsafe alternatives include: wait for the laptop to fail before planning recovery or copy confidential documents to an unmanaged public drive.",
+          "workedExample": "Situation: A freelancer stores all client-approved files only on one aging laptop. Action: Keep secure authorized backups and test recovery with non-sensitive sample files.",
+          "commonMistake": "Wait for the laptop to fail before planning recovery",
+          "remediation": "Untested or publicly exposed backups may fail operationally or create new risks.",
+          "hint": "Check whether the response follows this rule: Backups reduce data loss, but access control and restoration tests still matter.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Understand Backups and Device Loss\", consider this fictional incident: A freelancer stores all client-approved files only on one aging laptop. What should the person do?",
+              "options": {
+                "a": "Copy confidential documents to an unmanaged public drive",
+                "b": "Keep secure authorized backups and test recovery with non-sensitive sample files",
+                "c": "Wait for the laptop to fail before planning recovery"
+              },
+              "answer": "b",
+              "feedback": "Backups reduce data loss, but access control and restoration tests still matter. Recommended action: Keep secure authorized backups and test recovery with non-sensitive sample files."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a small shop protecting its weekly inventory records. Which response offers the safest next step?",
+              "options": {
+                "a": "Keep secure authorized backups and test recovery with non-sensitive sample files",
+                "b": "Copy confidential documents to an unmanaged public drive",
+                "c": "Wait for the laptop to fail before planning recovery"
+              },
+              "answer": "a",
+              "feedback": "Untested or publicly exposed backups may fail operationally or create new risks. Recommended action: Keep secure authorized backups and test recovery with non-sensitive sample files."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Understand Backups and Device Loss\": A backup is dependable only if restoration is possible and access is restricted.",
+              "answer": true,
+              "feedback": "Untested or publicly exposed backups may fail operationally or create new risks."
+            }
+          ]
+        },
+        {
+          "number": 18,
+          "title": "Checkpoint: Minimize Exposure",
+          "objective": "Apply checkpoint: minimize exposure to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Privacy decisions should consider necessity, permissions, retention and sharing audience. Worked example: A volunteer registration form asks for passports when only shifts and contact preferences are needed. A safer response is to collect only needed fields, limit access and set a reasonable deletion or retention plan. Unsafe alternatives include: store every passport scan forever in a shared folder or publish volunteer phone numbers in a public roster.",
+          "workedExample": "Situation: A volunteer registration form asks for passports when only shifts and contact preferences are needed. Action: Collect only needed fields, limit access and set a reasonable deletion or retention plan.",
+          "commonMistake": "Store every passport scan forever in a shared folder",
+          "remediation": "Data minimization lowers unnecessary exposure.",
+          "hint": "Check whether the response follows this rule: Privacy decisions should consider necessity, permissions, retention and sharing audience.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Checkpoint: Minimize Exposure\", consider this fictional incident: A volunteer registration form asks for passports when only shifts and contact preferences are needed. What should the person do?",
+              "options": {
+                "a": "Store every passport scan forever in a shared folder",
+                "b": "Publish volunteer phone numbers in a public roster",
+                "c": "Collect only needed fields, limit access and set a reasonable deletion or retention plan"
+              },
+              "answer": "c",
+              "feedback": "Privacy decisions should consider necessity, permissions, retention and sharing audience. Recommended action: Collect only needed fields, limit access and set a reasonable deletion or retention plan."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a youth club updating a digital signup sheet. Which response offers the safest next step?",
+              "options": {
+                "a": "Store every passport scan forever in a shared folder",
+                "b": "Collect only needed fields, limit access and set a reasonable deletion or retention plan",
+                "c": "Publish volunteer phone numbers in a public roster"
+              },
+              "answer": "b",
+              "feedback": "Data minimization lowers unnecessary exposure. Recommended action: Collect only needed fields, limit access and set a reasonable deletion or retention plan."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Checkpoint: Minimize Exposure\": Collecting more personal information than needed is the safest default for registration forms.",
+              "answer": false,
+              "feedback": "Data minimization lowers unnecessary exposure."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "cybersecurity-digital-safety",
+      "locale": "en",
+      "moduleNumber": 4,
+      "moduleTitle": "Scam Response and Safety Capstone",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 19,
+          "title": "Respond to a Suspected Account Takeover",
+          "objective": "Apply respond to a suspected account takeover to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Use verified account recovery and revoke unauthorized access when an account may be compromised. Worked example: A person sees a new login from an unrecognized device on their email account. A safer response is to use the official account security page to change the password, revoke sessions and review recovery methods. Unsafe alternatives include: reply to a random stranger offering account recovery for a fee or ignore the alert until the next month.",
+          "workedExample": "Situation: A person sees a new login from an unrecognized device on their email account. Action: Use the official account security page to change the password, revoke sessions and review recovery methods.",
+          "commonMistake": "Reply to a random stranger offering account recovery for a fee",
+          "remediation": "Recovery should address the attacker’s persistence as well as the password.",
+          "hint": "Check whether the response follows this rule: Use verified account recovery and revoke unauthorized access when an account may be compromised.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Respond to a Suspected Account Takeover\", consider this fictional incident: A person sees a new login from an unrecognized device on their email account. What should the person do?",
+              "options": {
+                "a": "Use the official account security page to change the password, revoke sessions and review recovery methods",
+                "b": "Reply to a random stranger offering account recovery for a fee",
+                "c": "Ignore the alert until the next month"
+              },
+              "answer": "a",
+              "feedback": "Use verified account recovery and revoke unauthorized access when an account may be compromised. Recommended action: Use the official account security page to change the password, revoke sessions and review recovery methods."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a freelancer noticing unknown messages sent from a client email account. Which response offers the safest next step?",
+              "options": {
+                "a": "Ignore the alert until the next month",
+                "b": "Reply to a random stranger offering account recovery for a fee",
+                "c": "Use the official account security page to change the password, revoke sessions and review recovery methods"
+              },
+              "answer": "c",
+              "feedback": "Recovery should address the attacker’s persistence as well as the password. Recommended action: Use the official account security page to change the password, revoke sessions and review recovery methods."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Respond to a Suspected Account Takeover\": A legitimate response should review active sessions, recovery methods and connected applications.",
+              "answer": true,
+              "feedback": "Recovery should address the attacker’s persistence as well as the password."
+            }
+          ]
+        },
+        {
+          "number": 20,
+          "title": "Report Fraud Without Spreading It",
+          "objective": "Apply report fraud without spreading it to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Reporting should preserve useful evidence without distributing active scam links or private details. Worked example: A class representative receives a phishing URL targeting classmates. A safer response is to warn peers without reproducing a clickable malicious link and use the service's report mechanism. Unsafe alternatives include: forward the original malicious URL to every student or publicly accuse an unverified person by name.",
+          "workedExample": "Situation: A class representative receives a phishing URL targeting classmates. Action: Warn peers without reproducing a clickable malicious link and use the service's report mechanism.",
+          "commonMistake": "Forward the original malicious URL to every student",
+          "remediation": "Warnings can describe the scam without amplifying access to it.",
+          "hint": "Check whether the response follows this rule: Reporting should preserve useful evidence without distributing active scam links or private details.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Report Fraud Without Spreading It\", consider this fictional incident: A class representative receives a phishing URL targeting classmates. What should the person do?",
+              "options": {
+                "a": "Publicly accuse an unverified person by name",
+                "b": "Warn peers without reproducing a clickable malicious link and use the service's report mechanism",
+                "c": "Forward the original malicious URL to every student"
+              },
+              "answer": "b",
+              "feedback": "Reporting should preserve useful evidence without distributing active scam links or private details. Recommended action: Warn peers without reproducing a clickable malicious link and use the service's report mechanism."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a community moderator reviewing a fake donation request. Which response offers the safest next step?",
+              "options": {
+                "a": "Warn peers without reproducing a clickable malicious link and use the service's report mechanism",
+                "b": "Publicly accuse an unverified person by name",
+                "c": "Forward the original malicious URL to every student"
+              },
+              "answer": "a",
+              "feedback": "Warnings can describe the scam without amplifying access to it. Recommended action: Warn peers without reproducing a clickable malicious link and use the service's report mechanism."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Report Fraud Without Spreading It\": Mass-forwarding a phishing link is an effective low-risk way to warn people.",
+              "answer": false,
+              "feedback": "Warnings can describe the scam without amplifying access to it."
+            }
+          ]
+        },
+        {
+          "number": 21,
+          "title": "Protect Financial Transactions",
+          "objective": "Apply protect financial transactions to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Payment instructions must be verified through independent channels when account details change unexpectedly. Worked example: A vendor invoice suddenly lists a new beneficiary account with a note saying not to call. A safer response is to confirm the change using a previously verified vendor contact before paying. Unsafe alternatives include: transfer immediately to avoid a late fee or use only the message's new callback number for verification.",
+          "workedExample": "Situation: A vendor invoice suddenly lists a new beneficiary account with a note saying not to call. Action: Confirm the change using a previously verified vendor contact before paying.",
+          "commonMistake": "Transfer immediately to avoid a late fee",
+          "remediation": "Invoice compromise frequently relies on believable-looking requests.",
+          "hint": "Check whether the response follows this rule: Payment instructions must be verified through independent channels when account details change unexpectedly.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Protect Financial Transactions\", consider this fictional incident: A vendor invoice suddenly lists a new beneficiary account with a note saying not to call. What should the person do?",
+              "options": {
+                "a": "Transfer immediately to avoid a late fee",
+                "b": "Use only the message's new callback number for verification",
+                "c": "Confirm the change using a previously verified vendor contact before paying"
+              },
+              "answer": "c",
+              "feedback": "Payment instructions must be verified through independent channels when account details change unexpectedly. Recommended action: Confirm the change using a previously verified vendor contact before paying."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a small business receiving a last-minute payment-account change. Which response offers the safest next step?",
+              "options": {
+                "a": "Transfer immediately to avoid a late fee",
+                "b": "Confirm the change using a previously verified vendor contact before paying",
+                "c": "Use only the message's new callback number for verification"
+              },
+              "answer": "b",
+              "feedback": "Invoice compromise frequently relies on believable-looking requests. Recommended action: Confirm the change using a previously verified vendor contact before paying."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Protect Financial Transactions\": Unverified bank-detail changes deserve extra scrutiny even on a familiar invoice.",
+              "answer": true,
+              "feedback": "Invoice compromise frequently relies on believable-looking requests."
+            }
+          ]
+        },
+        {
+          "number": 22,
+          "title": "Communicate a Breach Calmly",
+          "objective": "Apply communicate a breach calmly to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "Incident messages should state known facts, immediate protective steps and where updates will appear. Worked example: A fictional club discovers that a shared volunteer spreadsheet was publicly accessible. A safer response is to limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route. Unsafe alternatives include: claim no information was affected before checking or publish all volunteer identities as proof of transparency.",
+          "workedExample": "Situation: A fictional club discovers that a shared volunteer spreadsheet was publicly accessible. Action: Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route.",
+          "commonMistake": "Claim no information was affected before checking",
+          "remediation": "Accuracy and appropriate next actions matter more than unsupported reassurance.",
+          "hint": "Check whether the response follows this rule: Incident messages should state known facts, immediate protective steps and where updates will appear.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Communicate a Breach Calmly\", consider this fictional incident: A fictional club discovers that a shared volunteer spreadsheet was publicly accessible. What should the person do?",
+              "options": {
+                "a": "Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route",
+                "b": "Claim no information was affected before checking",
+                "c": "Publish all volunteer identities as proof of transparency"
+              },
+              "answer": "a",
+              "feedback": "Incident messages should state known facts, immediate protective steps and where updates will appear. Recommended action: Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a manager explaining a temporary shared-file exposure to staff. Which response offers the safest next step?",
+              "options": {
+                "a": "Publish all volunteer identities as proof of transparency",
+                "b": "Claim no information was affected before checking",
+                "c": "Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route"
+              },
+              "answer": "c",
+              "feedback": "Accuracy and appropriate next actions matter more than unsupported reassurance. Recommended action: Limit access, establish which fields were exposed and communicate confirmed facts with a safe contact route."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Communicate a Breach Calmly\": A responsible incident notice should distinguish confirmed facts from uncertain impact.",
+              "answer": true,
+              "feedback": "Accuracy and appropriate next actions matter more than unsupported reassurance."
+            }
+          ]
+        },
+        {
+          "number": 23,
+          "title": "Prepare an Incident Playbook",
+          "objective": "Apply prepare an incident playbook to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A repeatable response plan assigns roles, contacts, escalation and evidence-handling steps. Worked example: An online shop wants a plan for a staff member losing a phone with business apps. A safer response is to document who revokes sessions, secures accounts, assesses exposure and informs affected owners. Unsafe alternatives include: assume everyone will know what to do under stress or include real login passwords in the printed playbook.",
+          "workedExample": "Situation: An online shop wants a plan for a staff member losing a phone with business apps. Action: Document who revokes sessions, secures accounts, assesses exposure and informs affected owners.",
+          "commonMistake": "Assume everyone will know what to do under stress",
+          "remediation": "Store secrets securely and give authorized responders access through controlled processes.",
+          "hint": "Check whether the response follows this rule: A repeatable response plan assigns roles, contacts, escalation and evidence-handling steps.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Prepare an Incident Playbook\", consider this fictional incident: An online shop wants a plan for a staff member losing a phone with business apps. What should the person do?",
+              "options": {
+                "a": "Include real login passwords in the printed playbook",
+                "b": "Document who revokes sessions, secures accounts, assesses exposure and informs affected owners",
+                "c": "Assume everyone will know what to do under stress"
+              },
+              "answer": "b",
+              "feedback": "A repeatable response plan assigns roles, contacts, escalation and evidence-handling steps. Recommended action: Document who revokes sessions, secures accounts, assesses exposure and informs affected owners."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a school coordinating response to a fictional phishing attempt. Which response offers the safest next step?",
+              "options": {
+                "a": "Document who revokes sessions, secures accounts, assesses exposure and informs affected owners",
+                "b": "Include real login passwords in the printed playbook",
+                "c": "Assume everyone will know what to do under stress"
+              },
+              "answer": "a",
+              "feedback": "Store secrets securely and give authorized responders access through controlled processes. Recommended action: Document who revokes sessions, secures accounts, assesses exposure and informs affected owners."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Prepare an Incident Playbook\": An incident playbook should include credentials so responders never need another system.",
+              "answer": false,
+              "feedback": "Store secrets securely and give authorized responders access through controlled processes."
+            }
+          ]
+        },
+        {
+          "number": 24,
+          "title": "Capstone: Build a Digital Safety Plan",
+          "objective": "Apply capstone: build a digital safety plan to make a safe and verifiable digital-security decision in a realistic situation.",
+          "teaching": "A useful safety plan turns risks into practical preventive checks and an incident-response checklist. Worked example: A fictional community center has shared devices, volunteer accounts and phishing reports. A safer response is to create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership. Unsafe alternatives include: produce only a generic slogan about online safety or collect real volunteer ID documents as sample evidence.",
+          "workedExample": "Situation: A fictional community center has shared devices, volunteer accounts and phishing reports. Action: Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership.",
+          "commonMistake": "Produce only a generic slogan about online safety",
+          "remediation": "Concrete controls and review checks make the plan actionable.",
+          "hint": "Check whether the response follows this rule: A useful safety plan turns risks into practical preventive checks and an incident-response checklist.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In the safety lesson \"Capstone: Build a Digital Safety Plan\", consider this fictional incident: A fictional community center has shared devices, volunteer accounts and phishing reports. What should the person do?",
+              "options": {
+                "a": "Produce only a generic slogan about online safety",
+                "b": "Collect real volunteer ID documents as sample evidence",
+                "c": "Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership"
+              },
+              "answer": "c",
+              "feedback": "A useful safety plan turns risks into practical preventive checks and an incident-response checklist. Recommended action: Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership."
+            },
+            {
+              "type": "scenario",
+              "prompt": "Practice the same protective decision in a different scenario: a household planning device loss and account recovery steps. Which response offers the safest next step?",
+              "options": {
+                "a": "Produce only a generic slogan about online safety",
+                "b": "Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership",
+                "c": "Collect real volunteer ID documents as sample evidence"
+              },
+              "answer": "b",
+              "feedback": "Concrete controls and review checks make the plan actionable. Recommended action: Create a prioritized checklist covering MFA, sharing access, backups, scam reporting and recovery ownership."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this cybersecurity claim for \"Capstone: Build a Digital Safety Plan\": A complete plan should include an owner, a realistic response step and a way to verify each control.",
+              "answer": true,
+              "feedback": "Concrete controls and review checks make the plan actionable."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
