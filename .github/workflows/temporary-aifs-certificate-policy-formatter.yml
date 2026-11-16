@@ -1,0 +1,47 @@
+name: Temporary AIFS certificate policy formatting
+on:
+  push:
+    branches:
+      - feat/aifs-certificate-policy-v1-owner-gated-20261116
+permissions:
+  contents: write
+jobs:
+  format:
+    if: github.repository == 'SkillStep/skillup-platform' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout policy feature branch
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+        with:
+          persist-credentials: true
+          ref: feat/aifs-certificate-policy-v1-owner-gated-20261116
+      - name: Node runtime
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
+        with:
+          node-version-file: .node-version
+      - name: Locked formatter install
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.17.0 --activate
+          pnpm install --frozen-lockfile --ignore-scripts
+      - name: Apply pinned Biome to changed files only
+        run: |
+          pnpm exec biome format --write \
+            apps/api/src/certificates.ts \
+            tools/aifs-certificate-smoke.mjs \
+            tools/validate-aifs-certificate-policy.mjs \
+            tools/validate-aifs-certificate-policy.test.mjs
+      - name: Commit exact formatting corrections
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- \
+            apps/api/src/certificates.ts \
+            tools/aifs-certificate-smoke.mjs \
+            tools/validate-aifs-certificate-policy.mjs \
+            tools/validate-aifs-certificate-policy.test.mjs
+          if ! git diff --cached --quiet; then
+            git commit -m "style(AIFS): format owner-gated certificate policy and evidence guard"
+            git push origin HEAD:feat/aifs-certificate-policy-v1-owner-gated-20261116
+          fi
