@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "cybersecurity-digital-safety",
+  "courseTitle": "Cybersecurity & Digital Safety",
+  "publicPreviewSummary": "Learn to spot scams, recognize phishing attempts and protect accounts and personal information online.",
+  "existingDraftIdentityReused": false,
+  "issueNumber": 264,
+  "locale": "en",
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "humanSubjectReviewPending": true,
+  "capstone": "A fictional account safety audit and safe incident-response checklist without live harmful links or credentials",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Recognizing Phishing and Scams",
+      "learningObjective": "Spot impersonation, suspicious content, urgency and risky links without visiting them",
+      "levelTitles": [
+        "Read a Suspicious Parcel Delivery Message",
+        "Identify a Look-Alike URL Without Visiting It",
+        "Spot Impersonation in a Fake Bank Alert",
+        "Detect Urgency Tricks in Social Messages",
+        "Handle a QR Code from an Unknown Sender",
+        "Checkpoint: Triage Fictional Scam Messages"
+      ],
+      "exampleScenario": "Spot Impersonation in a Fake Bank Alert",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Passwords and Account Security",
+      "learningObjective": "Use strong credentials, multi-factor authentication and recovery precautions",
+      "levelTitles": [
+        "Build a Strong Unique Passphrase",
+        "Decide When a Password Manager Helps",
+        "Choose Safer Multifactor Authentication",
+        "Review Account Recovery Without Losing Access",
+        "Protect a Shared Laptop and Phone",
+        "Checkpoint: Harden a Fictional Student Account"
+      ],
+      "exampleScenario": "Choose Safer Multifactor Authentication",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Privacy and Data Protection",
+      "learningObjective": "Protect personal information, device permissions and shared documents",
+      "levelTitles": [
+        "Find Excessive Permissions in a Mobile App",
+        "Decide What Personal Data Should Stay Private",
+        "Check a Public Profile for Oversharing",
+        "Secure a Shared Cloud Document",
+        "Choose a Safe Backup and Update Habit",
+        "Checkpoint: Set Privacy for a Fictional Shop"
+      ],
+      "exampleScenario": "Check a Public Profile for Oversharing",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Scam Response and Safety Capstone",
+      "learningObjective": "Contain damage, use official reporting channels and restore access safely",
+      "levelTitles": [
+        "Contain a Suspected Account Compromise",
+        "Use Official Channels to Report a Scam",
+        "Record Evidence Without Sharing Harmful Links",
+        "Prioritize Account Recovery and Device Checks",
+        "Explain a Safe Response to Family Members",
+        "Capstone: Write a Digital Safety Response Plan"
+      ],
+      "exampleScenario": "Record Evidence Without Sharing Harmful Links",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
