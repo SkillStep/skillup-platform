@@ -74,7 +74,7 @@ function evaluateBoth(question: DraftQuestion): void {
       ? question.answer
         ? "false"
         : "true"
-      : Object.keys(question.options).find((key) => key !== correctKey) ?? "a";
+      : (Object.keys(question.options).find((key) => key !== correctKey) ?? "a");
   const privateEvaluation =
     question.type === "true_false"
       ? { correctOptionKey: correctKey }
