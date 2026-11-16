@@ -1,6 +1,9 @@
 import { readFileSync } from "node:fs";
 
-const manifestUrl = new URL("../docs/product/course-expansion/certificate-policy-v1.proposal.json", import.meta.url);
+const manifestUrl = new URL(
+  "../docs/product/course-expansion/certificate-policy-v1.proposal.json",
+  import.meta.url,
+);
 const repoRoot = new URL("../", import.meta.url);
 
 export const CANONICAL_SKILLS = Object.freeze([
@@ -31,7 +34,8 @@ export function validateCertificatePolicyProposal(policy) {
     policy.schemaVersion !== 1 ||
     policy.policyId !== "skillup-completion-certificate-policy" ||
     policy.policyVersion !== 1
-  ) reject("Certificate policy identity/version mismatch.");
+  )
+    reject("Certificate policy identity/version mismatch.");
   if (
     policy.status !== "proposed_requires_product_owner_and_legal_approval" ||
     policy.effectiveAt !== null ||
@@ -45,7 +49,8 @@ export function validateCertificatePolicyProposal(policy) {
     policy.legalApproval.approvedBy !== null ||
     policy.legalApproval.approvedAt !== null ||
     policy.legalApproval.evidenceUrl !== null
-  ) reject("Do not fabricate product-owner or legal signoff. Policy must remain unapproved.");
+  )
+    reject("Do not fabricate product-owner or legal signoff. Policy must remain unapproved.");
   const activation = policy.releaseActivation || {};
   for (const [key, value] of Object.entries({
     enabled: false,
@@ -54,7 +59,8 @@ export function validateCertificatePolicyProposal(policy) {
     allowHistoricalBackfill: false,
     publicVerificationEnabled: false,
   })) {
-    if (activation[key] !== value) reject(`Public activation is forbidden in this proposal: ${key}.`);
+    if (activation[key] !== value)
+      reject(`Public activation is forbidden in this proposal: ${key}.`);
   }
   const scope = policy.scope || {};
   const skills = scope.canonicalSkills;
@@ -74,7 +80,8 @@ export function validateCertificatePolicyProposal(policy) {
         skill?.skillSlug !== slug ||
         skill.displayName !== title ||
         skill.certificateTitle !== `Certificate of Completion — ${title}`
-      ) reject(`Wrong immutable certificate name or canonical identity at skill ${index + 1}.`);
+      )
+        reject(`Wrong immutable certificate name or canonical identity at skill ${index + 1}.`);
       if (uniqueSlugs.has(skill.skillSlug)) reject("Repeated skill slug.");
       uniqueSlugs.add(skill.skillSlug);
     }
@@ -86,7 +93,10 @@ export function validateCertificatePolicyProposal(policy) {
     mastery.requiredPublishedChallengeVersionsCorrectAtLeastOncePercent !== 100 ||
     mastery.noCredentialForMerelyViewingOrOpeningLesson !== true ||
     mastery.noRetroactiveCreditFromClientDisplayedProgress !== true
-  ) reject("Mastery requires 80% every required level, 100% required versions and real server evidence.");
+  )
+    reject(
+      "Mastery requires 80% every required level, 100% required versions and real server evidence.",
+    );
   const capstone = mastery.capstone || {};
   if (
     capstone.required !== true ||
@@ -94,22 +104,26 @@ export function validateCertificatePolicyProposal(policy) {
     capstone.reviewerMustDifferFromLearner !== true ||
     capstone.reviewerRoleVerificationRequired !== true ||
     capstone.provisionalSelfScoreCannotAward !== true
-  ) reject("Capstone requires real independent authorized human approval.");
+  )
+    reject("Capstone requires real independent authorized human approval.");
   const exams = mastery.baselineAndEndline || {};
   if (
     exams.diagnosticBaselineMandatoryForAward !== false ||
     exams.finalKnowledgeAssessmentMandatoryForAward !== false ||
     exams.futureChangeRequiresNewApprovedRequirementVersion !== true
-  ) reject("Draft baseline/endline items may not automatically qualify for v1 certificate awards.");
+  )
+    reject("Draft baseline/endline items may not automatically qualify for v1 certificate awards.");
   const retakes = policy.retakes || {};
   if (
     retakes.allowed !== true ||
     retakes.attemptsPerChallengePerLevelSession !== 2 ||
-    retakes.additionalLevelSessions !== "unlimited_without_daily_cooldown_under_existing_gameplay_service" ||
+    retakes.additionalLevelSessions !==
+      "unlimited_without_daily_cooldown_under_existing_gameplay_service" ||
     retakes.persistAllAttempts !== true ||
     retakes.bestCompletedSessionCanSatisfyLevelScore !== true ||
     retakes.noScoreResetOrDeletionOfHistoricalAttempts !== true
-  ) reject("Retake rules must align with actual two-attempt/restart gameplay semantics.");
+  )
+    reject("Retake rules must align with actual two-attempt/restart gameplay semantics.");
   const eligibility = policy.eligibility || {};
   for (const key of [
     "isIndependentOfPlanAtMomentOfIssuance",
@@ -125,7 +139,8 @@ export function validateCertificatePolicyProposal(policy) {
     "historicalClaimsOnlyAfterExplicitApprovedEvidenceAudit",
     "noSeparateCertificateFee",
     "noAutomaticNewAwardFromCourseRevision",
-  ]) if (eligibility[key] !== true) reject(`Missing entitlement/eligibility safeguard: ${key}.`);
+  ])
+    if (eligibility[key] !== true) reject(`Missing entitlement/eligibility safeguard: ${key}.`);
   const legal = policy.legalPrivacy || {};
   if (
     legal.exactCertificateDisclaimer !== EXACT_DISCLAIMER ||
@@ -133,7 +148,8 @@ export function validateCertificatePolicyProposal(policy) {
     legal.marketingMustNotClaimIndependentQualification !== true ||
     !Array.isArray(legal.supportedLanguagesNow) ||
     legal.supportedLanguagesNow.join(",") !== "en"
-  ) reject("Existing exact educational-only disclaimer and privacy limitations must not drift.");
+  )
+    reject("Existing exact educational-only disclaimer and privacy limitations must not drift.");
   const privacy = legal.certificatePrivacy || {};
   if (
     privacy.ownerOnlyAuthenticatedPdf !== true ||
@@ -141,7 +157,8 @@ export function validateCertificatePolicyProposal(policy) {
     privacy.publicIdentityLookup !== false ||
     privacy.shareableUnprotectedPdfRoute !== false ||
     privacy.exposeEmailAccountIdScoresAndAttemptHistory !== false
-  ) reject("Private download and default-disabled public verification are mandatory.");
+  )
+    reject("Private download and default-disabled public verification are mandatory.");
   const versioning = policy.versioning || {};
   for (const k of [
     "immutableFrozenApprovalDigest",
@@ -150,9 +167,12 @@ export function validateCertificatePolicyProposal(policy) {
     "earnedAwardsRemainFrozenUnderTheirVersion",
     "noAutomaticMigrationOrBackfill",
     "samePolicyAllTen",
-  ]) if (versioning[k] !== true) reject(`Missing immutable versioning safeguard: ${k}.`);
+  ])
+    if (versioning[k] !== true) reject(`Missing immutable versioning safeguard: ${k}.`);
   if (!Array.isArray(policy.releaseConditions) || policy.releaseConditions.length < 6) {
-    reject("Real owner/legal, capstone role, human content and exact-SHA QA gates must be documented.");
+    reject(
+      "Real owner/legal, capstone role, human content and exact-SHA QA gates must be documented.",
+    );
   }
   return issues;
 }
@@ -175,8 +195,12 @@ export function validatePolicyRepositoryAlignment() {
     !api.includes("roles.role = 'content_reviewer'") ||
     !api.includes("roles.created_at <= a.verified_at") ||
     !api.includes("reviewer_authorized")
-  ) errors.push("Capstone reviewer role and at-attestation authorization guard is missing.");
-  if (!gameplay.includes("challenge.max_attempts") && !gameplay.includes("challenge_version_id, max_attempts")) {
+  )
+    errors.push("Capstone reviewer role and at-attestation authorization guard is missing.");
+  if (
+    !gameplay.includes("challenge.max_attempts") &&
+    !gameplay.includes("challenge_version_id, max_attempts")
+  ) {
     // The actual service writes 2 attempts when starting each published level.
     if (!gameplay.includes("max_attempts") || !gameplay.includes("2,")) {
       errors.push("Game service no longer guarantees two attempts per question/session.");
