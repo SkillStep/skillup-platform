@@ -369,14 +369,21 @@ export async function importTeamFiveDrafts(db, plan) {
     plan.publicationAllowed !== false
   ) throw new Error("Incomplete or unsafe five-course draft import plan.");
   await db.query("select pg_advisory_xact_lock(hashtext($1))", ["aifs:team-five:full-drafts-v1"]);
-  const category = await requireOne(
-    db, "select id from skill_categories where slug = 'digital-skills' for update", [],
-    "seeded digital-skills category",
-  );
   let imported = 0;
   let existing = 0;
   for (const [index, course] of plan.courses.entries()) {
     const pathId = await preflightPriorDraft(db, course);
+    const categorySlug = course.courseSlug === "sales-client-negotiation"
+      ? "business"
+      : "digital-skills";
+    const category = pathId
+      ? null
+      : await requireOne(
+        db,
+        "select id from skill_categories where slug = $1 for update",
+        [categorySlug],
+        `seeded ${categorySlug} category`,
+      );
     const path = pathId
       ? { pathId, created: false, rows: await verifyExistingDraftHierarchy(db, course, pathId) }
       : await createNewDraftHierarchy(db, course, index, category.id);
