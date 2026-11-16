@@ -17,7 +17,8 @@ export const comingSoonSkills: readonly ComingSoonSkill[] = [
     slug: "prompt-engineering-generative-ai",
     publishedAliases: [],
     title: "Prompt Engineering & Generative AI",
-    summary: "Learn to write effective AI prompts, improve responses and check AI-generated results for accuracy.",
+    summary:
+      "Learn to write effective AI prompts, improve responses and check AI-generated results for accuracy.",
     keywords: ["prompt", "generative", "chatbot", "fact checking"],
     modules: [
       "Prompt Basics and Clear Instructions",
@@ -30,7 +31,8 @@ export const comingSoonSkills: readonly ComingSoonSkill[] = [
     slug: "cybersecurity-digital-safety",
     publishedAliases: [],
     title: "Cybersecurity & Digital Safety",
-    summary: "Learn to spot scams, recognize phishing attempts and protect accounts and personal information online.",
+    summary:
+      "Learn to spot scams, recognize phishing attempts and protect accounts and personal information online.",
     keywords: ["security", "phishing", "scams", "passwords", "privacy"],
     modules: [
       "Recognizing Phishing and Scams",
@@ -43,7 +45,8 @@ export const comingSoonSkills: readonly ComingSoonSkill[] = [
     slug: "data-analytics-dashboards",
     publishedAliases: ["data-analytics-decision-making"],
     title: "Data Analytics & Decision Making",
-    summary: "Practice reading charts, finding patterns and using simple data to make better everyday decisions.",
+    summary:
+      "Practice reading charts, finding patterns and using simple data to make better everyday decisions.",
     keywords: ["spreadsheets", "charts", "data", "dashboards", "decisions"],
     modules: [
       "Tables, Questions and Data Quality",
@@ -56,7 +59,8 @@ export const comingSoonSkills: readonly ComingSoonSkill[] = [
     slug: "applied-ai-workflows",
     publishedAliases: ["ai-automation-no-code-tools"],
     title: "AI Automation & No-Code Tools",
-    summary: "Learn how simple workflows connect digital tools and automate repetitive tasks without advanced coding.",
+    summary:
+      "Learn how simple workflows connect digital tools and automate repetitive tasks without advanced coding.",
     keywords: ["automation", "no-code", "triggers", "workflows"],
     modules: [
       "Workflow Opportunities and Safe Task Boundaries",
@@ -69,7 +73,8 @@ export const comingSoonSkills: readonly ComingSoonSkill[] = [
     slug: "sales-client-negotiation",
     publishedAliases: ["sales-negotiation-client-management"],
     title: "Sales, Negotiation & Client Management",
-    summary: "Build confidence in client conversations, handle objections and practice practical negotiation skills.",
+    summary:
+      "Build confidence in client conversations, handle objections and practice practical negotiation skills.",
     keywords: ["sales", "clients", "objections", "retention", "negotiation"],
     modules: [
       "Client Discovery and Active Listening",
@@ -87,8 +92,7 @@ export function filterUnpublishedPreviews(
   const present = new Set(published.map((item) => item.slug));
   return comingSoonSkills.filter(
     (skill) =>
-      !present.has(skill.slug) &&
-      !skill.publishedAliases.some((alias) => present.has(alias)),
+      !present.has(skill.slug) && !skill.publishedAliases.some((alias) => present.has(alias)),
   );
 }
 
