@@ -50,8 +50,8 @@ export function buildTeamFiveImportPlan(courses) {
   }
   const canonical = JSON.stringify(courses);
   return {
-    courses,
     ...check.stats,
+    courses,
     sha256: createHash("sha256").update(canonical).digest("hex"),
     state: "draft",
     publicationAllowed: false,
