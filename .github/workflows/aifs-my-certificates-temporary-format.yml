@@ -1,0 +1,47 @@
+name: AIFS temporary certificate UI formatter
+on:
+  push:
+    branches: [feat/aifs-my-certificates-20261116]
+permissions:
+  contents: write
+concurrency:
+  group: aifs-cert-ui-format
+  cancel-in-progress: true
+jobs:
+  format:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Format only certificate files with pinned Biome
+        run: |
+          pnpm exec biome format --write \
+            apps/api/src/certificates.ts \
+            apps/api/src/certificate-pdf.ts \
+            apps/api/src/certificate-pdf.test.ts \
+            apps/web/app/'[locale]'/certificates/page.tsx \
+            apps/web/app/'[locale]'/certificates/my-certificates.tsx \
+            apps/web/app/'[locale]'/certificates/certificates.module.css \
+            apps/web/app/'[locale]'/discovery-shell.tsx \
+            qa/staging-certification/tests/certificates.spec.mjs \
+            tools/aifs-certificate-smoke.mjs
+      - name: Commit formatting
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          if ! git diff --quiet; then
+            git add apps/api/src/certificates.ts apps/api/src/certificate-pdf.ts apps/api/src/certificate-pdf.test.ts
+            git add apps/web/app/'[locale]'/certificates apps/web/app/'[locale]'/discovery-shell.tsx
+            git add qa/staging-certification/tests/certificates.spec.mjs tools/aifs-certificate-smoke.mjs
+            git commit -m 'style(AIFS): pin certificate and learner UI formatting'
+            git push origin HEAD:refs/heads/feat/aifs-my-certificates-20261116
+          fi
