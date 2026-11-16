@@ -177,7 +177,9 @@ export function validateTeamFiveCourseDrafts(courses, options = {}) {
           const first = Object.values(initialOptions).map(normalize);
           const second = Object.values(transferOptions).map(normalize);
           if (first.some((choice) => second.includes(choice))) {
-            issues.push(`${id}: transfer scenario must have its own context-specific answer choices.`);
+            issues.push(
+              `${id}: transfer scenario must have its own context-specific answer choices.`,
+            );
           }
         }
       }

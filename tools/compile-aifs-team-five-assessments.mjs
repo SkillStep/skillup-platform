@@ -38,10 +38,7 @@ export function compileTeamFiveAssessments(banks, courses) {
 }
 
 if (process.argv[1]?.endsWith("compile-aifs-team-five-assessments.mjs")) {
-  const bundles = compileTeamFiveAssessments(
-    readTeamFiveAssessments(),
-    readTeamFiveCourseDrafts(),
-  );
+  const bundles = compileTeamFiveAssessments(readTeamFiveAssessments(), readTeamFiveCourseDrafts());
   const count = bundles.reduce((n, bank) => n + bank.questions.length, 0);
   console.info(
     `Prepared ${count} separate baseline/endline candidate questions across ${bundles.length} unpublished course drafts. No DB import, certificate scoring, reviewer claims or publication.`,

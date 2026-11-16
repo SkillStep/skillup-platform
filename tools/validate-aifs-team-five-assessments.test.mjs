@@ -21,7 +21,10 @@ test("unapproved scoring and fabricated reviewers cannot slip into an assessment
   changed[0].gradingPolicyApproved = true;
   changed[1].approvedBy = "automation";
   changed[2].publicationAllowed = true;
-  assert.match(validateTeamFiveAssessments(changed, courses).errors.join(" "), /invalid assessment/);
+  assert.match(
+    validateTeamFiveAssessments(changed, courses).errors.join(" "),
+    /invalid assessment/,
+  );
 });
 
 test("baseline and final questions must be distinct and assess the same competencies", () => {
@@ -29,7 +32,10 @@ test("baseline and final questions must be distinct and assess the same competen
   changed[0].questions[1].prompt = changed[0].questions[0].prompt;
   changed[1].questions[1].competency = "unexpected new competency";
   assert.match(validateTeamFiveAssessments(changed, courses).errors.join(" "), /duplicate prompt/);
-  assert.match(validateTeamFiveAssessments(changed, courses).errors.join(" "), /competency mapping/);
+  assert.match(
+    validateTeamFiveAssessments(changed, courses).errors.join(" "),
+    /competency mapping/,
+  );
 });
 
 test("private evaluator answers must match valid three-option choices", () => {

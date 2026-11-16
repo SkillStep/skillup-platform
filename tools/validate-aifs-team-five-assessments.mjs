@@ -6,9 +6,15 @@ import {
   validateTeamFiveCourseDrafts,
 } from "./validate-aifs-team-five-courses.mjs";
 
-const root = new URL("../docs/product/course-expansion/drafts/team-five/assessments/", import.meta.url);
+const root = new URL(
+  "../docs/product/course-expansion/drafts/team-five/assessments/",
+  import.meta.url,
+);
 const normalize = (text) =>
-  text.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 
 export function readTeamFiveAssessments() {
   return COURSE_IDENTITIES.map(([slug]) =>
@@ -29,7 +35,9 @@ export function validateTeamFiveAssessments(banks, courses) {
   }
   const allPrompts = new Set(
     courses.flatMap((c) =>
-      c.modules.flatMap((m) => m.levels.flatMap((l) => l.challenges.map((q) => normalize(q.prompt)))),
+      c.modules.flatMap((m) =>
+        m.levels.flatMap((l) => l.challenges.map((q) => normalize(q.prompt))),
+      ),
     ),
   );
   const allKeys = new Set();
@@ -64,17 +72,15 @@ export function validateTeamFiveAssessments(banks, courses) {
       if (q.state !== "draft" || q.type !== "multiple_choice") {
         errors.push(`${slug}/q${index + 1}: unsupported private-key assessment type/state.`);
       }
-      if (
-        typeof q.id !== "string" ||
-        !q.id.startsWith(`${slug}-${phase}-`) ||
-        allKeys.has(q.id)
-      ) errors.push(`${slug}/q${index + 1}: duplicated or invalid assessment ID.`);
+      if (typeof q.id !== "string" || !q.id.startsWith(`${slug}-${phase}-`) || allKeys.has(q.id))
+        errors.push(`${slug}/q${index + 1}: duplicated or invalid assessment ID.`);
       allKeys.add(q.id);
       if (
         typeof q.competency !== "string" ||
         q.competency.length < 5 ||
         byPhase[phase].has(q.competency)
-      ) errors.push(`${slug}/q${index + 1}: missing or duplicated competency coverage.`);
+      )
+        errors.push(`${slug}/q${index + 1}: missing or duplicated competency coverage.`);
       byPhase[phase].set(q.competency, q);
       if (
         typeof q.prompt !== "string" ||
@@ -82,7 +88,8 @@ export function validateTeamFiveAssessments(banks, courses) {
         q.prompt.length > 1000 ||
         typeof q.feedback !== "string" ||
         q.feedback.length < 50
-      ) errors.push(`${slug}/q${index + 1}: short question or explanation.`);
+      )
+        errors.push(`${slug}/q${index + 1}: short question or explanation.`);
       const normalized = normalize(q.prompt || "");
       if (allPrompts.has(normalized))
         errors.push(`${slug}/q${index + 1}: duplicate prompt across practice/assessments.`);
@@ -93,24 +100,38 @@ export function validateTeamFiveAssessments(banks, courses) {
         !["a", "b", "c"].includes(q.answer) ||
         Object.values(choices).some((x) => typeof x !== "string" || x.length < 20) ||
         new Set(Object.values(choices).map((x) => normalize(x || ""))).size !== 3
-      ) errors.push(`${slug}/q${index + 1}: invalid options or deterministic evaluator key.`);
+      )
+        errors.push(`${slug}/q${index + 1}: invalid options or deterministic evaluator key.`);
     }
     if (byPhase.baseline.size !== 4 || byPhase.endline.size !== 4)
       errors.push(`${slug}: expected four distinct baseline and endline competencies.`);
     if (
-      [...byPhase.baseline.keys()].sort().join("|") !==
-      [...byPhase.endline.keys()].sort().join("|")
-    ) errors.push(`${slug}: baseline/endline competency mapping must match.`);
+      [...byPhase.baseline.keys()].sort().join("|") !== [...byPhase.endline.keys()].sort().join("|")
+    )
+      errors.push(`${slug}: baseline/endline competency mapping must match.`);
     for (const [competency, before] of byPhase.baseline) {
       const after = byPhase.endline.get(competency);
-      if (after && (normalize(before.prompt) === normalize(after.prompt) ||
-        Object.values(before.options).every((choice) =>
-          Object.values(after.options).some((other) => normalize(choice) === normalize(other)),
-        ))) errors.push(`${slug}/${competency}: final assessment must use a distinct case and answer set.`);
+      if (
+        after &&
+        (normalize(before.prompt) === normalize(after.prompt) ||
+          Object.values(before.options).every((choice) =>
+            Object.values(after.options).some((other) => normalize(choice) === normalize(other)),
+          ))
+      )
+        errors.push(
+          `${slug}/${competency}: final assessment must use a distinct case and answer set.`,
+        );
     }
   }
-  if (totals.courses !== 5 || totals.baseline !== 20 || totals.endline !== 20 || totals.questions !== 40)
-    errors.push(`Expected five banks with 20 baseline and 20 final assessment questions, found ${JSON.stringify(totals)}.`);
+  if (
+    totals.courses !== 5 ||
+    totals.baseline !== 20 ||
+    totals.endline !== 20 ||
+    totals.questions !== 40
+  )
+    errors.push(
+      `Expected five banks with 20 baseline and 20 final assessment questions, found ${JSON.stringify(totals)}.`,
+    );
   return { errors, totals };
 }
 
@@ -120,6 +141,8 @@ if (process.argv[1]?.endsWith("validate-aifs-team-five-assessments.mjs")) {
     result.errors.forEach((error) => console.error(`AIFS ASSESSMENT ERROR: ${error}`));
     process.exitCode = 1;
   } else {
-    console.info("Verified 40 distinct draft questions: 20 baseline + 20 endline across five 24-level courses. No final policy or human approval. No publication.");
+    console.info(
+      "Verified 40 distinct draft questions: 20 baseline + 20 endline across five 24-level courses. No final policy or human approval. No publication.",
+    );
   }
 }
