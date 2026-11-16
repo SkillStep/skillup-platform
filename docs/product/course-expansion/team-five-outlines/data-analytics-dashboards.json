@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "data-analytics-dashboards",
+  "courseTitle": "Data Analytics & Decision Making",
+  "publicPreviewSummary": "Practice reading charts, finding patterns and using simple data to make better everyday decisions.",
+  "existingDraftIdentityReused": true,
+  "issueNumber": 242,
+  "locale": "en",
+  "state": "outline_draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "publishedAt": null,
+  "humanSubjectReviewPending": true,
+  "capstone": "A short decision memo and accessible evidence chart built from a synthetic small-business dataset",
+  "modules": [
+    {
+      "moduleNumber": 1,
+      "moduleTitle": "Tables, Questions and Data Quality",
+      "learningObjective": "Choose answerable questions and check small everyday data tables",
+      "levelTitles": [
+        "Read a Small Sales Table Accurately",
+        "Define an Answerable Everyday Data Question",
+        "Distinguish Categorical and Numeric Columns",
+        "Check Missing Transactions Before Analysis",
+        "Calculate a Meaningful Simple Comparison",
+        "Checkpoint: Clean and Explain a Data Question"
+      ],
+      "exampleScenario": "Distinguish Categorical and Numeric Columns",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 2,
+      "moduleTitle": "Charts, Trends and Meaningful Metrics",
+      "learningObjective": "Read fair charts, explain units and calculate simple changes without overclaiming",
+      "levelTitles": [
+        "Choose a Chart for a Monthly Trend",
+        "Read Axis Labels and Measurement Units",
+        "Recognize a Misleading Truncated Axis",
+        "Compute Change Between Two Periods",
+        "Spot Seasonal Patterns Without Overclaiming",
+        "Checkpoint: Describe a Chart with Evidence"
+      ],
+      "exampleScenario": "Recognize a Misleading Truncated Axis",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 3,
+      "moduleTitle": "Interpretation, Uncertainty and Comparing Options",
+      "learningObjective": "Compare outcomes, uncertainty and trade-offs before recommending actions",
+      "levelTitles": [
+        "Tell Correlation from a Supported Cause",
+        "Interpret a Metric with a Small Sample",
+        "Compare Two Options with Different Trade-Offs",
+        "Use Context Before Recommending an Action",
+        "Identify What Evidence Is Still Missing",
+        "Checkpoint: Write a Balanced Insight Statement"
+      ],
+      "exampleScenario": "Compare Two Options with Different Trade-Offs",
+      "reviewStatus": "subject_review_pending"
+    },
+    {
+      "moduleNumber": 4,
+      "moduleTitle": "Data-Based Decision and Dashboard Capstone",
+      "learningObjective": "Explain supported findings with evidence and a reversible recommendation",
+      "levelTitles": [
+        "Choose a Practical Business Decision",
+        "Summarize Two Reliable Source Tables",
+        "Create an Accessible Evidence Chart",
+        "List Assumptions and Sources of Uncertainty",
+        "Recommend One Reversible Next Step",
+        "Capstone: Deliver a Data-Based Decision Brief"
+      ],
+      "exampleScenario": "Create an Accessible Evidence Chart",
+      "reviewStatus": "subject_review_pending"
+    }
+  ]
+}
