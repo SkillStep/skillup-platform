@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { chmodSync, mkdtempSync, mkdirSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
@@ -49,7 +49,7 @@ test("rejects weak filesystem permissions", () => {
 test("fails if a practice level has fewer than three questions", () => {
   const root = fixture();
   const path = join(root, COURSES[0] + ".practice.json");
-  const bank = JSON.parse((await import("node:fs")).readFileSync(path, "utf8"));
+  const bank = JSON.parse(readFileSync(path, "utf8"));
   bank.items[0].levelNumber = 24;
   writeFileSync(path, JSON.stringify(bank), { mode: 0o600 });
   assert.throws(() => validatePrivateAssessmentBanks(root), /three distinct/);
@@ -58,7 +58,7 @@ test("fails if a practice level has fewer than three questions", () => {
 test("rejects invalid private answer key without printing its value", () => {
   const root = fixture();
   const path = join(root, COURSES[0] + ".practice.json");
-  const bank = JSON.parse((await import("node:fs")).readFileSync(path, "utf8"));
+  const bank = JSON.parse(readFileSync(path, "utf8"));
   bank.items[0].correctChoiceId = "DONT-LEAK-64839";
   writeFileSync(path, JSON.stringify(bank), { mode: 0o600 });
   assert.throws(() => validatePrivateAssessmentBanks(root), (error) =>
@@ -68,7 +68,7 @@ test("rejects invalid private answer key without printing its value", () => {
 test("rejects reused question IDs and prompts across courses", () => {
   const root = fixture();
   const path = join(root, COURSES[1] + ".practice.json");
-  const original = (await import("node:fs")).readFileSync(path, "utf8");
+  const original = readFileSync(path, "utf8");
   const bank = JSON.parse(original);
   bank.items[0].id = COURSES[0] + "-practice-1";
   writeFileSync(path, JSON.stringify(bank), { mode: 0o600 });
@@ -78,7 +78,7 @@ test("rejects reused question IDs and prompts across courses", () => {
 test("rejects missing baseline/endline mix", () => {
   const root = fixture();
   const path = join(root, COURSES[4] + ".assessments.json");
-  const bank = JSON.parse((await import("node:fs")).readFileSync(path, "utf8"));
+  const bank = JSON.parse(readFileSync(path, "utf8"));
   bank.items[0].phase = "endline";
   writeFileSync(path, JSON.stringify(bank), { mode: 0o600 });
   assert.throws(() => validatePrivateAssessmentBanks(root), /four baseline/);
