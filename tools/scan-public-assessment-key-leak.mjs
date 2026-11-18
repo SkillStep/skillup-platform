@@ -1,123 +1,123 @@
+import { execFileSync } from "node:child_process";
 import { lstatSync, readdirSync, readFileSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
 /**
- * Fail closed when team-five release assessment answer keys appear in the public tree.
- * Related: docs/product/course-expansion/PRIVATE_ASSESSMENT_BANK_OPERATIONS.md (#281).
+ * Public-tree guard, not a substitute for private storage, Git-history review,
+ * built-artifact inspection, authorized human sign-off or subject accuracy.
+ * Runs in CI before a release candidate can add final assessment keys.
  */
-
 const root = resolve(import.meta.dirname, "..");
-
 const ignoredDirectories = new Set([
-  ".git",
-  ".next",
-  ".pnpm-store",
-  ".tmp-cert",
-  "artifacts",
-  "coverage",
-  "dist",
-  "node_modules",
-  "private-editorial",
+  ".git", ".next", ".pnpm-store", ".tmp-cert", "artifacts", "coverage",
+  "dist", "node_modules", "private-editorial",
 ]);
-
-const scannedExtensions = new Set([".json"]);
-
-const syntheticAllowlist = [
-  /(^|[/\\])tools[/\\].*\.test\.mjs$/i,
-  /(^|[/\\]).*\.test\.(ts|tsx|js|mjs)$/i,
+const scanExtensions = new Set([".json", ".jsonl", ".yaml", ".yml", ".md", ".txt", ".csv", ".js", ".mjs", ".ts", ".tsx"]);
+const activeSlugs = [
+  "prompt-engineering-generative-ai",
+  "cybersecurity-digital-safety",
+  "data-analytics-dashboards",
+  "applied-ai-workflows",
+  "sales-client-negotiation",
 ];
+const teamFiveDirectory = /^docs\/product\/course-expansion\/drafts\/team-five\//i;
+const oldExcelDirectory = /^docs\/product\/course-expansion\/drafts\/excel\//i;
+const locallyPrivateDirectory = /^private-editorial\/assessment-banks\//i;
+const keyField = /["']?(?:answer|answers|correctAnswer|correctOptionKeys|correctOption|correctIndex|expectedAnswer|evaluatorKey|privateEvaluation|gradingKey|scoringKey)["']?\s*[:=]/i;
+const pathOutsideDrafts = /(?:assessment|challenge|answer|evaluation|question|bank)/i;
 
-/** Active launch blocker: five-course banks from PR #280 must not land in public git. */
-const teamFiveReleaseBank =
-  /(^|[/\\])docs[/\\]product[/\\]course-expansion[/\\]drafts[/\\]team-five[/\\].+\.json$/i;
-
-/**
- * Already-on-main Excel pilot drafts also embed answers (#281). Tracked as known debt
- * until content re-keys them into private-editorial/; they do not fail this gate yet
- * so the team-five launch scan can land without breaking current main CI.
- */
-const knownPublicPilotDebt =
-  /(^|[/\\])docs[/\\]product[/\\]course-expansion[/\\]drafts[/\\]excel[/\\].+\.json$/i;
-
-const answerFieldPatterns = [
-  /"answer"\s*:/,
-  /"privateEvaluation"\s*:/,
-  /"correctOptionKeys"\s*:/,
-  /"correctAnswer"\s*:/,
-  /"evaluatorKey"\s*:/,
-];
-
-function files(directory) {
-  const discovered = [];
+function walk(directory, base = directory) {
+  const found = [];
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     if (entry.isDirectory() && ignoredDirectories.has(entry.name)) continue;
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) discovered.push(...files(path));
-    else if (entry.isFile()) discovered.push(path);
+    const full = join(directory, entry.name);
+    if (entry.isDirectory()) found.push(...walk(full, base));
+    else if (entry.isFile() || entry.isSymbolicLink()) found.push(relative(base, full).replaceAll("\\", "/"));
   }
-  return discovered;
+  return found;
 }
 
-function isSyntheticAllowlisted(relativePath) {
-  return syntheticAllowlist.some((pattern) => pattern.test(relativePath));
+function trackedFiles(directory) {
+  try {
+    // Only Git-tracked files can be shipped with this public repository. This
+    // includes forcibly tracked files hidden behind a .gitignore rule.
+    const output = execFileSync("git", ["-C", directory, "ls-files", "--cached", "-z"], {
+      encoding: "utf8", timeout: 15000, maxBuffer: 16 * 1024 * 1024,
+    });
+    return output.split("\0").filter(Boolean);
+  } catch {
+    // Enables isolated fixtures in non-git test directories.
+    return walk(directory);
+  }
 }
 
-export function findPublicAssessmentKeyLeaks(repositoryRoot = root) {
+export function findPublicAssessmentKeyLeaks(repositoryRoot = root, options = {}) {
   const blockers = [];
   const knownDebts = [];
-
-  for (const path of files(repositoryRoot)) {
-    const rel = relative(repositoryRoot, path).replaceAll("\\", "/");
-    if (!scannedExtensions.has(extname(path).toLowerCase())) continue;
-    if (isSyntheticAllowlisted(rel)) continue;
-
+  const paths = options.trackedPaths ?? trackedFiles(repositoryRoot);
+  for (const raw of paths) {
+    const rel = raw.replaceAll("\\", "/");
+    if (!scanExtensions.has(extname(rel).toLowerCase())) continue;
+    if (rel.endsWith(".test.mjs") || rel.endsWith(".test.ts") || rel.endsWith(".spec.ts")) continue;
+    if (rel === "tools/scan-public-assessment-key-leak.mjs") continue;
+    const isTeamFive = teamFiveDirectory.test(rel);
+    const isOldExcel = oldExcelDirectory.test(rel);
+    const isPrivatePathTracked = locallyPrivateDirectory.test(rel);
+    const full = resolve(repositoryRoot, rel);
+    if (!full.startsWith(resolve(repositoryRoot) + "/")) continue;
     let stat;
-    try {
-      stat = lstatSync(path);
-    } catch {
+    try { stat = lstatSync(full); } catch { continue; }
+    if (stat.isSymbolicLink()) {
+      if (isTeamFive || isPrivatePathTracked) blockers.push(rel + ": tracked assessment source may not be a symlink");
       continue;
     }
-    if (!stat.isFile() || stat.size > 4 * 1_024 * 1_024) continue;
-
-    const content = readFileSync(path, "utf8");
-    if (content.includes("\u0000")) continue;
-
-    const hit = answerFieldPatterns.find((pattern) => pattern.test(content));
-    if (!hit) continue;
-
-    if (teamFiveReleaseBank.test(rel)) {
-      blockers.push(`${rel}: team-five release draft embeds evaluator answer fields`);
+    if (!stat.isFile()) continue;
+    if (stat.size > 4 * 1024 * 1024) {
+      if (isTeamFive || isPrivatePathTracked) blockers.push(rel + ": oversized assessment file could not be inspected");
       continue;
     }
-
-    if (knownPublicPilotDebt.test(rel)) {
-      knownDebts.push(`${rel}: Excel pilot draft still embeds public answer fields`);
+    const contents = readFileSync(full, "utf8");
+    if (contents.includes("\u0000")) {
+      if (isTeamFive || isPrivatePathTracked) blockers.push(rel + ": binary assessment file could not be inspected");
+      continue;
+    }
+    const hasKeyField = keyField.test(contents);
+    if (!hasKeyField) continue;
+    if (isOldExcel) {
+      knownDebts.push(rel + ": existing public Excel pilot answer bank still requires re-keying");
+    } else if (isTeamFive) {
+      blockers.push(rel + ": public team-five source contains evaluator answer fields");
+    } else if (isPrivatePathTracked) {
+      blockers.push(rel + ": private assessment bank was force-tracked into the public repository");
+    } else if (activeSlugs.some((slug) => rel.includes(slug)) || (
+      pathOutsideDrafts.test(rel) && activeSlugs.some((slug) => contents.includes(slug))
+    )) {
+      // Prevent simply moving the same five-course keyed bank elsewhere in the repo.
+      blockers.push(rel + ": team-five evaluation key was relocated into another public asset");
     }
   }
-
   return { blockers, knownDebts };
 }
 
-export function assertNoPublicTeamFiveAssessmentKeyLeaks(repositoryRoot = root) {
-  const { blockers, knownDebts } = findPublicAssessmentKeyLeaks(repositoryRoot);
-  if (knownDebts.length > 0) {
+export function assertNoPublicTeamFiveAssessmentKeyLeaks(repositoryRoot = root, options = {}) {
+  const result = findPublicAssessmentKeyLeaks(repositoryRoot, options);
+  if (result.knownDebts.length) {
     console.warn(
-      `Known public pilot assessment-key debt (#281), ${knownDebts.length} file(s):\n` +
-        `${knownDebts.slice(0, 8).join("\n")}` +
-        (knownDebts.length > 8 ? `\n… +${knownDebts.length - 8} more` : ""),
+      "Known PUBLIC assessment-key debt (#281): " + result.knownDebts.length +
+      " Excel pilot source file(s). Re-key before assessment publication."
     );
   }
-  if (blockers.length > 0) {
+  if (result.blockers.length) {
     throw new Error(
-      `Public team-five assessment key leak scan failed (#281):\n${blockers.join("\n")}\n` +
-        "Independently re-key into private-editorial/assessment-banks/ before merge/publish.",
+      "Public assessment bank security gate failed (#281):\n" + result.blockers.join("\n") +
+      "\nNever commit evaluator keys to the public SkillUp repository."
     );
   }
-  return { blockers, knownDebts };
+  return result;
 }
 
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   assertNoPublicTeamFiveAssessmentKeyLeaks();
-  console.log("SkillUp public team-five assessment key leak scan passed.");
+  console.log("SkillUp public assessment source scan passed (current tracked tree only).");
 }
