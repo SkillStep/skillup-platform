@@ -56,12 +56,8 @@ describe("mainLanding page", () => {
 
   it("matches desktop banner and JazzCash to the same campaign width", () => {
     const css = readFileSync(new URL("./landing.module.css", import.meta.url), "utf8");
-    expect(css).toMatch(
-      /\.hero\s*\{[^}]*width:\s*min\(100%,\s*var\(--landing-banner-max\)\)/,
-    );
-    expect(css).toMatch(
-      /\.paymentCard\s*\{[^}]*width:\s*min\(100%,\s*var\(--landing-form-max\)\)/,
-    );
+    expect(css).toMatch(/\.hero\s*\{[^}]*width:\s*min\(100%,\s*var\(--landing-banner-max\)\)/);
+    expect(css).toMatch(/\.paymentCard\s*\{[^}]*width:\s*min\(100%,\s*var\(--landing-form-max\)\)/);
     expect(source).toContain('className={styles["landingFooter"]}');
   });
 
