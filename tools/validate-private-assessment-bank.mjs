@@ -17,10 +17,16 @@ export const COURSES = Object.freeze([
   "sales-client-negotiation",
 ]);
 
-function fail(message) { throw new Error("Assessment bank preflight: " + message); }
+function fail(message) {
+  throw new Error("Assessment bank preflight: " + message);
+}
 function restricted(path, kind) {
   let stat;
-  try { stat = lstatSync(path); } catch { fail(kind + " missing"); }
+  try {
+    stat = lstatSync(path);
+  } catch {
+    fail(kind + " missing");
+  }
   if (stat.isSymbolicLink()) fail(kind + " must not be a symbolic link");
   if (kind === "directory" && !stat.isDirectory()) fail("bank root is not a directory");
   if (kind !== "directory" && !stat.isFile()) fail(kind + " is not a regular file");
@@ -32,14 +38,18 @@ function restricted(path, kind) {
 }
 function readPrivateJson(path) {
   restricted(path, "private assessment file");
-  try { return JSON.parse(readFileSync(path, "utf8")); }
-  catch { fail("invalid private assessment JSON"); }
+  try {
+    return JSON.parse(readFileSync(path, "utf8"));
+  } catch {
+    fail("invalid private assessment JSON");
+  }
 }
 function text(value, label, min = 8) {
   if (typeof value !== "string" || value.trim().length < min) fail(label + " missing or too short");
 }
 function assertItems(data, course, type, allIds, allPrompts) {
-  if (!data || typeof data !== "object" || Array.isArray(data)) fail("invalid " + type + " structure");
+  if (!data || typeof data !== "object" || Array.isArray(data))
+    fail("invalid " + type + " structure");
   if (data.courseSlug !== course) fail("bank course slug mismatch");
   text(data.version, "immutable bank version", 6);
   if (!Array.isArray(data.items) || data.items.length !== (type === "practice" ? 72 : 8)) {
@@ -89,7 +99,8 @@ function assertItems(data, course, type, allIds, allPrompts) {
   }
 }
 export function validatePrivateBankRoot(directory) {
-  if (!directory || !isAbsolute(directory)) fail("AIFS_PRIVATE_BANK_ROOT must be an absolute external path");
+  if (!directory || !isAbsolute(directory))
+    fail("AIFS_PRIVATE_BANK_ROOT must be an absolute external path");
   restricted(directory, "directory");
   const realRoot = realpathSync(directory);
   const repository = realpathSync(publicRepository);
@@ -110,8 +121,13 @@ export function validatePrivateAssessmentBanks(directory) {
       assertItems(bank, course, type, allIds, allPrompts);
     }
   }
-  return { courseCount: 5, practiceItems: 360, assessmentItems: 40, totalItems: 400,
-    result: "structural checks passed; HUMAN sign-off still required" };
+  return {
+    courseCount: 5,
+    practiceItems: 360,
+    assessmentItems: 40,
+    totalItems: 400,
+    result: "structural checks passed; HUMAN sign-off still required",
+  };
 }
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const result = validatePrivateAssessmentBanks(process.env.AIFS_PRIVATE_BANK_ROOT);

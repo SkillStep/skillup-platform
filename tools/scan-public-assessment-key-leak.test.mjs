@@ -16,13 +16,21 @@ function write(root, path, body) {
   mkdirSync(join(full, ".."), { recursive: true });
   writeFileSync(full, body, "utf8");
 }
-const teamFive = "docs/product/course-expansion/drafts/team-five/prompt-engineering-generative-ai.json";
+const teamFive =
+  "docs/product/course-expansion/drafts/team-five/prompt-engineering-generative-ai.json";
 const oldExcel = "docs/product/course-expansion/drafts/excel/module-01.json";
 
 test("non-Git fixture scans the public course candidate and reports existing Excel debt", () => {
   const root = fixture();
   write(root, oldExcel, JSON.stringify({ questions: [{ answer: "old-public-key" }] }));
-  write(root, teamFive, JSON.stringify({ courseSlug: "prompt-engineering-generative-ai", lesson: "safe teaching only" }));
+  write(
+    root,
+    teamFive,
+    JSON.stringify({
+      courseSlug: "prompt-engineering-generative-ai",
+      lesson: "safe teaching only",
+    }),
+  );
   const result = findPublicAssessmentKeyLeaks(root);
   assert.equal(result.blockers.length, 0);
   assert.equal(result.knownDebts.length, 1);
@@ -57,10 +65,14 @@ test("rejects relocated answer keys under a different public path", () => {
 test("rejects keyed bank relocated to a generic challenge file containing a team-five slug", () => {
   const root = fixture();
   const path = "docs/public/challenge-set.json";
-  write(root, path, JSON.stringify({
-    slug: "data-analytics-dashboards",
-    correctOptionKeys: ["A"],
-  }));
+  write(
+    root,
+    path,
+    JSON.stringify({
+      slug: "data-analytics-dashboards",
+      correctOptionKeys: ["A"],
+    }),
+  );
   assert.equal(findPublicAssessmentKeyLeaks(root).blockers.length, 1);
 });
 
@@ -91,9 +103,14 @@ test("fails closed for an oversized team-five file", () => {
 
 test("accepts public coming-soon metadata with no evaluator answers", () => {
   const root = fixture();
-  write(root, "docs/public/courses.json", JSON.stringify({
-    slug: "prompt-engineering-generative-ai", status: "coming_soon",
-    description: "Learn to improve prompts and evaluate claims",
-  }));
+  write(
+    root,
+    "docs/public/courses.json",
+    JSON.stringify({
+      slug: "prompt-engineering-generative-ai",
+      status: "coming_soon",
+      description: "Learn to improve prompts and evaluate claims",
+    }),
+  );
   assert.equal(findPublicAssessmentKeyLeaks(root).blockers.length, 0);
 });
