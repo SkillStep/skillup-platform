@@ -139,34 +139,36 @@ function LandingContent({
             <span />
           </div>
 
-          <div className={styles["trustRow"]}>
-            <div>
-              <Icon name="shield" />
-              <span>
-                <b>Secure Payments</b>
-                <small>Powered by JazzCash</small>
-              </span>
+          <footer className={styles["landingFooter"]}>
+            <div className={styles["trustRow"]}>
+              <div>
+                <Icon name="shield" />
+                <span>
+                  <b>Secure Payments</b>
+                  <small>Powered by JazzCash</small>
+                </span>
+              </div>
+              <div>
+                <Icon name="lock" />
+                <span>
+                  <b>Aapka data safe hai</b>
+                  <small>100% Secure</small>
+                </span>
+              </div>
+              <div>
+                <Icon name="headset" />
+                <span>
+                  <b>Help jab chahiye</b>
+                  <small>24/7 Support</small>
+                </span>
+              </div>
             </div>
-            <div>
-              <Icon name="lock" />
-              <span>
-                <b>Aapka data safe hai</b>
-                <small>100% Secure</small>
-              </span>
-            </div>
-            <div>
-              <Icon name="headset" />
-              <span>
-                <b>Help jab chahiye</b>
-                <small>24/7 Support</small>
-              </span>
-            </div>
-          </div>
 
-          <p className={styles["privacy"]}>
-            Jari rakhne se aap Skillup ki <Link href="/en/legal/terms">Terms and Conditions</Link>{" "}
-            aur <Link href="/en/legal/privacy">Privacy Policy</Link> se raazi hoon.
-          </p>
+            <p className={styles["privacy"]}>
+              Jari rakhne se aap Skillup ki <Link href="/en/legal/terms">Terms and Conditions</Link>{" "}
+              aur <Link href="/en/legal/privacy">Privacy Policy</Link> se raazi hoon.
+            </p>
+          </footer>
         </section>
       </ScrollReveal>
     </main>
