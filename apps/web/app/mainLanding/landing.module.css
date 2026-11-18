@@ -7,6 +7,9 @@
   --cream: #f7f5fb;
   --muted: #6b6578;
   --line: #e4e1ea;
+  /* Desktop campaign column matches Jalwa reference sizing. */
+  --landing-banner-max: 880px;
+  --landing-form-max: 880px;
 
   width: min(calc(100% - 80px), 1200px);
   margin: 0 auto;
@@ -47,8 +50,9 @@
 
 .hero {
   position: relative;
-  width: 100%;
-  margin: 0;
+  width: min(100%, var(--landing-banner-max));
+  max-width: var(--landing-banner-max);
+  margin: 0 auto;
   padding: 0;
   line-height: 0;
   overflow: hidden;
@@ -64,7 +68,7 @@
 }
 
 .bannerImage {
-  /* Full column width; desktop keeps natural ratio, mobile overrides to cover. */
+  /* Full campaign column width; desktop keeps natural ratio, mobile overrides to cover. */
   width: 100% !important;
   height: auto;
   max-width: 100%;
@@ -82,30 +86,24 @@
   display: none;
 }
 
-/* Banner spans the column; JazzCash card sits directly under it. */
+/* Banner + JazzCash share the same desktop max width; mobile pins first viewport. */
 .aboveFold {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  align-items: stretch;
-  min-height: 100svh;
+  align-items: center;
+  min-height: auto;
   padding-bottom: 0.75rem;
   box-sizing: border-box;
   overflow: visible;
-}
-
-@supports (height: 100dvh) {
-  .aboveFold {
-    min-height: 100dvh;
-  }
 }
 
 .paymentCard {
   position: relative;
   z-index: 10;
   flex: 0 0 auto;
-  width: min(66%, 800px);
-  max-width: 100%;
+  width: min(100%, var(--landing-form-max));
+  max-width: var(--landing-form-max);
   margin: 12px auto 0;
   padding: 18px 28px 16px;
   background: #fff;
@@ -329,10 +327,35 @@
 }
 
 .learning {
+  width: 100%;
   padding: 22px 28px 18px;
   background: #fff;
   margin-top: 0.5rem;
   border-radius: 18px;
+}
+
+.landingFooter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 14px;
+  text-align: center;
+}
+
+.landingFooter .trustRow {
+  width: min(100%, var(--landing-form-max));
+  margin: 0 auto;
+}
+
+.landingFooter .trustRow > div {
+  justify-content: center;
+}
+
+.landingFooter .privacy {
+  margin: 0 auto;
+  max-width: 42rem;
 }
 
 .sectionHeading {
@@ -517,8 +540,10 @@
    */
   .aboveFold {
     /* dvh preferred on mobile browsers; svh fallback for older engines. */
+    align-items: stretch;
     height: 100svh;
     max-height: 100svh;
+    min-height: 100svh;
     padding-bottom: 0.5rem;
     box-sizing: border-box;
     overflow: hidden;
@@ -528,6 +553,7 @@
     .aboveFold {
       height: 100dvh;
       max-height: 100dvh;
+      min-height: 100dvh;
     }
   }
 
@@ -538,10 +564,20 @@
   .hero {
     flex: 1 1 0;
     width: 100%;
+    max-width: none;
     min-height: 0;
     display: block;
     overflow: hidden;
     background: #f7f3ff;
+  }
+
+  .landingFooter {
+    align-items: center;
+    text-align: center;
+  }
+
+  .landingFooter .trustRow {
+    width: 100%;
   }
 
   .bannerSwap {
@@ -564,6 +600,7 @@
   .paymentCard {
     flex: 0 0 auto;
     width: calc(100% - 20px);
+    max-width: none;
     margin-top: 6px;
     margin-bottom: 0;
     padding: 10px 12px 8px;

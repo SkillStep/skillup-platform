@@ -12,39 +12,58 @@ type Entitlement = Readonly<{
 }>;
 
 /**
- * User Profile nav entry. Shows a Premium badge when the learner has an
- * active/grace entitlement, or after JazzCash pay-first unlock (guest).
+ * User Profile nav entry — only after sign-in.
+ * Shows a Premium badge when the learner has an active/grace entitlement,
+ * or after JazzCash pay-first unlock while signed in.
  */
-export function ProfileNavLink(): ReactElement {
+export function ProfileNavLink(): ReactElement | null {
+  const [signedIn, setSignedIn] = useState(false);
   const [showPremium, setShowPremium] = useState(false);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
     void (async () => {
       try {
-        if (hasPremiumUnlockedFlag()) {
-          setShowPremium(true);
+        const session = await fetch("/api/v1/auth/session", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!session.ok) {
+          setSignedIn(false);
+          setShowPremium(false);
+          setReady(true);
+          return;
         }
+        setSignedIn(true);
+
+        let premium = hasPremiumUnlockedFlag();
         const response = await fetch("/api/v1/commercial/account", {
           credentials: "same-origin",
           cache: "no-store",
           signal: controller.signal,
         });
-        if (response.status === 401) {
-          setShowPremium(hasPremiumUnlockedFlag());
-          return;
+        if (response.ok) {
+          const body = (await response.json()) as Readonly<{ entitlement?: Entitlement | null }>;
+          const status = body.entitlement?.status;
+          premium = status === "active" || status === "grace" || premium;
         }
-        if (!response.ok) return;
-        const body = (await response.json()) as Readonly<{ entitlement?: Entitlement | null }>;
-        const status = body.entitlement?.status;
-        setShowPremium(status === "active" || status === "grace" || hasPremiumUnlockedFlag());
+        setShowPremium(premium);
       } catch {
-        // Keep badge based on local unlock flag if the account call fails.
-        setShowPremium(hasPremiumUnlockedFlag());
+        // Fail closed: hide Profile until session is confirmed.
+        setSignedIn(false);
+        setShowPremium(false);
+      } finally {
+        setReady(true);
       }
     })();
     return () => controller.abort();
   }, []);
+
+  if (!ready || !signedIn) {
+    return null;
+  }
 
   return (
     <Link className={styles["profileNavLink"]} href={"/en/account" as Route}>

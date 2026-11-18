@@ -28,12 +28,15 @@ describe("public auth navigation", () => {
     expect(shell.match(/href="\/en\/unsubscribe"/g)?.length).toBeGreaterThanOrEqual(2);
   });
 
-  it("shows User Profile with a Premium tag after JazzCash unlock", () => {
+  it("shows User Profile only after sign-in, with Premium tag when entitled", () => {
     const shell = readFileSync(new URL("./discovery-shell.tsx", import.meta.url), "utf8");
     const profile = readFileSync(new URL("./profile-nav-link.tsx", import.meta.url), "utf8");
     expect(shell).toContain("<ProfileNavLink />");
     expect(profile).toContain("User Profile");
     expect(profile).toContain("Premium");
+    expect(profile).toContain("/api/v1/auth/session");
+    expect(profile).toContain("if (!ready || !signedIn)");
+    expect(profile).toContain("return null");
     expect(profile).toContain("hasPremiumUnlockedFlag");
   });
 });
