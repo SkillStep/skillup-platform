@@ -173,15 +173,33 @@ async function verifiedEvidence(
     [userId, challenges],
   );
 
+  // An arbitrary learner account must not be able to attest a capstone.
+  // The reviewer must hold a genuine active editorial review role that was
+  // granted before the attestation and not expired/revoked at verification.
+  // Check the latest attestation *before* considering its role, so a later
+  // unauthorized rejection cannot be silently bypassed by an older pass.
   const capstone = r.required_capstone
-    ? await db.query<{ decision: string; verified_at: Date }>(
-        `select decision, verified_at from skill_capstone_attestations
-          where user_id = $1 and requirement_set_id = $2
-          order by verified_at desc, id desc limit 1`,
+    ? await db.query<{ decision: string; verified_at: Date; reviewer_authorized: boolean }>(
+        `select a.decision, a.verified_at,
+                exists (
+                  select 1
+                    from admin_principals p
+                    join admin_role_assignments roles on roles.user_id = p.user_id
+                   where p.user_id = a.reviewer_user_id and p.status = 'active'
+                     and roles.role = 'content_reviewer'
+                     and roles.created_at <= a.verified_at
+                     and (roles.expires_at is null or roles.expires_at > a.verified_at)
+                     and (roles.revoked_at is null or roles.revoked_at > a.verified_at)
+                ) as reviewer_authorized
+           from skill_capstone_attestations a
+          where a.user_id = $1 and a.requirement_set_id = $2
+          order by a.verified_at desc, a.id desc limit 1`,
         [userId, r.id],
       )
     : null;
-  const capstonePassed = !r.required_capstone || capstone?.rows[0]?.decision === "passed";
+  const capstonePassed =
+    !r.required_capstone ||
+    (capstone?.rows[0]?.decision === "passed" && capstone?.rows[0]?.reviewer_authorized === true);
   const levelCount = completed.rows.length;
   const challengeCount = passed.rows.length;
   const good =
