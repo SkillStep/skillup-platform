@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "applied-ai-workflows",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "gradingPolicyApproved": false,
+  "questions": [
+    {
+      "id": "applied-ai-workflows-baseline-1",
+      "phase": "baseline",
+      "competency": "Idempotency",
+      "type": "multiple_choice",
+      "prompt": "An incoming event is delivered twice after a webhook retry. What should prevent a duplicate record?",
+      "options": {
+        "a": "Use a persistent event identifier and check whether the event was processed already",
+        "b": "Append every event even when identifiers match exactly",
+        "c": "Generate a new identifier on each retry to hide duplicates"
+      },
+      "answer": "a",
+      "feedback": "A stable idempotency key prevents one business event from triggering repeated effects.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-endline-1",
+      "phase": "endline",
+      "competency": "Idempotency",
+      "type": "multiple_choice",
+      "prompt": "A weekly report trigger runs again because a connector timed out after writing data. Which strategy is safest?",
+      "options": {
+        "a": "Email the identical report to every client twice",
+        "b": "Ignore the possibility that connectors retry",
+        "c": "Check the stored report/run identifier and avoid repeated external effects"
+      },
+      "answer": "c",
+      "feedback": "A stable idempotency key prevents one business event from triggering repeated effects.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-baseline-2",
+      "phase": "baseline",
+      "competency": "Minimal access",
+      "type": "multiple_choice",
+      "prompt": "A summary workflow requests the ability to delete every company document. What is appropriate?",
+      "options": {
+        "a": "Grant administrator rights to prevent future permission errors",
+        "b": "Place master tokens inside a public workflow prompt",
+        "c": "Restrict access to the necessary fields and prohibit unrelated deletion rights"
+      },
+      "answer": "c",
+      "feedback": "Least-privilege access and credential separation should be part of workflow design.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-endline-2",
+      "phase": "endline",
+      "competency": "Minimal access",
+      "type": "multiple_choice",
+      "prompt": "A no-code automation reads order statuses to prepare a weekly count. What should its scope include?",
+      "options": {
+        "a": "Permission to modify bank-account destinations",
+        "b": "Read-only access to approved order columns and the reporting date range",
+        "c": "Rights to export all employee records and customer correspondence"
+      },
+      "answer": "b",
+      "feedback": "Least-privilege access and credential separation should be part of workflow design.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-baseline-3",
+      "phase": "baseline",
+      "competency": "Human signoff",
+      "type": "multiple_choice",
+      "prompt": "An AI-generated invoice assistant encounters a changed bank beneficiary. How should the flow proceed?",
+      "options": {
+        "a": "Overwrite the original beneficiary without a review record",
+        "b": "Stop any payment and require independent human verification of the bank details",
+        "c": "Approve payment automatically because it was well phrased"
+      },
+      "answer": "b",
+      "feedback": "Irreversible or external actions require checks and explicit accountable human approval.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-endline-3",
+      "phase": "endline",
+      "competency": "Human signoff",
+      "type": "multiple_choice",
+      "prompt": "An automatic social scheduler drafts a claim about an unconfirmed product discount. What should happen before posting?",
+      "options": {
+        "a": "Require an authorized editor to check pricing facts and approve the exact version before scheduling",
+        "b": "Send the post first and ask the editor to review later",
+        "c": "Have the model invent a plausible discount to complete the schedule"
+      },
+      "answer": "a",
+      "feedback": "Irreversible or external actions require checks and explicit accountable human approval.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-baseline-4",
+      "phase": "baseline",
+      "competency": "Evaluation",
+      "type": "multiple_choice",
+      "prompt": "A manual weekly report took 90 minutes; the new flow takes 35 plus 20 minutes for review. What net time saving can be claimed?",
+      "options": {
+        "a": "35 minutes saved per comparable run, subject to real measurement",
+        "b": "90 minutes saved because the AI step is immediate",
+        "c": "55 minutes saved while ignoring human review time"
+      },
+      "answer": "a",
+      "feedback": "Measure total supervised work and validate normal and exceptional paths before declaring a workflow ready.",
+      "state": "draft"
+    },
+    {
+      "id": "applied-ai-workflows-endline-4",
+      "phase": "endline",
+      "competency": "Evaluation",
+      "type": "multiple_choice",
+      "prompt": "An automation passes a standard sample but fails when a required field is absent. What next step supports release readiness?",
+      "options": {
+        "a": "Claim the system is production-ready because one normal example passed",
+        "b": "Hide the failed run and discard its test evidence",
+        "c": "Record the missing-field failure, add safe exception handling and retest before activation"
+      },
+      "answer": "c",
+      "feedback": "Measure total supervised work and validate normal and exceptional paths before declaring a workflow ready.",
+      "state": "draft"
+    }
+  ]
+}

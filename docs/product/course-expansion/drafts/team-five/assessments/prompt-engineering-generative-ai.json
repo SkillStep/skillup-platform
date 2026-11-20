@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "prompt-engineering-generative-ai",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "gradingPolicyApproved": false,
+  "questions": [
+    {
+      "id": "prompt-engineering-generative-ai-baseline-1",
+      "phase": "baseline",
+      "competency": "Specificity",
+      "type": "multiple_choice",
+      "prompt": "A student writes \"help with exams\" and receives a vague plan. Which prompt revision is most useful?",
+      "options": {
+        "a": "Specify exam subjects, available days, format and measurable revision tasks",
+        "b": "Request a longer answer without supplying any goals",
+        "c": "Ask the assistant to predict exact exam questions"
+      },
+      "answer": "a",
+      "feedback": "Useful prompts contain a concrete outcome, relevant facts, constraints and acceptance checks.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-endline-1",
+      "phase": "endline",
+      "competency": "Specificity",
+      "type": "multiple_choice",
+      "prompt": "A bookshop writes \"make marketing\" and receives generic text. Which follow-up is best?",
+      "options": {
+        "a": "Request guaranteed sales with invented endorsements",
+        "b": "Give only the shop name and request an immediate final campaign",
+        "c": "Name the product, buyer, verified features and required caption length"
+      },
+      "answer": "c",
+      "feedback": "Useful prompts contain a concrete outcome, relevant facts, constraints and acceptance checks.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-baseline-2",
+      "phase": "baseline",
+      "competency": "Confidentiality",
+      "type": "multiple_choice",
+      "prompt": "A volunteer wants help summarizing a roster with actual phone numbers. Which input is suitable for a public tool?",
+      "options": {
+        "a": "Paste the full contact database for realism",
+        "b": "Include passwords to avoid further clarification",
+        "c": "Use an authorized minimized or fictional roster with no unnecessary identifiers"
+      },
+      "answer": "c",
+      "feedback": "Use minimal authorized input and keep actual identifiers outside unapproved tools.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-endline-2",
+      "phase": "endline",
+      "competency": "Confidentiality",
+      "type": "multiple_choice",
+      "prompt": "A freelancer is drafting a sample invoice that contains a real client's bank details. Which test data is appropriate?",
+      "options": {
+        "a": "Share an open folder of customer invoices",
+        "b": "Replace personal account fields with synthetic placeholders before testing",
+        "c": "Post the original financial identifiers in the prompt"
+      },
+      "answer": "b",
+      "feedback": "Use minimal authorized input and keep actual identifiers outside unapproved tools.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-baseline-3",
+      "phase": "baseline",
+      "competency": "Fact checking",
+      "type": "multiple_choice",
+      "prompt": "An AI supplies a study citation without any verifiable publication record. Which next step is appropriate?",
+      "options": {
+        "a": "Invent a matching DOI to make the source look real",
+        "b": "Withhold the citation until a reliable independent source confirms it",
+        "c": "Trust the publication title because it sounds academic"
+      },
+      "answer": "b",
+      "feedback": "Model fluency cannot substitute for independent factual verification.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-endline-3",
+      "phase": "endline",
+      "competency": "Fact checking",
+      "type": "multiple_choice",
+      "prompt": "A generated course summary gives an application deadline but cites no date or source. What should happen?",
+      "options": {
+        "a": "Verify the deadline on the responsible official website and record the date checked",
+        "b": "Assume that last year's deadline remains valid",
+        "c": "Publish the claim as certain because it was fluently phrased"
+      },
+      "answer": "a",
+      "feedback": "Model fluency cannot substitute for independent factual verification.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-baseline-4",
+      "phase": "baseline",
+      "competency": "Fair testing",
+      "type": "multiple_choice",
+      "prompt": "Two prompts write plans for the same learner. What makes the evaluation fair?",
+      "options": {
+        "a": "Use identical learner constraints and score both outputs against one rubric",
+        "b": "Give them different goals and compare only length",
+        "c": "Select the version with the most polished adjectives"
+      },
+      "answer": "a",
+      "feedback": "Consistent inputs and criteria make comparisons interpretable; edge cases need testing.",
+      "state": "draft"
+    },
+    {
+      "id": "prompt-engineering-generative-ai-endline-4",
+      "phase": "endline",
+      "competency": "Fair testing",
+      "type": "multiple_choice",
+      "prompt": "Two customer-support response templates are compared before rollout. Which approach is defensible?",
+      "options": {
+        "a": "Use unrelated cases with different severity and compare tone alone",
+        "b": "Treat the first valid output as proof of universal reliability",
+        "c": "Test both on the same fictional ticket set for accuracy, clarity and policy fit"
+      },
+      "answer": "c",
+      "feedback": "Consistent inputs and criteria make comparisons interpretable; edge cases need testing.",
+      "state": "draft"
+    }
+  ]
+}

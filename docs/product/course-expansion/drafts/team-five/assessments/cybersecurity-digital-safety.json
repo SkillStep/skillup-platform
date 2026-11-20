@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "cybersecurity-digital-safety",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "gradingPolicyApproved": false,
+  "questions": [
+    {
+      "id": "cybersecurity-digital-safety-baseline-1",
+      "phase": "baseline",
+      "competency": "Phishing",
+      "type": "multiple_choice",
+      "prompt": "A text says a parcel will be destroyed unless a fee is paid through an unfamiliar link. What should happen?",
+      "options": {
+        "a": "Pay the fee within the demanded countdown",
+        "b": "Share a payment-card photo to prove identity",
+        "c": "Check the shipment independently through the verified courier website or app"
+      },
+      "answer": "c",
+      "feedback": "Suspicious urgency and links should be verified through trusted channels, not interacted with directly.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-endline-1",
+      "phase": "endline",
+      "competency": "Phishing",
+      "type": "multiple_choice",
+      "prompt": "A student receives a scholarship acceptance email from an unknown sender asking for a login password. What should happen?",
+      "options": {
+        "a": "Forward the suspected phishing URL to all classmates",
+        "b": "Open the official scholarship portal from a verified bookmark and assess the notice",
+        "c": "Enter the account password through the received link"
+      },
+      "answer": "b",
+      "feedback": "Suspicious urgency and links should be verified through trusted channels, not interacted with directly.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-baseline-2",
+      "phase": "baseline",
+      "competency": "Account security",
+      "type": "multiple_choice",
+      "prompt": "An employee receives an MFA approval push while not trying to log in. What is safest?",
+      "options": {
+        "a": "Send a recovery code to a coworker",
+        "b": "Decline the prompt and review account sessions through official security settings",
+        "c": "Approve the prompt to stop notifications"
+      },
+      "answer": "b",
+      "feedback": "Unexpected authentication approvals and one-time codes must not be shared or approved.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-endline-2",
+      "phase": "endline",
+      "competency": "Account security",
+      "type": "multiple_choice",
+      "prompt": "A caller claiming to be technical support asks for a one-time code. Which response is correct?",
+      "options": {
+        "a": "Refuse to share the code and contact support through a verified channel",
+        "b": "Give the caller the code if they know your full name",
+        "c": "Disable MFA to make support faster"
+      },
+      "answer": "a",
+      "feedback": "Unexpected authentication approvals and one-time codes must not be shared or approved.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-baseline-3",
+      "phase": "baseline",
+      "competency": "Privacy permissions",
+      "type": "multiple_choice",
+      "prompt": "A volunteer shift sheet is set to \"anyone with link can edit.\" What is the suitable fix?",
+      "options": {
+        "a": "Restrict edit rights to designated volunteers and review prior exposure",
+        "b": "Leave it public because the URL is hard to remember",
+        "c": "Copy all contact numbers into the document for convenience"
+      },
+      "answer": "a",
+      "feedback": "Least privilege and deliberate access review reduce unintended disclosure.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-endline-3",
+      "phase": "endline",
+      "competency": "Privacy permissions",
+      "type": "multiple_choice",
+      "prompt": "A flashlight app on a trainee's phone requests unrestricted access to contacts. What should the trainee do?",
+      "options": {
+        "a": "Grant access because installation already succeeded",
+        "b": "Upload the address book to the app support website",
+        "c": "Refuse unrelated permissions and consider a safer app"
+      },
+      "answer": "c",
+      "feedback": "Least privilege and deliberate access review reduce unintended disclosure.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-baseline-4",
+      "phase": "baseline",
+      "competency": "Incident response",
+      "type": "multiple_choice",
+      "prompt": "An email account sends messages the owner did not write. Which response is best?",
+      "options": {
+        "a": "Ignore the messages until someone complains",
+        "b": "Pay an unknown recovery agent for remote access",
+        "c": "Use verified security settings to revoke sessions and check recovery and forwarding rules"
+      },
+      "answer": "c",
+      "feedback": "Incident handling must contain access, preserve evidence and rely on verified recovery.",
+      "state": "draft"
+    },
+    {
+      "id": "cybersecurity-digital-safety-endline-4",
+      "phase": "endline",
+      "competency": "Incident response",
+      "type": "multiple_choice",
+      "prompt": "A work tablet with signed-in services goes missing after a fictional community event. What is the appropriate response?",
+      "options": {
+        "a": "Share current account passwords with all event volunteers",
+        "b": "Revoke device sessions, protect account access and document possible exposure",
+        "c": "Assume device lock means no response is needed"
+      },
+      "answer": "b",
+      "feedback": "Incident handling must contain access, preserve evidence and rely on verified recovery.",
+      "state": "draft"
+    }
+  ]
+}

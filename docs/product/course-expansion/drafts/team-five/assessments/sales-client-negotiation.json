@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "sales-client-negotiation",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "gradingPolicyApproved": false,
+  "questions": [
+    {
+      "id": "sales-client-negotiation-baseline-1",
+      "phase": "baseline",
+      "competency": "Discovery",
+      "type": "multiple_choice",
+      "prompt": "A client says \"we need more growth.\" What question makes the requirement actionable?",
+      "options": {
+        "a": "Promise a 50 percent sales increase before any evidence",
+        "b": "Offer the costliest package without asking about goals",
+        "c": "Ask which customer action, baseline and time window define success"
+      },
+      "answer": "c",
+      "feedback": "Discovery identifies the client's actual goals, constraints and decision process before proposing work.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-endline-1",
+      "phase": "endline",
+      "competency": "Discovery",
+      "type": "multiple_choice",
+      "prompt": "A restaurant says its marketing campaign must be ready \"soon.\" What should a consultant confirm?",
+      "options": {
+        "a": "Begin production without any approved briefing",
+        "b": "Confirm the date, approval owner, required creative assets and launch dependencies",
+        "c": "Assume the next business day is the deadline"
+      },
+      "answer": "b",
+      "feedback": "Discovery identifies the client's actual goals, constraints and decision process before proposing work.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-baseline-2",
+      "phase": "baseline",
+      "competency": "Scope changes",
+      "type": "multiple_choice",
+      "prompt": "A contract contains four edited videos; a client requests ten at the original cost. What is fair?",
+      "options": {
+        "a": "Reject all agreed in-scope revision requests",
+        "b": "Offer a documented change order with revised time, deliverables and fees",
+        "c": "Promise extra six videos free without assessing feasibility"
+      },
+      "answer": "b",
+      "feedback": "Written scope and exclusions should remain clear when client needs change.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-endline-2",
+      "phase": "endline",
+      "competency": "Scope changes",
+      "type": "multiple_choice",
+      "prompt": "A proposal lists creative service fees but excludes paid advertisements. How must the total be described?",
+      "options": {
+        "a": "List paid ad spend as separately authorized and explicitly excluded from service fees",
+        "b": "Describe advertising spend as included without any budget",
+        "c": "Add an unexpected media bill after the client signs"
+      },
+      "answer": "a",
+      "feedback": "Written scope and exclusions should remain clear when client needs change.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-baseline-3",
+      "phase": "baseline",
+      "competency": "Budget concerns",
+      "type": "multiple_choice",
+      "prompt": "A prospect says the quote exceeds the approved budget. How should a seller respond?",
+      "options": {
+        "a": "Ask which goals matter most and offer transparent lower-scope alternatives",
+        "b": "Create a fake offer expiry in one hour",
+        "c": "Insist on full payment regardless of the budget cap"
+      },
+      "answer": "a",
+      "feedback": "Consultative negotiation should use accurate information and respect buyer constraints.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-endline-3",
+      "phase": "endline",
+      "competency": "Budget concerns",
+      "type": "multiple_choice",
+      "prompt": "A buyer says a partner needs another week to review the offer. What is an ethical next step?",
+      "options": {
+        "a": "Send messages every hour until acceptance",
+        "b": "Claim there is another buyer when no such request exists",
+        "c": "Respect the approval process and agree a reasonable follow-up time"
+      },
+      "answer": "c",
+      "feedback": "Consultative negotiation should use accurate information and respect buyer constraints.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-baseline-4",
+      "phase": "baseline",
+      "competency": "Handover",
+      "type": "multiple_choice",
+      "prompt": "A signed campaign moves from account management to delivery. Which information should transfer?",
+      "options": {
+        "a": "Leave delivery to guess the promises from memory",
+        "b": "Hide unresolved risks so the client stays confident",
+        "c": "Share approved scope, owner, exclusions, asset list, milestones and known risks securely"
+      },
+      "answer": "c",
+      "feedback": "Accurate handover and explicit dependencies prevent scope disputes and missed expectations.",
+      "state": "draft"
+    },
+    {
+      "id": "sales-client-negotiation-endline-4",
+      "phase": "endline",
+      "competency": "Handover",
+      "type": "multiple_choice",
+      "prompt": "A developer receives a signed project scope with no confirmed asset handover date. What should happen next?",
+      "options": {
+        "a": "Remove the asset dependency from the handover document",
+        "b": "Confirm client asset deadlines and update dependent delivery dates before promising launch",
+        "c": "Set an arbitrary delivery date without collecting required files"
+      },
+      "answer": "b",
+      "feedback": "Accurate handover and explicit dependencies prevent scope disputes and missed expectations.",
+      "state": "draft"
+    }
+  ]
+}

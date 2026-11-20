@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "data-analytics-dashboards",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "reviewedBy": null,
+  "approvedBy": null,
+  "publishedAt": null,
+  "gradingPolicyApproved": false,
+  "questions": [
+    {
+      "id": "data-analytics-dashboards-baseline-1",
+      "phase": "baseline",
+      "competency": "Conversions",
+      "type": "multiple_choice",
+      "prompt": "A cafe gets 100 qualified enquiries and 20 completed paid orders. What is the enquiry conversion rate?",
+      "options": {
+        "a": "The number of social media post impressions",
+        "b": "20 percent: paid orders divided by qualified enquiries",
+        "c": "One hundred percent because every enquiry was observed"
+      },
+      "answer": "b",
+      "feedback": "A conversion rate uses verified outcome events divided by a clearly defined eligible population.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-endline-1",
+      "phase": "endline",
+      "competency": "Conversions",
+      "type": "multiple_choice",
+      "prompt": "A signup page records 250 eligible visits and 25 completed registrations. What metric is justified?",
+      "options": {
+        "a": "10 percent: completed registrations divided by eligible visits",
+        "b": "Ten percent of this year's unspecified revenue",
+        "c": "Total page visits as a count of completed registrations"
+      },
+      "answer": "a",
+      "feedback": "A conversion rate uses verified outcome events divided by a clearly defined eligible population.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-baseline-2",
+      "phase": "baseline",
+      "competency": "Cleaning",
+      "type": "multiple_choice",
+      "prompt": "Two transactions have identical prices but different order identifiers. How should a reviewer treat them?",
+      "options": {
+        "a": "Retain the records as separate until source records prove duplication",
+        "b": "Delete one because the amounts are equal",
+        "c": "Merge both rows into a new invented purchase"
+      },
+      "answer": "a",
+      "feedback": "Cleaning decisions need source validation rather than cosmetic consistency.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-endline-2",
+      "phase": "endline",
+      "competency": "Cleaning",
+      "type": "multiple_choice",
+      "prompt": "A scheduling dataset contains the date February 31. What should an analyst do?",
+      "options": {
+        "a": "Silently convert it to February 28",
+        "b": "Delete every date in the same month",
+        "c": "Flag the invalid date and verify the correct record from the source"
+      },
+      "answer": "c",
+      "feedback": "Cleaning decisions need source validation rather than cosmetic consistency.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-baseline-3",
+      "phase": "baseline",
+      "competency": "Chart integrity",
+      "type": "multiple_choice",
+      "prompt": "A nonprofit compares registrations in three neighbourhoods. Which visual is clearest?",
+      "options": {
+        "a": "Unlabelled 3D pie sectors with no exact values",
+        "b": "A chart without any unit or timeframe",
+        "c": "A labelled category bar chart with a zero baseline"
+      },
+      "answer": "c",
+      "feedback": "Explicit units and fair scales keep quantitative comparisons interpretable.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-endline-3",
+      "phase": "endline",
+      "competency": "Chart integrity",
+      "type": "multiple_choice",
+      "prompt": "A shop displays weekly PKR revenue by product group as vertical bars. What must be included?",
+      "options": {
+        "a": "Decorative widths that change independently of the amounts",
+        "b": "A clearly identified PKR axis, category labels, dates and a zero baseline",
+        "c": "A truncated baseline to make the best category appear much larger"
+      },
+      "answer": "b",
+      "feedback": "Explicit units and fair scales keep quantitative comparisons interpretable.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-baseline-4",
+      "phase": "baseline",
+      "competency": "Uncertainty",
+      "type": "multiple_choice",
+      "prompt": "Purchases rise after two overlapping promotions. What conclusion is defensible?",
+      "options": {
+        "a": "Hide the second promotion's dates",
+        "b": "State the observed rise and note other possible influences instead of asserting one cause",
+        "c": "Attribute all purchases to the first promotion without comparison"
+      },
+      "answer": "b",
+      "feedback": "Analysis must distinguish observations from causal claims and explain limited samples.",
+      "state": "draft"
+    },
+    {
+      "id": "data-analytics-dashboards-endline-4",
+      "phase": "endline",
+      "competency": "Uncertainty",
+      "type": "multiple_choice",
+      "prompt": "A survey of eight customers from one shop is used to inform a citywide decision. How should it be reported?",
+      "options": {
+        "a": "Describe the result as exploratory with sample size and representativeness limitations",
+        "b": "Claim that eight customers represent the entire city reliably",
+        "c": "Discard negative feedback to create a stronger result"
+      },
+      "answer": "a",
+      "feedback": "Analysis must distinguish observations from causal claims and explain limited samples.",
+      "state": "draft"
+    }
+  ]
+}

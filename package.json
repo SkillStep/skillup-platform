@@ -47,7 +47,7 @@
     "infra:reset": "docker compose --env-file .env -f infra/compose.yaml down -v",
     "catalog:readiness:check": "node tools/report-aifs-readiness.mjs && node --test tools/report-aifs-readiness.test.mjs",
     "catalog:legacy-quality:audit": "node --import tsx tools/audit-existing-launch-courses.mjs && node --import tsx --test tools/audit-existing-launch-courses.test.mjs",
-    "catalog:team-five:check": "node tools/validate-team-five-outlines.mjs && node --test tools/validate-team-five-outlines.test.mjs",
+    "catalog:team-five:check": "node tools/validate-team-five-outlines.mjs && node --test tools/validate-team-five-outlines.test.mjs && node tools/validate-aifs-team-five-courses.mjs && node --test tools/validate-aifs-team-five-courses.test.mjs && node tools/compile-aifs-team-five-drafts.mjs && node --test tools/import-aifs-team-five-drafts.test.mjs && node tools/import-aifs-team-five-drafts.mjs --dry-run && node tools/validate-aifs-team-five-assessments.mjs && node --test tools/validate-aifs-team-five-assessments.test.mjs && node tools/compile-aifs-team-five-assessments.mjs",
     "certificates:backfill:dry-run": "node --env-file-if-exists=.env --import tsx tools/aifs-certificate-backfill-dry-run.mjs",
     "certificates:backfill:check": "node --test tools/aifs-certificate-backfill-dry-run.test.mjs"
   },

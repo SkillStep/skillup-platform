@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "data-analytics-dashboards",
+  "publicTitle": "Data Analytics & Decision Making",
+  "canonicalSlug": "data-analytics-dashboards",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "subjectReviewedBy": null,
+  "languageReviewedBy": null,
+  "publisherId": null,
+  "publishedAt": null,
+  "sourceKind": "internal_editorial",
+  "sourceReviewRequired": true,
+  "capstoneFile": "capstones/data-analytics-decision-making.md",
+  "modules": [
+    {
+      "schemaVersion": 1,
+      "courseSlug": "data-analytics-dashboards",
+      "locale": "en",
+      "moduleNumber": 1,
+      "moduleTitle": "Data Questions and Metrics",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 1,
+          "title": "Translate a Business Concern into Data Questions",
+          "objective": "Use the translate a business concern into data questions technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A useful analysis begins with a measurable decision question, population and time window. Worked example: A café manager says footfall feels lower but has only weekly receipts. The correct approach is to ask how many unique orders each day this week compares with the prior four weeks. Common errors include: report the number of social likes as proof of walk-ins or assume the decline is caused by rain without evidence.",
+          "workedExample": "Context: A café manager says footfall feels lower but has only weekly receipts. Applied technique: Ask how many unique orders each day this week compares with the prior four weeks.",
+          "commonMistake": "Report the number of social likes as proof of walk-ins",
+          "remediation": "Defined questions anchor the dataset and avoid speculative explanations.",
+          "hint": "Check that the action follows this data principle: A useful analysis begins with a measurable decision question, population and time window.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Translate a Business Concern into Data Questions\", analyze this fictional business situation: A café manager says footfall feels lower but has only weekly receipts. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Ask how many unique orders each day this week compares with the prior four weeks",
+                "b": "Report the number of social likes as proof of walk-ins",
+                "c": "Assume the decline is caused by rain without evidence"
+              },
+              "answer": "a",
+              "feedback": "A useful analysis begins with a measurable decision question, population and time window. In this example, ask how many unique orders each day this week compares with the prior four weeks."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a delivery shop evaluating more customer complaints. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Define whether the decision concerns complaint count, complaint rate or issue category and choose a fair time period",
+                "b": "Treat the loudest single complaint as proof every delivery failed",
+                "c": "Report social reactions as the number of resolved complaints"
+              },
+              "answer": "a",
+              "feedback": "Define whether the decision concerns complaint count, complaint rate or issue category and choose a fair time period. Defined questions anchor the dataset and avoid speculative explanations."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Translate a Business Concern into Data Questions\" correct? A specific comparison question helps determine what data to collect before designing a chart.",
+              "answer": true,
+              "feedback": "Defined questions anchor the dataset and avoid speculative explanations."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "Define an Outcome Metric",
+          "objective": "Use the define an outcome metric technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "An outcome KPI measures a meaningful result rather than merely recording activity. Worked example: A tutoring business logs 150 new enquiries but knows nothing about registrations. The correct approach is to measure confirmed paid registrations divided by qualified enquiries alongside enquiry count. Common errors include: treat every enquiry as a paying customer or count message impressions as lesson completions.",
+          "workedExample": "Context: A tutoring business logs 150 new enquiries but knows nothing about registrations. Applied technique: Measure confirmed paid registrations divided by qualified enquiries alongside enquiry count.",
+          "commonMistake": "Treat every enquiry as a paying customer",
+          "remediation": "More enquiries may coexist with a lower paid conversion rate.",
+          "hint": "Check that the action follows this data principle: An outcome KPI measures a meaningful result rather than merely recording activity.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Define an Outcome Metric\", analyze this fictional business situation: A tutoring business logs 150 new enquiries but knows nothing about registrations. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Count message impressions as lesson completions",
+                "b": "Measure confirmed paid registrations divided by qualified enquiries alongside enquiry count",
+                "c": "Treat every enquiry as a paying customer"
+              },
+              "answer": "b",
+              "feedback": "An outcome KPI measures a meaningful result rather than merely recording activity. In this example, measure confirmed paid registrations divided by qualified enquiries alongside enquiry count."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a small brand reviewing how many leads became orders. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Treat every new lead as a completed paid order",
+                "b": "Report follower count instead of lead-to-order conversion",
+                "c": "Measure verified orders divided by qualified leads for the same reporting period"
+              },
+              "answer": "c",
+              "feedback": "Measure verified orders divided by qualified leads for the same reporting period. More enquiries may coexist with a lower paid conversion rate."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Define an Outcome Metric\" correct? A larger enquiry count always proves conversion improved.",
+              "answer": false,
+              "feedback": "More enquiries may coexist with a lower paid conversion rate."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "title": "Choose a Useful Comparison Period",
+          "objective": "Use the choose a useful comparison period technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Time windows must be comparable and adjusted for weekends or seasonal changes where relevant. Worked example: A shop compares one Monday with a full six-day sales week. The correct approach is to compare like-for-like weeks or the same weekday and label the dates. Common errors include: declare sales rose because a six-day total exceeds a one-day total or ignore a holiday that affected hours.",
+          "workedExample": "Context: A shop compares one Monday with a full six-day sales week. Applied technique: Compare like-for-like weeks or the same weekday and label the dates.",
+          "commonMistake": "Declare sales rose because a six-day total exceeds a one-day total",
+          "remediation": "Use comparable periods and explain calendar differences.",
+          "hint": "Check that the action follows this data principle: Time windows must be comparable and adjusted for weekends or seasonal changes where relevant.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Choose a Useful Comparison Period\", analyze this fictional business situation: A shop compares one Monday with a full six-day sales week. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Declare sales rose because a six-day total exceeds a one-day total",
+                "b": "Ignore a holiday that affected hours",
+                "c": "Compare like-for-like weeks or the same weekday and label the dates"
+              },
+              "answer": "c",
+              "feedback": "Time windows must be comparable and adjusted for weekends or seasonal changes where relevant. In this example, compare like-for-like weeks or the same weekday and label the dates."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a school analyzing attendance before and after an exam week. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Omit examination dates and claim attendance changes have one cause",
+                "b": "Compare equivalent school days or weeks and explain the exam-period difference",
+                "c": "Compare a full term with one afternoon without normalization"
+              },
+              "answer": "b",
+              "feedback": "Compare equivalent school days or weeks and explain the exam-period difference. Use comparable periods and explain calendar differences."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Choose a Useful Comparison Period\" correct? Comparisons with unequal periods can create misleading trends.",
+              "answer": true,
+              "feedback": "Use comparable periods and explain calendar differences."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "title": "Identify Missing Data Requirements",
+          "objective": "Use the identify missing data requirements technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Document what is not recorded before asserting a conclusion from partial data. Worked example: A seller has order counts but not refund statuses and wants net revenue. The correct approach is to request paid amounts, refunds and cancellations before reporting net sales. Common errors include: multiply all order counts by a guessed average price or remove refunded orders without evidence.",
+          "workedExample": "Context: A seller has order counts but not refund statuses and wants net revenue. Applied technique: Request paid amounts, refunds and cancellations before reporting net sales.",
+          "commonMistake": "Multiply all order counts by a guessed average price",
+          "remediation": "Missing fields can change both totals and interpretations.",
+          "hint": "Check that the action follows this data principle: Document what is not recorded before asserting a conclusion from partial data.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Identify Missing Data Requirements\", analyze this fictional business situation: A seller has order counts but not refund statuses and wants net revenue. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Request paid amounts, refunds and cancellations before reporting net sales",
+                "b": "Multiply all order counts by a guessed average price",
+                "c": "Remove refunded orders without evidence"
+              },
+              "answer": "a",
+              "feedback": "Document what is not recorded before asserting a conclusion from partial data. In this example, request paid amounts, refunds and cancellations before reporting net sales."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping an NGO estimating event turnout from ticket registrations. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Distinguish registrations from confirmed attendance and request check-in records before estimating turnout",
+                "b": "Claim all registered people attended without verification",
+                "c": "Add a guessed number of walk-ins to the registration total"
+              },
+              "answer": "a",
+              "feedback": "Distinguish registrations from confirmed attendance and request check-in records before estimating turnout. Missing fields can change both totals and interpretations."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Identify Missing Data Requirements\" correct? Data that omit cancellations can overstate real fulfilled activity.",
+              "answer": true,
+              "feedback": "Missing fields can change both totals and interpretations."
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "title": "Avoid Vanity Metric Traps",
+          "objective": "Use the avoid vanity metric traps technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Activity counts may be useful signals but must be tied to conversion or retention outcomes. Worked example: A creator gains 20,000 video views while website orders stay flat. The correct approach is to report views alongside qualified visits and actual orders rather than claiming revenue impact. Common errors include: state that every view is a sale or remove order data because views look impressive.",
+          "workedExample": "Context: A creator gains 20,000 video views while website orders stay flat. Applied technique: Report views alongside qualified visits and actual orders rather than claiming revenue impact.",
+          "commonMistake": "State that every view is a sale",
+          "remediation": "Reach is not equivalent to actual business value.",
+          "hint": "Check that the action follows this data principle: Activity counts may be useful signals but must be tied to conversion or retention outcomes.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Avoid Vanity Metric Traps\", analyze this fictional business situation: A creator gains 20,000 video views while website orders stay flat. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Remove order data because views look impressive",
+                "b": "Report views alongside qualified visits and actual orders rather than claiming revenue impact",
+                "c": "State that every view is a sale"
+              },
+              "answer": "b",
+              "feedback": "Activity counts may be useful signals but must be tied to conversion or retention outcomes. In this example, report views alongside qualified visits and actual orders rather than claiming revenue impact."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a retail campaign reporting shares without purchases. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Assume that each shared post generated a completed sale",
+                "b": "Hide order results because the engagement numbers look better",
+                "c": "Report verified purchases or qualified visits alongside social shares and avoid revenue claims without sales evidence"
+              },
+              "answer": "c",
+              "feedback": "Report verified purchases or qualified visits alongside social shares and avoid revenue claims without sales evidence. Reach is not equivalent to actual business value."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Avoid Vanity Metric Traps\" correct? High social reach by itself establishes profitable campaign performance.",
+              "answer": false,
+              "feedback": "Reach is not equivalent to actual business value."
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "title": "Checkpoint: Write a KPI Brief",
+          "objective": "Use the checkpoint: write a kpi brief technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A KPI brief specifies decision, metric definition, numerator, denominator, time window and owner. Worked example: A fictional online shop asks whether checkout improvements helped customers. The correct approach is to define checkout conversion as verified purchases divided by eligible sessions over comparable weeks. Common errors include: use the number of page designs made as the conversion metric or report a percentage without defining its denominator.",
+          "workedExample": "Context: A fictional online shop asks whether checkout improvements helped customers. Applied technique: Define checkout conversion as verified purchases divided by eligible sessions over comparable weeks.",
+          "commonMistake": "Use the number of page designs made as the conversion metric",
+          "remediation": "Ambiguous metric definitions lead to inconsistent reporting.",
+          "hint": "Check that the action follows this data principle: A KPI brief specifies decision, metric definition, numerator, denominator, time window and owner.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Write a KPI Brief\", analyze this fictional business situation: A fictional online shop asks whether checkout improvements helped customers. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Use the number of page designs made as the conversion metric",
+                "b": "Report a percentage without defining its denominator",
+                "c": "Define checkout conversion as verified purchases divided by eligible sessions over comparable weeks"
+              },
+              "answer": "c",
+              "feedback": "A KPI brief specifies decision, metric definition, numerator, denominator, time window and owner. In this example, define checkout conversion as verified purchases divided by eligible sessions over comparable weeks."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a service business setting a weekly repeat-customer report. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Report a percentage without explaining the eligible population",
+                "b": "Define repeat-customer count from unique customer identifiers, a seven-day period and an explicit denominator",
+                "c": "Count every order as a different returning customer"
+              },
+              "answer": "b",
+              "feedback": "Define repeat-customer count from unique customer identifiers, a seven-day period and an explicit denominator. Ambiguous metric definitions lead to inconsistent reporting."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Checkpoint: Write a KPI Brief\" correct? Clear numerator and denominator definitions help teams reproduce the same metric.",
+              "answer": true,
+              "feedback": "Ambiguous metric definitions lead to inconsistent reporting."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "data-analytics-dashboards",
+      "locale": "en",
+      "moduleNumber": 2,
+      "moduleTitle": "Data Cleaning and Checks",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 7,
+          "title": "Distinguish Numeric and Text Data",
+          "objective": "Use the distinguish numeric and text data technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Display formatting must not cause amounts or quantities to be stored as nonnumeric text. Worked example: A CSV includes price values 900 and \"Rs 1,200\" in the same column. The correct approach is to parse and validate monetary amounts as numbers while retaining PKR as a unit. Common errors include: add the text amounts by concatenating strings or delete every row containing the currency label.",
+          "workedExample": "Context: A CSV includes price values 900 and \"Rs 1,200\" in the same column. Applied technique: Parse and validate monetary amounts as numbers while retaining PKR as a unit.",
+          "commonMistake": "Add the text amounts by concatenating strings",
+          "remediation": "Text parsing and conversion must happen before aggregation.",
+          "hint": "Check that the action follows this data principle: Display formatting must not cause amounts or quantities to be stored as nonnumeric text.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Distinguish Numeric and Text Data\", analyze this fictional business situation: A CSV includes price values 900 and \"Rs 1,200\" in the same column. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Parse and validate monetary amounts as numbers while retaining PKR as a unit",
+                "b": "Add the text amounts by concatenating strings",
+                "c": "Delete every row containing the currency label"
+              },
+              "answer": "a",
+              "feedback": "Display formatting must not cause amounts or quantities to be stored as nonnumeric text. In this example, parse and validate monetary amounts as numbers while retaining PKR as a unit."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a shop preparing a dataset with quantities typed as words. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Convert verified written quantities into numeric fields and flag uncertain words for source review",
+                "b": "Add the quantity strings as though they were numeric",
+                "c": "Delete every record whose quantity was originally typed as words"
+              },
+              "answer": "a",
+              "feedback": "Convert verified written quantities into numeric fields and flag uncertain words for source review. Text parsing and conversion must happen before aggregation."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Distinguish Numeric and Text Data\" correct? A column containing \"Rs 1,200\" always behaves like a numeric 1200 during arithmetic.",
+              "answer": false,
+              "feedback": "Text parsing and conversion must happen before aggregation."
+            }
+          ]
+        },
+        {
+          "number": 8,
+          "title": "Identify Invalid Dates and Values",
+          "objective": "Use the identify invalid dates and values technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Date formats, unit ranges and field constraints should be checked before analysis. Worked example: A monthly report includes February 31 and a negative parcel count. The correct approach is to flag both rows for source correction and document the exceptions. Common errors include: treat February 31 as a real date or change the negative count to zero without checking the source.",
+          "workedExample": "Context: A monthly report includes February 31 and a negative parcel count. Applied technique: Flag both rows for source correction and document the exceptions.",
+          "commonMistake": "Treat February 31 as a real date",
+          "remediation": "Source validation prevents error propagation.",
+          "hint": "Check that the action follows this data principle: Date formats, unit ranges and field constraints should be checked before analysis.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Identify Invalid Dates and Values\", analyze this fictional business situation: A monthly report includes February 31 and a negative parcel count. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Change the negative count to zero without checking the source",
+                "b": "Flag both rows for source correction and document the exceptions",
+                "c": "Treat February 31 as a real date"
+              },
+              "answer": "b",
+              "feedback": "Date formats, unit ranges and field constraints should be checked before analysis. In this example, flag both rows for source correction and document the exceptions."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a clinic reviewing fictional appointment timestamps. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Replace every invalid timestamp with today's date",
+                "b": "Sort unparsed dates as ordinary alphabetic text and trust the order",
+                "c": "Flag invalid or ambiguous timestamps and compare them with the clinic's original appointment register"
+              },
+              "answer": "c",
+              "feedback": "Flag invalid or ambiguous timestamps and compare them with the clinic's original appointment register. Source validation prevents error propagation."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Identify Invalid Dates and Values\" correct? Invalid values should be marked and checked rather than silently invented.",
+              "answer": true,
+              "feedback": "Source validation prevents error propagation."
+            }
+          ]
+        },
+        {
+          "number": 9,
+          "title": "Detect True Versus False Duplicates",
+          "objective": "Use the detect true versus false duplicates technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Records with the same visible amount are not necessarily duplicate transactions. Worked example: Two orders have PKR 850 totals but distinct IDs and timestamps. The correct approach is to use stable order identifiers and audit source events before deleting either. Common errors include: delete one because the totals match or merge the orders under one invented customer ID.",
+          "workedExample": "Context: Two orders have PKR 850 totals but distinct IDs and timestamps. Applied technique: Use stable order identifiers and audit source events before deleting either.",
+          "commonMistake": "Delete one because the totals match",
+          "remediation": "A duplicate must be established from the business event and its key.",
+          "hint": "Check that the action follows this data principle: Records with the same visible amount are not necessarily duplicate transactions.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Detect True Versus False Duplicates\", analyze this fictional business situation: Two orders have PKR 850 totals but distinct IDs and timestamps. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Delete one because the totals match",
+                "b": "Merge the orders under one invented customer ID",
+                "c": "Use stable order identifiers and audit source events before deleting either"
+              },
+              "answer": "c",
+              "feedback": "Records with the same visible amount are not necessarily duplicate transactions. In this example, use stable order identifiers and audit source events before deleting either."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a training center comparing repeated enrolment fees. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Combine two students into one invented registration",
+                "b": "Use registration IDs and source events to determine whether matching fee entries are separate enrolments",
+                "c": "Delete one fee merely because the amount is identical"
+              },
+              "answer": "b",
+              "feedback": "Use registration IDs and source events to determine whether matching fee entries are separate enrolments. A duplicate must be established from the business event and its key."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Detect True Versus False Duplicates\" correct? Matching totals alone reliably prove two rows represent one transaction.",
+              "answer": false,
+              "feedback": "A duplicate must be established from the business event and its key."
+            }
+          ]
+        },
+        {
+          "number": 10,
+          "title": "Check Outliers Against Sources",
+          "objective": "Use the check outliers against sources technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Extreme values may be genuine events or errors and need investigation before exclusion. Worked example: Daily sales mostly sit near PKR 8,000 but one day reports PKR 80,000. The correct approach is to inspect that day's source transactions and note any promotion or data-entry error. Common errors include: delete the observation because it changes the average or assume the business grew tenfold permanently.",
+          "workedExample": "Context: Daily sales mostly sit near PKR 8,000 but one day reports PKR 80,000. Applied technique: Inspect that day's source transactions and note any promotion or data-entry error.",
+          "commonMistake": "Delete the observation because it changes the average",
+          "remediation": "Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors.",
+          "hint": "Check that the action follows this data principle: Extreme values may be genuine events or errors and need investigation before exclusion.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Check Outliers Against Sources\", analyze this fictional business situation: Daily sales mostly sit near PKR 8,000 but one day reports PKR 80,000. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Inspect that day's source transactions and note any promotion or data-entry error",
+                "b": "Delete the observation because it changes the average",
+                "c": "Assume the business grew tenfold permanently"
+              },
+              "answer": "a",
+              "feedback": "Extreme values may be genuine events or errors and need investigation before exclusion. In this example, inspect that day's source transactions and note any promotion or data-entry error."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a warehouse reviewing a very large inventory movement. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Check the movement against the stock ledger and delivery documents before labeling it an outlier",
+                "b": "Remove the movement because it changes the average",
+                "c": "Assume the large amount is a permanent new daily baseline"
+              },
+              "answer": "a",
+              "feedback": "Check the movement against the stock ledger and delivery documents before labeling it an outlier. Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Check Outliers Against Sources\" correct? An outlier should be removed automatically whenever it increases variance.",
+              "answer": false,
+              "feedback": "Outliers may be important genuine events, so compare them to primary source records before deciding whether they are errors."
+            }
+          ]
+        },
+        {
+          "number": 11,
+          "title": "Reconcile Totals After Cleaning",
+          "objective": "Use the reconcile totals after cleaning technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Data corrections need a before-and-after record count and control totals. Worked example: A sheet has 50 orders worth PKR 120,000 before removing suspected duplicates. The correct approach is to reconcile unique order IDs and verified amounts with the source ledger after cleaning. Common errors include: declare any lower total to be correct or hide removed rows to avoid questions.",
+          "workedExample": "Context: A sheet has 50 orders worth PKR 120,000 before removing suspected duplicates. Applied technique: Reconcile unique order IDs and verified amounts with the source ledger after cleaning.",
+          "commonMistake": "Declare any lower total to be correct",
+          "remediation": "Reconciliation reveals accidental record loss.",
+          "hint": "Check that the action follows this data principle: Data corrections need a before-and-after record count and control totals.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Reconcile Totals After Cleaning\", analyze this fictional business situation: A sheet has 50 orders worth PKR 120,000 before removing suspected duplicates. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Hide removed rows to avoid questions",
+                "b": "Reconcile unique order IDs and verified amounts with the source ledger after cleaning",
+                "c": "Declare any lower total to be correct"
+              },
+              "answer": "b",
+              "feedback": "Data corrections need a before-and-after record count and control totals. In this example, reconcile unique order IDs and verified amounts with the source ledger after cleaning."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping an event manager validating registrations after de-duplication. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Accept any smaller total as proof duplicates were removed correctly",
+                "b": "Invent new registrations to replace deleted rows",
+                "c": "Reconcile unique registration IDs and source totals after each removal and preserve an exception log"
+              },
+              "answer": "c",
+              "feedback": "Reconcile unique registration IDs and source totals after each removal and preserve an exception log. Reconciliation reveals accidental record loss."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Reconcile Totals After Cleaning\" correct? A clean dataset should retain a documented reconciliation trail.",
+              "answer": true,
+              "feedback": "Reconciliation reveals accidental record loss."
+            }
+          ]
+        },
+        {
+          "number": 12,
+          "title": "Checkpoint: Verify a Small Dataset",
+          "objective": "Use the checkpoint: verify a small dataset technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A reliable cleaning report separates confirmed fixes, flagged exceptions and unchanged originals. Worked example: A synthetic twelve-row file has missing dates, repeated IDs and inconsistent price formats. The correct approach is to create an exception log, correct only confirmed records and reconcile totals against the source. Common errors include: fill every blank with today's date or publish a perfect completeness rate despite unresolved values.",
+          "workedExample": "Context: A synthetic twelve-row file has missing dates, repeated IDs and inconsistent price formats. Applied technique: Create an exception log, correct only confirmed records and reconcile totals against the source.",
+          "commonMistake": "Fill every blank with today's date",
+          "remediation": "Accuracy matters more than cosmetically complete cells.",
+          "hint": "Check that the action follows this data principle: A reliable cleaning report separates confirmed fixes, flagged exceptions and unchanged originals.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Verify a Small Dataset\", analyze this fictional business situation: A synthetic twelve-row file has missing dates, repeated IDs and inconsistent price formats. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Fill every blank with today's date",
+                "b": "Publish a perfect completeness rate despite unresolved values",
+                "c": "Create an exception log, correct only confirmed records and reconcile totals against the source"
+              },
+              "answer": "c",
+              "feedback": "A reliable cleaning report separates confirmed fixes, flagged exceptions and unchanged originals. In this example, create an exception log, correct only confirmed records and reconcile totals against the source."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a volunteer team checking fictional donation records. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Delete unmatched donation rows without checking receipts",
+                "b": "Record missing donor fields as exceptions and reconcile amounts with the original fictional donation log",
+                "c": "Fill all unknown donors with a guessed name"
+              },
+              "answer": "b",
+              "feedback": "Record missing donor fields as exceptions and reconcile amounts with the original fictional donation log. Accuracy matters more than cosmetically complete cells."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Checkpoint: Verify a Small Dataset\" correct? Unresolved missing values can be transparently reported without manufacturing replacements.",
+              "answer": true,
+              "feedback": "Accuracy matters more than cosmetically complete cells."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "data-analytics-dashboards",
+      "locale": "en",
+      "moduleNumber": 3,
+      "moduleTitle": "Visual Analysis",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 13,
+          "title": "Choose a Fair Comparison Chart",
+          "objective": "Use the choose a fair comparison chart technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Use chart types that match the question and structure of the data. Worked example: A business wants to compare monthly orders across three service categories. The correct approach is to use a clearly labelled bar chart for discrete category comparisons. Common errors include: use a pie chart with unlabeled slices for each month and category or use a decorative 3D chart that distorts proportions.",
+          "workedExample": "Context: A business wants to compare monthly orders across three service categories. Applied technique: Use a clearly labelled bar chart for discrete category comparisons.",
+          "commonMistake": "Use a pie chart with unlabeled slices for each month and category",
+          "remediation": "A shared axis supports direct comparison.",
+          "hint": "Check that the action follows this data principle: Use chart types that match the question and structure of the data.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Choose a Fair Comparison Chart\", analyze this fictional business situation: A business wants to compare monthly orders across three service categories. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Use a clearly labelled bar chart for discrete category comparisons",
+                "b": "Use a pie chart with unlabeled slices for each month and category",
+                "c": "Use a decorative 3D chart that distorts proportions"
+              },
+              "answer": "a",
+              "feedback": "Use chart types that match the question and structure of the data. In this example, use a clearly labelled bar chart for discrete category comparisons."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a nonprofit comparing registrations by neighbourhood. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Compare neighborhoods with a labeled bar chart, consistent geographic definitions and a zero baseline",
+                "b": "Use unlabeled 3D slices that conceal actual counts",
+                "c": "Combine two neighborhoods without disclosing the new grouping"
+              },
+              "answer": "a",
+              "feedback": "Compare neighborhoods with a labeled bar chart, consistent geographic definitions and a zero baseline. A shared axis supports direct comparison."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Choose a Fair Comparison Chart\" correct? Bar charts are generally appropriate for side-by-side discrete category totals.",
+              "answer": true,
+              "feedback": "A shared axis supports direct comparison."
+            }
+          ]
+        },
+        {
+          "number": 14,
+          "title": "Label Axes and Units Clearly",
+          "objective": "Use the label axes and units clearly technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A reader needs the metric name, unit, period and scale to interpret plotted values. Worked example: A dashboard chart shows 20, 30 and 40 without saying whether they mean rupees or customers. The correct approach is to label the vertical axis \"Orders (count)\" and show the reporting dates. Common errors include: assume readers know every unlabeled number or use the title \"Performance\" without identifying the KPI.",
+          "workedExample": "Context: A dashboard chart shows 20, 30 and 40 without saying whether they mean rupees or customers. Applied technique: Label the vertical axis \"Orders (count)\" and show the reporting dates.",
+          "commonMistake": "Assume readers know every unlabeled number",
+          "remediation": "Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately.",
+          "hint": "Check that the action follows this data principle: A reader needs the metric name, unit, period and scale to interpret plotted values.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Label Axes and Units Clearly\", analyze this fictional business situation: A dashboard chart shows 20, 30 and 40 without saying whether they mean rupees or customers. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Use the title \"Performance\" without identifying the KPI",
+                "b": "Label the vertical axis \"Orders (count)\" and show the reporting dates",
+                "c": "Assume readers know every unlabeled number"
+              },
+              "answer": "b",
+              "feedback": "A reader needs the metric name, unit, period and scale to interpret plotted values. In this example, label the vertical axis \"Orders (count)\" and show the reporting dates."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a shop reporting PKR revenue on a weekly line chart. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Label the vertical axis only with the word Performance",
+                "b": "Plot revenue amounts without disclosing currency or time window",
+                "c": "Show dates on the horizontal axis and explicitly label the vertical axis Revenue (PKR)"
+              },
+              "answer": "c",
+              "feedback": "Show dates on the horizontal axis and explicitly label the vertical axis Revenue (PKR). Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Label Axes and Units Clearly\" correct? Numbers without units can be read as several different measures.",
+              "answer": true,
+              "feedback": "Chart labels must identify the measure, unit, date range and scale so a reader can interpret the numbers accurately."
+            }
+          ]
+        },
+        {
+          "number": 15,
+          "title": "Compare Categories Without Distorting Scale",
+          "objective": "Use the compare categories without distorting scale technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A truncated axis can exaggerate small differences in bar heights. Worked example: Store A recorded 98 sales and Store B recorded 100 in the same period. The correct approach is to use a zero baseline for bar lengths and disclose the two-unit difference. Common errors include: start the axis at 97 to make Store B look three times as tall or use unequal bar widths without explanation.",
+          "workedExample": "Context: Store A recorded 98 sales and Store B recorded 100 in the same period. Applied technique: Use a zero baseline for bar lengths and disclose the two-unit difference.",
+          "commonMistake": "Start the axis at 97 to make Store B look three times as tall",
+          "remediation": "If showing percentage changes, explain the baseline separately.",
+          "hint": "Check that the action follows this data principle: A truncated axis can exaggerate small differences in bar heights.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Compare Categories Without Distorting Scale\", analyze this fictional business situation: Store A recorded 98 sales and Store B recorded 100 in the same period. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Start the axis at 97 to make Store B look three times as tall",
+                "b": "Use unequal bar widths without explanation",
+                "c": "Use a zero baseline for bar lengths and disclose the two-unit difference"
+              },
+              "answer": "c",
+              "feedback": "A truncated axis can exaggerate small differences in bar heights. In this example, use a zero baseline for bar lengths and disclose the two-unit difference."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a program manager comparing small completion-rate differences. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Use different bar widths so one programme appears more successful",
+                "b": "Use a fair baseline and show the exact percentage-point difference between programme completion rates",
+                "c": "Truncate bar axes to make a small difference look enormous"
+              },
+              "answer": "b",
+              "feedback": "Use a fair baseline and show the exact percentage-point difference between programme completion rates. If showing percentage changes, explain the baseline separately."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Compare Categories Without Distorting Scale\" correct? Bar charts with a zero baseline help avoid exaggerating absolute category differences.",
+              "answer": true,
+              "feedback": "If showing percentage changes, explain the baseline separately."
+            }
+          ]
+        },
+        {
+          "number": 16,
+          "title": "Interpret a Trend with Context",
+          "objective": "Use the interpret a trend with context technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A chart can describe a pattern but cannot alone prove what caused it. Worked example: Website signups rise after a promotional campaign but the site also launched a referral programme. The correct approach is to report the rise and note simultaneous changes as alternative explanations. Common errors include: claim the campaign caused every additional signup or delete other campaign dates from the timeline.",
+          "workedExample": "Context: Website signups rise after a promotional campaign but the site also launched a referral programme. Applied technique: Report the rise and note simultaneous changes as alternative explanations.",
+          "commonMistake": "Claim the campaign caused every additional signup",
+          "remediation": "Other changes may influence the outcome.",
+          "hint": "Check that the action follows this data principle: A chart can describe a pattern but cannot alone prove what caused it.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Interpret a Trend with Context\", analyze this fictional business situation: Website signups rise after a promotional campaign but the site also launched a referral programme. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Report the rise and note simultaneous changes as alternative explanations",
+                "b": "Claim the campaign caused every additional signup",
+                "c": "Delete other campaign dates from the timeline"
+              },
+              "answer": "a",
+              "feedback": "A chart can describe a pattern but cannot alone prove what caused it. In this example, report the rise and note simultaneous changes as alternative explanations."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a local café reviewing orders after changing opening hours. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Describe the before-and-after order change while noting the opening-hours change and other possible influences",
+                "b": "Claim the hours change caused every order fluctuation without controls",
+                "c": "Remove the earlier period to prevent comparison"
+              },
+              "answer": "a",
+              "feedback": "Describe the before-and-after order change while noting the opening-hours change and other possible influences. Other changes may influence the outcome."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Interpret a Trend with Context\" correct? Correlation in a short time series is definitive proof of causation.",
+              "answer": false,
+              "feedback": "Other changes may influence the outcome."
+            }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Describe Limitations and Missing Drivers",
+          "objective": "Use the describe limitations and missing drivers technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Honest reporting explains data gaps, sample size and unmeasured factors. Worked example: A survey of eight customers is presented as if it represents an entire city. The correct approach is to state the sample size and treat the pattern as exploratory rather than representative. Common errors include: present the result as a national estimate or omit dissatisfied responses to improve the average.",
+          "workedExample": "Context: A survey of eight customers is presented as if it represents an entire city. Applied technique: State the sample size and treat the pattern as exploratory rather than representative.",
+          "commonMistake": "Present the result as a national estimate",
+          "remediation": "Limitations narrow the appropriate conclusion.",
+          "hint": "Check that the action follows this data principle: Honest reporting explains data gaps, sample size and unmeasured factors.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Describe Limitations and Missing Drivers\", analyze this fictional business situation: A survey of eight customers is presented as if it represents an entire city. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Omit dissatisfied responses to improve the average",
+                "b": "State the sample size and treat the pattern as exploratory rather than representative",
+                "c": "Present the result as a national estimate"
+              },
+              "answer": "b",
+              "feedback": "Honest reporting explains data gaps, sample size and unmeasured factors. In this example, state the sample size and treat the pattern as exploratory rather than representative."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a school reporting feedback from one class. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Claim the sample is representative of every school",
+                "b": "Remove the negative responses because they complicate the conclusion",
+                "c": "Disclose that feedback came from one class, the sample count and any participation bias"
+              },
+              "answer": "c",
+              "feedback": "Disclose that feedback came from one class, the sample count and any participation bias. Limitations narrow the appropriate conclusion."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Describe Limitations and Missing Drivers\" correct? A very small convenience sample can support cautious insight without justifying population-wide claims.",
+              "answer": true,
+              "feedback": "Limitations narrow the appropriate conclusion."
+            }
+          ]
+        },
+        {
+          "number": 18,
+          "title": "Checkpoint: Explain a Dashboard",
+          "objective": "Use the checkpoint: explain a dashboard technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "An actionable dashboard explanation states what changed, confidence limits and a next test. Worked example: A mock report shows 12 percent more visits but unchanged completed orders. The correct approach is to explain that visits grew while conversion may have fallen and propose checking checkout friction. Common errors include: claim sales increased 12 percent because visits increased or hide the order series to keep the story positive.",
+          "workedExample": "Context: A mock report shows 12 percent more visits but unchanged completed orders. Applied technique: Explain that visits grew while conversion may have fallen and propose checking checkout friction.",
+          "commonMistake": "Claim sales increased 12 percent because visits increased",
+          "remediation": "Different metrics answer different questions.",
+          "hint": "Check that the action follows this data principle: An actionable dashboard explanation states what changed, confidence limits and a next test.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Checkpoint: Explain a Dashboard\", analyze this fictional business situation: A mock report shows 12 percent more visits but unchanged completed orders. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Claim sales increased 12 percent because visits increased",
+                "b": "Hide the order series to keep the story positive",
+                "c": "Explain that visits grew while conversion may have fallen and propose checking checkout friction"
+              },
+              "answer": "c",
+              "feedback": "An actionable dashboard explanation states what changed, confidence limits and a next test. In this example, explain that visits grew while conversion may have fallen and propose checking checkout friction."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a service provider presenting leads and paid bookings together. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Hide booking figures while presenting lead growth as revenue growth",
+                "b": "Report qualified leads and completed paid bookings separately and calculate the booking conversion rate",
+                "c": "Call every lead a completed booking"
+              },
+              "answer": "b",
+              "feedback": "Report qualified leads and completed paid bookings separately and calculate the booking conversion rate. Different metrics answer different questions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Checkpoint: Explain a Dashboard\" correct? A useful dashboard narrative should distinguish traffic from verified paid outcomes.",
+              "answer": true,
+              "feedback": "Different metrics answer different questions."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "data-analytics-dashboards",
+      "locale": "en",
+      "moduleNumber": 4,
+      "moduleTitle": "Dashboard Capstone",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 19,
+          "title": "Select Three Meaningful KPIs",
+          "objective": "Use the select three meaningful kpis technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A small dashboard should prioritize a few mutually informative metrics aligned with one decision. Worked example: A fictional delivery service wants to improve order reliability. The correct approach is to track fulfilled orders, on-time delivery rate and verified customer complaints. Common errors include: show logo impressions, number of team meetings and office temperature or use three differently named versions of total orders.",
+          "workedExample": "Context: A fictional delivery service wants to improve order reliability. Applied technique: Track fulfilled orders, on-time delivery rate and verified customer complaints.",
+          "commonMistake": "Show logo impressions, number of team meetings and office temperature",
+          "remediation": "Each KPI should inform a distinct part of the decision.",
+          "hint": "Check that the action follows this data principle: A small dashboard should prioritize a few mutually informative metrics aligned with one decision.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Select Three Meaningful KPIs\", analyze this fictional business situation: A fictional delivery service wants to improve order reliability. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Track fulfilled orders, on-time delivery rate and verified customer complaints",
+                "b": "Show logo impressions, number of team meetings and office temperature",
+                "c": "Use three differently named versions of total orders"
+              },
+              "answer": "a",
+              "feedback": "A small dashboard should prioritize a few mutually informative metrics aligned with one decision. In this example, track fulfilled orders, on-time delivery rate and verified customer complaints."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a subscription service monitoring acquisition, activation and retention. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Track new eligible users, first successful activation and returning active users with defined windows",
+                "b": "Display three labels that all refer to total downloads",
+                "c": "Treat installation count as a direct measure of paid retention"
+              },
+              "answer": "a",
+              "feedback": "Track new eligible users, first successful activation and returning active users with defined windows. Each KPI should inform a distinct part of the decision."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Select Three Meaningful KPIs\" correct? Three complementary outcome metrics are more useful than three redundant counts.",
+              "answer": true,
+              "feedback": "Each KPI should inform a distinct part of the decision."
+            }
+          ]
+        },
+        {
+          "number": 20,
+          "title": "Design a Readable Dashboard Layout",
+          "objective": "Use the design a readable dashboard layout technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Visual hierarchy should present the key finding before supporting details and caveats. Worked example: A manager reviews the weekly report on a narrow mobile screen. The correct approach is to place the primary KPI, trend and exceptions in a clear readable sequence with labels. Common errors include: fit twelve tiny charts above the fold or encode every category only by color.",
+          "workedExample": "Context: A manager reviews the weekly report on a narrow mobile screen. Applied technique: Place the primary KPI, trend and exceptions in a clear readable sequence with labels.",
+          "commonMistake": "Fit twelve tiny charts above the fold",
+          "remediation": "Accessible labels and layout matter on small devices.",
+          "hint": "Check that the action follows this data principle: Visual hierarchy should present the key finding before supporting details and caveats.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Design a Readable Dashboard Layout\", analyze this fictional business situation: A manager reviews the weekly report on a narrow mobile screen. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Encode every category only by color",
+                "b": "Place the primary KPI, trend and exceptions in a clear readable sequence with labels",
+                "c": "Fit twelve tiny charts above the fold"
+              },
+              "answer": "b",
+              "feedback": "Visual hierarchy should present the key finding before supporting details and caveats. In this example, place the primary KPI, trend and exceptions in a clear readable sequence with labels."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a volunteer coordinator preparing a one-page report. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Show twelve tiny unlabeled charts on one mobile screen",
+                "b": "Use color alone to distinguish urgent exceptions",
+                "c": "Put the most important outcome first, follow with readable trend and exception notes, and label every chart"
+              },
+              "answer": "c",
+              "feedback": "Put the most important outcome first, follow with readable trend and exception notes, and label every chart. Accessible labels and layout matter on small devices."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Design a Readable Dashboard Layout\" correct? A dashboard should remain understandable when viewed without colour distinctions.",
+              "answer": true,
+              "feedback": "Accessible labels and layout matter on small devices."
+            }
+          ]
+        },
+        {
+          "number": 21,
+          "title": "Connect Charts to Accurate Source Tables",
+          "objective": "Use the connect charts to accurate source tables technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Every displayed metric should be traceable to a defined source and calculation. Worked example: A dashboard claims 150 fulfilled orders but the source sheet shows 145 delivered and five cancelled. The correct approach is to recalculate fulfilled orders from delivered status and document the filter. Common errors include: keep 150 because it was the earlier displayed number or delete cancelled rows from the master sheet to match the chart.",
+          "workedExample": "Context: A dashboard claims 150 fulfilled orders but the source sheet shows 145 delivered and five cancelled. Applied technique: Recalculate fulfilled orders from delivered status and document the filter.",
+          "commonMistake": "Keep 150 because it was the earlier displayed number",
+          "remediation": "Reproducibility is part of trust in analytics.",
+          "hint": "Check that the action follows this data principle: Every displayed metric should be traceable to a defined source and calculation.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Connect Charts to Accurate Source Tables\", analyze this fictional business situation: A dashboard claims 150 fulfilled orders but the source sheet shows 145 delivered and five cancelled. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Keep 150 because it was the earlier displayed number",
+                "b": "Delete cancelled rows from the master sheet to match the chart",
+                "c": "Recalculate fulfilled orders from delivered status and document the filter"
+              },
+              "answer": "c",
+              "feedback": "Every displayed metric should be traceable to a defined source and calculation. In this example, recalculate fulfilled orders from delivered status and document the filter."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a retailer validating an inventory turnover report. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Delete excluded items from the underlying source without justification",
+                "b": "Recompute turnover from traceable inventory and sales records and document the exact calculation period",
+                "c": "Trust a graphic total that disagrees with the stock ledger"
+              },
+              "answer": "b",
+              "feedback": "Recompute turnover from traceable inventory and sales records and document the exact calculation period. Reproducibility is part of trust in analytics."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Connect Charts to Accurate Source Tables\" correct? A dashboard total that cannot be reproduced from its source should not be treated as verified.",
+              "answer": true,
+              "feedback": "Reproducibility is part of trust in analytics."
+            }
+          ]
+        },
+        {
+          "number": 22,
+          "title": "Add Caveats to Summary Insights",
+          "objective": "Use the add caveats to summary insights technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Short executive summaries still need caveats when the data are incomplete or nonrepresentative. Worked example: A report uses only two weekdays because weekend transactions have not synced. The correct approach is to say the result excludes weekends and defer a full-week conclusion. Common errors include: label the two days as a representative seven-day average or invent weekend activity to fill the gap.",
+          "workedExample": "Context: A report uses only two weekdays because weekend transactions have not synced. Applied technique: Say the result excludes weekends and defer a full-week conclusion.",
+          "commonMistake": "Label the two days as a representative seven-day average",
+          "remediation": "A concise caveat can materially change the decision.",
+          "hint": "Check that the action follows this data principle: Short executive summaries still need caveats when the data are incomplete or nonrepresentative.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Add Caveats to Summary Insights\", analyze this fictional business situation: A report uses only two weekdays because weekend transactions have not synced. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Say the result excludes weekends and defer a full-week conclusion",
+                "b": "Label the two days as a representative seven-day average",
+                "c": "Invent weekend activity to fill the gap"
+              },
+              "answer": "a",
+              "feedback": "Short executive summaries still need caveats when the data are incomplete or nonrepresentative. In this example, say the result excludes weekends and defer a full-week conclusion."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a tutoring service reporting incomplete month-end attendance. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Identify the missing month-end days and postpone claims about the full month's attendance",
+                "b": "Pretend the partial month represents the entire calendar",
+                "c": "Guess the attendance for every day that has not been recorded"
+              },
+              "answer": "a",
+              "feedback": "Identify the missing month-end days and postpone claims about the full month's attendance. A concise caveat can materially change the decision."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Add Caveats to Summary Insights\" correct? Explicit data coverage warnings keep readers from overgeneralising.",
+              "answer": true,
+              "feedback": "A concise caveat can materially change the decision."
+            }
+          ]
+        },
+        {
+          "number": 23,
+          "title": "Prioritize Actions Supported by Evidence",
+          "objective": "Use the prioritize actions supported by evidence technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "Proposed action should address an observed gap and be testable with a clear success metric. Worked example: An online store sees many verified carts but few completed payments. The correct approach is to investigate failed payment steps and test an improvement while tracking completed checkout rate. Common errors include: replace every product photo without investigating checkout or claim the audience does not want the products.",
+          "workedExample": "Context: An online store sees many verified carts but few completed payments. Applied technique: Investigate failed payment steps and test an improvement while tracking completed checkout rate.",
+          "commonMistake": "Replace every product photo without investigating checkout",
+          "remediation": "Use observed gaps to guide tests, not unrelated redesign.",
+          "hint": "Check that the action follows this data principle: Proposed action should address an observed gap and be testable with a clear success metric.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Prioritize Actions Supported by Evidence\", analyze this fictional business situation: An online store sees many verified carts but few completed payments. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Claim the audience does not want the products",
+                "b": "Investigate failed payment steps and test an improvement while tracking completed checkout rate",
+                "c": "Replace every product photo without investigating checkout"
+              },
+              "answer": "b",
+              "feedback": "Proposed action should address an observed gap and be testable with a clear success metric. In this example, investigate failed payment steps and test an improvement while tracking completed checkout rate."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a delivery team interpreting a spike in late deliveries. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Replace the marketing logo as the first response to lateness",
+                "b": "Assume a single driver caused the spike without investigation",
+                "c": "Check late-delivery records by route, timing and capacity, then test a remedy against on-time rate"
+              },
+              "answer": "c",
+              "feedback": "Check late-delivery records by route, timing and capacity, then test a remedy against on-time rate. Use observed gaps to guide tests, not unrelated redesign."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Prioritize Actions Supported by Evidence\" correct? A measurable experiment is preferable to an untested explanation when causes remain uncertain.",
+              "answer": true,
+              "feedback": "Use observed gaps to guide tests, not unrelated redesign."
+            }
+          ]
+        },
+        {
+          "number": 24,
+          "title": "Capstone: Present an Operational Dashboard",
+          "objective": "Use the capstone: present an operational dashboard technique to make a traceable and proportionate data-informed decision in a real work task.",
+          "teaching": "A complete report needs clean source data, calculated KPIs, charts, caveats and decision-focused recommendations. Worked example: A synthetic 30-order dataset contains delivered, cancelled and pending orders over two weeks. The correct approach is to create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action. Common errors include: present a decorative chart without underlying calculations or hide exceptions to make the dashboard appear successful. Capstone task: analyze a twelve-row fictional bakery order dataset. Report delivered order count, delivered revenue in PKR and delivery completion rate with defined denominators. Present two honest, labeled charts, a reconciliation log and a 150-word decision memo with caveats. Apply the supplied self-review rubric before seeking human review.",
+          "workedExample": "Context: A synthetic 30-order dataset contains delivered, cancelled and pending orders over two weeks. Applied technique: Create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action.",
+          "commonMistake": "Present a decorative chart without underlying calculations",
+          "remediation": "Auditable methods make the recommendation repeatable.",
+          "hint": "Check that the action follows this data principle: A complete report needs clean source data, calculated KPIs, charts, caveats and decision-focused recommendations.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "In \"Capstone: Present an Operational Dashboard\", analyze this fictional business situation: A synthetic 30-order dataset contains delivered, cancelled and pending orders over two weeks. Which approach supports a defensible conclusion?",
+              "options": {
+                "a": "Present a decorative chart without underlying calculations",
+                "b": "Hide exceptions to make the dashboard appear successful",
+                "c": "Create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action"
+              },
+              "answer": "c",
+              "feedback": "A complete report needs clean source data, calculated KPIs, charts, caveats and decision-focused recommendations. In this example, create a reproducible three-KPI dashboard with a data dictionary, two charts, audit notes and prioritized action."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An analyst is helping a fictional bakery owner reviewing fulfillment and customer satisfaction. Which data step would produce the most defensible result?",
+              "options": {
+                "a": "Build charts from unsourced headline numbers without a reproducible table",
+                "b": "Show fulfilled orders and revenue with defined statuses, source audit and limitations before recommending action",
+                "c": "Treat cancelled orders as delivered in fulfillment reports"
+              },
+              "answer": "b",
+              "feedback": "Show fulfilled orders and revenue with defined statuses, source audit and limitations before recommending action. Auditable methods make the recommendation repeatable."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Is this statement about \"Capstone: Present an Operational Dashboard\" correct? A persuasive dashboard should disclose the assumptions and filters behind its numbers.",
+              "answer": true,
+              "feedback": "Auditable methods make the recommendation repeatable."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

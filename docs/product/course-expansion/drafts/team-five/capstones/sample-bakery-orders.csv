@@ -1,0 +1,13 @@
+order_id,date,category,status,amount_pkr
+BK-101,2026-11-02,cakes,delivered,1200
+BK-102,2026-11-03,bread,delivered,450
+BK-103,2026-11-04,drinks,cancelled,600
+BK-104,2026-11-05,cakes,delivered,1500
+BK-105,2026-11-06,bread,pending,350
+BK-106,2026-11-07,drinks,delivered,500
+BK-107,2026-11-09,cakes,delivered,1400
+BK-108,2026-11-10,bread,delivered,550
+BK-109,2026-11-11,drinks,pending,650
+BK-110,2026-11-12,bread,cancelled,450
+BK-111,2026-11-13,cakes,delivered,1800
+BK-112,2026-11-14,drinks,delivered,700

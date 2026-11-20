@@ -1,0 +1,1034 @@
+{
+  "schemaVersion": 1,
+  "courseSlug": "applied-ai-workflows",
+  "publicTitle": "AI Automation & No-Code Tools",
+  "canonicalSlug": "applied-ai-workflows",
+  "locale": "en",
+  "state": "draft",
+  "publicationAllowed": false,
+  "subjectReviewedBy": null,
+  "languageReviewedBy": null,
+  "publisherId": null,
+  "publishedAt": null,
+  "sourceKind": "internal_editorial",
+  "sourceReviewRequired": true,
+  "capstoneFile": "capstones/ai-automation-no-code-tools.md",
+  "modules": [
+    {
+      "schemaVersion": 1,
+      "courseSlug": "applied-ai-workflows",
+      "locale": "en",
+      "moduleNumber": 1,
+      "moduleTitle": "Workflow Identification",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 1,
+          "title": "List Repeatable Low-Risk Work Tasks",
+          "objective": "Demonstrate list repeatable low-risk work tasks using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Good automation candidates recur frequently, have structured inputs and allow errors to be corrected. In a practical example, An office team copies approved event registrations into a weekly summary every Friday. The recommended workflow is to start with a reversible, low-risk registration summary using fictional records. Avoid: automate confidential hiring decisions without review or give an untested bot permission to delete the source spreadsheet.",
+          "workedExample": "An office team copies approved event registrations into a weekly summary every Friday. Action: Start with a reversible, low-risk registration summary using fictional records.",
+          "commonMistake": "Automate confidential hiring decisions without review",
+          "remediation": "Pilot scope should be bounded and recoverable.",
+          "hint": "Identify the option that follows this workflow principle: Good automation candidates recur frequently, have structured inputs and allow errors to be corrected.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"List Repeatable Low-Risk Work Tasks\", consider this workflow problem: An office team copies approved event registrations into a weekly summary every Friday. Which design choice fits the goal?",
+              "options": {
+                "a": "Start with a reversible, low-risk registration summary using fictional records",
+                "b": "Automate confidential hiring decisions without review",
+                "c": "Give an untested bot permission to delete the source spreadsheet"
+              },
+              "answer": "a",
+              "feedback": "Good automation candidates recur frequently, have structured inputs and allow errors to be corrected. Best choice: Start with a reversible, low-risk registration summary using fictional records."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a small café listing repeatable stock reporting tasks. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Automatically discard inventory records judged anomalous",
+                "b": "Start with an unattended bulk supplier-payment process",
+                "c": "Pilot a reversible weekly stock summary with defined inputs and a named reviewer"
+              },
+              "answer": "c",
+              "feedback": "Pilot a reversible weekly stock summary with defined inputs and a named reviewer. Pilot scope should be bounded and recoverable."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"List Repeatable Low-Risk Work Tasks\": A predictable low-risk task is a better first automation pilot than an irreversible high-stakes decision.",
+              "answer": true,
+              "feedback": "Pilot scope should be bounded and recoverable."
+            }
+          ]
+        },
+        {
+          "number": 2,
+          "title": "Recognize Tasks Needing Human Judgment",
+          "objective": "Demonstrate recognize tasks needing human judgment using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Decisions affecting rights, finances or people may require an accountable human reviewer. In a practical example, An AI workflow drafts an applicant rejection letter from incomplete interview notes. The recommended workflow is to require authorized human confirmation of the decision and reasons before sending. Avoid: allow automatic rejection based on the generated tone or hide the source notes from the person responsible.",
+          "workedExample": "An AI workflow drafts an applicant rejection letter from incomplete interview notes. Action: Require authorized human confirmation of the decision and reasons before sending.",
+          "commonMistake": "Allow automatic rejection based on the generated tone",
+          "remediation": "Accountability must remain with authorized people.",
+          "hint": "Identify the option that follows this workflow principle: Decisions affecting rights, finances or people may require an accountable human reviewer.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Recognize Tasks Needing Human Judgment\", consider this workflow problem: An AI workflow drafts an applicant rejection letter from incomplete interview notes. Which design choice fits the goal?",
+              "options": {
+                "a": "Hide the source notes from the person responsible",
+                "b": "Require authorized human confirmation of the decision and reasons before sending",
+                "c": "Allow automatic rejection based on the generated tone"
+              },
+              "answer": "b",
+              "feedback": "Decisions affecting rights, finances or people may require an accountable human reviewer. Best choice: Require authorized human confirmation of the decision and reasons before sending."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a hospital office summarizing a fictional appointment reschedule. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Include patient clinical details in an open-channel summary",
+                "b": "Prepare a nonbinding reschedule summary for an authorized person to verify before contacting patients",
+                "c": "Automatically change appointment times for everyone without review"
+              },
+              "answer": "b",
+              "feedback": "Prepare a nonbinding reschedule summary for an authorized person to verify before contacting patients. Accountability must remain with authorized people."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Recognize Tasks Needing Human Judgment\": An AI-generated employment decision should be released without any accountable human check.",
+              "answer": false,
+              "feedback": "Accountability must remain with authorized people."
+            }
+          ]
+        },
+        {
+          "number": 3,
+          "title": "Define a Clear Workflow Outcome",
+          "objective": "Demonstrate define a clear workflow outcome using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A workflow needs a trigger, intended artifact, owner and measurable acceptance condition. In a practical example, A charity wants to reduce time spent compiling volunteer shift updates. The recommended workflow is to define a weekly summary draft due Friday with accurate shift counts and a named reviewer. Avoid: ask for \"more productivity\" without any observable result or measure success only by number of app integrations.",
+          "workedExample": "A charity wants to reduce time spent compiling volunteer shift updates. Action: Define a weekly summary draft due Friday with accurate shift counts and a named reviewer.",
+          "commonMistake": "Ask for \"more productivity\" without any observable result",
+          "remediation": "Without a defined outcome, efficiency claims cannot be checked.",
+          "hint": "Identify the option that follows this workflow principle: A workflow needs a trigger, intended artifact, owner and measurable acceptance condition.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Define a Clear Workflow Outcome\", consider this workflow problem: A charity wants to reduce time spent compiling volunteer shift updates. Which design choice fits the goal?",
+              "options": {
+                "a": "Ask for \"more productivity\" without any observable result",
+                "b": "Measure success only by number of app integrations",
+                "c": "Define a weekly summary draft due Friday with accurate shift counts and a named reviewer"
+              },
+              "answer": "c",
+              "feedback": "A workflow needs a trigger, intended artifact, owner and measurable acceptance condition. Best choice: Define a weekly summary draft due Friday with accurate shift counts and a named reviewer."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping an operations assistant automating a weekly inventory report. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Define the Monday inventory summary, source records, exception rules and coordinator sign-off",
+                "b": "Measure success by the number of automations created",
+                "c": "Allow a report with no consistent date range or output format"
+              },
+              "answer": "a",
+              "feedback": "Define the Monday inventory summary, source records, exception rules and coordinator sign-off. Without a defined outcome, efficiency claims cannot be checked."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Define a Clear Workflow Outcome\": A clear output and success check make automation effectiveness easier to measure.",
+              "answer": true,
+              "feedback": "Without a defined outcome, efficiency claims cannot be checked."
+            }
+          ]
+        },
+        {
+          "number": 4,
+          "title": "Identify Inputs and Access Requirements",
+          "objective": "Demonstrate identify inputs and access requirements using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "List minimal required inputs and permissions before connecting a service. In a practical example, A fictional retailer wants an automation that counts weekly orders from an approved sheet. The recommended workflow is to grant read access only to order status, date and ID fields needed for counts. Avoid: give the workflow administrator access to all company files or copy customer passwords into the automation's notes.",
+          "workedExample": "A fictional retailer wants an automation that counts weekly orders from an approved sheet. Action: Grant read access only to order status, date and ID fields needed for counts.",
+          "commonMistake": "Give the workflow administrator access to all company files",
+          "remediation": "Least privilege protects unrelated information.",
+          "hint": "Identify the option that follows this workflow principle: List minimal required inputs and permissions before connecting a service.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Identify Inputs and Access Requirements\", consider this workflow problem: A fictional retailer wants an automation that counts weekly orders from an approved sheet. Which design choice fits the goal?",
+              "options": {
+                "a": "Grant read access only to order status, date and ID fields needed for counts",
+                "b": "Give the workflow administrator access to all company files",
+                "c": "Copy customer passwords into the automation's notes"
+              },
+              "answer": "a",
+              "feedback": "List minimal required inputs and permissions before connecting a service. Best choice: Grant read access only to order status, date and ID fields needed for counts."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a coach summarizing anonymized appointment requests. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Grant the assistant full access to every client's files",
+                "b": "Copy appointment tokens into the instruction prompt",
+                "c": "Use anonymized appointment categories and minimum read-only access to produce the requested aggregate"
+              },
+              "answer": "c",
+              "feedback": "Use anonymized appointment categories and minimum read-only access to produce the requested aggregate. Least privilege protects unrelated information."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Identify Inputs and Access Requirements\": A workflow should request only the data and access necessary to complete its bounded task.",
+              "answer": true,
+              "feedback": "Least privilege protects unrelated information."
+            }
+          ]
+        },
+        {
+          "number": 5,
+          "title": "Estimate the Cost of a Bad Answer",
+          "objective": "Demonstrate estimate the cost of a bad answer using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Error severity should determine whether a workflow can run unattended or requires review. In a practical example, An invoice assistant may misread the beneficiary account on a supplier document. The recommended workflow is to require human verification of payment details and keep payouts outside the automation. Avoid: transfer money automatically when a model sounds certain or ignore a mismatch because the invoice is formatted professionally.",
+          "workedExample": "An invoice assistant may misread the beneficiary account on a supplier document. Action: Require human verification of payment details and keep payouts outside the automation.",
+          "commonMistake": "Transfer money automatically when a model sounds certain",
+          "remediation": "Rare but costly errors still need strong controls.",
+          "hint": "Identify the option that follows this workflow principle: Error severity should determine whether a workflow can run unattended or requires review.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Estimate the Cost of a Bad Answer\", consider this workflow problem: An invoice assistant may misread the beneficiary account on a supplier document. Which design choice fits the goal?",
+              "options": {
+                "a": "Ignore a mismatch because the invoice is formatted professionally",
+                "b": "Require human verification of payment details and keep payouts outside the automation",
+                "c": "Transfer money automatically when a model sounds certain"
+              },
+              "answer": "b",
+              "feedback": "Error severity should determine whether a workflow can run unattended or requires review. Best choice: Require human verification of payment details and keep payouts outside the automation."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a payroll team reviewing a fictional expense classification. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Silently relabel ambiguous expenses to make totals look balanced",
+                "b": "Require a payroll specialist to verify uncertain classifications before any payment or tax effect",
+                "c": "Automatically submit reimbursements on an unverified label"
+              },
+              "answer": "b",
+              "feedback": "Require a payroll specialist to verify uncertain classifications before any payment or tax effect. Rare but costly errors still need strong controls."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Estimate the Cost of a Bad Answer\": Automation risk assessment should consider impact, not only how often an error might occur.",
+              "answer": true,
+              "feedback": "Rare but costly errors still need strong controls."
+            }
+          ]
+        },
+        {
+          "number": 6,
+          "title": "Checkpoint: Select a Safe AI Workflow",
+          "objective": "Demonstrate checkpoint: select a safe ai workflow using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Choose a candidate using data sensitivity, reversibility, frequency and review effort. In a practical example, A school administration office compares attendance summaries with automatic student disciplinary decisions. The recommended workflow is to pilot an aggregate attendance summary with a human check rather than automatic disciplinary action. Avoid: use an opaque model to punish students without explanation or enable bulk deletion for faster cleanup.",
+          "workedExample": "A school administration office compares attendance summaries with automatic student disciplinary decisions. Action: Pilot an aggregate attendance summary with a human check rather than automatic disciplinary action.",
+          "commonMistake": "Use an opaque model to punish students without explanation",
+          "remediation": "The first pilot should minimize harms and clarify responsibility.",
+          "hint": "Identify the option that follows this workflow principle: Choose a candidate using data sensitivity, reversibility, frequency and review effort.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Checkpoint: Select a Safe AI Workflow\", consider this workflow problem: A school administration office compares attendance summaries with automatic student disciplinary decisions. Which design choice fits the goal?",
+              "options": {
+                "a": "Use an opaque model to punish students without explanation",
+                "b": "Enable bulk deletion for faster cleanup",
+                "c": "Pilot an aggregate attendance summary with a human check rather than automatic disciplinary action"
+              },
+              "answer": "c",
+              "feedback": "Choose a candidate using data sensitivity, reversibility, frequency and review effort. Best choice: Pilot an aggregate attendance summary with a human check rather than automatic disciplinary action."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a business selecting one task for its first no-code pilot. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Select a frequent reversible task with reliable records and easy manual verification",
+                "b": "Start with a workflow that permanently deletes customer accounts",
+                "c": "Choose the task that has the most connectors rather than measurable value"
+              },
+              "answer": "a",
+              "feedback": "Select a frequent reversible task with reliable records and easy manual verification. The first pilot should minimize harms and clarify responsibility."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Checkpoint: Select a Safe AI Workflow\": A reversible workflow with measurable outputs is suitable for initial supervised testing.",
+              "answer": true,
+              "feedback": "The first pilot should minimize harms and clarify responsibility."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "applied-ai-workflows",
+      "locale": "en",
+      "moduleNumber": 2,
+      "moduleTitle": "Prompt and Tool Patterns",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 7,
+          "title": "Write a Structured Task Brief",
+          "objective": "Demonstrate write a structured task brief using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A no-code step must specify inputs, output fields, constraints and what happens on missing data. In a practical example, A weekly report uses a date range and a list of fictional completed tasks. The recommended workflow is to specify permitted columns, date filter, output heading and explicit missing-field behavior. Avoid: ask the model to invent tasks when the sheet is empty or paste credentials into the prompt body.",
+          "workedExample": "A weekly report uses a date range and a list of fictional completed tasks. Action: Specify permitted columns, date filter, output heading and explicit missing-field behavior.",
+          "commonMistake": "Ask the model to invent tasks when the sheet is empty",
+          "remediation": "Failure behavior belongs in the workflow contract.",
+          "hint": "Identify the option that follows this workflow principle: A no-code step must specify inputs, output fields, constraints and what happens on missing data.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Write a Structured Task Brief\", consider this workflow problem: A weekly report uses a date range and a list of fictional completed tasks. Which design choice fits the goal?",
+              "options": {
+                "a": "Specify permitted columns, date filter, output heading and explicit missing-field behavior",
+                "b": "Ask the model to invent tasks when the sheet is empty",
+                "c": "Paste credentials into the prompt body"
+              },
+              "answer": "a",
+              "feedback": "A no-code step must specify inputs, output fields, constraints and what happens on missing data. Best choice: Specify permitted columns, date filter, output heading and explicit missing-field behavior."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a teacher configuring a feedback draft from anonymized survey answers. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Invent student comments to complete a feedback draft",
+                "b": "Put real respondent identifiers into a public prompt template",
+                "c": "Specify approved anonymous response fields, feedback format and what to do with missing answers"
+              },
+              "answer": "c",
+              "feedback": "Specify approved anonymous response fields, feedback format and what to do with missing answers. Failure behavior belongs in the workflow contract."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Write a Structured Task Brief\": A structured task brief should explain how the step handles absent inputs.",
+              "answer": true,
+              "feedback": "Failure behavior belongs in the workflow contract."
+            }
+          ]
+        },
+        {
+          "number": 8,
+          "title": "Specify Format and Quality Standards",
+          "objective": "Demonstrate specify format and quality standards using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Downstream automations need stable field names, accepted values and basic validation. In a practical example, A generated summary must feed a sheet with columns task_id, status and owner. The recommended workflow is to require those exact fields and reject unknown statuses before writing. Avoid: allow the model to rename columns on every run or send free-form prose into numeric columns.",
+          "workedExample": "A generated summary must feed a sheet with columns task_id, status and owner. Action: Require those exact fields and reject unknown statuses before writing.",
+          "commonMistake": "Allow the model to rename columns on every run",
+          "remediation": "A clear contract prevents brittle integrations.",
+          "hint": "Identify the option that follows this workflow principle: Downstream automations need stable field names, accepted values and basic validation.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Specify Format and Quality Standards\", consider this workflow problem: A generated summary must feed a sheet with columns task_id, status and owner. Which design choice fits the goal?",
+              "options": {
+                "a": "Send free-form prose into numeric columns",
+                "b": "Require those exact fields and reject unknown statuses before writing",
+                "c": "Allow the model to rename columns on every run"
+              },
+              "answer": "b",
+              "feedback": "Downstream automations need stable field names, accepted values and basic validation. Best choice: Require those exact fields and reject unknown statuses before writing."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a shop creating a no-code weekly stock alert. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Allow the model to guess reorder quantities without source limits",
+                "b": "Define low-stock threshold, numeric units, recipients and validation before sending alerts",
+                "c": "Send alerts from mixed text/numeric quantities without conversion"
+              },
+              "answer": "b",
+              "feedback": "Define low-stock threshold, numeric units, recipients and validation before sending alerts. A clear contract prevents brittle integrations."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Specify Format and Quality Standards\": Structured output should be validated before another action consumes it.",
+              "answer": true,
+              "feedback": "A clear contract prevents brittle integrations."
+            }
+          ]
+        },
+        {
+          "number": 9,
+          "title": "Add Relevant Context Without Secrets",
+          "objective": "Demonstrate add relevant context without secrets using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Provide policy excerpts and synthetic examples while keeping real access tokens outside prompts. In a practical example, A customer support workflow needs an approved returns policy and order category. The recommended workflow is to supply the public policy text and a fictional case but use secure integration secrets storage. Avoid: embed the API key in the customer-facing prompt or copy all historical private tickets into the example.",
+          "workedExample": "A customer support workflow needs an approved returns policy and order category. Action: Supply the public policy text and a fictional case but use secure integration secrets storage.",
+          "commonMistake": "Embed the API key in the customer-facing prompt",
+          "remediation": "Secret management belongs in protected connector configuration.",
+          "hint": "Identify the option that follows this workflow principle: Provide policy excerpts and synthetic examples while keeping real access tokens outside prompts.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Add Relevant Context Without Secrets\", consider this workflow problem: A customer support workflow needs an approved returns policy and order category. Which design choice fits the goal?",
+              "options": {
+                "a": "Embed the API key in the customer-facing prompt",
+                "b": "Copy all historical private tickets into the example",
+                "c": "Supply the public policy text and a fictional case but use secure integration secrets storage"
+              },
+              "answer": "c",
+              "feedback": "Provide policy excerpts and synthetic examples while keeping real access tokens outside prompts. Best choice: Supply the public policy text and a fictional case but use secure integration secrets storage."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a community support bot drafting answers from an approved FAQ. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Pass only the authorized FAQ excerpt and question while keeping service credentials inside a secure connector",
+                "b": "Paste the bot's access token into a visitor-facing answer",
+                "c": "Give the bot permission to export unrelated private conversations"
+              },
+              "answer": "a",
+              "feedback": "Pass only the authorized FAQ excerpt and question while keeping service credentials inside a secure connector. Secret management belongs in protected connector configuration."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Add Relevant Context Without Secrets\": A prompt should not contain raw API credentials merely because the model is part of a workflow.",
+              "answer": true,
+              "feedback": "Secret management belongs in protected connector configuration."
+            }
+          ]
+        },
+        {
+          "number": 10,
+          "title": "Break Complex Work into Verified Steps",
+          "objective": "Demonstrate break complex work into verified steps using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A multi-step flow should validate intermediate outputs before side effects occur. In a practical example, A form-to-email automation summarizes a registration and drafts a confirmation. The recommended workflow is to separate intake validation, drafting, reviewer confirmation and email sending. Avoid: send emails immediately from unchecked free-text fields or silently skip records when validation fails.",
+          "workedExample": "A form-to-email automation summarizes a registration and drafts a confirmation. Action: Separate intake validation, drafting, reviewer confirmation and email sending.",
+          "commonMistake": "Send emails immediately from unchecked free-text fields",
+          "remediation": "Side effects should occur only after the required checks.",
+          "hint": "Identify the option that follows this workflow principle: A multi-step flow should validate intermediate outputs before side effects occur.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Break Complex Work into Verified Steps\", consider this workflow problem: A form-to-email automation summarizes a registration and drafts a confirmation. Which design choice fits the goal?",
+              "options": {
+                "a": "Separate intake validation, drafting, reviewer confirmation and email sending",
+                "b": "Send emails immediately from unchecked free-text fields",
+                "c": "Silently skip records when validation fails"
+              },
+              "answer": "a",
+              "feedback": "A multi-step flow should validate intermediate outputs before side effects occur. Best choice: Separate intake validation, drafting, reviewer confirmation and email sending."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping an operations team generating a daily incident summary from a form. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Automatically circulate unverified incident allegations",
+                "b": "Ignore malformed fields and report the batch as complete",
+                "c": "Validate form fields, generate an incident summary, then require owner review before any external send"
+              },
+              "answer": "c",
+              "feedback": "Validate form fields, generate an incident summary, then require owner review before any external send. Side effects should occur only after the required checks."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Break Complex Work into Verified Steps\": Adding an approval step before an external send can reduce avoidable mistakes.",
+              "answer": true,
+              "feedback": "Side effects should occur only after the required checks."
+            }
+          ]
+        },
+        {
+          "number": 11,
+          "title": "Design a Reusable Prompt Template",
+          "objective": "Demonstrate design a reusable prompt template using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Variables and output fields need stable definitions across multiple workflow runs. In a practical example, A coordinator drafts event reminders for three fictional sessions. The recommended workflow is to use placeholders for session name, time, venue and approved contact wording. Avoid: write each prompt with hidden hardcoded dates or let the automation guess the location when empty.",
+          "workedExample": "A coordinator drafts event reminders for three fictional sessions. Action: Use placeholders for session name, time, venue and approved contact wording.",
+          "commonMistake": "Write each prompt with hidden hardcoded dates",
+          "remediation": "Named variables avoid accidental information mixing.",
+          "hint": "Identify the option that follows this workflow principle: Variables and output fields need stable definitions across multiple workflow runs.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Design a Reusable Prompt Template\", consider this workflow problem: A coordinator drafts event reminders for three fictional sessions. Which design choice fits the goal?",
+              "options": {
+                "a": "Let the automation guess the location when empty",
+                "b": "Use placeholders for session name, time, venue and approved contact wording",
+                "c": "Write each prompt with hidden hardcoded dates"
+              },
+              "answer": "b",
+              "feedback": "Variables and output fields need stable definitions across multiple workflow runs. Best choice: Use placeholders for session name, time, venue and approved contact wording."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a volunteer team adapting one reminder template weekly. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Guess event venue and approval each time the template runs",
+                "b": "Use named variables for event, confirmed time, channel and audience and reject missing required details",
+                "c": "Hardcode last week's time into every future reminder"
+              },
+              "answer": "b",
+              "feedback": "Use named variables for event, confirmed time, channel and audience and reject missing required details. Named variables avoid accidental information mixing."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Design a Reusable Prompt Template\": Parameterizing repeated inputs makes a workflow easier to test and maintain.",
+              "answer": true,
+              "feedback": "Named variables avoid accidental information mixing."
+            }
+          ]
+        },
+        {
+          "number": 12,
+          "title": "Checkpoint: Improve a Reporting Prompt",
+          "objective": "Demonstrate checkpoint: improve a reporting prompt using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A workflow prompt should combine output schema, source constraints, missing-data policy and review criteria. In a practical example, An office automation summarises twelve fictional support tickets by issue category. The recommended workflow is to request category counts, exceptions and a CSV-ready output checked against ticket IDs. Avoid: generate summary totals without reading the tickets or allow invented support outcomes to fill missing statuses.",
+          "workedExample": "An office automation summarises twelve fictional support tickets by issue category. Action: Request category counts, exceptions and a CSV-ready output checked against ticket IDs.",
+          "commonMistake": "Generate summary totals without reading the tickets",
+          "remediation": "Automated summaries can omit or double count events.",
+          "hint": "Identify the option that follows this workflow principle: A workflow prompt should combine output schema, source constraints, missing-data policy and review criteria.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Checkpoint: Improve a Reporting Prompt\", consider this workflow problem: An office automation summarises twelve fictional support tickets by issue category. Which design choice fits the goal?",
+              "options": {
+                "a": "Generate summary totals without reading the tickets",
+                "b": "Allow invented support outcomes to fill missing statuses",
+                "c": "Request category counts, exceptions and a CSV-ready output checked against ticket IDs"
+              },
+              "answer": "c",
+              "feedback": "A workflow prompt should combine output schema, source constraints, missing-data policy and review criteria. Best choice: Request category counts, exceptions and a CSV-ready output checked against ticket IDs."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a warehouse producing a fictional weekly exception report. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Reconcile source incident IDs and status counts, flag missing entries and output a consistent exception table",
+                "b": "Add fictional incidents to make an interesting report",
+                "c": "Let the workflow rename required output columns on every execution"
+              },
+              "answer": "a",
+              "feedback": "Reconcile source incident IDs and status counts, flag missing entries and output a consistent exception table. Automated summaries can omit or double count events."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Checkpoint: Improve a Reporting Prompt\": A report should be checked against source record counts before sharing.",
+              "answer": true,
+              "feedback": "Automated summaries can omit or double count events."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "applied-ai-workflows",
+      "locale": "en",
+      "moduleNumber": 3,
+      "moduleTitle": "Verification and Privacy",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 13,
+          "title": "Recognize Unsupported AI Claims",
+          "objective": "Demonstrate recognize unsupported ai claims using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "AI output may include invented facts that appear authoritative in a generated report. In a practical example, An AI-generated inventory summary mentions a supplier shortage not found in any source. The recommended workflow is to flag the shortage as unsupported and remove it until evidence exists. Avoid: publish it as a confirmed supplier update or invent a citation to make it look reliable.",
+          "workedExample": "An AI-generated inventory summary mentions a supplier shortage not found in any source. Action: Flag the shortage as unsupported and remove it until evidence exists.",
+          "commonMistake": "Publish it as a confirmed supplier update",
+          "remediation": "A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported.",
+          "hint": "Identify the option that follows this workflow principle: AI output may include invented facts that appear authoritative in a generated report.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Recognize Unsupported AI Claims\", consider this workflow problem: An AI-generated inventory summary mentions a supplier shortage not found in any source. Which design choice fits the goal?",
+              "options": {
+                "a": "Flag the shortage as unsupported and remove it until evidence exists",
+                "b": "Publish it as a confirmed supplier update",
+                "c": "Invent a citation to make it look reliable"
+              },
+              "answer": "a",
+              "feedback": "AI output may include invented facts that appear authoritative in a generated report. Best choice: Flag the shortage as unsupported and remove it until evidence exists."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a client service manager reviewing an AI-written incident note. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Present generated causes as confirmed without checking records",
+                "b": "Invent a source reference to defend an uncertain statement",
+                "c": "Compare AI-written incident claims with the actual authorized case log and flag unsupported statements"
+              },
+              "answer": "c",
+              "feedback": "Compare AI-written incident claims with the actual authorized case log and flag unsupported statements. A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Recognize Unsupported AI Claims\": An unsupported generated explanation should be labelled as an assumption, not confirmed fact.",
+              "answer": true,
+              "feedback": "A generated explanation without verifiable source evidence must be flagged, checked and withheld until it can be supported."
+            }
+          ]
+        },
+        {
+          "number": 14,
+          "title": "Verify Facts with Primary Sources",
+          "objective": "Demonstrate verify facts with primary sources using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Use authoritative documents or systems of record for critical workflow facts. In a practical example, A generated weekly report says payment for a fictional order cleared yesterday. The recommended workflow is to compare the claim against a verified payment ledger rather than the model's wording. Avoid: mark the order as paid because the AI gave a date or use a customer chat excerpt as definitive bank settlement proof.",
+          "workedExample": "A generated weekly report says payment for a fictional order cleared yesterday. Action: Compare the claim against a verified payment ledger rather than the model's wording.",
+          "commonMistake": "Mark the order as paid because the AI gave a date",
+          "remediation": "Authoritative records decide factual status.",
+          "hint": "Identify the option that follows this workflow principle: Use authoritative documents or systems of record for critical workflow facts.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Verify Facts with Primary Sources\", consider this workflow problem: A generated weekly report says payment for a fictional order cleared yesterday. Which design choice fits the goal?",
+              "options": {
+                "a": "Use a customer chat excerpt as definitive bank settlement proof",
+                "b": "Compare the claim against a verified payment ledger rather than the model's wording",
+                "c": "Mark the order as paid because the AI gave a date"
+              },
+              "answer": "b",
+              "feedback": "Use authoritative documents or systems of record for critical workflow facts. Best choice: Compare the claim against a verified payment ledger rather than the model's wording."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a school administrator validating attendance totals against a register. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Use the AI's estimated class size instead of actual register counts",
+                "b": "Reconcile summary counts with the official attendance register before approval",
+                "c": "Mark every predicted student presence as fact"
+              },
+              "answer": "b",
+              "feedback": "Reconcile summary counts with the official attendance register before approval. Authoritative records decide factual status."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Verify Facts with Primary Sources\": A primary source check is stronger than trusting a plausible AI summary.",
+              "answer": true,
+              "feedback": "Authoritative records decide factual status."
+            }
+          ]
+        },
+        {
+          "number": 15,
+          "title": "Protect Private Work Materials",
+          "objective": "Demonstrate protect private work materials using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Connection permissions and output destinations should be restricted to authorized users. In a practical example, A workflow can read an employee rota and draft a general coverage summary. The recommended workflow is to use aggregated coverage data and limit the output to authorized managers. Avoid: send identifiable rota details to an open group or grant the automation full mailbox export permissions.",
+          "workedExample": "A workflow can read an employee rota and draft a general coverage summary. Action: Use aggregated coverage data and limit the output to authorized managers.",
+          "commonMistake": "Send identifiable rota details to an open group",
+          "remediation": "Workflow automation inherits existing privacy obligations.",
+          "hint": "Identify the option that follows this workflow principle: Connection permissions and output destinations should be restricted to authorized users.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Protect Private Work Materials\", consider this workflow problem: A workflow can read an employee rota and draft a general coverage summary. Which design choice fits the goal?",
+              "options": {
+                "a": "Send identifiable rota details to an open group",
+                "b": "Grant the automation full mailbox export permissions",
+                "c": "Use aggregated coverage data and limit the output to authorized managers"
+              },
+              "answer": "c",
+              "feedback": "Connection permissions and output destinations should be restricted to authorized users. Best choice: Use aggregated coverage data and limit the output to authorized managers."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a finance analyst sharing a fictional departmental expense summary. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Aggregate only authorized departmental totals and restrict the report to approved finance readers",
+                "b": "Post identifiable individual expense rows to a public channel",
+                "c": "Grant every employee admin access to the finance drive"
+              },
+              "answer": "a",
+              "feedback": "Aggregate only authorized departmental totals and restrict the report to approved finance readers. Workflow automation inherits existing privacy obligations."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Protect Private Work Materials\": Using an AI tool removes the need to respect original document sharing permissions.",
+              "answer": false,
+              "feedback": "Workflow automation inherits existing privacy obligations."
+            }
+          ]
+        },
+        {
+          "number": 16,
+          "title": "Document Sources and Assumptions",
+          "objective": "Demonstrate document sources and assumptions using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A reproducible workflow should record where values came from and what defaults were applied. In a practical example, A forecast draft uses a fictional list of sales and a manually chosen growth rate. The recommended workflow is to store the input file name, period and explicitly labelled growth assumption alongside the draft. Avoid: present the assumed rate as an observed historical fact or discard the source references after generating the slide.",
+          "workedExample": "A forecast draft uses a fictional list of sales and a manually chosen growth rate. Action: Store the input file name, period and explicitly labelled growth assumption alongside the draft.",
+          "commonMistake": "Present the assumed rate as an observed historical fact",
+          "remediation": "Provenance enables reviewers to challenge the calculation.",
+          "hint": "Identify the option that follows this workflow principle: A reproducible workflow should record where values came from and what defaults were applied.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Document Sources and Assumptions\", consider this workflow problem: A forecast draft uses a fictional list of sales and a manually chosen growth rate. Which design choice fits the goal?",
+              "options": {
+                "a": "Store the input file name, period and explicitly labelled growth assumption alongside the draft",
+                "b": "Present the assumed rate as an observed historical fact",
+                "c": "Discard the source references after generating the slide"
+              },
+              "answer": "a",
+              "feedback": "A reproducible workflow should record where values came from and what defaults were applied. Best choice: Store the input file name, period and explicitly labelled growth assumption alongside the draft."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a campaign manager reviewing a draft weekly spending report. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Call an assumed growth factor a proven observed result",
+                "b": "Discard all input references when the draft chart is generated",
+                "c": "Record the exact spending period, source report and assumptions separately from derived projections"
+              },
+              "answer": "c",
+              "feedback": "Record the exact spending period, source report and assumptions separately from derived projections. Provenance enables reviewers to challenge the calculation."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Document Sources and Assumptions\": Separating source data from assumptions makes automated reports easier to audit.",
+              "answer": true,
+              "feedback": "Provenance enables reviewers to challenge the calculation."
+            }
+          ]
+        },
+        {
+          "number": 17,
+          "title": "Escalate Sensitive or High-Stakes Decisions",
+          "objective": "Demonstrate escalate sensitive or high-stakes decisions using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "An automated step must stop and request authorized review when risk thresholds are met. In a practical example, A no-code system detects conflicting bank details on a supplier invoice. The recommended workflow is to pause the workflow and request independent authorized verification. Avoid: send the payment because the amount is small or overwrite the old account without preserving the change history.",
+          "workedExample": "A no-code system detects conflicting bank details on a supplier invoice. Action: Pause the workflow and request independent authorized verification.",
+          "commonMistake": "Send the payment because the amount is small",
+          "remediation": "Human escalation is a feature, not a failure.",
+          "hint": "Identify the option that follows this workflow principle: An automated step must stop and request authorized review when risk thresholds are met.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Escalate Sensitive or High-Stakes Decisions\", consider this workflow problem: A no-code system detects conflicting bank details on a supplier invoice. Which design choice fits the goal?",
+              "options": {
+                "a": "Overwrite the old account without preserving the change history",
+                "b": "Pause the workflow and request independent authorized verification",
+                "c": "Send the payment because the amount is small"
+              },
+              "answer": "b",
+              "feedback": "An automated step must stop and request authorized review when risk thresholds are met. Best choice: Pause the workflow and request independent authorized verification."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a clinic office identifying a fictional urgent reschedule request. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Hide the urgency indicator so the report can finish",
+                "b": "Escalate a possible high-risk reschedule to authorized clinical staff before taking action",
+                "c": "Allow an unreviewed system to change an urgent appointment"
+              },
+              "answer": "b",
+              "feedback": "Escalate a possible high-risk reschedule to authorized clinical staff before taking action. Human escalation is a feature, not a failure."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Escalate Sensitive or High-Stakes Decisions\": A safe automated flow can be designed to stop when high-risk conditions appear.",
+              "answer": true,
+              "feedback": "Human escalation is a feature, not a failure."
+            }
+          ]
+        },
+        {
+          "number": 18,
+          "title": "Checkpoint: Audit an AI-Generated Report",
+          "objective": "Demonstrate checkpoint: audit an ai-generated report using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Review source totals, unsupported statements, exposure risks and actions before publication. In a practical example, A generated management note gives 42 completed jobs while the source has 39. The recommended workflow is to reconcile IDs, correct the figure and record the discrepancy before sending. Avoid: accept the 42 because the writing is fluent or remove the original file to avoid confusion.",
+          "workedExample": "A generated management note gives 42 completed jobs while the source has 39. Action: Reconcile IDs, correct the figure and record the discrepancy before sending.",
+          "commonMistake": "Accept the 42 because the writing is fluent",
+          "remediation": "Automated reports require reconciliation.",
+          "hint": "Identify the option that follows this workflow principle: Review source totals, unsupported statements, exposure risks and actions before publication.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Checkpoint: Audit an AI-Generated Report\", consider this workflow problem: A generated management note gives 42 completed jobs while the source has 39. Which design choice fits the goal?",
+              "options": {
+                "a": "Accept the 42 because the writing is fluent",
+                "b": "Remove the original file to avoid confusion",
+                "c": "Reconcile IDs, correct the figure and record the discrepancy before sending"
+              },
+              "answer": "c",
+              "feedback": "Review source totals, unsupported statements, exposure risks and actions before publication. Best choice: Reconcile IDs, correct the figure and record the discrepancy before sending."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a nonprofit checking a generated donor-free activity report. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Compare the generated activity counts with authorized source records and note each correction",
+                "b": "Approve numbers solely because the report sounds fluent",
+                "c": "Delete the input file to make mismatches harder to find"
+              },
+              "answer": "a",
+              "feedback": "Compare the generated activity counts with authorized source records and note each correction. Automated reports require reconciliation."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Checkpoint: Audit an AI-Generated Report\": An accurate-looking table guarantees its numbers match the source.",
+              "answer": false,
+              "feedback": "Automated reports require reconciliation."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "courseSlug": "applied-ai-workflows",
+      "locale": "en",
+      "moduleNumber": 4,
+      "moduleTitle": "Applied AI Capstone",
+      "state": "draft",
+      "authoredBy": "AI-assisted original educational draft",
+      "reviewedBy": null,
+      "approvedBy": null,
+      "publishedAt": null,
+      "levels": [
+        {
+          "number": 19,
+          "title": "Map Human Review Checkpoints",
+          "objective": "Demonstrate map human review checkpoints using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Review gates should be placed before irreversible actions, not only after output delivery. In a practical example, A social publishing automation drafts posts from approved product details. The recommended workflow is to require an editor to check claims and approve the exact version before scheduling. Avoid: automatically publish the draft then ask for a review or use an unrecorded verbal approval as the only audit evidence.",
+          "workedExample": "A social publishing automation drafts posts from approved product details. Action: Require an editor to check claims and approve the exact version before scheduling.",
+          "commonMistake": "Automatically publish the draft then ask for a review",
+          "remediation": "Approval must occur before side effects.",
+          "hint": "Identify the option that follows this workflow principle: Review gates should be placed before irreversible actions, not only after output delivery.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Map Human Review Checkpoints\", consider this workflow problem: A social publishing automation drafts posts from approved product details. Which design choice fits the goal?",
+              "options": {
+                "a": "Require an editor to check claims and approve the exact version before scheduling",
+                "b": "Automatically publish the draft then ask for a review",
+                "c": "Use an unrecorded verbal approval as the only audit evidence"
+              },
+              "answer": "a",
+              "feedback": "Review gates should be placed before irreversible actions, not only after output delivery. Best choice: Require an editor to check claims and approve the exact version before scheduling."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping an HR team drafting but not sending interview scheduling emails. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Send every generated invitation as soon as its draft exists",
+                "b": "Allow the model to change a candidate's interview date without confirmation",
+                "c": "Draft candidate emails but require an authorized HR reviewer to approve each exact message before sending"
+              },
+              "answer": "c",
+              "feedback": "Draft candidate emails but require an authorized HR reviewer to approve each exact message before sending. Approval must occur before side effects."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Map Human Review Checkpoints\": A pre-send review gate can prevent an unapproved claim from reaching customers.",
+              "answer": true,
+              "feedback": "Approval must occur before side effects."
+            }
+          ]
+        },
+        {
+          "number": 20,
+          "title": "Define Repeatable Inputs and Outputs",
+          "objective": "Demonstrate define repeatable inputs and outputs using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Specify triggers, transformations, structured payloads and destination fields for repeatability. In a practical example, A weekly order report reads completed order records each Monday. The recommended workflow is to define the Monday schedule, date window, required fields, CSV output and exception handling. Avoid: let the time window vary unpredictably each run or mix customer notes into a public dashboard without permission.",
+          "workedExample": "A weekly order report reads completed order records each Monday. Action: Define the Monday schedule, date window, required fields, CSV output and exception handling.",
+          "commonMistake": "Let the time window vary unpredictably each run",
+          "remediation": "Determinism helps diagnose failures and drift.",
+          "hint": "Identify the option that follows this workflow principle: Specify triggers, transformations, structured payloads and destination fields for repeatability.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Define Repeatable Inputs and Outputs\", consider this workflow problem: A weekly order report reads completed order records each Monday. Which design choice fits the goal?",
+              "options": {
+                "a": "Mix customer notes into a public dashboard without permission",
+                "b": "Define the Monday schedule, date window, required fields, CSV output and exception handling",
+                "c": "Let the time window vary unpredictably each run"
+              },
+              "answer": "b",
+              "feedback": "Specify triggers, transformations, structured payloads and destination fields for repeatability. Best choice: Define the Monday schedule, date window, required fields, CSV output and exception handling."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a warehouse automation summarizing fictional receipts. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Write to the accounting ledger without validating source receipts",
+                "b": "Define receipt schema, trigger date range, error handling and a duplicate-safe export format",
+                "c": "Infer missing invoice totals from other rows"
+              },
+              "answer": "b",
+              "feedback": "Define receipt schema, trigger date range, error handling and a duplicate-safe export format. Determinism helps diagnose failures and drift."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Define Repeatable Inputs and Outputs\": Clear input-output contracts make repeated runs comparable.",
+              "answer": true,
+              "feedback": "Determinism helps diagnose failures and drift."
+            }
+          ]
+        },
+        {
+          "number": 21,
+          "title": "Write a Simple Quality Checklist",
+          "objective": "Demonstrate write a simple quality checklist using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Quality checks should be observable and tied to likely failure modes of the actual automation. In a practical example, A task summary workflow sometimes drops rows with blank owners. The recommended workflow is to check input count, missing-owner exceptions, status values and approved recipient list. Avoid: approve when the generated text sounds persuasive or use only a cosmetic spelling check.",
+          "workedExample": "A task summary workflow sometimes drops rows with blank owners. Action: Check input count, missing-owner exceptions, status values and approved recipient list.",
+          "commonMistake": "Approve when the generated text sounds persuasive",
+          "remediation": "Risk-focused checks catch recurring defects.",
+          "hint": "Identify the option that follows this workflow principle: Quality checks should be observable and tied to likely failure modes of the actual automation.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Write a Simple Quality Checklist\", consider this workflow problem: A task summary workflow sometimes drops rows with blank owners. Which design choice fits the goal?",
+              "options": {
+                "a": "Approve when the generated text sounds persuasive",
+                "b": "Use only a cosmetic spelling check",
+                "c": "Check input count, missing-owner exceptions, status values and approved recipient list"
+              },
+              "answer": "c",
+              "feedback": "Quality checks should be observable and tied to likely failure modes of the actual automation. Best choice: Check input count, missing-owner exceptions, status values and approved recipient list."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a project coordinator reviewing a weekly automated tracker. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Check missing owners, duplicate task IDs, approved status values and intended recipients",
+                "b": "Consider the output correct only because it is concise",
+                "c": "Skip past failure cases to keep the checklist short"
+              },
+              "answer": "a",
+              "feedback": "Check missing owners, duplicate task IDs, approved status values and intended recipients. Risk-focused checks catch recurring defects."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Write a Simple Quality Checklist\": A checklist should explicitly test failures that have occurred in previous trial runs.",
+              "answer": true,
+              "feedback": "Risk-focused checks catch recurring defects."
+            }
+          ]
+        },
+        {
+          "number": 22,
+          "title": "Test a Workflow on Fictional Data",
+          "objective": "Demonstrate test a workflow on fictional data using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Synthetic cases should cover normal runs, missing fields, duplicates and trigger retries. In a practical example, A form-to-sheet workflow sometimes runs twice for the same submission. The recommended workflow is to test duplicate delivery and use a stable event ID to avoid adding the same row twice. Avoid: use real confidential submissions for initial debugging or assume the connector never retries an event.",
+          "workedExample": "A form-to-sheet workflow sometimes runs twice for the same submission. Action: Test duplicate delivery and use a stable event ID to avoid adding the same row twice.",
+          "commonMistake": "Use real confidential submissions for initial debugging",
+          "remediation": "Retry-safe logic keeps a single business event from duplicating actions.",
+          "hint": "Identify the option that follows this workflow principle: Synthetic cases should cover normal runs, missing fields, duplicates and trigger retries.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Test a Workflow on Fictional Data\", consider this workflow problem: A form-to-sheet workflow sometimes runs twice for the same submission. Which design choice fits the goal?",
+              "options": {
+                "a": "Test duplicate delivery and use a stable event ID to avoid adding the same row twice",
+                "b": "Use real confidential submissions for initial debugging",
+                "c": "Assume the connector never retries an event"
+              },
+              "answer": "a",
+              "feedback": "Synthetic cases should cover normal runs, missing fields, duplicates and trigger retries. Best choice: Test duplicate delivery and use a stable event ID to avoid adding the same row twice."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping an event coordinator building a no-code registration system. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Append a new record every time the same webhook retries",
+                "b": "Use real attendees' full private details in initial public tests",
+                "c": "Use stable registration event IDs and test normal, duplicate, invalid and retried submissions"
+              },
+              "answer": "c",
+              "feedback": "Use stable registration event IDs and test normal, duplicate, invalid and retried submissions. Retry-safe logic keeps a single business event from duplicating actions."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Test a Workflow on Fictional Data\": A duplicate trigger can create repeated effects unless the workflow checks idempotency.",
+              "answer": true,
+              "feedback": "Retry-safe logic keeps a single business event from duplicating actions."
+            }
+          ]
+        },
+        {
+          "number": 23,
+          "title": "Measure Corrections and Time Saved",
+          "objective": "Demonstrate measure corrections and time saved using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "Compare automation work against a defined manual baseline and record rework. In a practical example, A monthly report formerly took 90 minutes and now takes 35 minutes plus 20 minutes review. The recommended workflow is to report net time saved as 35 minutes and note corrected errors. Avoid: claim 90 minutes saved because generation is instantaneous or ignore review time when assessing efficiency.",
+          "workedExample": "A monthly report formerly took 90 minutes and now takes 35 minutes plus 20 minutes review. Action: Report net time saved as 35 minutes and note corrected errors.",
+          "commonMistake": "Claim 90 minutes saved because generation is instantaneous",
+          "remediation": "Net savings = prior manual time minus automated handling and human review time.",
+          "hint": "Identify the option that follows this workflow principle: Compare automation work against a defined manual baseline and record rework.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Measure Corrections and Time Saved\", consider this workflow problem: A monthly report formerly took 90 minutes and now takes 35 minutes plus 20 minutes review. Which design choice fits the goal?",
+              "options": {
+                "a": "Ignore review time when assessing efficiency",
+                "b": "Report net time saved as 35 minutes and note corrected errors",
+                "c": "Claim 90 minutes saved because generation is instantaneous"
+              },
+              "answer": "b",
+              "feedback": "Compare automation work against a defined manual baseline and record rework. Best choice: Report net time saved as 35 minutes and note corrected errors."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a small office measuring a supervised AI-assisted weekly process. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Ignore the cost of fixing errors when measuring benefit",
+                "b": "Compare the old manual time with automation, supervision and correction time using the same workload",
+                "c": "Claim the full previous work time as saved without subtracting review"
+              },
+              "answer": "b",
+              "feedback": "Compare the old manual time with automation, supervision and correction time using the same workload. Net savings = prior manual time minus automated handling and human review time."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Measure Corrections and Time Saved\": Time savings must include review and correction effort to be meaningful.",
+              "answer": true,
+              "feedback": "Net savings = prior manual time minus automated handling and human review time."
+            }
+          ]
+        },
+        {
+          "number": 24,
+          "title": "Capstone: Document a Reviewed AI Process",
+          "objective": "Demonstrate capstone: document a reviewed ai process using a controlled, repeatable AI-assisted work process with appropriate checks.",
+          "teaching": "A working no-code design documents trigger, data flow, permissions, exception handling, tests and human sign-off. In a practical example, A fictional NGO creates a volunteer shift summary that drafts a manager email every Friday. The recommended workflow is to submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record. Avoid: claim the design is deployed to real users without evidence or store an actual mailbox password inside the workflow diagram. Capstone task: design a fictional volunteer-summary automation with event-ID deduplication, least-privilege connectors, validation and a human pre-send approval gate. Show a flow diagram, six synthetic tests including retry/missing-field errors, expected results and a correction log. This is a proposed workflow, not a deployed integration.",
+          "workedExample": "A fictional NGO creates a volunteer shift summary that drafts a manager email every Friday. Action: Submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record.",
+          "commonMistake": "Claim the design is deployed to real users without evidence",
+          "remediation": "A clear boundary prevents a draft prototype from being mistaken for a live controlled process.",
+          "hint": "Identify the option that follows this workflow principle: A working no-code design documents trigger, data flow, permissions, exception handling, tests and human sign-off.",
+          "challenges": [
+            {
+              "type": "multiple_choice",
+              "prompt": "For \"Capstone: Document a Reviewed AI Process\", consider this workflow problem: A fictional NGO creates a volunteer shift summary that drafts a manager email every Friday. Which design choice fits the goal?",
+              "options": {
+                "a": "Claim the design is deployed to real users without evidence",
+                "b": "Store an actual mailbox password inside the workflow diagram",
+                "c": "Submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record"
+              },
+              "answer": "c",
+              "feedback": "A working no-code design documents trigger, data flow, permissions, exception handling, tests and human sign-off. Best choice: Submit a workflow map, sanitized sample input and output, retry tests, approval gate and audit record."
+            },
+            {
+              "type": "scenario",
+              "prompt": "An automation designer is helping a school office preparing a repeatable attendance report for approval. Which workflow step is safest and most testable?",
+              "options": {
+                "a": "Document data input schema, duplicate handling, human approval, six test cases and an accountable owner",
+                "b": "Declare the untested process live because the diagram is polished",
+                "c": "Embed real school credentials in a published workflow map"
+              },
+              "answer": "a",
+              "feedback": "Document data input schema, duplicate handling, human approval, six test cases and an accountable owner. A clear boundary prevents a draft prototype from being mistaken for a live controlled process."
+            },
+            {
+              "type": "true_false",
+              "prompt": "Evaluate this workflow statement for \"Capstone: Document a Reviewed AI Process\": A good capstone distinguishes a tested prototype from a production-approved automation.",
+              "answer": true,
+              "feedback": "A clear boundary prevents a draft prototype from being mistaken for a live controlled process."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
