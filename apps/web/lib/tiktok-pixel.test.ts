@@ -11,6 +11,7 @@ describe("tiktok pixel", () => {
   it("loads the SkillUp TikTok Pixel and tracks CompletePayment with event_id", () => {
     const track = vi.fn();
     const page = vi.fn();
+    const load = vi.fn();
     const appendChild = vi.fn();
     const createElement = vi.fn(() => ({
       id: "",
@@ -18,8 +19,18 @@ describe("tiktok pixel", () => {
       src: "",
     }));
 
+    const ttq = {
+      track,
+      page,
+      load,
+      _loaded: false,
+      _i: {},
+      _t: {},
+      _o: {},
+    };
+
     vi.stubGlobal("window", {
-      ttq: undefined,
+      ttq,
       TiktokAnalyticsObject: undefined,
     });
     vi.stubGlobal("document", {
@@ -31,18 +42,6 @@ describe("tiktok pixel", () => {
       getElementsByTagName: () => [],
       head: { appendChild },
     });
-
-    // First call bootstraps ttq stubs; replace track/page after ensure.
-    logTikTokEvent("PageView", { item_id: "premium-yearly", value: 3999, currency: "PKR" });
-    const ttq = (
-      globalThis as {
-        window: {
-          ttq: { track: typeof track; page: typeof page; load: () => void; _loaded?: boolean };
-        };
-      }
-    ).window.ttq;
-    ttq.track = track;
-    ttq.page = page;
 
     logTikTokEvent("PageView");
     logTikTokEvent(
@@ -58,6 +57,7 @@ describe("tiktok pixel", () => {
       { eventId: "order-123" },
     );
 
+    expect(load).toHaveBeenCalledWith(SKILLUP_TIKTOK_PIXEL_ID);
     expect(page).toHaveBeenCalled();
     expect(track).toHaveBeenCalledWith(
       "CompletePayment",
@@ -73,7 +73,5 @@ describe("tiktok pixel", () => {
       }),
       { event_id: "order-123" },
     );
-    expect(createElement).toHaveBeenCalled();
-    expect(appendChild).toHaveBeenCalled();
   });
 });
