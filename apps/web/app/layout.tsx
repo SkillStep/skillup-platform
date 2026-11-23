@@ -6,6 +6,7 @@ import "./components.css";
 import "./accessibility.css";
 import { GaRuntimeConfig } from "./ga-runtime-config";
 import { PwaStatus } from "./pwa-status";
+import { TikTokRuntimeConfig } from "./tiktok-runtime-config";
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
     <html lang="en">
       <head>
         <GaRuntimeConfig />
+        <TikTokRuntimeConfig />
       </head>
       <body>
         <a className="skip-link" href="#main-content">

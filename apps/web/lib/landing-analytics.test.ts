@@ -76,6 +76,7 @@ describe("landing analytics session + events", () => {
       getElementById: () => ({ id: "skillup-ga4-gtag" }),
       querySelector: () => null,
       createElement: () => ({ id: "", async: false, src: "" }),
+      getElementsByTagName: () => [],
       head: { appendChild: () => undefined },
     });
     vi.stubEnv("NEXT_PUBLIC_GA_MEASUREMENT_ID", "G-TESTMEASURE1");

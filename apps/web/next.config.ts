@@ -38,18 +38,30 @@ function paymentFormOrigins(): readonly string[] {
   return [...origins];
 }
 
+const analyticsScriptHosts =
+  "https://www.googletagmanager.com https://analytics.tiktok.com";
+const analyticsConnectHosts = [
+  "https://www.googletagmanager.com",
+  "https://www.google-analytics.com",
+  "https://analytics.google.com",
+  "https://analytics.tiktok.com",
+  "https://analytics-ipv6.tiktok.com",
+  "https://business-api.tiktok.com",
+].join(" ");
+const analyticsImageHosts =
+  "https://www.googletagmanager.com https://www.google-analytics.com https://analytics.tiktok.com";
 const scriptPolicy =
   process.env.NODE_ENV === "production"
-    ? "script-src 'self' 'unsafe-inline'"
-    : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+    ? `script-src 'self' 'unsafe-inline' ${analyticsScriptHosts}`
+    : `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${analyticsScriptHosts}`;
 const formAction = ["form-action 'self'", ...paymentFormOrigins()].join(" ");
 const contentSecurityPolicy = [
   "default-src 'self'",
   scriptPolicy,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${analyticsImageHosts}`,
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src 'self' ${analyticsConnectHosts}`,
   "manifest-src 'self'",
   "worker-src 'self' blob:",
   "object-src 'none'",

@@ -1,6 +1,7 @@
 import type { LandingCampaign } from "./landing-campaign";
 import { planCodeForPackage } from "./landing-campaign";
 import { logGa4Event } from "./ga4";
+import { logTikTokEvent } from "./tiktok-pixel";
 
 export const LP_CONTEXT_STORAGE_KEY = "lp_context";
 export const LP_SENT_TOKENS_STORAGE_KEY = "lp_sent_tokens";
@@ -123,14 +124,21 @@ function eventParams(
 
 export function trackLandingView(context: LandingAnalyticsContext): void {
   persistLandingAnalyticsContext(context);
-  logGa4Event("landing_view", eventParams(context));
-  logGa4Event("view_item", eventParams(context));
+  const params = eventParams(context);
+  logGa4Event("landing_view", params);
+  logGa4Event("view_item", params);
+  // TikTok Pixel — PageView + ViewContent for landing2 / campaign traffic.
+  logTikTokEvent("PageView", params);
+  logTikTokEvent("ViewContent", params);
 }
 
 export function trackAddToCart(context: LandingAnalyticsContext): void {
   persistLandingAnalyticsContext(context);
-  logGa4Event("add_to_cart", eventParams(context, { user_state: "new" }));
+  const params = eventParams(context, { user_state: "new" });
+  logGa4Event("add_to_cart", params);
   logGa4Event("begin_checkout", eventParams(context));
+  logTikTokEvent("AddToCart", params);
+  logTikTokEvent("InitiateCheckout", eventParams(context));
 }
 
 function hasSentToken(transactionId: string): boolean {
@@ -170,11 +178,13 @@ export function trackPaymentConversion(
   if (!options.transactionId || hasSentToken(options.transactionId)) return;
 
   markSentToken(options.transactionId);
-  logGa4Event(
-    context.conversion_event,
-    eventParams(context, {
-      transaction_id: options.transactionId,
-      user_state: "new",
-    }),
-  );
+  const conversionParams = eventParams(context, {
+    transaction_id: options.transactionId,
+    user_state: "new",
+  });
+  logGa4Event(context.conversion_event, conversionParams);
+  // TikTok: yearly → CompletePayment, monthly → Subscribe. event_id = order id for dedupe.
+  const tiktokEvent =
+    context.conversion_event === "purchase" ? "CompletePayment" : "Subscribe";
+  logTikTokEvent(tiktokEvent, conversionParams, { eventId: options.transactionId });
 }

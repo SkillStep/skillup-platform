@@ -315,7 +315,8 @@ There is still **no** separate Marketing “landing CMS portal” (upload banner
 | DB migrations `0029`, `0030` | API / database deploy | Attribution columns + funnel event names |
 | JazzCash V11 checkout flags (existing) | API | Real payment path that stamps attribution |
 
-Meta / TikTok Pixel IDs: **not required** for official Subs or SkillUp admin reports. Add later only if those ad platforms need in-platform conversion optimization.
+Meta Pixel: **not required** for official Subs or SkillUp admin reports (no Meta Pixel ID provided yet).  
+TikTok Pixel: **implemented** for in-platform ad optimization — see `docs/product/TIKTOK_PIXEL_INTEGRATION.md` (Pixel ID `DBU5QHBC77UCDH70PUAG`). Still not the source of truth for Subs counts.
 
 ---
 
@@ -329,4 +330,4 @@ Meta / TikTok Pixel IDs: **not required** for official Subs or SkillUp admin rep
 ---
 
 **End of implementation summary.**  
-Phases 1–5 complete on branch `feat/premium-campaign-attribution-phase1`. Remaining optional: Meta/TikTok pixels when Pixel IDs are provided.
+Phases 1–5 complete on branch `feat/premium-campaign-attribution-phase1`. TikTok Pixel added when client provided Pixel ID (see `TIKTOK_PIXEL_INTEGRATION.md`). Remaining optional: Meta Pixel when a Meta Pixel ID is provided.
