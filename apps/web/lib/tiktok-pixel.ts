@@ -5,7 +5,11 @@
 
 type TtqApi = {
   page: () => void;
-  track: (event: string, params?: Record<string, unknown>, options?: Record<string, unknown>) => void;
+  track: (
+    event: string,
+    params?: Record<string, unknown>,
+    options?: Record<string, unknown>,
+  ) => void;
   load: (pixelId: string) => void;
 };
 
@@ -144,7 +148,8 @@ function commercePayload(
     currency: params["currency"] ?? "PKR",
   };
   if (typeof params["value"] === "number") payload["value"] = params["value"];
-  if (typeof params["traffic_source"] === "string") payload["traffic_source"] = params["traffic_source"];
+  if (typeof params["traffic_source"] === "string")
+    payload["traffic_source"] = params["traffic_source"];
   if (typeof params["utm_code"] === "string") payload["utm_code"] = params["utm_code"];
   if (typeof params["banner_parameter"] === "string") {
     payload["banner_parameter"] = params["banner_parameter"];

@@ -184,7 +184,6 @@ export function trackPaymentConversion(
   });
   logGa4Event(context.conversion_event, conversionParams);
   // TikTok: yearly → CompletePayment, monthly → Subscribe. event_id = order id for dedupe.
-  const tiktokEvent =
-    context.conversion_event === "purchase" ? "CompletePayment" : "Subscribe";
+  const tiktokEvent = context.conversion_event === "purchase" ? "CompletePayment" : "Subscribe";
   logTikTokEvent(tiktokEvent, conversionParams, { eventId: options.transactionId });
 }

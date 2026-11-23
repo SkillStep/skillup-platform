@@ -34,8 +34,13 @@ describe("tiktok pixel", () => {
 
     // First call bootstraps ttq stubs; replace track/page after ensure.
     logTikTokEvent("PageView", { item_id: "premium-yearly", value: 3999, currency: "PKR" });
-    const ttq = (globalThis as { window: { ttq: { track: typeof track; page: typeof page; load: () => void; _loaded?: boolean } } })
-      .window.ttq;
+    const ttq = (
+      globalThis as {
+        window: {
+          ttq: { track: typeof track; page: typeof page; load: () => void; _loaded?: boolean };
+        };
+      }
+    ).window.ttq;
     ttq.track = track;
     ttq.page = page;
 

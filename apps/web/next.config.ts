@@ -38,8 +38,7 @@ function paymentFormOrigins(): readonly string[] {
   return [...origins];
 }
 
-const analyticsScriptHosts =
-  "https://www.googletagmanager.com https://analytics.tiktok.com";
+const analyticsScriptHosts = "https://www.googletagmanager.com https://analytics.tiktok.com";
 const analyticsConnectHosts = [
   "https://www.googletagmanager.com",
   "https://www.google-analytics.com",
