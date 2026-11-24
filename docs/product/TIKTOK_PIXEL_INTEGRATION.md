@@ -44,16 +44,19 @@ This is **not** the default `/mainLanding` page (`utm=D`).
 - Loads `https://analytics.tiktok.com/i18n/pixel/events.js`
 - Never throws into checkout / payment UI
 
-### Event wiring (same moments as GA4)
+### Event wiring (client-approved TikTok events only)
 
-| SkillUp moment | GA4 | TikTok Pixel |
+Client requested **only** these TikTok Pixel events (all others removed):
+
+| SkillUp moment | GA4 (unchanged) | TikTok Pixel |
 | --- | --- | --- |
-| Landing open (`LandingAnalyticsBoot`) | `landing_view`, `view_item` | `PageView`, `ViewContent` |
-| Subscribe CTA (`trackAddToCart`) | `add_to_cart`, `begin_checkout` | `AddToCart`, `InitiateCheckout` |
-| JazzCash success, yearly (`package=2`) | `purchase` | `CompletePayment` (`event_id` = order id) |
-| JazzCash success, monthly | `subscribe` | `Subscribe` (`event_id` = order id) |
+| Landing open | `landing_view`, `view_item` | *(none)* |
+| Subscribe CTA / Add to cart | `add_to_cart`, `begin_checkout` | **`AddToCart`** |
+| JazzCash payment success | `purchase` / `subscribe` | **`CompletePayment`** (`event_id` = order id) |
 
-Conversion events are deduped per `transaction_id` / order id (same session storage gate as GA4).
+**Not fired on TikTok Pixel:** `PageView`, `ViewContent`, `InitiateCheckout`, `Subscribe`.
+
+`CompletePayment` is deduped per `transaction_id` / order id (same session storage gate as GA4).
 
 ### CSP
 
@@ -82,10 +85,10 @@ If both are unset, the app still uses the client-provided SkillUp Pixel ID above
 1. Open the TikTok landing:  
    `/landing2?utm=T&package=2&parameter=20percentoff&payment=jazzcash`
 2. Install [TikTok Pixel Helper](https://ads.tiktok.com/help/) (Chrome) or watch Network for `analytics.tiktok.com`.
-3. Confirm `PageView` / `ViewContent` on load.
-4. Click **Subscribe Now** → `AddToCart` + `InitiateCheckout`.
+3. Landing open → **no** TikTok `PageView` / `ViewContent` (by design).
+4. Click **Subscribe Now** → **only** `AddToCart`.
 5. Complete a staging JazzCash success return with `orderId` → one `CompletePayment` with matching `event_id`.
-6. In TikTok Events Manager → Test Events, confirm the Pixel ID `DBU5QHBC77UCDH70PUAG` receives events.
+6. In TikTok Events Manager → Test Events, confirm the Pixel ID `DBU5QHBC77UCDH70PUAG` receives only those two event types.
 
 Do **not** treat Pixel conversion totals as official subscription counts. Cross-check Admin → Premium → Campaign attribution (`utm=T`, `package=2`, `parameter=20percentoff`).
 
@@ -119,7 +122,7 @@ Do **not** treat Pixel conversion totals as official subscription counts. Cross-
 
 ## 7. Follow-ups for the client (optional)
 
-1. Confirm event names in TikTok Ads Manager match this mapping (`CompletePayment` for yearly).
+1. Confirm TikTok Ads Manager expects exactly `AddToCart` + `CompletePayment`.
 2. Grant Events Manager access for Test Events verification on staging.
 3. Provide Events API access token if server-side matching is required later.
 4. Provide Meta Pixel ID separately if Meta ads need the same treatment.

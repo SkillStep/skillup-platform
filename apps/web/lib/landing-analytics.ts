@@ -127,9 +127,6 @@ export function trackLandingView(context: LandingAnalyticsContext): void {
   const params = eventParams(context);
   logGa4Event("landing_view", params);
   logGa4Event("view_item", params);
-  // TikTok Pixel — PageView + ViewContent for landing2 / campaign traffic.
-  logTikTokEvent("PageView", params);
-  logTikTokEvent("ViewContent", params);
 }
 
 export function trackAddToCart(context: LandingAnalyticsContext): void {
@@ -137,8 +134,8 @@ export function trackAddToCart(context: LandingAnalyticsContext): void {
   const params = eventParams(context, { user_state: "new" });
   logGa4Event("add_to_cart", params);
   logGa4Event("begin_checkout", eventParams(context));
+  // TikTok Pixel — AddToCart only (Subscribe Now / CTA).
   logTikTokEvent("AddToCart", params);
-  logTikTokEvent("InitiateCheckout", eventParams(context));
 }
 
 function hasSentToken(transactionId: string): boolean {
@@ -183,7 +180,6 @@ export function trackPaymentConversion(
     user_state: "new",
   });
   logGa4Event(context.conversion_event, conversionParams);
-  // TikTok: yearly → CompletePayment, monthly → Subscribe. event_id = order id for dedupe.
-  const tiktokEvent = context.conversion_event === "purchase" ? "CompletePayment" : "Subscribe";
-  logTikTokEvent(tiktokEvent, conversionParams, { eventId: options.transactionId });
+  // TikTok Pixel — CompletePayment only on confirmed success. event_id = order id for dedupe.
+  logTikTokEvent("CompletePayment", conversionParams, { eventId: options.transactionId });
 }

@@ -51,7 +51,10 @@ If only a TikTok Pixel ID is provided, implement **TikTok only**. Do not invent 
 ### Strongly preferred (ask if missing)
 
 3. Which **events** TikTok Ads Manager expects  
-   Default if unspecified: `PageView`, `ViewContent`, `AddToCart`, `InitiateCheckout`, `CompletePayment` / `Subscribe`
+   **SkillUp client approved set (use this when following this repo):**  
+   - `AddToCart` — when the user clicks Subscribe / Add to cart  
+   - `CompletePayment` — when payment is successful  
+   Do **not** fire `PageView`, `ViewContent`, `InitiateCheckout`, or `Subscribe` unless a different client explicitly requests them.
 4. Whether Pixel should load **site-wide** or only on the landing  
    Default: **site-wide base code** (needed because payment return often lands on `/` or `/account`, not the landing)
 5. Staging / Events Manager access for Test Events verification
@@ -115,19 +118,23 @@ Copy this checklist into the PR / issue:
 
 ---
 
-## 6. Standard event map
+## 6. Standard event map (SkillUp / client-approved)
 
-Use this default mapping unless the client specifies different TikTok event names:
+**Only these two TikTok events** unless a different client document says otherwise:
 
 | Product moment | TikTok event | Notes |
 | --- | --- | --- |
-| Landing / offer page open | `PageView` | Via `ttq.page()` |
-| Landing / offer page open | `ViewContent` | Include content_id, value, currency when known |
-| Primary CTA (Subscribe / Buy) | `AddToCart` | Before redirect to wallet / checkout |
-| Primary CTA | `InitiateCheckout` | Same click is fine |
-| Payment success — one-time / yearly style | `CompletePayment` | Pass `event_id` = order id |
-| Payment success — subscription / monthly style | `Subscribe` | Pass `event_id` = order id |
-| Payment failed / pending | Do **not** fire CompletePayment / Subscribe | Optional custom or skip |
+| Primary CTA (Subscribe / Add to cart) | `AddToCart` | Before redirect to wallet / checkout |
+| Payment success (any successful paid plan) | `CompletePayment` | Pass `event_id` = order id; fire once per order |
+| Landing / offer page open | *(none)* | Do not fire PageView / ViewContent |
+| Payment failed / pending | *(none)* | Do not fire CompletePayment |
+
+### Removed / do not fire (unless newly requested)
+
+- `PageView`
+- `ViewContent`
+- `InitiateCheckout`
+- `Subscribe`
 
 ### Payload shape (browser)
 
@@ -187,10 +194,10 @@ Resolution order agents should implement:
 1. Open the exact campaign landing URL the client provided.
 2. Confirm `<meta name="…-tiktok-pixel-id" content="…">` is present.
 3. Network tab: request to `analytics.tiktok.com` succeeds (not CSP-blocked).
-4. TikTok Pixel Helper: Pixel ID matches; `PageView` / `ViewContent` on load.
-5. Click CTA: `AddToCart` + `InitiateCheckout`.
-6. Complete a **staging** payment success with an order id: one `CompletePayment` or `Subscribe`.
-7. Reload / repeat success with same order id: **no second** conversion event.
+4. Landing open: Pixel may load, but **no** `PageView` / `ViewContent` events.
+5. Click CTA: **only** `AddToCart`.
+6. Complete a **staging** payment success with an order id: **one** `CompletePayment`.
+7. Reload / repeat success with same order id: **no second** `CompletePayment`.
 8. Cross-check product admin / DB attribution for the same order — Pixel count is secondary.
 
 ---
@@ -201,6 +208,7 @@ Resolution order agents should implement:
 - Do not commit Events API secrets or TikTok access tokens to git.
 - Do not put real answer keys, PII, or payment credentials in Pixel payloads.
 - Do not fire `CompletePayment` on “button click” — only after confirmed payment success.
+- Do not fire extra TikTok events (`PageView`, `ViewContent`, `InitiateCheckout`, `Subscribe`) when the client approved only `AddToCart` + `CompletePayment`.
 - Do not merge Pixel work with unrelated production promotion / billing flag changes.
 - Do not assume Meta Pixel is required because TikTok was requested.
 - Do not hard-block the product if Pixel ID env is missing when a documented client default exists — but do no-op safely if no valid ID is available.
@@ -212,13 +220,13 @@ Resolution order agents should implement:
 ```md
 ## Summary
 - Integrate TikTok Pixel `<PIXEL_ID>` for campaign landing `<PATH>`.
-- Fire PageView/ViewContent, AddToCart/InitiateCheckout, and CompletePayment|Subscribe (deduped by order id).
+- Fire **only** `AddToCart` (CTA) and `CompletePayment` (payment success, deduped by order id).
 - CSP + runtime env `TIKTOK_PIXEL_ID` + product MD guide.
 
 ## Test plan
-- [ ] Pixel Helper on landing URL
-- [ ] CTA events
-- [ ] Staging payment success → one conversion event
+- [ ] Pixel Helper on landing URL (no PageView/ViewContent)
+- [ ] CTA → AddToCart only
+- [ ] Staging payment success → one CompletePayment
 - [ ] Unit tests for loader + landing analytics
 ```
 
@@ -230,6 +238,7 @@ Resolution order agents should implement:
 | --- | --- |
 | Landing | `/landing2?utm=T&package=2&parameter=20percentoff&payment=jazzcash` |
 | Pixel ID | `DBU5QHBC77UCDH70PUAG` |
+| Approved events | `AddToCart`, `CompletePayment` only |
 | Loader | `apps/web/lib/tiktok-pixel.ts` |
 | Runtime meta | `apps/web/app/tiktok-runtime-config.tsx` |
 | Funnel wiring | `apps/web/lib/landing-analytics.ts` |
@@ -247,6 +256,7 @@ Follow docs/product/TIKTOK_PIXEL_AGENT_GUIDE.md.
 Client provided:
 - Landing URL: <URL>
 - TikTok Pixel ID: <PIXEL_ID>
+- Events only: AddToCart (CTA) and CompletePayment (payment success)
 
-Implement browser TikTok Pixel with runtime env, CSP allowlist, and event wiring at landing view / CTA / payment success (dedupe by order id). Write a short product-specific MD recording the URL, Pixel ID, and event map. Do not treat Pixel as source of truth for paid subs. Do not implement Meta Pixel unless a Meta Pixel ID is provided.
+Implement browser TikTok Pixel with runtime env, CSP allowlist, and those two events only (dedupe CompletePayment by order id). Do not fire PageView, ViewContent, InitiateCheckout, or Subscribe. Write/update the product MD. Do not treat Pixel as source of truth for paid subs. Do not implement Meta Pixel unless a Meta Pixel ID is provided.
 ```

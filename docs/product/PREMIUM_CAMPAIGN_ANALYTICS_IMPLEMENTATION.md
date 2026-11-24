@@ -316,7 +316,7 @@ There is still **no** separate Marketing “landing CMS portal” (upload banner
 | JazzCash V11 checkout flags (existing) | API | Real payment path that stamps attribution |
 
 Meta Pixel: **not required** for official Subs or SkillUp admin reports (no Meta Pixel ID provided yet).  
-TikTok Pixel: **implemented** for in-platform ad optimization — see `docs/product/TIKTOK_PIXEL_INTEGRATION.md` (Pixel ID `DBU5QHBC77UCDH70PUAG`). Still not the source of truth for Subs counts.
+TikTok Pixel: **implemented** for in-platform ad optimization — see `docs/product/TIKTOK_PIXEL_INTEGRATION.md` (Pixel ID `DBU5QHBC77UCDH70PUAG`). Client-approved events only: **`AddToCart`** + **`CompletePayment`**. Still not the source of truth for Subs counts.
 
 ---
 

@@ -8,7 +8,7 @@ describe("tiktok pixel", () => {
     vi.restoreAllMocks();
   });
 
-  it("loads the SkillUp TikTok Pixel and tracks CompletePayment with event_id", () => {
+  it("loads the SkillUp TikTok Pixel and tracks AddToCart + CompletePayment only", () => {
     const track = vi.fn();
     const page = vi.fn();
     const load = vi.fn();
@@ -43,24 +43,24 @@ describe("tiktok pixel", () => {
       head: { appendChild },
     });
 
-    logTikTokEvent("PageView");
-    logTikTokEvent(
-      "CompletePayment",
-      {
-        item_id: "premium-yearly",
-        item_name: "SkillUp Premium Yearly (20% off)",
-        value: 3999,
-        currency: "PKR",
-        traffic_source: "tiktok",
-        landing: "landing2",
-      },
-      { eventId: "order-123" },
-    );
+    const commerce = {
+      item_id: "premium-yearly",
+      item_name: "SkillUp Premium Yearly (20% off)",
+      value: 3999,
+      currency: "PKR",
+      traffic_source: "tiktok",
+      landing: "landing2",
+    } as const;
+
+    logTikTokEvent("AddToCart", commerce);
+    logTikTokEvent("CompletePayment", commerce, { eventId: "order-123" });
 
     expect(load).toHaveBeenCalledWith(SKILLUP_TIKTOK_PIXEL_ID);
-    expect(page).toHaveBeenCalled();
-    expect(track).toHaveBeenCalledWith(
-      "CompletePayment",
+    expect(page).not.toHaveBeenCalled();
+    expect(track).toHaveBeenCalledTimes(2);
+    expect(track).toHaveBeenNthCalledWith(
+      1,
+      "AddToCart",
       expect.objectContaining({
         currency: "PKR",
         value: 3999,
@@ -70,6 +70,15 @@ describe("tiktok pixel", () => {
             content_name: "SkillUp Premium Yearly (20% off)",
           }),
         ],
+      }),
+      undefined,
+    );
+    expect(track).toHaveBeenNthCalledWith(
+      2,
+      "CompletePayment",
+      expect.objectContaining({
+        currency: "PKR",
+        value: 3999,
       }),
       { event_id: "order-123" },
     );
