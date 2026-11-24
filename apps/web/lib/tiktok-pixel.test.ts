@@ -8,7 +8,7 @@ describe("tiktok pixel", () => {
     vi.restoreAllMocks();
   });
 
-  it("loads the SkillUp TikTok Pixel and tracks AddToCart + CompletePayment only", () => {
+  it("loads the SkillUp TikTok Pixel and tracks Subscribe with event_id", () => {
     const track = vi.fn();
     const page = vi.fn();
     const load = vi.fn();
@@ -43,24 +43,39 @@ describe("tiktok pixel", () => {
       head: { appendChild },
     });
 
-    const commerce = {
+    logTikTokEvent("PageView");
+    logTikTokEvent("ViewContent", {
       item_id: "premium-yearly",
-      item_name: "SkillUp Premium Yearly (20% off)",
       value: 3999,
       currency: "PKR",
-      traffic_source: "tiktok",
-      landing: "landing2",
-    } as const;
-
-    logTikTokEvent("AddToCart", commerce);
-    logTikTokEvent("CompletePayment", commerce, { eventId: "order-123" });
+    });
+    logTikTokEvent("InitiateCheckout", {
+      item_id: "premium-yearly",
+      value: 3999,
+      currency: "PKR",
+    });
+    logTikTokEvent("AddPaymentInfo", {
+      item_id: "premium-yearly",
+      value: 3999,
+      currency: "PKR",
+    });
+    logTikTokEvent(
+      "Subscribe",
+      {
+        item_id: "premium-yearly",
+        item_name: "SkillUp Premium Yearly (20% off)",
+        value: 3999,
+        currency: "PKR",
+        traffic_source: "tiktok",
+        landing: "landing2",
+      },
+      { eventId: "order-123" },
+    );
 
     expect(load).toHaveBeenCalledWith(SKILLUP_TIKTOK_PIXEL_ID);
-    expect(page).not.toHaveBeenCalled();
-    expect(track).toHaveBeenCalledTimes(2);
-    expect(track).toHaveBeenNthCalledWith(
-      1,
-      "AddToCart",
+    expect(page).toHaveBeenCalled();
+    expect(track).toHaveBeenCalledWith(
+      "Subscribe",
       expect.objectContaining({
         currency: "PKR",
         value: 3999,
@@ -71,16 +86,13 @@ describe("tiktok pixel", () => {
           }),
         ],
       }),
-      undefined,
-    );
-    expect(track).toHaveBeenNthCalledWith(
-      2,
-      "CompletePayment",
-      expect.objectContaining({
-        currency: "PKR",
-        value: 3999,
-      }),
       { event_id: "order-123" },
     );
+    expect(track.mock.calls.map((call) => call[0])).toEqual([
+      "ViewContent",
+      "InitiateCheckout",
+      "AddPaymentInfo",
+      "Subscribe",
+    ]);
   });
 });

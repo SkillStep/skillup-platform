@@ -127,6 +127,9 @@ export function trackLandingView(context: LandingAnalyticsContext): void {
   const params = eventParams(context);
   logGa4Event("landing_view", params);
   logGa4Event("view_item", params);
+  // TikTok (client-approved): PageView + ViewContent on landing open.
+  logTikTokEvent("PageView", params);
+  logTikTokEvent("ViewContent", params);
 }
 
 export function trackAddToCart(context: LandingAnalyticsContext): void {
@@ -134,8 +137,10 @@ export function trackAddToCart(context: LandingAnalyticsContext): void {
   const params = eventParams(context, { user_state: "new" });
   logGa4Event("add_to_cart", params);
   logGa4Event("begin_checkout", eventParams(context));
-  // TikTok Pixel — AddToCart only (Subscribe Now / CTA).
-  logTikTokEvent("AddToCart", params);
+  // TikTok (client-approved): Subscribe button → InitiateCheckout; JazzCash MSISDN → AddPaymentInfo.
+  // Do not fire AddToCart on TikTok.
+  logTikTokEvent("InitiateCheckout", params);
+  logTikTokEvent("AddPaymentInfo", eventParams(context));
 }
 
 function hasSentToken(transactionId: string): boolean {
@@ -180,6 +185,7 @@ export function trackPaymentConversion(
     user_state: "new",
   });
   logGa4Event(context.conversion_event, conversionParams);
-  // TikTok Pixel — CompletePayment only on confirmed success. event_id = order id for dedupe.
-  logTikTokEvent("CompletePayment", conversionParams, { eventId: options.transactionId });
+  // TikTok (client-approved): Subscribe only on successful subscription. event_id = order id.
+  // Do not fire CompletePayment on TikTok.
+  logTikTokEvent("Subscribe", conversionParams, { eventId: options.transactionId });
 }
