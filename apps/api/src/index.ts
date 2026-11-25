@@ -25,6 +25,7 @@ import {
 import { createConfiguredAuthCodeDelivery } from "./email-delivery.js";
 import { createExternalBillingService, registerExternalBillingRoutes } from "./external-billing.js";
 import { createExternalPaymentClient } from "./external-payment-client.js";
+import { postJazzCashIpn } from "./jazzcash-ipn-forward.js";
 import { createGameplayService } from "./gameplay.js";
 import { resolveJazzCashCpsClient } from "./jazzcash-cps.js";
 import { createJazzCashV11BillingService } from "./jazzcash-v11-billing.js";
@@ -129,6 +130,22 @@ const app = buildApi({
   progressService,
   commercialService,
   ...(jazzCashV11BillingService ? { jazzCashV11BillingService } : {}),
+  ...(config.FEATURE_PAYMENT_SERVICE_ENABLED && config.PAYMENT_SERVICE_BASE_URL
+    ? {
+        forwardJazzCashIpn: (fields: Readonly<Record<string, string>>) =>
+          postJazzCashIpn(
+            config.PAYMENT_SERVICE_BASE_URL!,
+            config.PAYMENT_SERVICE_TIMEOUT_SECONDS ?? 15,
+            fields,
+          ),
+        forwardJazzCashWalletReturn: (fields: Readonly<Record<string, string>>) =>
+          postJazzCashIpn(
+            config.PAYMENT_SERVICE_BASE_URL!,
+            config.PAYMENT_SERVICE_TIMEOUT_SECONDS ?? 15,
+            fields,
+          ),
+      }
+    : {}),
   adminService,
   capabilityService,
   accountLifecycleService,

@@ -13,6 +13,7 @@ import { type AnalyticsService, registerAnalyticsRoutes } from "./analytics-serv
 import { type AuthService, registerAuthRoutes } from "./auth.js";
 import { type CapabilityService, registerCapabilityRoutes } from "./capabilities.js";
 import { type CommercialService, registerCommercialRoutes } from "./commercial.js";
+import type { ForwardedIpn } from "./jazzcash-ipn-forward.js";
 import { type ApiConfig, readApiConfig } from "./config.js";
 import { type GameplayService, registerGameplayRoutes } from "./gameplay.js";
 import {
@@ -35,6 +36,8 @@ export type BuildApiOptions = Readonly<{
   gameplayService?: GameplayService | undefined;
   progressService?: ProgressService | undefined;
   commercialService?: CommercialService | undefined;
+  forwardJazzCashIpn?: (fields: Readonly<Record<string, string>>) => Promise<ForwardedIpn>;
+  forwardJazzCashWalletReturn?: (fields: Readonly<Record<string, string>>) => Promise<ForwardedIpn>;
   jazzCashV11BillingService?: JazzCashV11BillingService | undefined;
   adminService?: AdminService | undefined;
   capabilityService?: CapabilityService | undefined;
@@ -258,6 +261,7 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       commercialService: options.commercialService,
+      ...(options.forwardJazzCashIpn ? { forwardJazzCashIpn: options.forwardJazzCashIpn } : {}),
     });
   }
   if (options.authService && options.jazzCashV11BillingService) {
@@ -265,6 +269,9 @@ export function buildApi(options: BuildApiOptions = {}): FastifyInstance {
       config,
       authService: options.authService,
       billingService: options.jazzCashV11BillingService,
+      ...(options.forwardJazzCashWalletReturn
+        ? { forwardJazzCashWalletReturn: options.forwardJazzCashWalletReturn }
+        : {}),
     });
   }
   if (options.authService && options.adminService) {

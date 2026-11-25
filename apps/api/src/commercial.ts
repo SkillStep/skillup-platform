@@ -20,6 +20,7 @@ import {
 } from "./premium-attribution.js";
 import { BoundedRateLimitStore } from "./rate-limit.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
+import { acknowledgeJazzCashIpn, type ForwardedIpn } from "./jazzcash-ipn-forward.js";
 
 const CreateOrderSchema = z
   .object({
@@ -1408,6 +1409,7 @@ export function registerCommercialRoutes(
     config: ApiConfig;
     authService: AuthService;
     commercialService: CommercialService;
+    forwardJazzCashIpn?: (fields: Readonly<Record<string, string>>) => Promise<ForwardedIpn>;
   }>,
 ): void {
   // Guest unsubscribe by JazzCash MSISDN (pay-first). Bound per requester fingerprint.
@@ -1561,23 +1563,11 @@ export function registerCommercialRoutes(
    */
   app.post("/v1/commercial/jazzcash/ipn", async (request, reply) => {
     const fields = bodyAsStringRecord(request.body);
-    try {
-      const order = await options.commercialService.handleJazzCashCallback(fields);
-      return reply.status(200).send({
-        received: true,
-        merchantReference: order.merchantReference,
-        status: order.status,
-      });
-    } catch (error) {
-      if (error instanceof CommercialRequestError && error.statusCode === 404) {
-        // Acknowledge unknown refs so JazzCash does not retry forever; record via request log.
-        request.log.warn(
-          { merchantReference: fields["pp_TxnRefNo"] ?? null },
-          "JazzCash IPN for unknown merchant reference acknowledged",
-        );
-        return reply.status(200).send({ received: true, status: "ignored_unknown" });
-      }
-      throw error;
-    }
+    const decision = await acknowledgeJazzCashIpn({
+      fields,
+      ...(options.forwardJazzCashIpn ? { forward: options.forwardJazzCashIpn } : {}),
+      settleLocal: (payload) => options.commercialService.handleJazzCashCallback(payload),
+    });
+    return reply.status(decision.statusCode).send(decision.body);
   });
 }

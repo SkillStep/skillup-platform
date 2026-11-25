@@ -6,7 +6,15 @@ import { z } from "zod";
 
 import { AuthRequestError, type AuthService } from "./auth.js";
 import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
+import {
+  createExternalPaymentClient,
+  ExternalPaymentRequestError,
+} from "./external-payment-client.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
+import {
+  acknowledgeExternalWalletReturn,
+  type ForwardedIpn,
+} from "./jazzcash-ipn-forward.js";
 import {
   createJazzCashV11Client,
   type JazzCashV11Client,
@@ -757,6 +765,9 @@ export function registerJazzCashV11BillingRoutes(
     config: ApiConfig;
     authService: AuthService;
     billingService: JazzCashV11BillingService;
+    forwardJazzCashWalletReturn?: (
+      fields: Readonly<Record<string, string>>,
+    ) => Promise<ForwardedIpn>;
   }>,
 ): void {
   app.post("/v1/premium/billing/jazzcash-v11/link/start", async (request, reply) => {
@@ -797,9 +808,39 @@ export function registerJazzCashV11BillingRoutes(
         planCode: body.planCode,
         msisdnSuffix: body.msisdn.slice(-4),
         authenticated: Boolean(sessionLearner),
+        paymentService: options.config.FEATURE_PAYMENT_SERVICE_ENABLED,
       },
       "JazzCash wallet-link start requested",
     );
+
+    if (options.config.FEATURE_PAYMENT_SERVICE_ENABLED) {
+      const paymentPlanCode =
+        body.planCode === "premium-yearly"
+          ? (options.config.PAYMENT_SERVICE_YEARLY_PLAN_CODE ?? "yearly")
+          : (options.config.PAYMENT_SERVICE_MONTHLY_PLAN_CODE ?? "monthly");
+      const appReturnUrl =
+        options.config.PAYMENT_SERVICE_APP_RETURN_URL ??
+        new URL("/en/account?billingReturn=1", options.config.PUBLIC_APP_URL).toString();
+      try {
+        const linked = await createExternalPaymentClient(options.config).linkWallet({
+          userId,
+          msisdn: body.msisdn,
+          planCode: paymentPlanCode,
+          appReturnUrl,
+        });
+        return reply.status(201).send({
+          checkoutMode: "jazzcash_wallet_link" as const,
+          requestId: linked.requestId,
+          actionUrl: linked.portalUrl,
+          fields: linked.fields,
+        });
+      } catch (error) {
+        if (error instanceof ExternalPaymentRequestError) {
+          throw new JazzCashV11BillingError(error.statusCode, error.message);
+        }
+        throw error;
+      }
+    }
 
     const result = await options.billingService.startWalletLink({
       userId,
@@ -839,6 +880,14 @@ export function registerJazzCashV11BillingRoutes(
     }
 
     const body = LinkCallbackBodySchema.parse(request.body);
+    if (options.forwardJazzCashWalletReturn) {
+      const forwarded = await options.forwardJazzCashWalletReturn(body.fields);
+      const decision = acknowledgeExternalWalletReturn(
+        forwarded,
+        body.fields["pp_RequestID"]?.trim() ?? "",
+      );
+      return reply.status(decision.statusCode).send(decision.body);
+    }
     const result = await options.billingService.completeWalletLink({
       ...(userId ? { userId } : {}),
       fields: body.fields,
