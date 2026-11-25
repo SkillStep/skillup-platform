@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { logTikTokEvent, SKILLUP_TIKTOK_PIXEL_ID } from "./tiktok-pixel";
+import { ensureTikTokPixel, logTikTokEvent, SKILLUP_TIKTOK_PIXEL_ID } from "./tiktok-pixel";
 
 describe("tiktok pixel", () => {
   afterEach(() => {
@@ -17,6 +17,7 @@ describe("tiktok pixel", () => {
       id: "",
       async: false,
       src: "",
+      type: "",
     }));
 
     const ttq = {
@@ -94,5 +95,48 @@ describe("tiktok pixel", () => {
       "AddPaymentInfo",
       "Subscribe",
     ]);
+  });
+
+  it("uses an Array stub so the remote SDK can drain queued Subscribe", () => {
+    const appendChild = vi.fn();
+    const scriptEl = { id: "", async: false, src: "", type: "" };
+    vi.stubGlobal("window", {
+      TiktokAnalyticsObject: undefined,
+    });
+    vi.stubGlobal("document", {
+      getElementById: () => null,
+      querySelector: () => ({
+        getAttribute: () => SKILLUP_TIKTOK_PIXEL_ID,
+      }),
+      createElement: () => scriptEl,
+      getElementsByTagName: () => [],
+      head: { appendChild },
+    });
+
+    expect(ensureTikTokPixel()).toBe(true);
+    const ttq = (globalThis as unknown as { window: { ttq: unknown[] } }).window.ttq;
+    expect(Array.isArray(ttq)).toBe(true);
+
+    logTikTokEvent(
+      "Subscribe",
+      {
+        item_id: "premium-yearly",
+        item_name: "SkillUp Premium Yearly (20% off)",
+        value: 3999,
+        currency: "PKR",
+      },
+      { eventId: "order-queued" },
+    );
+
+    // Official stub queues onto the array itself: ["track", "Subscribe", payload, opts].
+    expect(
+      ttq.some((entry) => Array.isArray(entry) && entry[0] === "track" && entry[1] === "Subscribe"),
+    ).toBe(true);
+    const subscribe = ttq.find(
+      (entry) => Array.isArray(entry) && entry[0] === "track" && entry[1] === "Subscribe",
+    ) as unknown[];
+    expect(JSON.stringify(subscribe)).toContain("order-queued");
+    expect(scriptEl.src).toContain("analytics.tiktok.com/i18n/pixel/events.js");
+    expect(scriptEl.src).toContain(SKILLUP_TIKTOK_PIXEL_ID);
   });
 });

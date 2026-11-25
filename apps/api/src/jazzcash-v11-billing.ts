@@ -11,10 +11,7 @@ import {
   ExternalPaymentRequestError,
 } from "./external-payment-client.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
-import {
-  acknowledgeExternalWalletReturn,
-  type ForwardedIpn,
-} from "./jazzcash-ipn-forward.js";
+import { acknowledgeExternalWalletReturn, type ForwardedIpn } from "./jazzcash-ipn-forward.js";
 import {
   createJazzCashV11Client,
   type JazzCashV11Client,
@@ -822,12 +819,28 @@ export function registerJazzCashV11BillingRoutes(
         options.config.PAYMENT_SERVICE_APP_RETURN_URL ??
         new URL("/en/account?billingReturn=1", options.config.PUBLIC_APP_URL).toString();
       try {
-        const linked = await createExternalPaymentClient(options.config).linkWallet({
-          userId,
-          msisdn: body.msisdn,
-          planCode: paymentPlanCode,
-          appReturnUrl,
-        });
+        const client = createExternalPaymentClient(options.config);
+        let linked;
+        try {
+          linked = await client.linkWallet({
+            userId,
+            msisdn: body.msisdn,
+            planCode: paymentPlanCode,
+            appReturnUrl,
+          });
+        } catch (error) {
+          if (
+            !(error instanceof ExternalPaymentRequestError) ||
+            error.errorCode !== "invalid_app_return"
+          ) {
+            throw error;
+          }
+          linked = await client.linkWallet({
+            userId,
+            msisdn: body.msisdn,
+            planCode: paymentPlanCode,
+          });
+        }
         return reply.status(201).send({
           checkoutMode: "jazzcash_wallet_link" as const,
           requestId: linked.requestId,

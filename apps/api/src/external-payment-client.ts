@@ -167,7 +167,7 @@ export type ExternalPaymentClient = Readonly<{
       userId: string;
       msisdn: string;
       planCode: string;
-      appReturnUrl: string;
+      appReturnUrl?: string;
     }>,
   ) => Promise<ExternalWalletLink>;
   getWallet: (userId: string) => Promise<ExternalWallet>;
@@ -321,7 +321,15 @@ export function createExternalPaymentClient(
     linkWallet: async (input) =>
       parseUpstream(
         ExternalWalletLinkSchema,
-        await request("/v1/wallets/link", { method: "POST", body: input }),
+        await request("/v1/wallets/link", {
+          method: "POST",
+          body: {
+            userId: input.userId,
+            msisdn: input.msisdn,
+            planCode: input.planCode,
+            ...(input.appReturnUrl ? { appReturnUrl: input.appReturnUrl } : {}),
+          },
+        }),
       ),
 
     getWallet: async (userId) =>
