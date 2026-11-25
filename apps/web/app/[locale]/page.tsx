@@ -12,7 +12,11 @@ import { HomeReveal } from "./home-reveal";
 
 type PageProps = Readonly<{
   params: Promise<{ locale: string }>;
-  searchParams: Promise<{ payment?: string | string[]; orderId?: string | string[] }>;
+  searchParams: Promise<{
+    payment?: string | string[];
+    orderId?: string | string[];
+    cv?: string | string[];
+  }>;
 }>;
 
 const publicAppUrl = process.env["PUBLIC_APP_URL"] ?? "http://localhost:3000";
@@ -78,6 +82,7 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
   const pilot = launchPaths.find((path) => path.status === "pilot") ?? launchPaths[0];
   const payment = firstQueryValue(query.payment);
   const orderId = firstQueryValue(query.orderId);
+  const conversionReceipt = firstQueryValue(query.cv);
   const featuredPaths = launchPaths.slice(0, 2);
   const morePaths = launchPaths.slice(2);
 
@@ -85,7 +90,11 @@ export default async function EnglishHomePage({ params, searchParams }: PageProp
     <>
       <PublicHeader />
       <main className="home-main">
-        <HomePaymentBanner payment={payment} orderId={orderId} />
+        <HomePaymentBanner
+          payment={payment}
+          orderId={orderId}
+          conversionReceipt={conversionReceipt}
+        />
 
         <section className="hero hero-modern" aria-labelledby="hero-title">
           <HomeReveal variant="fade-right" durationMs={900}>

@@ -64,7 +64,20 @@ This is **not** the default `/mainLanding` page (`utm=D`).
 | Subscribe CTA (`trackAddToCart`) | `add_to_cart`, `begin_checkout` | `InitiateCheckout`, `AddPaymentInfo` |
 | JazzCash / payment success | `purchase` / `subscribe` | **`Subscribe` only** (`event_id` = order id) |
 
-`Subscribe` is deduped per `transaction_id` / order id (same session storage gate as GA4).
+`Subscribe` is deduped per `transaction_id` / order id (session **and** localStorage).
+
+### JazzCash return + Subscribe reliability (§3A)
+
+JazzCash returns via **cross-site POST** to `/en/account/payment-return` (or `/callback`). SkillUp then redirects to `/en?payment=succeeded&orderId=<id>&cv=<signed receipt>`.
+
+| Mechanism | Why |
+| --- | --- |
+| `orderId` only when API grants a succeeded order | Wallet-link alone must not fire Subscribe |
+| `cv` query + `SameSite=None; Secure` receipt cookie | Survives cross-site return better than Lax-only cookies |
+| `POST /api/campaign/conversion-receipt` | Home banner verifies receipt before conversion tracking |
+| Dual-write `lp_context` (session + localStorage) + UTM rebuild | Prevents silent drop when sessionStorage is empty after return |
+
+Signing uses `CONVERSION_RECEIPT_SECRET` if set (min 32 chars), else `SESSION_SECRET` from the shared web `.env`.
 
 ### CSP
 
@@ -95,8 +108,9 @@ If both are unset, the app still uses the client-provided SkillUp Pixel ID above
 2. Install [TikTok Pixel Helper](https://ads.tiktok.com/help/) (Chrome) or watch Network for `analytics.tiktok.com`.
 3. Landing open → `PageView` + `ViewContent`.
 4. Click **Subscribe Now** (with JazzCash number) → `InitiateCheckout` + `AddPaymentInfo` only (no `AddToCart`).
-5. Complete a staging JazzCash success return with `orderId` → one `Subscribe` with matching `event_id` (no `CompletePayment`).
+5. Complete a staging JazzCash success return: URL must include `orderId=` **and** `cv=`. Confirm one `Subscribe` with matching `event_id` (no `CompletePayment`). Also confirm `POST /api/campaign/conversion-receipt` → `{ ok: true }`.
 6. In TikTok Events Manager → Test Events, confirm Pixel `DBU5QHBC77UCDH70PUAG` receives only those five event types.
+7. If CTA events are Active but `Subscribe` is missing → diagnose with `docs/product/TIKTOK_PIXEL_AGENT_GUIDE.md` §3A (do not change Pixel ID first).
 
 Do **not** treat Pixel conversion totals as official subscription counts. Cross-check Admin → Premium → Campaign attribution (`utm=T`, `package=2`, `parameter=20percentoff`).
 
@@ -122,10 +136,14 @@ Do **not** treat Pixel conversion totals as official subscription counts. Cross-
 | `apps/web/lib/landing-analytics.ts` | Fires TikTok + GA4 together |
 | `apps/web/app/mainLanding/landing-analytics-boot.tsx` | Landing view |
 | `apps/web/app/mainLanding/landing-subscribe.tsx` | CTA → InitiateCheckout + AddPaymentInfo |
-| `apps/web/app/[locale]/home-payment-banner.tsx` | Payment success → Subscribe |
+| `apps/web/app/[locale]/home-payment-banner.tsx` | Payment success → verify `cv` → Subscribe |
+| `apps/web/lib/conversion-receipt.ts` | Sign/verify JazzCash conversion receipt |
+| `apps/web/app/api/campaign/conversion-receipt/route.ts` | Receipt verify API |
+| `apps/web/app/[locale]/account/payment-return/route.ts` | JazzCash return → `orderId` + `cv` |
 | `apps/web/next.config.ts` | CSP allowlist |
 | `docs/product/PREMIUM_CAMPAIGN_ANALYTICS_IMPLEMENTATION.md` | Attribution + GA4 source of truth |
-| `docs/product/TIKTOK_PIXEL_AGENT_GUIDE.md` | Reusable agent playbook |
+| `docs/product/TIKTOK_PIXEL_AGENT_GUIDE.md` | Reusable agent playbook (§3A) |
+| `resources/TIKTOK_PIXEL_AGENT_GUIDE.md` | Portable §3A playbook (Jalwa origin) |
 
 ---
 

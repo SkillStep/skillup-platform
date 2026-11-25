@@ -1,6 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import {
+  CONVERSION_RECEIPT_COOKIE,
+  CONVERSION_RECEIPT_PARAM,
+  conversionReceiptCookieOptions,
+  signConversionReceipt,
+} from "../../lib/conversion-receipt";
 import { publicAppOrigin } from "../../lib/public-app-origin";
 
 export const dynamic = "force-dynamic";
@@ -8,6 +14,7 @@ export const runtime = "nodejs";
 
 /**
  * Compatibility return path. Prefer /en/account/payment-return for JazzCash allowlists.
+ * On granted success, appends `cv=` + SameSite=None Secure receipt cookie (§3A).
  */
 
 function apiBaseUrl(): URL {
@@ -29,7 +36,22 @@ function paymentResultRedirect(
   const home = new URL("/en", appOrigin);
   home.searchParams.set("payment", status);
   if (orderId) home.searchParams.set("orderId", orderId);
-  return NextResponse.redirect(home, 303);
+
+  const receipt =
+    status === "succeeded" && orderId ? signConversionReceipt(orderId, status) : null;
+  if (receipt) {
+    home.searchParams.set(CONVERSION_RECEIPT_PARAM, receipt);
+  }
+
+  const response = NextResponse.redirect(home, 303);
+  if (receipt) {
+    response.cookies.set(
+      CONVERSION_RECEIPT_COOKIE,
+      receipt,
+      conversionReceiptCookieOptions(home),
+    );
+  }
+  return response;
 }
 
 async function collectFields(request: NextRequest): Promise<Record<string, string>> {

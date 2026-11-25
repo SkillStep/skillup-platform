@@ -11,7 +11,38 @@ import { withReturnTo } from "../../lib/return-to";
 type PaymentBannerProps = Readonly<{
   payment?: string | null;
   orderId?: string | null;
+  /** Signed conversion receipt (`cv`) from JazzCash payment-return (§3A). */
+  conversionReceipt?: string | null;
 }>;
+
+async function verifyConversionReceipt(
+  orderId: string,
+  receipt: string | null | undefined,
+): Promise<"verified" | "rejected" | "unavailable"> {
+  try {
+    const response = await fetch("/api/campaign/conversion-receipt", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        orderId,
+        ...(receipt ? { receipt } : {}),
+      }),
+      cache: "no-store",
+    });
+    const payload = (await response.json().catch(() => ({}))) as Readonly<{
+      ok?: boolean;
+      reason?: string;
+    }>;
+    if (response.ok && payload.ok === true) return "verified";
+    // Explicit crypto / payload rejection — do not fire Subscribe.
+    if (response.status === 400) return "rejected";
+    // Route missing / 5xx / HTML error page — do not block granted orderId (§3A).
+    return "unavailable";
+  } catch {
+    return "unavailable";
+  }
+}
 
 function paymentCopy(payment: string | null | undefined): Readonly<{
   tone: "success" | "pending" | "error";
@@ -87,7 +118,11 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
   return null;
 }
 
-export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
+export function HomePaymentBanner({
+  payment,
+  orderId,
+  conversionReceipt,
+}: PaymentBannerProps) {
   const copy = paymentCopy(payment);
   const titleId = useId();
   const [visible, setVisible] = useState(Boolean(copy));
@@ -96,15 +131,31 @@ export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
   useEffect(() => {
     if (!copy || !payment) return;
     if (copy.tone === "success") markPremiumUnlocked();
-    if (orderId) {
-      trackPaymentConversion({
-        paymentStatus: payment,
-        transactionId: orderId,
-      });
-    }
 
     let cancelled = false;
     void (async () => {
+      // TikTok Subscribe (§3A): verify `cv` when present. Reject only on explicit
+      // bad receipt; if verify is unavailable, still fire on granted orderId.
+      if (orderId) {
+        let receiptVerified = false;
+        let allowConversion = true;
+        if (payment === "succeeded") {
+          const hasQueryReceipt = Boolean(conversionReceipt?.trim());
+          const verifyResult = await verifyConversionReceipt(orderId, conversionReceipt);
+          receiptVerified = verifyResult === "verified";
+          if (hasQueryReceipt && verifyResult === "rejected") {
+            allowConversion = false;
+          }
+        }
+        if (!cancelled && allowConversion) {
+          trackPaymentConversion({
+            paymentStatus: payment,
+            transactionId: orderId,
+            receiptVerified,
+          });
+        }
+      }
+
       if (!copy.showAuthPrompt) {
         setGuestAuthPrompt(false);
         return;
@@ -125,12 +176,13 @@ export function HomePaymentBanner({ payment, orderId }: PaymentBannerProps) {
     const url = new URL(window.location.href);
     url.searchParams.delete("payment");
     url.searchParams.delete("orderId");
+    url.searchParams.delete("cv");
     window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
 
     return () => {
       cancelled = true;
     };
-  }, [copy, orderId, payment]);
+  }, [conversionReceipt, copy, orderId, payment]);
 
   if (!copy || !visible) return null;
 

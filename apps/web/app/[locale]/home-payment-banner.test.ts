@@ -15,4 +15,12 @@ describe("home payment status message", () => {
     expect(source).not.toContain("Open Premium Features");
     expect(source).not.toContain('href={"/en/premium" as Route}');
   });
+
+  it("verifies conversion receipt before Subscribe (§3A)", () => {
+    expect(source).toContain("/api/campaign/conversion-receipt");
+    expect(source).toContain("conversionReceipt");
+    expect(source).toContain("receiptVerified");
+    expect(source).toContain('verifyResult === "rejected"');
+    expect(source).toContain('url.searchParams.delete("cv")');
+  });
 });

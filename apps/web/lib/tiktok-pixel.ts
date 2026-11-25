@@ -158,6 +158,15 @@ function commercePayload(
   return payload;
 }
 
+/** Ensure the TikTok base code is injected (safe no-op when Pixel ID missing). */
+export function ensureTikTokPixel(): boolean {
+  try {
+    return ensureTtq() !== null;
+  } catch {
+    return false;
+  }
+}
+
 /** Fire a TikTok Pixel event. Never throws — analytics must not break checkout. */
 export function logTikTokEvent(
   eventName: string,

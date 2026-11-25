@@ -1,6 +1,12 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
+import {
+  CONVERSION_RECEIPT_COOKIE,
+  CONVERSION_RECEIPT_PARAM,
+  conversionReceiptCookieOptions,
+  signConversionReceipt,
+} from "../../../../lib/conversion-receipt";
 import { publicAppOrigin } from "../../../../lib/public-app-origin";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +19,9 @@ export const runtime = "nodejs";
  *
  * Session cookie is optional here: JazzCash returns via cross-site POST and often omits it.
  * The API completes from the signed pp_RequestID → wallet-link intent mapping.
+ *
+ * On granted success, appends `cv=<signed receipt>` and sets a SameSite=None Secure receipt
+ * cookie so TikTok Subscribe can verify after the cross-site JazzCash POST (§3A).
  */
 
 function apiBaseUrl(): URL {
@@ -36,7 +45,22 @@ function paymentResultRedirect(
   const home = new URL("/en", appOrigin);
   home.searchParams.set("payment", status);
   if (orderId) home.searchParams.set("orderId", orderId);
-  return NextResponse.redirect(home, 303);
+
+  const receipt =
+    status === "succeeded" && orderId ? signConversionReceipt(orderId, status) : null;
+  if (receipt) {
+    home.searchParams.set(CONVERSION_RECEIPT_PARAM, receipt);
+  }
+
+  const response = NextResponse.redirect(home, 303);
+  if (receipt) {
+    response.cookies.set(
+      CONVERSION_RECEIPT_COOKIE,
+      receipt,
+      conversionReceiptCookieOptions(home),
+    );
+  }
+  return response;
 }
 
 async function collectFields(request: NextRequest): Promise<Record<string, string>> {
