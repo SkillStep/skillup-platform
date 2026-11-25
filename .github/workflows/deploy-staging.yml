@@ -322,9 +322,10 @@ jobs:
                 print('Twilio staging secrets not supplied by GitHub; preserving any existing server-side SMS configuration')
 
             # JazzCash MWALLET recurring (wallet-link + pay-via-token): enable when staging secrets are present.
-            merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
-            password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
-            integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip()
+            # Fallbacks are temporary until these GitHub staging secrets are available.
+            merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip() or 'MC990984'
+            password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip() or 'hr0g2b0w96'
+            integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip() or '72syo1nh67'
             return_url = 'https://skillupshop.codistan.org/en/account/payment-return'
             # Prefer secret only when it already targets this staging host's payment-return route.
             secret_return = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip()
