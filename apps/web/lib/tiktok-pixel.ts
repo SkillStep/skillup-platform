@@ -1,6 +1,10 @@
 /**
  * TikTok Pixel (browser). Marketing only — never the source of truth for Premium Subs.
  * Pixel ID is public client-side config, same pattern as GA4 Measurement ID.
+ *
+ * Stub matches TikTok’s official base code: `ttq` is an Array whose entries the remote
+ * SDK drains on load. A function/`q`-property stub leaves Subscribe stuck and never
+ * sends `pixel/act` after JazzCash return.
  */
 
 type TtqApi = {
@@ -10,19 +14,20 @@ type TtqApi = {
     params?: Record<string, unknown>,
     options?: Record<string, unknown>,
   ) => void;
-  load: (pixelId: string) => void;
+  load: (pixelId: string, options?: Record<string, unknown>) => void;
+  ready?: (callback: () => void) => void;
 };
 
-type TtqQueue = TtqApi & {
-  (...args: unknown[]): void;
-  push: (args: unknown[]) => void;
-  methods: string[];
-  setAndDefer: (target: TtqQueue, method: string) => void;
-  _i: Record<string, unknown[]>;
-  _t: Record<string, number>;
-  _o: Record<string, unknown>;
-  _loaded?: boolean;
-};
+type TtqQueue = TtqApi &
+  Array<unknown[]> & {
+    methods: string[];
+    setAndDefer: (target: object, method: string) => void;
+    instance?: (pixelId: string) => unknown;
+    _i: Record<string, unknown[] & { _u?: string }>;
+    _t: Record<string, number>;
+    _o: Record<string, unknown>;
+    _loaded?: boolean;
+  };
 
 declare global {
   interface Window {
@@ -54,17 +59,14 @@ export function isTikTokPixelConfigured(): boolean {
   return pixelId() !== null;
 }
 
+/**
+ * Official-style stub: Array + setAndDefer. Remote events.js drains array entries.
+ * @see https://ads.tiktok.com/help/ (Events / Pixel base code)
+ */
 function createTtq(): TtqQueue {
-  const queue = function ttq(...args: unknown[]) {
-    queue.push(args);
-  } as TtqQueue;
+  const ttq = [] as unknown as TtqQueue;
 
-  queue.push = (args) => {
-    // Queue calls until the remote SDK replaces handlers.
-    (queue as unknown as { q?: unknown[][] }).q = (queue as unknown as { q?: unknown[][] }).q ?? [];
-    (queue as unknown as { q: unknown[][] }).q.push(args);
-  };
-  queue.methods = [
+  ttq.methods = [
     "page",
     "track",
     "identify",
@@ -82,27 +84,42 @@ function createTtq(): TtqQueue {
     "revokeConsent",
     "grantConsent",
   ];
-  queue.setAndDefer = (target, method) => {
+  ttq.setAndDefer = (target, method) => {
     Object.assign(target, {
       [method]: (...args: unknown[]) => {
-        target.push([method, ...args]);
+        (target as TtqQueue).push([method, ...args]);
       },
     });
   };
-  for (const method of queue.methods) {
-    queue.setAndDefer(queue, method);
+  for (const method of ttq.methods) {
+    ttq.setAndDefer(ttq, method);
   }
-  queue._i = {};
-  queue._t = {};
-  queue._o = {};
-  queue.load = (id) => {
+
+  ttq.instance = (pixelIdValue: string) => {
+    let bucket = ttq._i[pixelIdValue];
+    if (!bucket) {
+      bucket = [] as unknown as unknown[] & { _u?: string };
+      ttq._i[pixelIdValue] = bucket;
+    }
+    for (const method of ttq.methods) {
+      ttq.setAndDefer(bucket, method);
+    }
+    return bucket;
+  };
+
+  ttq._i = {};
+  ttq._t = {};
+  ttq._o = {};
+  ttq.load = (id, options = {}) => {
     const src = "https://analytics.tiktok.com/i18n/pixel/events.js";
-    queue._i[id] = [];
-    queue._t[id] = Date.now();
-    queue._o[id] = {};
+    ttq._i[id] = ttq._i[id] || ([] as unknown as unknown[] & { _u?: string });
+    ttq._i[id]._u = src;
+    ttq._t[id] = Date.now();
+    ttq._o[id] = options;
     if (document.getElementById(SCRIPT_ID)) return;
     const script = document.createElement("script");
     script.id = SCRIPT_ID;
+    script.type = "text/javascript";
     script.async = true;
     script.src = `${src}?sdkid=${encodeURIComponent(id)}&lib=ttq`;
     const first = document.getElementsByTagName("script")[0];
@@ -113,7 +130,7 @@ function createTtq(): TtqQueue {
     }
   };
 
-  return queue;
+  return ttq;
 }
 
 function ensureTtq(): TtqApi | null {
@@ -158,6 +175,20 @@ function commercePayload(
   return payload;
 }
 
+function dispatchTtqEvent(
+  ttq: TtqApi,
+  eventName: string,
+  params: Readonly<Record<string, string | number | boolean | undefined>>,
+  options: Readonly<{ eventId?: string }>,
+): void {
+  if (eventName === "PageView") {
+    ttq.page();
+    return;
+  }
+  const trackOptions = options.eventId ? { event_id: options.eventId } : undefined;
+  ttq.track(eventName, commercePayload(params), trackOptions);
+}
+
 /** Ensure the TikTok base code is injected (safe no-op when Pixel ID missing). */
 export function ensureTikTokPixel(): boolean {
   try {
@@ -167,7 +198,11 @@ export function ensureTikTokPixel(): boolean {
   }
 }
 
-/** Fire a TikTok Pixel event. Never throws — analytics must not break checkout. */
+/**
+ * Fire a TikTok Pixel event. Never throws — analytics must not break checkout.
+ * Uses the official Array stub so pre-SDK `track('Subscribe')` is drained by
+ * events.js into pixel/act (JazzCash return must not use a function/`q` stub).
+ */
 export function logTikTokEvent(
   eventName: string,
   params: Readonly<Record<string, string | number | boolean | undefined>> = {},
@@ -176,12 +211,7 @@ export function logTikTokEvent(
   try {
     const ttq = ensureTtq();
     if (!ttq) return;
-    if (eventName === "PageView") {
-      ttq.page();
-      return;
-    }
-    const trackOptions = options.eventId ? { event_id: options.eventId } : undefined;
-    ttq.track(eventName, commercePayload(params), trackOptions);
+    dispatchTtqEvent(ttq, eventName, params, options);
   } catch {
     // Ignore analytics failures.
   }
