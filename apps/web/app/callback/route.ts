@@ -37,19 +37,14 @@ function paymentResultRedirect(
   home.searchParams.set("payment", status);
   if (orderId) home.searchParams.set("orderId", orderId);
 
-  const receipt =
-    status === "succeeded" && orderId ? signConversionReceipt(orderId, status) : null;
+  const receipt = status === "succeeded" && orderId ? signConversionReceipt(orderId, status) : null;
   if (receipt) {
     home.searchParams.set(CONVERSION_RECEIPT_PARAM, receipt);
   }
 
   const response = NextResponse.redirect(home, 303);
   if (receipt) {
-    response.cookies.set(
-      CONVERSION_RECEIPT_COOKIE,
-      receipt,
-      conversionReceiptCookieOptions(home),
-    );
+    response.cookies.set(CONVERSION_RECEIPT_COOKIE, receipt, conversionReceiptCookieOptions(home));
   }
   return response;
 }

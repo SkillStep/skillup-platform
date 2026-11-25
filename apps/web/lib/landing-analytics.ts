@@ -1,6 +1,6 @@
+import { logGa4Event } from "./ga4";
 import type { LandingCampaign } from "./landing-campaign";
 import { planCodeForPackage } from "./landing-campaign";
-import { logGa4Event } from "./ga4";
 import { ensureTikTokPixel, logTikTokEvent } from "./tiktok-pixel";
 import { readStoredAttribution } from "./utm-attribution";
 
@@ -130,7 +130,9 @@ function browserLocalStorage(): Storage | undefined {
 }
 
 function isValidContext(stored: LandingAnalyticsContext | null): stored is LandingAnalyticsContext {
-  return Boolean(stored && typeof stored === "object" && stored.package_id && stored.conversion_event);
+  return Boolean(
+    stored && typeof stored === "object" && stored.package_id && stored.conversion_event,
+  );
 }
 
 export function persistLandingAnalyticsContext(context: LandingAnalyticsContext): void {

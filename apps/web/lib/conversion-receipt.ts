@@ -114,9 +114,7 @@ export function verifyConversionReceipt(
 }
 
 /** Cookie options that survive JazzCash cross-site POST returns (HTTPS). */
-export function conversionReceiptCookieOptions(
-  requestUrl: URL,
-): Readonly<{
+export function conversionReceiptCookieOptions(requestUrl: URL): Readonly<{
   httpOnly: true;
   path: string;
   maxAge: number;

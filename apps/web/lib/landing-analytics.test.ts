@@ -98,9 +98,7 @@ describe("landing analytics session + events", () => {
     vi.stubGlobal("document", {
       getElementById: () => ({ id: "skillup-ga4-gtag", content: "DBU5QHBC77UCDH70PUAG" }),
       querySelector: (sel: string) =>
-        sel.includes("tiktok-pixel-id")
-          ? { getAttribute: () => "DBU5QHBC77UCDH70PUAG" }
-          : null,
+        sel.includes("tiktok-pixel-id") ? { getAttribute: () => "DBU5QHBC77UCDH70PUAG" } : null,
       createElement: () => ({ id: "", async: false, src: "" }),
       getElementsByTagName: () => [],
       head: { appendChild: () => undefined },

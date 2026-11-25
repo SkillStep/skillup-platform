@@ -118,11 +118,7 @@ function paymentCopy(payment: string | null | undefined): Readonly<{
   return null;
 }
 
-export function HomePaymentBanner({
-  payment,
-  orderId,
-  conversionReceipt,
-}: PaymentBannerProps) {
+export function HomePaymentBanner({ payment, orderId, conversionReceipt }: PaymentBannerProps) {
   const copy = paymentCopy(payment);
   const titleId = useId();
   const [visible, setVisible] = useState(Boolean(copy));

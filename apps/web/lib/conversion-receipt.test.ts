@@ -1,9 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
 
-import {
-  signConversionReceipt,
-  verifyConversionReceipt,
-} from "./conversion-receipt";
+import { signConversionReceipt, verifyConversionReceipt } from "./conversion-receipt";
 
 describe("conversion receipt (§3A)", () => {
   afterEach(() => {
