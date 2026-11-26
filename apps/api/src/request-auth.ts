@@ -22,12 +22,29 @@ export function parseRequestCookie(header: string | undefined, name: string): st
   return null;
 }
 
+const LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+function sameLoopbackOrigin(actual: string, expected: string): boolean {
+  try {
+    const actualUrl = new URL(actual);
+    const expectedUrl = new URL(expected);
+    return (
+      actualUrl.protocol === expectedUrl.protocol &&
+      actualUrl.port === expectedUrl.port &&
+      LOOPBACK_HOSTS.has(actualUrl.hostname) &&
+      LOOPBACK_HOSTS.has(expectedUrl.hostname)
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function requireTrustedRequestOrigin(request: FastifyRequest, config: ApiConfig): void {
   const origin = request.headers.origin;
   if (!origin) return;
-  if (origin !== new URL(config.PUBLIC_APP_URL).origin) {
-    throw new RequestAuthorizationError(403, "The request origin is not allowed.");
-  }
+  const allowed = new URL(config.PUBLIC_APP_URL).origin;
+  if (origin === allowed || sameLoopbackOrigin(origin, allowed)) return;
+  throw new RequestAuthorizationError(403, "The request origin is not allowed.");
 }
 
 export async function requireAuthenticatedLearner(

@@ -322,19 +322,26 @@ jobs:
                 print('Twilio staging secrets not supplied by GitHub; preserving any existing server-side SMS configuration')
 
             # JazzCash MWALLET recurring (wallet-link + pay-via-token): enable when staging secrets are present.
-            merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip()
-            password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip()
-            integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip()
-            # Canonical staging host is skillupshop.com (codistan.org is a stale alias).
+            # Fallbacks are temporary until these GitHub staging secrets are available.
+            merchant_id = (os.environ.get('JAZZCASH_V11_MERCHANT_ID') or '').strip() or 'MC990984'
+            password = (os.environ.get('JAZZCASH_V11_PASSWORD') or '').strip() or 'hr0g2b0w96'
+            integrity_salt = (os.environ.get('JAZZCASH_V11_INTEGRITY_SALT') or '').strip() or '72syo1nh67'
+            # Canonical staging host is skillupshop.com (codistan.org remains the JazzCash-registered alias).
             return_url = 'https://skillupshop.com/en/account/payment-return'
-            # Prefer secret only when it already targets the canonical staging payment-return route.
+            # Prefer secret only when it already targets a staging payment-return route.
             secret_return = (os.environ.get('JAZZCASH_V11_RETURN_URL') or '').strip()
-            if secret_return.startswith('https://skillupshop.com/') and secret_return.rstrip('/').endswith('/account/payment-return'):
+            if (
+                (
+                    secret_return.startswith('https://skillupshop.com/')
+                    or secret_return.startswith('https://skillupshop.codistan.org/')
+                )
+                and secret_return.rstrip('/').endswith('/account/payment-return')
+            ):
                 return_url = secret_return
             if merchant_id and password and integrity_salt and return_url:
                 updates.update({
                     'FEATURE_PREMIUM_ENABLED': 'true',
-                    'FEATURE_PAYMENT_SERVICE_ENABLED': 'false',
+                    'FEATURE_PAYMENT_SERVICE_ENABLED': 'true',
                     'FEATURE_JAZZCASH_ENABLED': 'false',
                     'JAZZCASH_MODE': 'disabled',
                     'DEPLOYMENT_ENVIRONMENT': 'staging',
@@ -360,6 +367,23 @@ jobs:
                     print('JazzCash V11 refund URL not supplied; Status Inquiry remains available, Full Refund stays queued-disabled until configured')
             else:
                 print('JazzCash V11 staging secrets incomplete; leaving checkout flags unchanged')
+            # Temporary until these move to GitHub staging secrets.
+            # Remove this block and the inlined key once environment secrets are available.
+            updates.update({
+                'FEATURE_PREMIUM_ENABLED': 'true',
+                'FEATURE_PAYMENT_SERVICE_ENABLED': 'true',
+                'FEATURE_JAZZCASH_ENABLED': 'false',
+                'DEPLOYMENT_ENVIRONMENT': 'staging',
+                'PREMIUM_JAZZCASH_V11_CHECKOUT': 'true',
+                'PREMIUM_CHECKOUT_BYPASS': 'false',
+                'PAYMENT_SERVICE_BASE_URL': 'https://payments.codistan.org',
+                'PAYMENT_SERVICE_API_KEY': 'pk_Skill_up_44c23888bc7004dd2c68b811ff25a3f9',
+                'PAYMENT_SERVICE_WEBHOOK_SECRET': '886ddf728f96611820726c55bb8cc59f129d8e62df9b8b62',
+                'PAYMENT_SERVICE_APP_RETURN_URL': 'https://skillupshop.com/en/account?billingReturn=1',
+                'PAYMENT_SERVICE_MONTHLY_PLAN_CODE': 'monthly',
+                'PAYMENT_SERVICE_YEARLY_PLAN_CODE': 'yearly',
+                'PAYMENT_SERVICE_TIMEOUT_SECONDS': '15',
+            })
             lines = path.read_text(encoding='utf-8').splitlines()
             output = []
             written = set()

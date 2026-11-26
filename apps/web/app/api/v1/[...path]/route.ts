@@ -34,10 +34,10 @@ type RouteContext = Readonly<{
 }>;
 
 function apiBaseUrl(): URL {
-  const value = process.env["API_BASE_URL"];
-  if (!value) throw new Error("API_BASE_URL is required for the web API proxy.");
+  const value = process.env["API_BASE_URL"] ?? "http://127.0.0.1:3001";
 
   const url = new URL(value);
+  if (url.hostname === "localhost") url.hostname = "127.0.0.1";
   if (url.protocol !== "http:" && url.protocol !== "https:") {
     throw new Error("API_BASE_URL must use HTTP or HTTPS.");
   }
