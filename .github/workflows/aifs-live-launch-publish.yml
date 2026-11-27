@@ -93,9 +93,13 @@ jobs:
               -e APP_ENV=staging \
               -e AIFS_ALLOW_DRAFT_IMPORT=yes \
               -e AIFS_TEAM_FIVE_DRAFT_ROOT=/tmp/aifs-launch/docs/product/course-expansion/drafts/team-five \
+              -e NODE_PATH=/app/node_modules \
+              --workdir /app \
               api node /tmp/aifs-launch/tools/import-aifs-team-five-drafts.mjs --apply-draft
             docker compose -f docker-compose.staging.yml exec -T \
               -e AIFS_FORCE_PUBLISH_TEAM_FIVE=yes \
+              -e NODE_PATH=/app/node_modules \
+              --workdir /app \
               api node /tmp/aifs-launch/tools/aifs-live-launch-activate.mjs
             docker compose -f docker-compose.staging.yml up -d --force-recreate api web
             sleep 12
