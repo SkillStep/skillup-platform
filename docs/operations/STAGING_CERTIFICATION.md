@@ -2,6 +2,9 @@
 
 Status: repository implementation is tracked by #97, #98, #99 and #100. A live candidate is not ready for UAT until the deployed staging workflow returns `READY FOR UAT`.
 
+Canonical public staging edge for exact-SHA certification is **https://skillupshop.com**.  
+`skillupshop.codistan.org` may lag an older release SHA and must not be treated as the certified edge unless digests match.
+
 ## Release contract
 
 `Code / PR → Quality CI → immutable staging deployment → deployed identity gate → automated staging certification → READY FOR UAT → human UAT → explicit production approval → promote exact tested artifacts → production smoke`
