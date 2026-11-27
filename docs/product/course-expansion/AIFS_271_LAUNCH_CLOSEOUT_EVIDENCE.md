@@ -33,15 +33,24 @@ Captured after Staging Deploy `45971531718` and launch activation:
 | Public catalogue | **10** playable courses on skillupshop.com |
 | #280 | **Still blocked** — do not merge |
 
-## Remaining #271 engineering on this branch
+## Exact-SHA certification + history audit (completed on this branch)
 
-1. Exact-SHA `Staging Certification` against `1a5f068…` on **https://skillupshop.com** (not lagging codistan.org).
-2. Read-only certificate history dry-run on staging (`AIFS Certificate History Dry Run`).
-3. Record CI run links + redacted aggregates back onto #271.
-4. Open PR from this branch; merge only with Abdullah approval.
+| Check | Result |
+| --- | --- |
+| Staging Certification run | [45975932891](https://github.com/SkillStep/skillup-platform/actions/runs/45975932891) **success** |
+| Playwright | **135 passed**, 2 skipped, 0 failed → `READY FOR UAT` |
+| Edge certified | https://skillupshop.com @ `1a5f068…` |
+| Certificate history dry-run | **AUDITED_NO_WRITES** (same run, parallel job) |
+| policyCount | 10 |
+| totalCandidates / examined | 10 / 10 |
+| frozenAwardEvidenceAnomalies | 0 |
+| awards issued by audit | **0** (read-only) |
+
+PR: [#289](https://github.com/SkillStep/skillup-platform/pull/289) — **merge only with Abdullah approval**.
 
 ## Explicit non-goals
 
 - No JazzCash / payment / merchant credential changes.
 - No merge of #280.
-- No production promotion beyond the already-live skillupshop.com staging edge unless a separate written GO is recorded.
+- No merge of this branch to `main` without Abdullah approval.
+- No separate production promotion beyond the already-live skillupshop.com edge unless a separate written GO is recorded.
