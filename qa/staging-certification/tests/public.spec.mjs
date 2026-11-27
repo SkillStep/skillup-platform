@@ -79,8 +79,8 @@ test("private routes remain non-indexable and non-cacheable", async ({ request }
   }
 });
 
-test("five upcoming courses are discoverable but never playable", async ({ page, request }) => {
-  const previewTitles = [
+test("ten published courses are playable after team-five launch", async ({ page, request }) => {
+  const launchedTitles = [
     "Prompt Engineering & Generative AI",
     "Cybersecurity & Digital Safety",
     "Data Analytics & Decision Making",
@@ -88,25 +88,27 @@ test("five upcoming courses are discoverable but never playable", async ({ page,
     "Sales, Negotiation & Client Management",
   ];
   await page.goto("/en/skills");
-  for (const title of previewTitles) {
+  for (const title of launchedTitles) {
     const card = page
       .locator("article")
       .filter({ has: page.getByRole("heading", { name: title }) });
     await expect(card).toBeVisible();
-    await expect(card.getByText("Coming soon")).toBeVisible();
-    await expect(card.getByRole("link", { name: /Start practice/ })).toHaveCount(0);
+    await expect(card.getByText("Coming soon")).toHaveCount(0);
+    await expect(card.getByRole("link", { name: /Start practice/ })).toBeVisible();
   }
-  const keyword = page.getByRole("searchbox");
-  await keyword.fill("phishing");
-  await expect(page.getByRole("heading", { name: "Cybersecurity & Digital Safety" })).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Prompt Engineering & Generative AI" }),
-  ).toHaveCount(0);
 
-  const preview = await request.get("/en/skills/upcoming/cybersecurity-digital-safety");
-  expect(preview.status()).toBe(200);
-  expect(await preview.text()).toContain("Proposed learning path");
-  expect(await preview.text()).not.toContain("/en/learn/");
-  const noDraft = await request.get("/en/paths/cybersecurity-digital-safety");
-  expect(noDraft.status()).toBe(404);
+  const catalog = await request.get("/api/v1/catalog/courses");
+  expect(catalog.ok()).toBeTruthy();
+  const body = await catalog.json();
+  const courses = body.courses || body.items || [];
+  expect(courses.length).toBeGreaterThanOrEqual(10);
+  for (const slug of [
+    "prompt-engineering-generative-ai",
+    "cybersecurity-digital-safety",
+    "data-analytics-dashboards",
+    "applied-ai-workflows",
+    "sales-client-negotiation",
+  ]) {
+    expect(courses.some((course) => course.slug === slug)).toBeTruthy();
+  }
 });

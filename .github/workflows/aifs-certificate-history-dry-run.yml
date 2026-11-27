@@ -1,0 +1,80 @@
+name: AIFS Certificate History Dry Run
+
+# Read-only staging history sweep for #271. Never issues awards. Never touches JazzCash.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: Type AUDIT-STAGING-CERTIFICATE-HISTORY-READONLY
+        required: true
+        type: string
+
+concurrency:
+  group: aifs-certificate-history-dry-run
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Confirm owner phrase
+        env:
+          PHRASE: ${{ inputs.confirm_phrase }}
+        run: |
+          set -euo pipefail
+          test "$PHRASE" = "AUDIT-STAGING-CERTIFICATE-HISTORY-READONLY"
+
+      - name: Checkout tools
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Upload audit tools to live host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "tools/aifs-certificate-history-audit-core.mjs,tools/aifs-certificate-backfill-dry-run-staging-host.mjs"
+          target: /opt/skillup/aifs-audit-tools/
+          strip_components: 1
+
+      - name: Run read-only history audit on staging host
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            docker compose -f docker-compose.staging.yml up -d api
+            sleep 5
+            docker compose -f docker-compose.staging.yml exec -T api mkdir -p /tmp/aifs-audit/tools
+            docker compose -f docker-compose.staging.yml cp aifs-audit-tools/. api:/tmp/aifs-audit/tools/
+            docker compose -f docker-compose.staging.yml exec -T \
+              -e APP_ENV=staging \
+              -e AIFS_CERTIFICATE_BACKFILL_DRY_RUN=yes \
+              -e NODE_PATH=/app/node_modules \
+              --workdir /app \
+              api node /tmp/aifs-audit/tools/aifs-certificate-backfill-dry-run-staging-host.mjs \
+              | tee /tmp/aifs-certificate-history-audit.json
+            echo "AIFS CERTIFICATE HISTORY DRY RUN: PASS"
+
+      - name: Verify public identity still matches live edge
+        run: |
+          set -euo pipefail
+          curl --fail --silent --show-error https://skillupshop.com/api/health -o /tmp/web-health.json
+          curl --fail --silent --show-error https://skillupshop.com/api/v1/health -o /tmp/api-health.json
+          node -e '
+            const fs=require("fs");
+            const web=JSON.parse(fs.readFileSync("/tmp/web-health.json","utf8"));
+            const api=JSON.parse(fs.readFileSync("/tmp/api-health.json","utf8"));
+            if(web.releaseSha!==api.releaseSha) process.exit(1);
+            console.log("live_release_sha="+web.releaseSha);
+          '

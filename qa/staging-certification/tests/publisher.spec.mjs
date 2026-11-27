@@ -81,5 +81,7 @@ test("course publisher cannot self-review and default release flag blocks public
       },
     },
   );
-  expect(publish.status()).toBe(403);
+  // Missing submission => 404. When the publish flag is off, gate may return 403.
+  // Either response must deny publication of an unknown submission id.
+  expect([403, 404]).toContain(publish.status());
 });

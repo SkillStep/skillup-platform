@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { performance } from "node:perf_hooks";
 
-const STAGING_HOST = "skillupshop.codistan.org";
+const ALLOWED_STAGING_HOSTS = new Set(["skillupshop.com", "skillupshop.codistan.org"]);
 const DEFAULT_REQUESTS_PER_TARGET = 30;
 const DEFAULT_CONCURRENCY = 8;
 const DEFAULT_P95_MS = 1_500;
@@ -34,8 +34,10 @@ const webUrl = process.env.STAGING_WEB_URL?.trim();
 if (!webUrl) throw new Error("STAGING_WEB_URL is required.");
 
 const parsedWebUrl = new URL(webUrl);
-if (parsedWebUrl.protocol !== "https:" || parsedWebUrl.hostname !== STAGING_HOST) {
-  throw new Error(`Capacity smoke is locked to https://${STAGING_HOST}.`);
+if (parsedWebUrl.protocol !== "https:" || !ALLOWED_STAGING_HOSTS.has(parsedWebUrl.hostname)) {
+  throw new Error(
+    `Capacity smoke is locked to https://skillupshop.com (or legacy https://skillupshop.codistan.org).`,
+  );
 }
 
 const requestsPerTarget = positiveInteger(
