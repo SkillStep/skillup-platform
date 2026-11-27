@@ -1,0 +1,120 @@
+name: AIFS Live Launch Publish
+
+# Owner-authorized: import private-keyed team-five drafts, publish, enable certificates.
+# Does not change JazzCash merchant credentials or unrelated payment settings.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_phrase:
+        description: Type PUBLISH-TEAM-FIVE-AND-ENABLE-CERTIFICATES
+        required: true
+        type: string
+
+concurrency:
+  group: aifs-live-launch
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - name: Confirm owner phrase
+        env:
+          PHRASE: ${{ inputs.confirm_phrase }}
+        run: |
+          set -euo pipefail
+          test "$PHRASE" = "PUBLISH-TEAM-FIVE-AND-ENABLE-CERTIFICATES"
+
+      - name: Checkout private publishable package
+        uses: actions/checkout@v4
+        with:
+          repository: SkillStep/aifs-private-assessment-bank
+          token: ${{ secrets.AIFS_PRIVATE_BANK_TOKEN }}
+          path: private-bank
+
+      - name: Upload package to live host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "private-bank/release/v1-publishable/*"
+          target: /opt/skillup/aifs-launch/
+          strip_components: 3
+
+      - name: Import, publish, enable certificates
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            test -d aifs-launch/docs/product/course-expansion/drafts/team-five
+            python3 - <<'PY'
+            from pathlib import Path
+            path = Path('.env')
+            text = path.read_text(encoding='utf-8')
+            updates = {
+              'AIFS_ALLOW_DRAFT_IMPORT': 'yes',
+              'AIFS_COURSE_PUBLISH_ENABLED': 'yes',
+              'SKILLUP_CERTIFICATE_ISSUANCE_ENABLED': 'yes',
+            }
+            lines = text.splitlines()
+            keys = set()
+            out = []
+            for line in lines:
+              if not line or line.lstrip().startswith('#') or '=' not in line:
+                out.append(line)
+                continue
+              key, _, _ = line.partition('=')
+              if key in updates:
+                out.append(f"{key}={updates[key]}")
+                keys.add(key)
+              else:
+                out.append(line)
+            for key, value in updates.items():
+              if key not in keys:
+                out.append(f"{key}={value}")
+            path.write_text('\n'.join(out) + '\n', encoding='utf-8')
+            path.chmod(0o600)
+            print('ENV FLAGS: UPDATED')
+            PY
+            docker compose -f docker-compose.staging.yml up -d api web
+            sleep 8
+            docker compose -f docker-compose.staging.yml cp aifs-launch/. api:/tmp/aifs-launch/
+            docker compose -f docker-compose.staging.yml exec -T \
+              -e APP_ENV=staging \
+              -e AIFS_ALLOW_DRAFT_IMPORT=yes \
+              -e AIFS_TEAM_FIVE_DRAFT_ROOT=/tmp/aifs-launch/docs/product/course-expansion/drafts/team-five \
+              api node /tmp/aifs-launch/tools/import-aifs-team-five-drafts.mjs --apply-draft
+            docker compose -f docker-compose.staging.yml exec -T \
+              -e AIFS_FORCE_PUBLISH_TEAM_FIVE=yes \
+              api node /tmp/aifs-launch/tools/aifs-live-launch-activate.mjs
+            docker compose -f docker-compose.staging.yml up -d --force-recreate api web
+            sleep 12
+            curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/tmp/web-health.json
+            curl --fail --silent --show-error http://127.0.0.1:4000/ready >/tmp/api-ready.json || curl --fail --silent --show-error http://127.0.0.1:4000/api/v1/ready >/tmp/api-ready.json || true
+            echo "AIFS LIVE LAUNCH HOST STEPS: PASS"
+
+      - name: Verify public catalogue growth
+        run: |
+          set -euo pipefail
+          body="$(curl --fail --silent --show-error https://skillupshop.com/api/v1/catalog/courses)"
+          echo "$body" | node -e '
+            let s=""; process.stdin.on("data",d=>s+=d); process.stdin.on("end",()=>{
+              const j=JSON.parse(s); const items=j.courses||j.items||[];
+              console.log("catalog_count="+items.length);
+              for (const c of items) console.log(c.slug);
+              if (items.length < 10) {
+                console.error("Expected at least 10 published catalogue courses after launch.");
+                process.exit(1);
+              }
+            });
+          '
