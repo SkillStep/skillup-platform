@@ -9,6 +9,7 @@ import { type CommercialService, jazzCashSecureHash } from "./commercial.js";
 import {
   createExternalPaymentClient,
   ExternalPaymentRequestError,
+  type ExternalWalletLink,
 } from "./external-payment-client.js";
 import { type ApiConfig, isJazzCashV11CheckoutEnabled } from "./config.js";
 import { acknowledgeExternalWalletReturn, type ForwardedIpn } from "./jazzcash-ipn-forward.js";
@@ -820,7 +821,7 @@ export function registerJazzCashV11BillingRoutes(
         new URL("/en/account?billingReturn=1", options.config.PUBLIC_APP_URL).toString();
       try {
         const client = createExternalPaymentClient(options.config);
-        let linked;
+        let linked: ExternalWalletLink;
         try {
           linked = await client.linkWallet({
             userId,

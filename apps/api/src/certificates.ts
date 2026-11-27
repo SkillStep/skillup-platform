@@ -5,9 +5,9 @@ import type { FastifyInstance } from "fastify";
 import type { PoolClient } from "pg";
 import { z } from "zod";
 
-import type { AuthService, AuthenticatedLearner } from "./auth.js";
-import type { ApiConfig } from "./config.js";
+import type { AuthenticatedLearner, AuthService } from "./auth.js";
 import { renderSkillCertificatePdf } from "./certificate-pdf.js";
+import type { ApiConfig } from "./config.js";
 import { requireAuthenticatedLearner, requireTrustedRequestOrigin } from "./request-auth.js";
 
 export class CertificateError extends Error {

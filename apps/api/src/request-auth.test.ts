@@ -2,7 +2,7 @@ import type { FastifyRequest } from "fastify";
 import { describe, expect, it } from "vitest";
 
 import type { ApiConfig } from "./config.js";
-import { requireTrustedRequestOrigin, RequestAuthorizationError } from "./request-auth.js";
+import { RequestAuthorizationError, requireTrustedRequestOrigin } from "./request-auth.js";
 
 const config = { PUBLIC_APP_URL: "http://localhost:3000" } as ApiConfig;
 

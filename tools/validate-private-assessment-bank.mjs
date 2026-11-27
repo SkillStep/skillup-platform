@@ -18,22 +18,22 @@ export const COURSES = Object.freeze([
 ]);
 
 function fail(message) {
-  throw new Error("Assessment bank preflight: " + message);
+  throw new Error(`Assessment bank preflight: ${message}`);
 }
 function restricted(path, kind) {
   let stat;
   try {
     stat = lstatSync(path);
   } catch {
-    fail(kind + " missing");
+    fail(`${kind} missing`);
   }
-  if (stat.isSymbolicLink()) fail(kind + " must not be a symbolic link");
+  if (stat.isSymbolicLink()) fail(`${kind} must not be a symbolic link`);
   if (kind === "directory" && !stat.isDirectory()) fail("bank root is not a directory");
-  if (kind !== "directory" && !stat.isFile()) fail(kind + " is not a regular file");
+  if (kind !== "directory" && !stat.isFile()) fail(`${kind} is not a regular file`);
   if (process.platform !== "win32" && stat.mode & 0o077) {
-    fail(kind + " must have owner-only permissions (directory 0700, file 0600)");
+    fail(`${kind} must have owner-only permissions (directory 0700, file 0600)`);
   }
-  if (stat.size > 4 * 1024 * 1024) fail(kind + " exceeds 4 MiB maximum");
+  if (stat.size > 4 * 1024 * 1024) fail(`${kind} exceeds 4 MiB maximum`);
   return stat;
 }
 function readPrivateJson(path) {
@@ -45,15 +45,14 @@ function readPrivateJson(path) {
   }
 }
 function text(value, label, min = 8) {
-  if (typeof value !== "string" || value.trim().length < min) fail(label + " missing or too short");
+  if (typeof value !== "string" || value.trim().length < min) fail(`${label} missing or too short`);
 }
 function assertItems(data, course, type, allIds, allPrompts) {
-  if (!data || typeof data !== "object" || Array.isArray(data))
-    fail("invalid " + type + " structure");
+  if (!data || typeof data !== "object" || Array.isArray(data)) fail(`invalid ${type} structure`);
   if (data.courseSlug !== course) fail("bank course slug mismatch");
   text(data.version, "immutable bank version", 6);
   if (!Array.isArray(data.items) || data.items.length !== (type === "practice" ? 72 : 8)) {
-    fail(type + " count mismatch for " + course);
+    fail(`${type} count mismatch for ${course}`);
   }
   const eachLevel = Array.from({ length: 24 }, () => 0);
   const eachPhase = { baseline: 0, endline: 0 };
@@ -116,7 +115,7 @@ export function validatePrivateAssessmentBanks(directory) {
   const allPrompts = new Set();
   for (const course of COURSES) {
     for (const type of ["practice", "assessments"]) {
-      const path = join(realRoot, course + "." + type + ".json");
+      const path = join(realRoot, `${course}.${type}.json`);
       const bank = readPrivateJson(path);
       assertItems(bank, course, type, allIds, allPrompts);
     }
