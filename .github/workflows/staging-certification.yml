@@ -91,6 +91,7 @@ on:
 
 permissions:
   contents: read
+  statuses: write
 
 concurrency:
   group: staging-certification
@@ -471,4 +472,41 @@ jobs:
         run: |
           set -euo pipefail
           echo "Redacted aggregate JSON is printed in the SSH step log above (no PII)."
-          echo "Attach the run URL on issue #271."
+          echo "Attach the run URL on the release tracker."
+
+  report-status:
+    name: Publish staging-certification/live on exact release SHA
+    if: ${{ always() }}
+    needs: [certify]
+    runs-on: ubuntu-24.04
+    env:
+      TARGET_SHA: ${{ inputs.expected_release_sha || github.event.client_payload.expected_release_sha }}
+      CERTIFY_RESULT: ${{ needs.certify.result }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - name: Publish machine-readable status on exact release
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${TARGET_SHA:-}"
+          state="failure"
+          description="Staging certification failed"
+          if [ "$CERTIFY_RESULT" = "success" ]; then
+            state="success"
+            description="Exact staging release passed mandatory certification"
+          fi
+          payload="$(jq -n \
+            --arg state "$state" \
+            --arg description "$description" \
+            --arg context "staging-certification/live" \
+            --arg target_url "$RUN_URL" \
+            '{state:$state,description:$description,context:$context,target_url:$target_url}')"
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header "Authorization: Bearer $GH_TOKEN" \
+            --header "Accept: application/vnd.github+json" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data "$payload" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/statuses/${TARGET_SHA}" >/dev/null
+          echo "Published staging-certification/live=$state for $TARGET_SHA"
