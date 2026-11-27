@@ -102,9 +102,23 @@ jobs:
               --workdir /app \
               api node /tmp/aifs-launch/tools/aifs-live-launch-activate.mjs
             docker compose -f docker-compose.staging.yml up -d --force-recreate api web
-            sleep 12
-            curl --fail --silent --show-error http://127.0.0.1:3000/api/health >/tmp/web-health.json
-            curl --fail --silent --show-error http://127.0.0.1:4000/ready >/tmp/api-ready.json || curl --fail --silent --show-error http://127.0.0.1:4000/api/v1/ready >/tmp/api-ready.json || true
+            wait_for() {
+              label="$1"; url="$2"
+              for _ in $(seq 1 60); do
+                if curl --fail --silent --show-error --max-time 3 "$url" >/dev/null; then
+                  echo "$label is healthy"
+                  return 0
+                fi
+                sleep 2
+              done
+              echo "::error::$label did not become healthy: $url" >&2
+              return 1
+            }
+            wait_for "API health" "http://127.0.0.1:4020/v1/health"
+            wait_for "API ready" "http://127.0.0.1:4020/v1/ready"
+            wait_for "Web health" "http://127.0.0.1:3020/api/health"
+            curl --fail --silent --show-error http://127.0.0.1:3020/api/health >/tmp/web-health.json
+            curl --fail --silent --show-error http://127.0.0.1:4020/v1/ready >/tmp/api-ready.json
             echo "AIFS LIVE LAUNCH HOST STEPS: PASS"
 
       - name: Verify public catalogue growth
