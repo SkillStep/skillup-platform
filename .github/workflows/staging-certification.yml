@@ -43,6 +43,11 @@ on:
         description: Known-good rollback artifact/reference
         required: true
         type: string
+      staging_web_url:
+        description: Canonical staging edge URL to certify (defaults to skillupshop.com)
+        required: false
+        type: string
+        default: https://skillupshop.com
   workflow_call:
     inputs:
       expected_release_sha:
@@ -96,7 +101,8 @@ jobs:
       # The canonical staging edge is deployment-owned configuration, not a secret.
       # Keep an environment override for future moves, but do not block certification
       # merely because the optional GitHub variable was never created.
-      STAGING_WEB_URL: ${{ vars.STAGING_WEB_URL || 'https://skillupshop.codistan.org' }}
+      # Canonical live staging edge is skillupshop.com (codistan.org may lag an older SHA).
+      STAGING_WEB_URL: ${{ inputs.staging_web_url || vars.STAGING_WEB_URL || 'https://skillupshop.com' }}
       STAGING_API_URL: ${{ vars.STAGING_API_URL }}
       STAGING_EXPECTED_RELEASE_SHA: ${{ inputs.expected_release_sha || github.event.client_payload.expected_release_sha }}
       STAGING_DEPLOYMENT_PIPELINE_ID: ${{ inputs.pipeline_id || github.event.client_payload.pipeline_id }}
