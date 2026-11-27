@@ -48,6 +48,11 @@ on:
         required: false
         type: string
         default: https://skillupshop.com
+      run_certificate_history_dry_run:
+        description: Also run read-only certificate history audit on staging (no awards)
+        required: false
+        type: boolean
+        default: true
   workflow_call:
     inputs:
       expected_release_sha:
@@ -144,10 +149,13 @@ jobs:
       STAGING_QA_MAILBOX_TOKEN: ${{ secrets.STAGING_QA_MAILBOX_TOKEN }}
 
     steps:
-      - name: Checkout exact candidate
+      - name: Checkout QA suite
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-          ref: ${{ env.STAGING_EXPECTED_RELEASE_SHA }}
+          # Deployed identity is still asserted against STAGING_EXPECTED_* digests.
+          # For workflow_dispatch from a non-main branch, run the branch QA suite so
+          # post-launch assertion updates can certify the live edge without merging first.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.ref != 'refs/heads/main' && github.sha || env.STAGING_EXPECTED_RELEASE_SHA }}
           persist-credentials: false
 
       - name: Set up Node.js
@@ -411,3 +419,56 @@ jobs:
             qa/staging-certification/artifacts/playwright-results.json
           if-no-files-found: warn
           retention-days: 14
+
+  certificate-history-dry-run:
+    name: Read-only certificate history audit
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.run_certificate_history_dry_run == true || inputs.run_certificate_history_dry_run == 'true') }}
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 20
+    steps:
+      - name: Checkout audit tools from workflow ref
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Upload audit tools to live host
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          source: "tools/aifs-certificate-history-audit-core.mjs,tools/aifs-certificate-backfill-dry-run-staging-host.mjs"
+          target: /opt/skillup/aifs-audit-tools/
+          strip_components: 1
+
+      - name: Run read-only history audit on staging host
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.STAGING_HOST }}
+          username: ${{ secrets.STAGING_SSH_USER }}
+          key: ${{ secrets.STAGING_SSH_KEY }}
+          command_timeout: 15m
+          script: |
+            set -euo pipefail
+            cd /opt/skillup
+            test -f .env
+            docker compose -f docker-compose.staging.yml up -d api
+            sleep 5
+            docker compose -f docker-compose.staging.yml exec -T api mkdir -p /tmp/aifs-audit/tools
+            docker compose -f docker-compose.staging.yml cp aifs-audit-tools/. api:/tmp/aifs-audit/tools/
+            docker compose -f docker-compose.staging.yml exec -T \
+              -e APP_ENV=staging \
+              -e AIFS_CERTIFICATE_BACKFILL_DRY_RUN=yes \
+              -e NODE_PATH=/app/node_modules \
+              --workdir /app \
+              api node /tmp/aifs-audit/tools/aifs-certificate-backfill-dry-run-staging-host.mjs \
+              | tee /tmp/aifs-certificate-history-audit.json
+            echo "AIFS CERTIFICATE HISTORY DRY RUN: PASS"
+
+      - name: Note aggregate evidence location
+        if: always()
+        run: |
+          set -euo pipefail
+          echo "Redacted aggregate JSON is printed in the SSH step log above (no PII)."
+          echo "Attach the run URL on issue #271."
