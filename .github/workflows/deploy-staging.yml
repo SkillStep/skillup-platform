@@ -411,7 +411,7 @@ jobs:
             # Security containment cannot wait for GHCR egress to recover.
             # The existing staging-only PostgreSQL container is already running.
             PGPASSWORD="$(grep -m1 '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)" \
-            psql -X -v ON_ERROR_STOP=1 -h 172.17.0.1 -p 5443 -U skillup_staging -d skillup_staging <<'CONTAINMENT_SQL'
+            psql -X -v ON_ERROR_STOP=1 -h 127.0.0.1 -p 5443 -U skillup_staging -d skillup_staging <<'CONTAINMENT_SQL'
             begin;
             update admin_principals
                set status = 'suspended', suspended_at = coalesce(suspended_at, now())
