@@ -19,4 +19,4 @@ allowBuilds:
   sharp: true
 
 catalog:
-  '@next/env': 16.4.2
+  '@next/env': 16.4.6
