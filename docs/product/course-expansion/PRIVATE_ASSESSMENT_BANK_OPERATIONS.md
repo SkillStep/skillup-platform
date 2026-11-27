@@ -81,4 +81,6 @@ The current PR #280 draft content was historically authored in public JSON. **Do
 - [ ] Two named **real humans**, Content Lead and Security Reviewer, both sign #281 (without posting any answer keys).
 - [ ] Only then may independent course-review and per-course publisher workflow proceed on the exact corrected version.
 
-**Still blocked:** #280 course publishing, #265 policy-dependent certificate issuance and #271 ten-skill production GO. No pricing/JazzCash/production changes are authorized by this file.
+**#280:** do not merge (public keys). Launch used this private bank instead — see `AIFS_280_SUPERSEDED_BY_PRIVATE_BANK.md`.  
+**#265 / #271:** policy + exact-SHA QA closed for the staging edge launch.  
+Separate `promote-production.yml` remains an owner-gated step. No pricing/JazzCash changes are authorized by this file.
