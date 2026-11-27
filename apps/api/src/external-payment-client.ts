@@ -249,10 +249,24 @@ export function createExternalPaymentClient(
     path: string,
     init: Readonly<{ method?: string; body?: unknown }> = {},
   ): Promise<unknown> {
+    const method = init.method ?? "GET";
+    const url = endpoint(provider.baseUrl, path);
+    // Visible in staging/prod container logs so operators can confirm which JazzCash
+    // payment-service base URL SkillUp is actually calling (e.g. ngrok vs payments host).
+    console.log(
+      JSON.stringify({
+        msg: "payment_service_call",
+        method,
+        path,
+        baseUrl: provider.baseUrl,
+        url,
+      }),
+    );
+
     let response: Response;
     try {
-      response = await fetcher(endpoint(provider.baseUrl, path), {
-        method: init.method ?? "GET",
+      response = await fetcher(url, {
+        method,
         headers: {
           accept: "application/json",
           "x-api-key": provider.apiKey,
@@ -262,13 +276,35 @@ export function createExternalPaymentClient(
         redirect: "error",
         signal: AbortSignal.timeout(provider.timeoutSeconds * 1_000),
       });
-    } catch {
+    } catch (error) {
+      console.log(
+        JSON.stringify({
+          msg: "payment_service_call_failed",
+          method,
+          path,
+          baseUrl: provider.baseUrl,
+          url,
+          reason: error instanceof Error ? error.name : "unknown",
+          detail: error instanceof Error ? error.message : String(error),
+        }),
+      );
       throw new ExternalPaymentRequestError(
         502,
         "payment_service_unreachable",
         "The payment service could not be reached.",
       );
     }
+
+    console.log(
+      JSON.stringify({
+        msg: "payment_service_call_result",
+        method,
+        path,
+        baseUrl: provider.baseUrl,
+        url,
+        status: response.status,
+      }),
+    );
 
     const payload = await jsonPayload(response);
     if (!response.ok) {

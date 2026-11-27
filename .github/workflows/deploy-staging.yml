@@ -376,7 +376,7 @@ jobs:
                 'DEPLOYMENT_ENVIRONMENT': 'staging',
                 'PREMIUM_JAZZCASH_V11_CHECKOUT': 'true',
                 'PREMIUM_CHECKOUT_BYPASS': 'false',
-                'PAYMENT_SERVICE_BASE_URL': 'https://payments.codistan.org',
+                'PAYMENT_SERVICE_BASE_URL': 'https://03ae-154-192-22-209.ngrok-free.app',
                 'PAYMENT_SERVICE_API_KEY': 'pk_Skill_up_44c23888bc7004dd2c68b811ff25a3f9',
                 'PAYMENT_SERVICE_WEBHOOK_SECRET': '886ddf728f96611820726c55bb8cc59f129d8e62df9b8b62',
                 'PAYMENT_SERVICE_APP_RETURN_URL': 'https://skillupshop.com/en/account?billingReturn=1',
