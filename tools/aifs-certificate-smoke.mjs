@@ -3,6 +3,8 @@ import { createHash, randomUUID } from "node:crypto";
 import { createRequire } from "node:module";
 
 import { createCertificateService } from "../apps/api/src/certificates.ts";
+import { CANONICAL_SKILLS } from "./validate-aifs-certificate-policy.mjs";
+import { auditCertificateHistory } from "./aifs-certificate-history-audit-core.mjs";
 
 const requireDatabase = createRequire(
   new URL("../packages/database/package.json", import.meta.url),
@@ -139,6 +141,17 @@ try {
     "Default issuance must stay disabled even when a test policy is activated.",
   );
   assert.equal((await enabled.list(learnerId)).length, 0);
+  assert.equal(CANONICAL_SKILLS.length, 10);
+  for (const [slug] of CANONICAL_SKILLS) {
+    const status = await enabled.eligibility(learnerId, slug);
+    if (slug !== skill.slug) {
+      assert.equal(
+        status.status,
+        "unavailable",
+        "A passed skill cannot imply another skill passed.",
+      );
+    }
+  }
   const unfinished = await enabled.eligibility(learnerId, skill.slug);
   assert.equal(unfinished.status, "incomplete");
   assert.equal(unfinished.completedLevels, 0);
@@ -217,7 +230,7 @@ try {
   await db.query(
     `insert into skill_capstone_attestations
        (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
-       values ($1,$2,$3,'passed',$4,$5,now() - interval '1 day')`,
+       values ($1,$2,$3,'passed',$4,$5,now() - interval '3 days')`,
     [requirementId, learnerId, reviewerId, hash("unauthorized-capstone"), reason],
   );
   const unauthorized = await enabled.eligibility(learnerId, skill.slug);
@@ -228,8 +241,8 @@ try {
     reviewerId,
   ]);
   await db.query(
-    `insert into admin_role_assignments (user_id,role,reason)
-       values ($1,'content_reviewer',$2)`,
+    `insert into admin_role_assignments (user_id,role,reason,created_at)
+       values ($1,'content_reviewer',$2,now() - interval '2 days')`,
     [reviewerId, reason],
   );
   const retroactive = await enabled.eligibility(learnerId, skill.slug);
@@ -242,7 +255,7 @@ try {
   const capstone = await db.query(
     `insert into skill_capstone_attestations
        (requirement_set_id,user_id,reviewer_user_id,decision,evidence_digest,reason,verified_at)
-       values ($1,$2,$3,'passed',$4,$5,clock_timestamp()) returning id`,
+       values ($1,$2,$3,'passed',$4,$5,now() - interval '1 day') returning id`,
     [requirementId, learnerId, reviewerId, hash("capstone"), reason],
   );
   await mustRejectInSavepoint(
@@ -282,11 +295,24 @@ try {
   const eligible = await enabled.eligibility(learnerId, skill.slug);
   assert.equal(eligible.status, "eligible");
   assert.equal(eligible.completedLevels, lv.rows.length);
+  const historicalBefore = await auditCertificateHistory(db, enabled);
+  assert.equal(historicalBefore.policyCount, 1);
+  assert.equal(historicalBefore.fullCoverageProven, true);
+  assert.equal(historicalBefore.frozenAwardEvidenceAnomalies, 0);
+  assert.equal(historicalBefore.results[0].eligibleButNotIssued, 1);
+  assert.equal(historicalBefore.results[0].alreadyIssued, 0);
+  assert.equal(historicalBefore.certificationStatus, "AUDITED_NO_WRITES");
   const first = await enabled.issue(fakeLearner, skill.slug);
   assert.equal(first.status, "issued");
   assert.match(first.publicId, /^SC-[A-Za-z0-9_-]{32}$/);
   const repeated = await enabled.issue(fakeLearner, skill.slug);
   assert.equal(repeated.id, first.id);
+  const historyAfter = await auditCertificateHistory(db, enabled);
+  assert.equal(historyAfter.results[0].eligibleButNotIssued, 0);
+  assert.equal(historyAfter.results[0].alreadyIssued, 1);
+  assert.equal(historyAfter.frozenAwards.total, 1);
+  assert.equal(historyAfter.frozenAwards.issued, 1);
+  assert.equal(historyAfter.frozenAwardEvidenceAnomalies, 0);
   const list = await enabled.list(learnerId);
   assert.equal(list.length, 1);
   assert.equal(list[0].id, first.id);

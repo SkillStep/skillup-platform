@@ -214,7 +214,29 @@ jobs:
           SKILLUP_API_URL=http://127.0.0.1:3001 \
           SKILLUP_EXPECTED_RELEASE_SHA="$RELEASE_SHA" \
           pnpm smoke:live 2>&1 | tee artifacts/e2e-smoke.log
+
+          # Real Chromium, built web image, three viewports, synthetic data
+          # intercepted only inside these isolated browser tests. No OTP or
+          # live learner accounts, so screenshots are safe CI evidence.
+          pnpm --filter @skillup/staging-certification exec playwright install --with-deps chromium
+          STAGING_WEB_URL=http://127.0.0.1:3000 \
+          pnpm --filter @skillup/staging-certification exec playwright test \
+            --project=certificates-qa-desktop \
+            --project=certificates-qa-mobile \
+            --project=certificates-qa-tablet
+
           trap - EXIT
+
+      - name: Upload certificate viewport QA evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: certificate-browser-qa-${{ github.sha }}
+          path: |
+            qa/staging-certification/artifacts/test-results/**/certificate-layout.png
+            qa/staging-certification/artifacts/playwright-results.json
+          if-no-files-found: warn
+          retention-days: 30
 
       - name: Upload end-to-end diagnostics
         if: failure()
