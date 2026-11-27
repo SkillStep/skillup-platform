@@ -12,8 +12,12 @@ function request(origin: string | undefined): FastifyRequest {
 
 describe("trusted request origin", () => {
   it("allows the configured origin and the IPv4 loopback equivalent", () => {
-    expect(() => requireTrustedRequestOrigin(request("http://localhost:3000"), config)).not.toThrow();
-    expect(() => requireTrustedRequestOrigin(request("http://127.0.0.1:3000"), config)).not.toThrow();
+    expect(() =>
+      requireTrustedRequestOrigin(request("http://localhost:3000"), config),
+    ).not.toThrow();
+    expect(() =>
+      requireTrustedRequestOrigin(request("http://127.0.0.1:3000"), config),
+    ).not.toThrow();
     expect(() => requireTrustedRequestOrigin(request(undefined), config)).not.toThrow();
   });
 

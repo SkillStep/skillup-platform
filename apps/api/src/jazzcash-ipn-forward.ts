@@ -49,7 +49,8 @@ export async function postJazzCashIpn(
   const body = (await response.json().catch(() => null)) as unknown;
   if (response.status === 400) return { disposition: "invalid_hash", body };
   if (!response.ok) return { disposition: "unavailable" };
-  const record = body && typeof body === "object" ? (body as { kind?: unknown; outcome?: unknown }) : {};
+  const record =
+    body && typeof body === "object" ? (body as { kind?: unknown; outcome?: unknown }) : {};
   if (record.kind === "ignored" || record.outcome === "unknown") return { disposition: "unknown" };
   return { disposition: "applied", body };
 }
