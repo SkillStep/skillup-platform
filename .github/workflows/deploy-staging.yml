@@ -410,8 +410,8 @@ jobs:
 
             # Security containment cannot wait for GHCR egress to recover.
             # The existing staging-only PostgreSQL container is already running.
-            docker exec -i skillup-postgres-staging-container sh -c \
-              'psql -X -v ON_ERROR_STOP=1 -U "$POSTGRES_USER" -d "$POSTGRES_DB"' <<'CONTAINMENT_SQL'
+            PGPASSWORD="$(grep -m1 '^POSTGRES_PASSWORD=' .env | cut -d= -f2-)" \
+            psql -X -v ON_ERROR_STOP=1 -h 172.17.0.1 -p 5443 -U skillup_staging -d skillup_staging <<'CONTAINMENT_SQL'
             begin;
             update admin_principals
                set status = 'suspended', suspended_at = coalesce(suspended_at, now())
@@ -482,14 +482,6 @@ jobs:
               }
             done
             echo "OFFLINE IMAGE TRANSFER + TAG LOAD: PASS"
-            docker compose -f docker-compose.staging.yml up -d postgres
-            for attempt in $(seq 1 45); do
-              if [ "$(docker inspect skillup-postgres-staging-container --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}')" = healthy ]; then
-                break
-              fi
-              sleep 2
-            done
-            test "$(docker inspect skillup-postgres-staging-container --format '{{.State.Health.Status}}')" = healthy
 
             echo "Applying database migrations and deterministic launch seeds before application startup"
             docker compose -f docker-compose.staging.yml run --rm --no-deps api \
