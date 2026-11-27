@@ -46,11 +46,22 @@ Captured after Staging Deploy `45971531718` and launch activation:
 | frozenAwardEvidenceAnomalies | 0 |
 | awards issued by audit | **0** (read-only) |
 
-PR: [#289](https://github.com/SkillStep/skillup-platform/pull/289) — **merge only with Abdullah approval**.
+PR path: [#289](https://github.com/SkillStep/skillup-platform/pull/289) → `release/aifs-271-closeout` → [#290](https://github.com/SkillStep/skillup-platform/pull/290) → `main` (**single main merge when Abdullah approves**).
+
+## Skipped Playwright tests — classified (non-blocking)
+
+Both skips are the **same** JazzCash checkout test on two projects:
+
+| Project | Test | Reason |
+| --- | --- | --- |
+| learner-desktop | checkout creation is replay-safe… | `STAGING_JAZZCASH_SANDBOX_READY` is not `true` |
+| learner-mobile | checkout creation is replay-safe… | same |
+
+**Classification:** expected / non-critical for this launch closeout. JazzCash sandbox and merchant credentials were **explicitly not changed**. Negative JazzCash callback/malformed tests still executed and passed. Enabling sandbox to unskip would violate the JazzCash no-touch rule.
 
 ## Explicit non-goals
 
 - No JazzCash / payment / merchant credential changes.
 - No merge of #280.
-- No merge of this branch to `main` without Abdullah approval.
-- No separate production promotion beyond the already-live skillupshop.com edge unless a separate written GO is recorded.
+- No merge to `main` until Abdullah approves **#290** once.
+- No separate `promote-production.yml` cut unless a separate written GO is recorded.
