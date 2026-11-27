@@ -4,6 +4,12 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@next/env':
+      specifier: 16.4.2
+      version: 16.4.2
+
 overrides:
   sharp: 0.35.5
   postcss: 8.5.23
@@ -77,6 +83,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@next/env':
+        specifier: 'catalog:'
+        version: 16.4.2
       '@skillup/discoverability':
         specifier: workspace:*
         version: link:../../packages/discoverability

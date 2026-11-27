@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@next/env": "catalog:",
     "@skillup/discoverability": "workspace:*",
     "@skillup/ui": "workspace:*",
     "next": "16.4.2",

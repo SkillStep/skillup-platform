@@ -17,3 +17,6 @@ overrides:
 allowBuilds:
   esbuild: true
   sharp: true
+
+catalog:
+  '@next/env': 16.4.2
