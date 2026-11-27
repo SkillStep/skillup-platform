@@ -5,21 +5,22 @@
 **Date:** 2026-11-27  
 **Rule:** Do not merge this branch to `main` without Abdullah approval. Keep [#280](https://github.com/SkillStep/skillup-platform/pull/280) unmerged (public evaluator keys).
 
-## Live identity (skillupshop.com)
+## Live identity (skillupshop.com) — release package certified
 
-Captured after Staging Deploy `45971531718` and launch activation:
+Staging Deploy of `release/aifs-271-closeout` tip (pre-main):
 
 | Field | Value |
 | --- | --- |
-| releaseSha | `1a5f068dc65c1c236a7eb1ec84b24dae6a49d1ed` |
-| pipelineId | `45971531718-1` |
-| webArtifactRef | `ghcr.io/skillstep/skillup-platform-web:1a5f068dc65c1c236a7eb1ec84b24dae6a49d1ed` |
-| webImageDigest | `sha256:24daaffebd274b146b1553cca977fe759ca39d77392fd6e74df8a89bce1f53c9` |
-| apiArtifactRef | `ghcr.io/skillstep/skillup-platform-api:1a5f068dc65c1c236a7eb1ec84b24dae6a49d1ed` |
-| apiImageDigest | `sha256:0f65a3a4b3e5fbf26daf18bef3cf7ad61b0795eeb3c39ed866466e4ada57e69f` |
-| aiArtifactRef | `ghcr.io/skillstep/skillup-platform-ai-worker:1a5f068dc65c1c236a7eb1ec84b24dae6a49d1ed` |
-| aiImageDigest | `sha256:eb7eef91d2b632c32fd0591a6c6abbebab6496a605ca0a0de11e72b10ad84374` |
-| previousReleaseRef / rollback | `ghcr.io/skillstep/skillup-platform-web:ccd16674409756c8aaa62884cf2c63409dd434af` |
+| releaseSha | `d2bbcd19e4e89c793f9207a915793930dd33103a` |
+| pipelineId | `45978093468-1` |
+| deploy run | https://github.com/SkillStep/skillup-platform/actions/runs/45978093468 |
+| webArtifactRef | `ghcr.io/skillstep/skillup-platform-web:d2bbcd19e4e89c793f9207a915793930dd33103a` |
+| webImageDigest | `sha256:e6a3e5048f48783bc6012be080a9bda76eecb4d8dc5712b7aae0a62857925573` |
+| apiArtifactRef | `ghcr.io/skillstep/skillup-platform-api:d2bbcd19e4e89c793f9207a915793930dd33103a` |
+| apiImageDigest | `sha256:ff7f8d2944bff6a9136e8ff18e6a265e99123c4f5ea60b92be2a7158a541ac61` |
+| aiArtifactRef | `ghcr.io/skillstep/skillup-platform-ai-worker:d2bbcd19e4e89c793f9207a915793930dd33103a` |
+| aiImageDigest | `sha256:eb38f29d5380ac24744337483b59d33a254525135f892998faa2187ece1c8a46` |
+| previousReleaseRef / rollback | `ghcr.io/skillstep/skillup-platform-web:1a5f068dc65c1c236a7eb1ec84b24dae6a49d1ed` |
 
 ## Content / policy gates already cleared (prior session)
 
@@ -37,9 +38,9 @@ Captured after Staging Deploy `45971531718` and launch activation:
 
 | Check | Result |
 | --- | --- |
-| Staging Certification run | [45975932891](https://github.com/SkillStep/skillup-platform/actions/runs/45975932891) **success** |
-| Playwright | **135 passed**, 2 skipped, 0 failed → `READY FOR UAT` |
-| Edge certified | https://skillupshop.com @ `1a5f068…` |
+| Staging Certification run | [45978853133](https://github.com/SkillStep/skillup-platform/actions/runs/45978853133) **success** (prior: 45975932891) |
+| Playwright | **135 passed**, 2 skipped (JazzCash classified), 0 failed → `READY FOR UAT` |
+| Edge certified | https://skillupshop.com @ `d2bbcd1…` |
 | Certificate history dry-run | **AUDITED_NO_WRITES** (same run, parallel job) |
 | policyCount | 10 |
 | totalCandidates / examined | 10 / 10 |
