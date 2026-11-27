@@ -10,27 +10,6 @@
 name: skillup-staging
 
 services:
-  postgres:
-    image: postgres:18.4-bookworm
-    container_name: skillup-postgres-staging-container
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    ports:
-      - "127.0.0.1:5433:5432"
-    volumes:
-      - skillup_staging_postgres_data:/var/lib/postgresql
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
-    security_opt:
-      - no-new-privileges:true
-
   api:
     image: ${API_RELEASE_ARTIFACT_REF:-ghcr.io/skillstep/skillup-platform-api:staging}
     container_name: skillup-api-staging-container
@@ -43,9 +22,6 @@ services:
       - "payments.codistan.org:172.17.0.1"
     ports:
       - "4020:3001"
-    depends_on:
-      postgres:
-        condition: service_healthy
 
   web:
     image: ${WEB_RELEASE_ARTIFACT_REF:-ghcr.io/skillstep/skillup-platform-web:staging}
@@ -74,5 +50,4 @@ services:
       - api
 
 volumes:
-  skillup_staging_postgres_data:
   skillup_ai_worker_data:
